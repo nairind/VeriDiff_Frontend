@@ -1,27 +1,30 @@
-import * as ExcelJS from 'exceljs';
+import XLSX from 'xlsx';
 
 /**
- * Excel file comparison utility using ExcelJS
+ * Excel file comparison utility
  * Provides browser-compatible Excel file comparison functionality with support for hidden sheets
  */
 
 /**
  * Reads an Excel file and returns its contents as a workbook
  * @param {File} file - The Excel file to read
- * @returns {Promise<ExcelJS.Workbook>} - A promise that resolves to the workbook object
+ * @returns {Promise<Object>} - A promise that resolves to the workbook object
  */
 export const readExcelFile = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
-    reader.onload = async (event) => {
+    reader.onload = (event) => {
       try {
-        // Create a new workbook
-        const workbook = new ExcelJS.Workbook();
+        console.log('FileReader onload triggered');
         
-        // Load from buffer
-        const buffer = event.target.result;
-        await workbook.xlsx.load(buffer);
+        // Use ArrayBuffer for better browser compatibility
+        const data = new Uint8Array(event.target.result);
+        console.log('Uint8Array created, length:', data.length);
+        
+        // Use type 'array' which is recommended for browser compatibility
+        const workbook = XLSX.read(data, { type: 'array' });
+        console.log('Workbook successfully read, sheets:', workbook.SheetNames);
         
         resolve(workbook);
       } catch (error) {
@@ -35,61 +38,36 @@ export const readExcelFile = (file) => {
       reject(new Error('Failed to read file'));
     };
     
-    // Read file as array buffer for ExcelJS
+    // Use readAsArrayBuffer instead of readAsBinaryString for better browser compatibility
+    console.log('Reading file as ArrayBuffer...');
     reader.readAsArrayBuffer(file);
   });
 };
 
 /**
  * Converts a workbook to a structured object for comparison
- * @param {ExcelJS.Workbook} workbook - The ExcelJS workbook object
+ * @param {Object} workbook - The XLSX workbook object
  * @returns {Object} - A structured representation of the workbook
  */
 export const workbookToStructured = (workbook) => {
   const result = {};
   
   // Process each worksheet
-  workbook.eachSheet((worksheet, sheetId) => {
-    const sheetName = worksheet.name;
-    const sheetState = worksheet.state || 'visible'; // 'visible', 'hidden', or 'veryHidden'
-    const rows = [];
+  workbook.SheetNames.forEach(sheetName => {
+    const worksheet = workbook.Sheets[sheetName];
     
-    // Process each row
-    worksheet.eachRow((row, rowNumber) => {
-      const cells = [];
-      
-      // Process each cell in the row
-      row.eachCell((cell, colNumber) => {
-        // Get cell value with proper type handling
-        let value = '';
-        
-        if (cell.value !== null && cell.value !== undefined) {
-          if (cell.value.text) {
-            // Rich text
-            value = cell.value.text;
-          } else if (cell.value.formula) {
-            // Formula
-            value = cell.value.result || cell.value.formula;
-          } else if (cell.value.hyperlink) {
-            // Hyperlink
-            value = cell.value.text || cell.value.hyperlink;
-          } else if (cell.value instanceof Date) {
-            // Date
-            value = cell.value.toISOString();
-          } else {
-            // Regular value
-            value = cell.value.toString();
-          }
-        }
-        
-        cells.push(value);
-      });
-      
-      rows.push(cells);
-    });
+    // Check if sheet is hidden
+    const sheetVisible = worksheet['!hidden'] ? false : true;
+    const sheetState = sheetVisible ? 'visible' : 'hidden';
+    
+    // Convert to JSON with header:1 to get array of arrays format
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    
+    // Skip empty worksheets
+    if (jsonData.length === 0) return;
     
     result[sheetName] = {
-      rows: rows,
+      rows: jsonData,
       state: sheetState
     };
   });
@@ -99,8 +77,8 @@ export const workbookToStructured = (workbook) => {
 
 /**
  * Compares two Excel workbooks
- * @param {ExcelJS.Workbook} workbook1 - The first workbook
- * @param {ExcelJS.Workbook} workbook2 - The second workbook
+ * @param {Object} workbook1 - The first workbook
+ * @param {Object} workbook2 - The second workbook
  * @returns {Object} - The comparison results
  */
 export const compareWorkbooks = (workbook1, workbook2) => {
@@ -213,6 +191,11 @@ export const compareWorkbooks = (workbook1, workbook2) => {
       const row1 = rows1[rowIdx];
       const row2 = rows2[rowIdx];
       
+      // Ensure rows are arrays before proceeding
+      if (!Array.isArray(row1) || !Array.isArray(row2)) {
+        continue;
+      }
+      
       // Get max columns from both rows
       const maxCols = Math.max(row1.length, row2.length);
       
@@ -304,7 +287,9 @@ export const compareWorkbooks = (workbook1, workbook2) => {
  */
 export const compareExcelFiles_main = async (file1, file2) => {
   try {
-    console.log('Starting Excel comparison with ExcelJS...');
+    console.log('Starting Excel comparison with SheetJS...');
+    console.log('File 1:', file1.name, 'Size:', file1.size);
+    console.log('File 2:', file2.name, 'Size:', file2.size);
     
     // Validate file types
     const validExcelExtensions = ['.xlsx', '.xls', '.xlsm', '.xlsb'];
