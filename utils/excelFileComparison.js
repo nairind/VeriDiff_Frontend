@@ -1,25 +1,28 @@
-import XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 
 /**
- * Excel file comparison utility
- * Provides browser-compatible Excel file comparison functionality
+ * Excel file comparison utility using ExcelJS
+ * Provides browser-compatible Excel file comparison functionality with support for hidden sheets
  */
 
 /**
  * Reads an Excel file and returns its contents as a workbook
  * @param {File} file - The Excel file to read
- * @returns {Promise<Object>} - A promise that resolves to the workbook object
+ * @returns {Promise<ExcelJS.Workbook>} - A promise that resolves to the workbook object
  */
 export const readExcelFile = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
-        // Use ArrayBuffer for better browser compatibility
-        const data = new Uint8Array(event.target.result);
-        // Use type 'array' which is recommended for browser compatibility
-        const workbook = XLSX.read(data, { type: 'array' });
+        // Create a new workbook
+        const workbook = new ExcelJS.Workbook();
+        
+        // Load from buffer
+        const buffer = event.target.result;
+        await workbook.xlsx.load(buffer);
+        
         resolve(workbook);
       } catch (error) {
         console.error('Excel read error:', error);
@@ -32,29 +35,63 @@ export const readExcelFile = (file) => {
       reject(new Error('Failed to read file'));
     };
     
-    // Use readAsArrayBuffer instead of readAsBinaryString for better browser compatibility
+    // Read file as array buffer for ExcelJS
     reader.readAsArrayBuffer(file);
   });
 };
 
 /**
  * Converts a workbook to a structured object for comparison
- * @param {Object} workbook - The XLSX workbook object
+ * @param {ExcelJS.Workbook} workbook - The ExcelJS workbook object
  * @returns {Object} - A structured representation of the workbook
  */
 export const workbookToStructured = (workbook) => {
   const result = {};
   
   // Process each worksheet
-  workbook.SheetNames.forEach(sheetName => {
-    const worksheet = workbook.Sheets[sheetName];
-    // Use sheet_to_json with header:1 to get array of arrays format
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  workbook.eachSheet((worksheet, sheetId) => {
+    const sheetName = worksheet.name;
+    const sheetState = worksheet.state || 'visible'; // 'visible', 'hidden', or 'veryHidden'
+    const rows = [];
     
-    // Skip empty worksheets
-    if (jsonData.length === 0) return;
+    // Process each row
+    worksheet.eachRow((row, rowNumber) => {
+      const cells = [];
+      
+      // Process each cell in the row
+      row.eachCell((cell, colNumber) => {
+        // Get cell value with proper type handling
+        let value = '';
+        
+        if (cell.value !== null && cell.value !== undefined) {
+          if (cell.value.text) {
+            // Rich text
+            value = cell.value.text;
+          } else if (cell.value.formula) {
+            // Formula
+            value = cell.value.result || cell.value.formula;
+          } else if (cell.value.hyperlink) {
+            // Hyperlink
+            value = cell.value.text || cell.value.hyperlink;
+          } else if (cell.value instanceof Date) {
+            // Date
+            value = cell.value.toISOString();
+          } else {
+            // Regular value
+            value = cell.value.toString();
+          }
+        }
+        
+        cells.push(value);
+      });
+      
+      rows.push(cells);
+    });
     
-    result[sheetName] = jsonData;
+    result[sheetName] = {
+      rows: rows,
+      state: sheetState
+    };
   });
   
   return result;
@@ -62,8 +99,8 @@ export const workbookToStructured = (workbook) => {
 
 /**
  * Compares two Excel workbooks
- * @param {Object} workbook1 - The first workbook
- * @param {Object} workbook2 - The second workbook
+ * @param {ExcelJS.Workbook} workbook1 - The first workbook
+ * @param {ExcelJS.Workbook} workbook2 - The second workbook
  * @returns {Object} - The comparison results
  */
 export const compareWorkbooks = (workbook1, workbook2) => {
@@ -94,7 +131,7 @@ export const compareWorkbooks = (workbook1, workbook2) => {
         ID: recordId.toString(),
         COLUMN: `Sheet: ${sheetName}`,
         SOURCE_1_VALUE: '',
-        SOURCE_2_VALUE: 'Sheet exists',
+        SOURCE_2_VALUE: `Sheet exists (${structured2[sheetName].state})`,
         STATUS: 'difference'
       });
       differencesFound++;
@@ -107,7 +144,7 @@ export const compareWorkbooks = (workbook1, workbook2) => {
       results.push({
         ID: recordId.toString(),
         COLUMN: `Sheet: ${sheetName}`,
-        SOURCE_1_VALUE: 'Sheet exists',
+        SOURCE_1_VALUE: `Sheet exists (${structured1[sheetName].state})`,
         SOURCE_2_VALUE: '',
         STATUS: 'difference'
       });
@@ -115,17 +152,34 @@ export const compareWorkbooks = (workbook1, workbook2) => {
       return;
     }
     
-    // Both workbooks have this sheet, compare content
+    // Both workbooks have this sheet, check visibility state
     const sheet1 = structured1[sheetName];
     const sheet2 = structured2[sheetName];
     
+    if (sheet1.state !== sheet2.state) {
+      // Sheet visibility differs
+      recordId++;
+      results.push({
+        ID: recordId.toString(),
+        COLUMN: `Sheet: ${sheetName} (Visibility)`,
+        SOURCE_1_VALUE: sheet1.state,
+        SOURCE_2_VALUE: sheet2.state,
+        STATUS: 'difference'
+      });
+      differencesFound++;
+    }
+    
+    // Compare sheet content
+    const rows1 = sheet1.rows;
+    const rows2 = sheet2.rows;
+    
     // Get max rows from both sheets
-    const maxRows = Math.max(sheet1.length, sheet2.length);
+    const maxRows = Math.max(rows1.length, rows2.length);
     
     // Compare each row
     for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
-      const row1Exists = rowIdx < sheet1.length;
-      const row2Exists = rowIdx < sheet2.length;
+      const row1Exists = rowIdx < rows1.length;
+      const row2Exists = rowIdx < rows2.length;
       
       if (!row1Exists) {
         // Row only exists in sheet 2
@@ -156,13 +210,8 @@ export const compareWorkbooks = (workbook1, workbook2) => {
       }
       
       // Both sheets have this row, compare cells
-      const row1 = sheet1[rowIdx];
-      const row2 = sheet2[rowIdx];
-      
-      // Ensure rows are arrays before proceeding
-      if (!Array.isArray(row1) || !Array.isArray(row2)) {
-        continue;
-      }
+      const row1 = rows1[rowIdx];
+      const row2 = rows2[rowIdx];
       
       // Get max columns from both rows
       const maxCols = Math.max(row1.length, row2.length);
@@ -255,6 +304,8 @@ export const compareWorkbooks = (workbook1, workbook2) => {
  */
 export const compareExcelFiles_main = async (file1, file2) => {
   try {
+    console.log('Starting Excel comparison with ExcelJS...');
+    
     // Validate file types
     const validExcelExtensions = ['.xlsx', '.xls', '.xlsm', '.xlsb'];
     const file1Ext = file1.name.substring(file1.name.lastIndexOf('.')).toLowerCase();
@@ -264,12 +315,21 @@ export const compareExcelFiles_main = async (file1, file2) => {
       throw new Error('Both files must be Excel files (.xlsx, .xls, .xlsm, or .xlsb)');
     }
     
+    console.log('Reading first Excel file...');
     // Read Excel files
     const workbook1 = await readExcelFile(file1);
-    const workbook2 = await readExcelFile(file2);
+    console.log('First Excel file read successfully');
     
+    console.log('Reading second Excel file...');
+    const workbook2 = await readExcelFile(file2);
+    console.log('Second Excel file read successfully');
+    
+    console.log('Comparing workbooks...');
     // Compare workbooks
-    return compareWorkbooks(workbook1, workbook2);
+    const results = compareWorkbooks(workbook1, workbook2);
+    console.log('Comparison complete');
+    
+    return results;
   } catch (error) {
     console.error('Excel comparison error:', error);
     throw new Error(`Excel comparison failed: ${error.message}`);
