@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { compareFiles } from '../utils/simpleCSVComparison';
 import { compareTextFiles_main } from '../utils/textFileComparison';
+import { compareJSONFiles_main } from '../utils/jsonFileComparison';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -25,6 +26,8 @@ export default function Home() {
         setFileType('text');
       } else if (file.name.toLowerCase().endsWith('.csv')) {
         setFileType('csv');
+      } else if (file.name.toLowerCase().endsWith('.json')) {
+        setFileType('json');
       }
     }
   };
@@ -53,6 +56,9 @@ export default function Home() {
     } else if (fileType === 'text' && (!file1.name.toLowerCase().endsWith('.txt') || !file2.name.toLowerCase().endsWith('.txt'))) {
       setError('Please select text (.txt) files for text comparison');
       return;
+    } else if (fileType === 'json' && (!file1.name.toLowerCase().endsWith('.json') || !file2.name.toLowerCase().endsWith('.json'))) {
+      setError('Please select JSON (.json) files for JSON comparison');
+      return;
     }
     
     setLoading(true);
@@ -67,6 +73,9 @@ export default function Home() {
       } else if (fileType === 'text') {
         // Use the text file comparison logic
         comparisonResults = await compareTextFiles_main(file1, file2);
+      } else if (fileType === 'json') {
+        // Use the JSON file comparison logic
+        comparisonResults = await compareJSONFiles_main(file1, file2);
       }
       
       setResults(comparisonResults);
@@ -111,32 +120,46 @@ export default function Home() {
             />
             Text Files
           </label>
+          <label>
+            <input 
+              type="radio" 
+              name="fileType" 
+              value="json" 
+              checked={fileType === 'json'} 
+              onChange={handleFileTypeChange} 
+            />
+            JSON Files
+          </label>
         </div>
 
         <form onSubmit={handleSubmit} className="form">
           <div className="file-inputs">
             <div className="file-input">
               <label htmlFor="file1">
-                {fileType === 'csv' ? 'CSV File 1:' : 'Text File 1:'}
+                {fileType === 'csv' ? 'CSV File 1:' : 
+                 fileType === 'text' ? 'Text File 1:' : 'JSON File 1:'}
               </label>
               <input
                 type="file"
                 id="file1"
                 onChange={(e) => handleFileChange(e, 1)}
-                accept={fileType === 'csv' ? '.csv' : '.txt'}
+                accept={fileType === 'csv' ? '.csv' : 
+                        fileType === 'text' ? '.txt' : '.json'}
               />
               {file1 && <p className="file-info">Selected: {file1.name}</p>}
             </div>
             
             <div className="file-input">
               <label htmlFor="file2">
-                {fileType === 'csv' ? 'CSV File 2:' : 'Text File 2:'}
+                {fileType === 'csv' ? 'CSV File 2:' : 
+                 fileType === 'text' ? 'Text File 2:' : 'JSON File 2:'}
               </label>
               <input
                 type="file"
                 id="file2"
                 onChange={(e) => handleFileChange(e, 2)}
-                accept={fileType === 'csv' ? '.csv' : '.txt'}
+                accept={fileType === 'csv' ? '.csv' : 
+                        fileType === 'text' ? '.txt' : '.json'}
               />
               {file2 && <p className="file-info">Selected: {file2.name}</p>}
             </div>
