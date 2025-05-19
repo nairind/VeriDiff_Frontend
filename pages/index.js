@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import { compareFiles } from '../utils/simpleCSVComparison';
+import { compareTextFiles_main } from '../utils/textFileComparison';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -8,6 +9,7 @@ export default function Home() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fileType, setFileType] = useState('csv'); // Default to CSV
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
@@ -17,7 +19,23 @@ export default function Home() {
       } else {
         setFile2(file);
       }
+
+      // Auto-detect file type
+      if (file.name.toLowerCase().endsWith('.txt')) {
+        setFileType('text');
+      } else if (file.name.toLowerCase().endsWith('.csv')) {
+        setFileType('csv');
+      }
     }
+  };
+
+  const handleFileTypeChange = (e) => {
+    setFileType(e.target.value);
+    // Clear any previous files and results when changing file type
+    setFile1(null);
+    setFile2(null);
+    setResults(null);
+    setError(null);
   };
 
   const handleSubmit = async (e) => {
@@ -28,9 +46,12 @@ export default function Home() {
       return;
     }
     
-    // Basic file type validation
-    if (!file1.name.toLowerCase().endsWith('.csv') || !file2.name.toLowerCase().endsWith('.csv')) {
-      setError('Please select CSV files only. This simplified version only supports CSV comparison.');
+    // Validate file types match the selected comparison type
+    if (fileType === 'csv' && (!file1.name.toLowerCase().endsWith('.csv') || !file2.name.toLowerCase().endsWith('.csv'))) {
+      setError('Please select CSV files for CSV comparison');
+      return;
+    } else if (fileType === 'text' && (!file1.name.toLowerCase().endsWith('.txt') || !file2.name.toLowerCase().endsWith('.txt'))) {
+      setError('Please select text (.txt) files for text comparison');
       return;
     }
     
@@ -38,8 +59,16 @@ export default function Home() {
     setError(null);
     
     try {
-      // Use the simplified CSV comparison logic
-      const comparisonResults = await compareFiles(file1, file2);
+      let comparisonResults;
+      
+      if (fileType === 'csv') {
+        // Use the CSV comparison logic
+        comparisonResults = await compareFiles(file1, file2);
+      } else if (fileType === 'text') {
+        // Use the text file comparison logic
+        comparisonResults = await compareTextFiles_main(file1, file2);
+      }
+      
       setResults(comparisonResults);
     } catch (err) {
       console.error('Comparison error:', err);
@@ -52,36 +81,62 @@ export default function Home() {
   return (
     <div className="container">
       <Head>
-        <title>VeriDiff - CSV Comparison Tool</title>
-        <meta name="description" content="Compare CSV files with precision" />
+        <title>VeriDiff - File Comparison Tool</title>
+        <meta name="description" content="Compare files with precision" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
         <h1 className="title">VeriDiff</h1>
-        <p className="description">Upload two CSV files to compare their contents</p>
-        <p className="note">(Simplified version - CSV files only)</p>
+        <p className="description">Upload two files to compare their contents</p>
+        
+        <div className="file-type-selector">
+          <label>
+            <input 
+              type="radio" 
+              name="fileType" 
+              value="csv" 
+              checked={fileType === 'csv'} 
+              onChange={handleFileTypeChange} 
+            />
+            CSV Files
+          </label>
+          <label>
+            <input 
+              type="radio" 
+              name="fileType" 
+              value="text" 
+              checked={fileType === 'text'} 
+              onChange={handleFileTypeChange} 
+            />
+            Text Files
+          </label>
+        </div>
 
         <form onSubmit={handleSubmit} className="form">
           <div className="file-inputs">
             <div className="file-input">
-              <label htmlFor="file1">CSV File 1:</label>
+              <label htmlFor="file1">
+                {fileType === 'csv' ? 'CSV File 1:' : 'Text File 1:'}
+              </label>
               <input
                 type="file"
                 id="file1"
                 onChange={(e) => handleFileChange(e, 1)}
-                accept=".csv"
+                accept={fileType === 'csv' ? '.csv' : '.txt'}
               />
               {file1 && <p className="file-info">Selected: {file1.name}</p>}
             </div>
             
             <div className="file-input">
-              <label htmlFor="file2">CSV File 2:</label>
+              <label htmlFor="file2">
+                {fileType === 'csv' ? 'CSV File 2:' : 'Text File 2:'}
+              </label>
               <input
                 type="file"
                 id="file2"
                 onChange={(e) => handleFileChange(e, 2)}
-                accept=".csv"
+                accept={fileType === 'csv' ? '.csv' : '.txt'}
               />
               {file2 && <p className="file-info">Selected: {file2.name}</p>}
             </div>
@@ -165,10 +220,17 @@ export default function Home() {
           margin: 1rem 0 0.5rem;
         }
 
-        .note {
-          text-align: center;
-          color: #666;
-          margin-bottom: 2rem;
+        .file-type-selector {
+          display: flex;
+          gap: 2rem;
+          margin: 1rem 0 2rem;
+        }
+
+        .file-type-selector label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
         }
 
         .form {
