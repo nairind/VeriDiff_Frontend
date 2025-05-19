@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { compareFiles } from '../utils/simpleCSVComparison';
 import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareJSONFiles_main } from '../utils/jsonFileComparison';
+import { compareExcelFiles_main } from '../utils/excelFileComparison';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -28,6 +29,9 @@ export default function Home() {
         setFileType('csv');
       } else if (file.name.toLowerCase().endsWith('.json')) {
         setFileType('json');
+      } else if (['.xlsx', '.xls', '.xlsm', '.xlsb'].some(ext => 
+        file.name.toLowerCase().endsWith(ext))) {
+        setFileType('excel');
       }
     }
   };
@@ -59,6 +63,15 @@ export default function Home() {
     } else if (fileType === 'json' && (!file1.name.toLowerCase().endsWith('.json') || !file2.name.toLowerCase().endsWith('.json'))) {
       setError('Please select JSON (.json) files for JSON comparison');
       return;
+    } else if (fileType === 'excel') {
+      const validExcelExtensions = ['.xlsx', '.xls', '.xlsm', '.xlsb'];
+      const file1Ext = file1.name.substring(file1.name.lastIndexOf('.')).toLowerCase();
+      const file2Ext = file2.name.substring(file2.name.lastIndexOf('.')).toLowerCase();
+      
+      if (!validExcelExtensions.includes(file1Ext) || !validExcelExtensions.includes(file2Ext)) {
+        setError('Please select Excel files (.xlsx, .xls, .xlsm, or .xlsb) for Excel comparison');
+        return;
+      }
     }
     
     setLoading(true);
@@ -76,6 +89,9 @@ export default function Home() {
       } else if (fileType === 'json') {
         // Use the JSON file comparison logic
         comparisonResults = await compareJSONFiles_main(file1, file2);
+      } else if (fileType === 'excel') {
+        // Use the Excel file comparison logic
+        comparisonResults = await compareExcelFiles_main(file1, file2);
       }
       
       setResults(comparisonResults);
@@ -130,6 +146,16 @@ export default function Home() {
             />
             JSON Files
           </label>
+          <label>
+            <input 
+              type="radio" 
+              name="fileType" 
+              value="excel" 
+              checked={fileType === 'excel'} 
+              onChange={handleFileTypeChange} 
+            />
+            Excel Files
+          </label>
         </div>
 
         <form onSubmit={handleSubmit} className="form">
@@ -137,14 +163,16 @@ export default function Home() {
             <div className="file-input">
               <label htmlFor="file1">
                 {fileType === 'csv' ? 'CSV File 1:' : 
-                 fileType === 'text' ? 'Text File 1:' : 'JSON File 1:'}
+                 fileType === 'text' ? 'Text File 1:' : 
+                 fileType === 'json' ? 'JSON File 1:' : 'Excel File 1:'}
               </label>
               <input
                 type="file"
                 id="file1"
                 onChange={(e) => handleFileChange(e, 1)}
                 accept={fileType === 'csv' ? '.csv' : 
-                        fileType === 'text' ? '.txt' : '.json'}
+                        fileType === 'text' ? '.txt' : 
+                        fileType === 'json' ? '.json' : '.xlsx,.xls,.xlsm,.xlsb'}
               />
               {file1 && <p className="file-info">Selected: {file1.name}</p>}
             </div>
@@ -152,14 +180,16 @@ export default function Home() {
             <div className="file-input">
               <label htmlFor="file2">
                 {fileType === 'csv' ? 'CSV File 2:' : 
-                 fileType === 'text' ? 'Text File 2:' : 'JSON File 2:'}
+                 fileType === 'text' ? 'Text File 2:' : 
+                 fileType === 'json' ? 'JSON File 2:' : 'Excel File 2:'}
               </label>
               <input
                 type="file"
                 id="file2"
                 onChange={(e) => handleFileChange(e, 2)}
                 accept={fileType === 'csv' ? '.csv' : 
-                        fileType === 'text' ? '.txt' : '.json'}
+                        fileType === 'text' ? '.txt' : 
+                        fileType === 'json' ? '.json' : '.xlsx,.xls,.xlsm,.xlsb'}
               />
               {file2 && <p className="file-info">Selected: {file2.name}</p>}
             </div>
@@ -247,6 +277,8 @@ export default function Home() {
           display: flex;
           gap: 2rem;
           margin: 1rem 0 2rem;
+          flex-wrap: wrap;
+          justify-content: center;
         }
 
         .file-type-selector label {
@@ -254,6 +286,7 @@ export default function Home() {
           align-items: center;
           gap: 0.5rem;
           cursor: pointer;
+          margin-bottom: 0.5rem;
         }
 
         .form {
@@ -321,6 +354,7 @@ export default function Home() {
           display: flex;
           gap: 2rem;
           margin-bottom: 1rem;
+          flex-wrap: wrap;
         }
 
         .results-table {
@@ -341,6 +375,18 @@ export default function Home() {
 
         .results-table .difference {
           background-color: #ffebee;
+        }
+
+        @media (max-width: 600px) {
+          .file-type-selector {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+          
+          .summary {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
         }
       `}</style>
 
