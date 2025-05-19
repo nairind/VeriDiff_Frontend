@@ -1,0 +1,15 @@
+{
+  "name": "Product A",
+  "price": 120,
+  "quantity": 5,
+  "inStock": true,
+  "categories": ["electronics", "gadgets", "new-arrivals"],
+  "specifications": {
+    "weight": "255g",
+    "dimensions": {
+      "height": 10,
+      "width": 5,
+      "depth": 2.5
+    }
+  }
+}

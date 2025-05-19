@@ -1,0 +1,15 @@
+This is a sample text file for testing.
+Line 1: This is the first line of text.
+Line 2: This is the second line of text with a change.
+Line 3: This is the third line of text.
+Line 4: This line has been completely changed.
+Line 5: This is the fifth line of text.
+
+Numbers:
+10
+25
+30
+40
+55
+
+End of file with an additional line.
