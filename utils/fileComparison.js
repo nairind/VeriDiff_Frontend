@@ -61,7 +61,18 @@ export const readExcelFile = (file) => {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        resolve(jsonData);
+        
+        // Convert to array of objects with headers
+        const headers = jsonData[0].map((header, index) => header || `Column${index + 1}`);
+        const rows = jsonData.slice(1).map(row => {
+          const obj = {};
+          headers.forEach((header, index) => {
+            obj[header] = row[index] !== undefined ? row[index] : '';
+          });
+          return obj;
+        });
+        
+        resolve(rows);
       } catch (error) {
         reject(error);
       }
@@ -135,9 +146,9 @@ export const compareTabularData = (data1, data2, options = {}) => {
   }
   
   // Find a common identifier column (first column or 'id' or 'ID')
-  let idColumn = Object.keys(data1[0])[0]; // Default to first column
-  if (data1[0].id !== undefined) idColumn = 'id';
-  if (data1[0].ID !== undefined) idColumn = 'ID';
+  let idColumn = Object.keys(data1[0] || {})[0] || ''; // Default to first column
+  if (data1[0]?.id !== undefined) idColumn = 'id';
+  if (data1[0]?.ID !== undefined) idColumn = 'ID';
   
   // Compare rows
   const results = [];
@@ -147,12 +158,16 @@ export const compareTabularData = (data1, data2, options = {}) => {
   // Create a map of the second dataset for faster lookups
   const data2Map = new Map();
   data2.forEach(row => {
-    data2Map.set(row[idColumn], row);
+    if (row[idColumn] !== undefined) {
+      data2Map.set(row[idColumn], row);
+    }
   });
   
   // Compare each row in the first dataset
   data1.forEach(row1 => {
     const id = row1[idColumn];
+    if (id === undefined) return;
+    
     const row2 = data2Map.get(id);
     
     if (!row2) {
@@ -239,7 +254,7 @@ export const compareTabularData = (data1, data2, options = {}) => {
   const data1Ids = new Set(data1.map(row => row[idColumn]));
   data2.forEach(row2 => {
     const id = row2[idColumn];
-    if (!data1Ids.has(id)) {
+    if (id !== undefined && !data1Ids.has(id)) {
       for (const column of allColumns) {
         if (row2[column] !== undefined) {
           results.push({
@@ -372,26 +387,7 @@ export const compareFiles = async (file1, file2) => {
       const data1 = await readExcelFile(file1);
       const data2 = await readExcelFile(file2);
       
-      // Convert to objects with headers
-      const headers = data1[0].map((header, index) => header || `Column${index + 1}`);
-      
-      const objData1 = data1.slice(1).map(row => {
-        const obj = {};
-        headers.forEach((header, index) => {
-          obj[header] = row[index] !== undefined ? row[index] : '';
-        });
-        return obj;
-      });
-      
-      const objData2 = data2.slice(1).map(row => {
-        const obj = {};
-        headers.forEach((header, index) => {
-          obj[header] = row[index] !== undefined ? row[index] : '';
-        });
-        return obj;
-      });
-      
-      return compareTabularData(objData1, objData2);
+      return compareTabularData(data1, data2);
     } else if (type1 === 'text') {
       const content1 = await readFileContents(file1);
       const content2 = await readFileContents(file2);
