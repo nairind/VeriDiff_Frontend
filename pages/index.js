@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import { compareFiles } from '../utils/fileComparison';
+import { compareFiles } from '../utils/simpleCSVComparison';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -8,17 +8,14 @@ export default function Home() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [fileTypes, setFileTypes] = useState({ file1: '', file2: '' });
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (file) {
       if (fileNum === 1) {
         setFile1(file);
-        setFileTypes(prev => ({ ...prev, file1: file.type }));
       } else {
         setFile2(file);
-        setFileTypes(prev => ({ ...prev, file2: file.type }));
       }
     }
   };
@@ -32,8 +29,8 @@ export default function Home() {
     }
     
     // Basic file type validation
-    if (fileTypes.file1 && fileTypes.file2 && fileTypes.file1 !== fileTypes.file2) {
-      setError('Please select files of the same type for comparison');
+    if (!file1.name.toLowerCase().endsWith('.csv') || !file2.name.toLowerCase().endsWith('.csv')) {
+      setError('Please select CSV files only. This simplified version only supports CSV comparison.');
       return;
     }
     
@@ -41,10 +38,11 @@ export default function Home() {
     setError(null);
     
     try {
-      // Use the client-side comparison logic instead of API call
+      // Use the simplified CSV comparison logic
       const comparisonResults = await compareFiles(file1, file2);
       setResults(comparisonResults);
     } catch (err) {
+      console.error('Comparison error:', err);
       setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
@@ -54,35 +52,36 @@ export default function Home() {
   return (
     <div className="container">
       <Head>
-        <title>VeriDiff - File Comparison Tool</title>
-        <meta name="description" content="Compare files with precision" />
+        <title>VeriDiff - CSV Comparison Tool</title>
+        <meta name="description" content="Compare CSV files with precision" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
         <h1 className="title">VeriDiff</h1>
-        <p className="description">Upload two files to compare their contents</p>
+        <p className="description">Upload two CSV files to compare their contents</p>
+        <p className="note">(Simplified version - CSV files only)</p>
 
         <form onSubmit={handleSubmit} className="form">
           <div className="file-inputs">
             <div className="file-input">
-              <label htmlFor="file1">File 1:</label>
+              <label htmlFor="file1">CSV File 1:</label>
               <input
                 type="file"
                 id="file1"
                 onChange={(e) => handleFileChange(e, 1)}
-                accept=".csv,.xlsx,.xls,.txt,.json"
+                accept=".csv"
               />
               {file1 && <p className="file-info">Selected: {file1.name}</p>}
             </div>
             
             <div className="file-input">
-              <label htmlFor="file2">File 2:</label>
+              <label htmlFor="file2">CSV File 2:</label>
               <input
                 type="file"
                 id="file2"
                 onChange={(e) => handleFileChange(e, 2)}
-                accept=".csv,.xlsx,.xls,.txt,.json"
+                accept=".csv"
               />
               {file2 && <p className="file-info">Selected: {file2.name}</p>}
             </div>
@@ -101,7 +100,7 @@ export default function Home() {
             <div className="summary">
               <p>Total Records: {results.total_records}</p>
               <p>Differences Found: {results.differences_found}</p>
-              <p>Within Tolerance: {results.within_tolerance}</p>
+              <p>Matches Found: {results.matches_found}</p>
             </div>
             
             <table className="results-table">
@@ -163,7 +162,13 @@ export default function Home() {
           text-align: center;
           line-height: 1.5;
           font-size: 1.5rem;
-          margin: 1rem 0 2rem;
+          margin: 1rem 0 0.5rem;
+        }
+
+        .note {
+          text-align: center;
+          color: #666;
+          margin-bottom: 2rem;
         }
 
         .form {
