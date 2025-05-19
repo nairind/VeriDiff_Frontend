@@ -1,94 +1,100 @@
-// utils/excelFileComparison.js (browser-compatible version using xlsx)
-
+// utils/xlsxFileComparison.js
 import * as XLSX from 'xlsx';
 
 /**
- * Reads an Excel file and returns its contents as a JSON array per sheet
+ * Reads an Excel file in the browser using xlsx
  * @param {File} file - The Excel file to read
- * @returns {Promise<Object>} - Sheet-wise structured data
+ * @returns {Promise<Object>} - Parsed workbook object
  */
-export const readExcelFile = async (file) => {
-  const data = await file.arrayBuffer();
-  const workbook = XLSX.read(data, { type: 'array' });
-  const result = {};
+export const readXlsxFile = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        resolve(workbook);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+};
 
+/**
+ * Extracts structured rows from a workbook
+ * @param {XLSX.WorkBook} workbook
+ * @returns {Object} { sheetName: string[][] }
+ */
+export const extractSheets = (workbook) => {
+  const result = {};
   workbook.SheetNames.forEach(sheetName => {
     const sheet = workbook.Sheets[sheetName];
-    const sheetJson = XLSX.utils.sheet_to_json(sheet, { defval: null, header: 1 });
-    result[sheetName] = sheetJson;
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }); // 2D array
+    result[sheetName] = rows;
   });
-
   return result;
 };
 
 /**
- * Compares two Excel sheets structured as 2D arrays
- * @param {Object} workbook1
- * @param {Object} workbook2
- * @returns {Object} Comparison result object
+ * Compares two Excel sheets row by row
+ * @param {string[][]} sheet1 - 2D array from workbook 1
+ * @param {string[][]} sheet2 - 2D array from workbook 2
+ * @returns {Object[]} - Array of difference objects
  */
-export const compareWorkbooks = (workbook1, workbook2) => {
-  const results = [];
-  let differencesFound = 0;
-  let matchesFound = 0;
-  let recordId = 0;
+export const compareSheets = (sheet1, sheet2, sheetName) => {
+  const maxRows = Math.max(sheet1.length, sheet2.length);
+  const differences = [];
 
-  const allSheetNames = new Set([...Object.keys(workbook1), ...Object.keys(workbook2)]);
+  for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
+    const row1 = sheet1[rowIdx] || [];
+    const row2 = sheet2[rowIdx] || [];
+    const maxCols = Math.max(row1.length, row2.length);
 
-  allSheetNames.forEach(sheetName => {
-    const rows1 = workbook1[sheetName] || [];
-    const rows2 = workbook2[sheetName] || [];
-    const maxRows = Math.max(rows1.length, rows2.length);
+    for (let colIdx = 0; colIdx < maxCols; colIdx++) {
+      const val1 = row1[colIdx] || '';
+      const val2 = row2[colIdx] || '';
 
-    for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
-      const row1 = rows1[rowIdx] || [];
-      const row2 = rows2[rowIdx] || [];
-      const maxCols = Math.max(row1.length, row2.length);
-
-      for (let colIdx = 0; colIdx < maxCols; colIdx++) {
-        const cell1 = row1[colIdx] ?? '';
-        const cell2 = row2[colIdx] ?? '';
-        const colLetter = String.fromCharCode(65 + colIdx);
-        const cellAddress = `${sheetName}!${colLetter}${rowIdx + 1}`;
-
-        if (String(cell1) !== String(cell2)) {
-          differencesFound++;
-          recordId++;
-          results.push({
-            ID: recordId.toString(),
-            COLUMN: cellAddress,
-            SOURCE_1_VALUE: String(cell1),
-            SOURCE_2_VALUE: String(cell2),
-            STATUS: 'difference'
-          });
-        } else {
-          matchesFound++;
-        }
+      if (String(val1) !== String(val2)) {
+        differences.push({
+          location: `${sheetName}!${String.fromCharCode(65 + colIdx)}${rowIdx + 1}`,
+          file1: val1,
+          file2: val2,
+        });
       }
     }
-  });
+  }
 
-  return {
-    total_records: results.length,
-    differences_found: differencesFound,
-    matches_found: matchesFound,
-    results
-  };
+  return differences;
 };
 
 /**
  * Main function to compare two Excel files
- * @param {File} file1 - The first Excel file
- * @param {File} file2 - The second Excel file
- * @returns {Promise<Object>} - The comparison results
  */
 export const compareExcelFiles_main = async (file1, file2) => {
-  try {
-    const workbook1 = await readExcelFile(file1);
-    const workbook2 = await readExcelFile(file2);
-    return compareWorkbooks(workbook1, workbook2);
-  } catch (error) {
-    console.error('Comparison error:', error);
-    throw new Error(`Excel comparison failed: ${error.message}`);
+  const wb1 = await readXlsxFile(file1);
+  const wb2 = await readXlsxFile(file2);
+
+  const sheets1 = extractSheets(wb1);
+  const sheets2 = extractSheets(wb2);
+
+  const allSheetNames = new Set([
+    ...Object.keys(sheets1),
+    ...Object.keys(sheets2),
+  ]);
+
+  let results = [];
+  for (let sheetName of allSheetNames) {
+    const sheet1 = sheets1[sheetName] || [];
+    const sheet2 = sheets2[sheetName] || [];
+    const diffs = compareSheets(sheet1, sheet2, sheetName);
+    results = results.concat(diffs);
   }
+
+  return {
+    totalDifferences: results.length,
+    differences: results
+  };
 };
