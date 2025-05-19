@@ -16,22 +16,24 @@ export const readExcelFile = (file) => {
     
     reader.onload = (event) => {
       try {
-        // Use the result directly from the FileReader
-        const data = event.target.result;
-        // Specify type as 'binary' which is more reliable in browsers
-        const workbook = XLSX.read(data, { type: 'binary' });
+        // Use ArrayBuffer for better browser compatibility
+        const data = new Uint8Array(event.target.result);
+        // Use type 'array' which is recommended for browser compatibility
+        const workbook = XLSX.read(data, { type: 'array' });
         resolve(workbook);
       } catch (error) {
+        console.error('Excel read error:', error);
         reject(new Error('Failed to read Excel file: ' + error.message));
       }
     };
     
     reader.onerror = (error) => {
+      console.error('FileReader error:', error);
       reject(new Error('Failed to read file'));
     };
     
-    // Use readAsBinaryString instead of readAsArrayBuffer for better browser compatibility
-    reader.readAsBinaryString(file);
+    // Use readAsArrayBuffer instead of readAsBinaryString for better browser compatibility
+    reader.readAsArrayBuffer(file);
   });
 };
 
@@ -46,6 +48,7 @@ export const workbookToStructured = (workbook) => {
   // Process each worksheet
   workbook.SheetNames.forEach(sheetName => {
     const worksheet = workbook.Sheets[sheetName];
+    // Use sheet_to_json with header:1 to get array of arrays format
     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
     
     // Skip empty worksheets
@@ -156,20 +159,22 @@ export const compareWorkbooks = (workbook1, workbook2) => {
       const row1 = sheet1[rowIdx];
       const row2 = sheet2[rowIdx];
       
+      // Ensure rows are arrays before proceeding
+      if (!Array.isArray(row1) || !Array.isArray(row2)) {
+        continue;
+      }
+      
       // Get max columns from both rows
-      const maxCols = Math.max(
-        Array.isArray(row1) ? row1.length : 0, 
-        Array.isArray(row2) ? row2.length : 0
-      );
+      const maxCols = Math.max(row1.length, row2.length);
       
       // Compare each cell
       for (let colIdx = 0; colIdx < maxCols; colIdx++) {
-        const cell1Exists = Array.isArray(row1) && colIdx < row1.length;
-        const cell2Exists = Array.isArray(row2) && colIdx < row2.length;
-        
         // Use column letter for better readability (A, B, C, etc.)
         const colLetter = String.fromCharCode(65 + colIdx); // A=65, B=66, etc.
         const cellAddress = `${colLetter}${rowIdx + 1}`;
+        
+        const cell1Exists = colIdx < row1.length;
+        const cell2Exists = colIdx < row2.length;
         
         if (!cell1Exists) {
           // Cell only exists in sheet 2
@@ -178,7 +183,7 @@ export const compareWorkbooks = (workbook1, workbook2) => {
             ID: recordId.toString(),
             COLUMN: `${sheetName}!${cellAddress}`,
             SOURCE_1_VALUE: '',
-            SOURCE_2_VALUE: String(row2[colIdx]),
+            SOURCE_2_VALUE: String(row2[colIdx] || ''),
             STATUS: 'difference'
           });
           differencesFound++;
@@ -191,7 +196,7 @@ export const compareWorkbooks = (workbook1, workbook2) => {
           results.push({
             ID: recordId.toString(),
             COLUMN: `${sheetName}!${cellAddress}`,
-            SOURCE_1_VALUE: String(row1[colIdx]),
+            SOURCE_1_VALUE: String(row1[colIdx] || ''),
             SOURCE_2_VALUE: '',
             STATUS: 'difference'
           });
