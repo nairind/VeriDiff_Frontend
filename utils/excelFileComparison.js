@@ -16,8 +16,10 @@ export const readExcelFile = (file) => {
     
     reader.onload = (event) => {
       try {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+        // Use the result directly from the FileReader
+        const data = event.target.result;
+        // Specify type as 'binary' which is more reliable in browsers
+        const workbook = XLSX.read(data, { type: 'binary' });
         resolve(workbook);
       } catch (error) {
         reject(new Error('Failed to read Excel file: ' + error.message));
@@ -28,7 +30,8 @@ export const readExcelFile = (file) => {
       reject(new Error('Failed to read file'));
     };
     
-    reader.readAsArrayBuffer(file);
+    // Use readAsBinaryString instead of readAsArrayBuffer for better browser compatibility
+    reader.readAsBinaryString(file);
   });
 };
 
@@ -154,13 +157,19 @@ export const compareWorkbooks = (workbook1, workbook2) => {
       const row2 = sheet2[rowIdx];
       
       // Get max columns from both rows
-      const maxCols = Math.max(row1.length, row2.length);
+      const maxCols = Math.max(
+        Array.isArray(row1) ? row1.length : 0, 
+        Array.isArray(row2) ? row2.length : 0
+      );
       
       // Compare each cell
       for (let colIdx = 0; colIdx < maxCols; colIdx++) {
-        const cell1Exists = colIdx < row1.length;
-        const cell2Exists = colIdx < row2.length;
-        const cellAddress = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
+        const cell1Exists = Array.isArray(row1) && colIdx < row1.length;
+        const cell2Exists = Array.isArray(row2) && colIdx < row2.length;
+        
+        // Use column letter for better readability (A, B, C, etc.)
+        const colLetter = String.fromCharCode(65 + colIdx); // A=65, B=66, etc.
+        const cellAddress = `${colLetter}${rowIdx + 1}`;
         
         if (!cell1Exists) {
           // Cell only exists in sheet 2
