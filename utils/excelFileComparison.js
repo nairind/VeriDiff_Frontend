@@ -62,3 +62,24 @@ export const compareExcelData = (data1, data2) => {
 
   return diffs;
 };
+
+/**
+ * Main function to compare two Excel files.
+ * @param {File} file1 - First Excel file.
+ * @param {File} file2 - Second Excel file.
+ * @returns {Promise<Array<Object>>} List of differences between the files.
+ */
+export const main = async (file1, file2) => {
+  try {
+    // Parse both Excel files
+    const data1 = await parseExcelFile(file1);
+    const data2 = await parseExcelFile(file2);
+
+    // Compare the parsed data
+    const differences = compareExcelData(data1, data2);
+
+    return differences;
+  } catch (error) {
+    throw new Error('Failed to compare Excel files: ' + error.message);
+  }
+};
