@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { compareFiles } from '../utils/simpleCSVComparison';
 import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareJSONFiles_main } from '../utils/jsonFileComparison';
-import { compareExcelFiles } from '../utils/excelFileComparison'; // ✅ Updated here
+import { compareExcelFiles } from '../utils/excelFileComparison';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -16,21 +16,13 @@ export default function Home() {
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (file) {
-      if (fileNum === 1) {
-        setFile1(file);
-      } else {
-        setFile2(file);
-      }
+      if (fileNum === 1) setFile1(file);
+      else setFile2(file);
 
-      if (file.name.toLowerCase().endsWith('.txt')) {
-        setFileType('text');
-      } else if (file.name.toLowerCase().endsWith('.csv')) {
-        setFileType('csv');
-      } else if (file.name.toLowerCase().endsWith('.json')) {
-        setFileType('json');
-      } else if (['.xlsx', '.xls', '.xlsm', '.xlsb'].some(ext => file.name.toLowerCase().endsWith(ext))) {
-        setFileType('excel');
-      }
+      if (file.name.toLowerCase().endsWith('.txt')) setFileType('text');
+      else if (file.name.toLowerCase().endsWith('.csv')) setFileType('csv');
+      else if (file.name.toLowerCase().endsWith('.json')) setFileType('json');
+      else if (['.xlsx', '.xls', '.xlsm', '.xlsb'].some(ext => file.name.toLowerCase().endsWith(ext))) setFileType('excel');
     }
   };
 
@@ -50,30 +42,12 @@ export default function Home() {
       return;
     }
 
-    if (fileType === 'csv' && (!file1.name.endsWith('.csv') || !file2.name.endsWith('.csv'))) {
-      setError('Please select CSV files for CSV comparison');
-      return;
-    } else if (fileType === 'text' && (!file1.name.endsWith('.txt') || !file2.name.endsWith('.txt'))) {
-      setError('Please select text files');
-      return;
-    } else if (fileType === 'json' && (!file1.name.endsWith('.json') || !file2.name.endsWith('.json'))) {
-      setError('Please select JSON files');
-      return;
-    } else if (fileType === 'excel') {
-      const validExts = ['.xlsx', '.xls', '.xlsm', '.xlsb'];
-      const ext1 = file1.name.slice(file1.name.lastIndexOf('.')).toLowerCase();
-      const ext2 = file2.name.slice(file2.name.lastIndexOf('.')).toLowerCase();
-      if (!validExts.includes(ext1) || !validExts.includes(ext2)) {
-        setError('Please select Excel files');
-        return;
-      }
-    }
-
     setLoading(true);
     setError(null);
 
     try {
       let comparisonResults;
+
       if (fileType === 'csv') {
         comparisonResults = await compareFiles(file1, file2);
       } else if (fileType === 'text') {
@@ -81,7 +55,7 @@ export default function Home() {
       } else if (fileType === 'json') {
         comparisonResults = await compareJSONFiles_main(file1, file2);
       } else if (fileType === 'excel') {
-        comparisonResults = await compareExcelFiles(file1, file2); // ✅ Updated call
+        comparisonResults = await compareExcelFiles(file1, file2);
       }
 
       setResults(comparisonResults);
@@ -98,6 +72,7 @@ export default function Home() {
       <Head>
         <title>VeriDiff - File Comparison Tool</title>
         <meta name="description" content="Compare files with precision" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
@@ -105,7 +80,7 @@ export default function Home() {
         <p className="description">Upload two files to compare their contents</p>
 
         <div className="file-type-selector">
-          {['csv', 'text', 'json', 'excel'].map((type) => (
+          {['csv', 'text', 'json', 'excel'].map(type => (
             <label key={type}>
               <input
                 type="radio"
@@ -114,55 +89,56 @@ export default function Home() {
                 checked={fileType === type}
                 onChange={handleFileTypeChange}
               />
-              {type.charAt(0).toUpperCase() + type.slice(1)} Files
+              {type.toUpperCase()} Files
             </label>
           ))}
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {[1, 2].map((num) => (
-            <div key={num} className="file-input">
-              <label htmlFor={`file${num}`}>
-                {fileType.toUpperCase()} File {num}:
-              </label>
-              <input
-                type="file"
-                id={`file${num}`}
-                onChange={(e) => handleFileChange(e, num)}
-                accept={
-                  fileType === 'csv'
-                    ? '.csv'
-                    : fileType === 'text'
-                    ? '.txt'
-                    : fileType === 'json'
-                    ? '.json'
-                    : '.xlsx,.xls,.xlsm,.xlsb'
-                }
-              />
-            </div>
-          ))}
+        <form onSubmit={handleSubmit} className="form">
+          <div className="file-inputs">
+            {[1, 2].map(num => (
+              <div className="file-input" key={num}>
+                <label htmlFor={`file${num}`}>{`${fileType.toUpperCase()} File ${num}:`}</label>
+                <input
+                  type="file"
+                  id={`file${num}`}
+                  onChange={(e) => handleFileChange(e, num)}
+                  accept={fileType === 'csv' ? '.csv' : fileType === 'text' ? '.txt' : fileType === 'json' ? '.json' : '.xlsx,.xls,.xlsm,.xlsb'}
+                />
+                {num === 1 && file1 && <p className="file-info">Selected: {file1.name}</p>}
+                {num === 2 && file2 && <p className="file-info">Selected: {file2.name}</p>}
+              </div>
+            ))}
+          </div>
+
           <button type="submit" disabled={loading}>
             {loading ? 'Comparing...' : 'Compare Files'}
           </button>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
+
+          {error && <p className="error">{error}</p>}
         </form>
 
         {results && (
           <div className="results">
-            <h2>Results</h2>
-            <table>
+            <h2>Comparison Results</h2>
+            <div className="summary">
+              <p>Total Records: {results.total_records}</p>
+              <p>Differences Found: {results.differences_found}</p>
+              <p>Matches Found: {results.matches_found}</p>
+            </div>
+            <table className="results-table">
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>Column</th>
-                  <th>Source 1</th>
-                  <th>Source 2</th>
+                  <th>Source 1 Value</th>
+                  <th>Source 2 Value</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {results.results.map((row, index) => (
-                  <tr key={index}>
+                  <tr key={index} className={row.STATUS === 'difference' ? 'difference' : ''}>
                     <td>{row.ID}</td>
                     <td>{row.COLUMN}</td>
                     <td>{row.SOURCE_1_VALUE}</td>
@@ -175,6 +151,172 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      <style jsx>{`
+        .container {
+          min-height: 100vh;
+          padding: 0 0.5rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        main {
+          padding: 5rem 0;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+        }
+
+        .title {
+          margin: 0;
+          line-height: 1.15;
+          font-size: 4rem;
+          text-align: center;
+        }
+
+        .description {
+          text-align: center;
+          line-height: 1.5;
+          font-size: 1.5rem;
+          margin: 1rem 0 0.5rem;
+        }
+
+        .file-type-selector {
+          display: flex;
+          gap: 2rem;
+          margin: 1rem 0 2rem;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .file-type-selector label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          margin-bottom: 0.5rem;
+        }
+
+        .form {
+          width: 100%;
+          max-width: 800px;
+          margin-bottom: 2rem;
+        }
+
+        .file-inputs {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .file-input {
+          flex: 1;
+          min-width: 300px;
+        }
+
+        .file-input label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-weight: bold;
+        }
+
+        .file-info {
+          margin-top: 0.5rem;
+          font-size: 0.9rem;
+          color: #666;
+        }
+
+        button {
+          background-color: #0070f3;
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          font-size: 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        button:hover {
+          background-color: #0051a2;
+        }
+
+        button:disabled {
+          background-color: #ccc;
+          cursor: not-allowed;
+        }
+
+        .error {
+          color: red;
+          margin-top: 1rem;
+        }
+
+        .results {
+          width: 100%;
+          max-width: 800px;
+          margin-top: 2rem;
+        }
+
+        .summary {
+          display: flex;
+          gap: 2rem;
+          margin-bottom: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .results-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .results-table th,
+        .results-table td {
+          padding: 0.75rem;
+          border: 1px solid #ddd;
+          text-align: left;
+        }
+
+        .results-table th {
+          background-color: #f2f2f2;
+        }
+
+        .results-table .difference {
+          background-color: #ffebee;
+        }
+
+        @media (max-width: 600px) {
+          .file-type-selector {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+          .summary {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+        }
+      `}</style>
+
+      <style jsx global>{`
+        html,
+        body {
+          padding: 0;
+          margin: 0;
+          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+            Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+      `}</style>
     </div>
   );
 }
