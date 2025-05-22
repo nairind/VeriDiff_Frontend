@@ -38,6 +38,7 @@ const parseExcelFile = (file) => {
 const compareExcelData = (data1, data2) => {
   const diffs = [];
   const maxRows = Math.max(data1.length, data2.length);
+  let matches = 0;
 
   for (let i = 0; i < maxRows; i++) {
     const row1 = data1[i] || {};
@@ -45,31 +46,47 @@ const compareExcelData = (data1, data2) => {
     const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
 
     for (const key of keys) {
-      if ((row1[key] || "") !== (row2[key] || "")) {
+      const val1 = row1[key] || "";
+      const val2 = row2[key] || "";
+      if (val1 !== val2) {
         diffs.push({
-          row: i + 1,
-          column: key,
-          value1: row1[key] || "",
-          value2: row2[key] || "",
-          status: "mismatch"
+          ID: `${i + 1}-${key}`,
+          COLUMN: key,
+          SOURCE_1_VALUE: val1,
+          SOURCE_2_VALUE: val2,
+          STATUS: "difference",
+        });
+      } else {
+        matches++;
+        diffs.push({
+          ID: `${i + 1}-${key}`,
+          COLUMN: key,
+          SOURCE_1_VALUE: val1,
+          SOURCE_2_VALUE: val2,
+          STATUS: "match",
         });
       }
     }
   }
 
-  return diffs;
+  return {
+    total_records: diffs.length,
+    differences_found: diffs.filter(d => d.STATUS === "difference").length,
+    matches_found: matches,
+    results: diffs,
+  };
 };
 
 /**
  * Main entry to compare two Excel files
  * @param {File} file1
  * @param {File} file2
- * @returns {Promise<Array<Object>>}
+ * @returns {Promise<Object>} Formatted comparison result
  */
 export const compareExcelFiles = async (file1, file2) => {
   const [data1, data2] = await Promise.all([
     parseExcelFile(file1),
-    parseExcelFile(file2)
+    parseExcelFile(file2),
   ]);
 
   return compareExcelData(data1, data2);
