@@ -4,7 +4,7 @@ import { compareFiles } from '../utils/simpleCSVComparison';
 import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareJSONFiles_main } from '../utils/jsonFileComparison';
 import { compareExcelFiles } from '../utils/excelFileComparison';
-import { compareExcelToCSV } from '../utils/fileComparison';
+import { compareExcelToCSV as compareExcelAndCSVFiles } from '../utils/fileComparison';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -40,38 +40,41 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!file1 || !file2) {
+    console.log('file1:', file1?.name, 'file2:', file2?.name, 'fileType:', fileType);
+
+    if (!file1 || !file2 || !file1.name || !file2.name) {
       setError('Please select two files to compare');
       return;
     }
 
-    const ext1 = file1.name.toLowerCase();
-    const ext2 = file2.name.toLowerCase();
+    const ext1 = file1.name.substring(file1.name.lastIndexOf('.')).toLowerCase();
+    const ext2 = file2.name.substring(file2.name.lastIndexOf('.')).toLowerCase();
 
-    const isCSV = (name) => name.endsWith('.csv');
-    const isExcel = (name) => ['.xlsx', '.xls', '.xlsm', '.xlsb'].some(ext => name.endsWith(ext));
+    const isExcel = (ext) => ['.xlsx', '.xls', '.xlsm', '.xlsb'].includes(ext);
+    const isCSV = (ext) => ext === '.csv';
 
     if (fileType === 'csv' && (!isCSV(ext1) || !isCSV(ext2))) {
-      setError('Please select two CSV files');
+      setError('Please select CSV files for CSV comparison');
       return;
     }
 
     if (fileType === 'text' && (!ext1.endsWith('.txt') || !ext2.endsWith('.txt'))) {
-      setError('Please select two text files');
+      setError('Please select text (.txt) files for text comparison');
       return;
     }
 
     if (fileType === 'json' && (!ext1.endsWith('.json') || !ext2.endsWith('.json'))) {
-      setError('Please select two JSON files');
+      setError('Please select JSON (.json) files for JSON comparison');
       return;
     }
 
     if (fileType === 'excel' && (!isExcel(ext1) || !isExcel(ext2))) {
-      setError('Please select two Excel files');
+      setError('Please select Excel files (.xlsx, .xls, .xlsm, or .xlsb)');
       return;
     }
 
-    if (fileType === 'excel_csv' && !(isExcel(ext1) && isCSV(ext2) || isCSV(ext1) && isExcel(ext2))) {
+    if (fileType === 'excel_csv' &&
+        !((isExcel(ext1) && isCSV(ext2)) || (isCSV(ext1) && isExcel(ext2)))) {
       setError('Please select one Excel and one CSV file');
       return;
     }
@@ -81,16 +84,23 @@ export default function Home() {
 
     try {
       let comparisonResults;
-      if (fileType === 'csv') comparisonResults = await compareFiles(file1, file2);
-      else if (fileType === 'text') comparisonResults = await compareTextFiles_main(file1, file2);
-      else if (fileType === 'json') comparisonResults = await compareJSONFiles_main(file1, file2);
-      else if (fileType === 'excel') comparisonResults = await compareExcelFiles(file1, file2);
-      else if (fileType === 'excel_csv') comparisonResults = await compareExcelToCSV(file1, file2);
+
+      if (fileType === 'csv') {
+        comparisonResults = await compareFiles(file1, file2);
+      } else if (fileType === 'text') {
+        comparisonResults = await compareTextFiles_main(file1, file2);
+      } else if (fileType === 'json') {
+        comparisonResults = await compareJSONFiles_main(file1, file2);
+      } else if (fileType === 'excel') {
+        comparisonResults = await compareExcelFiles(file1, file2);
+      } else if (fileType === 'excel_csv') {
+        comparisonResults = await compareExcelAndCSVFiles(file1, file2);
+      }
 
       setResults(comparisonResults);
     } catch (err) {
       console.error('Comparison error:', err);
-      setError('Comparison failed: ' + err.message);
+      setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
     }
