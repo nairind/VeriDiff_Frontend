@@ -4,7 +4,7 @@ import { compareFiles } from '../utils/simpleCSVComparison';
 import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareJSONFiles_main } from '../utils/jsonFileComparison';
 import { compareExcelFiles } from '../utils/excelFileComparison';
-import { compareExcelToCSV as compareExcelAndCSVFiles } from '../utils/fileComparison';
+import { compareExcelCSVFiles } from '../utils/fileComparison';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -18,15 +18,26 @@ export default function Home() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (fileNum === 1) setFile1(file);
-    else setFile2(file);
+    const extension = file.name.split('.').pop().toLowerCase();
 
-    const ext = file.name.toLowerCase();
+    if (fileNum === 1) {
+      setFile1(file);
+    } else {
+      setFile2(file);
+    }
 
-    if (ext.endsWith('.txt')) setFileType('text');
-    else if (ext.endsWith('.csv')) setFileType('csv');
-    else if (ext.endsWith('.json')) setFileType('json');
-    else if (['.xlsx', '.xls', '.xlsm', '.xlsb'].some(ex => ext.endsWith(ex))) setFileType('excel');
+    if ((file1 && file1.name.endsWith('.xlsx') && file.name.endsWith('.csv')) ||
+        (file2 && file2.name.endsWith('.xlsx') && file.name.endsWith('.csv'))) {
+      setFileType('excel_csv');
+    } else if (file.name.endsWith('.txt')) {
+      setFileType('text');
+    } else if (file.name.endsWith('.csv')) {
+      setFileType('csv');
+    } else if (file.name.endsWith('.json')) {
+      setFileType('json');
+    } else if (['xlsx', 'xls', 'xlsm', 'xlsb'].includes(extension)) {
+      setFileType('excel');
+    }
   };
 
   const handleFileTypeChange = (e) => {
@@ -40,42 +51,8 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('file1:', file1?.name, 'file2:', file2?.name, 'fileType:', fileType);
-
-    if (!file1 || !file2 || !file1.name || !file2.name) {
+    if (!file1 || !file2) {
       setError('Please select two files to compare');
-      return;
-    }
-
-    const ext1 = file1.name.substring(file1.name.lastIndexOf('.')).toLowerCase();
-    const ext2 = file2.name.substring(file2.name.lastIndexOf('.')).toLowerCase();
-
-    const isExcel = (ext) => ['.xlsx', '.xls', '.xlsm', '.xlsb'].includes(ext);
-    const isCSV = (ext) => ext === '.csv';
-
-    if (fileType === 'csv' && (!isCSV(ext1) || !isCSV(ext2))) {
-      setError('Please select CSV files for CSV comparison');
-      return;
-    }
-
-    if (fileType === 'text' && (!ext1.endsWith('.txt') || !ext2.endsWith('.txt'))) {
-      setError('Please select text (.txt) files for text comparison');
-      return;
-    }
-
-    if (fileType === 'json' && (!ext1.endsWith('.json') || !ext2.endsWith('.json'))) {
-      setError('Please select JSON (.json) files for JSON comparison');
-      return;
-    }
-
-    if (fileType === 'excel' && (!isExcel(ext1) || !isExcel(ext2))) {
-      setError('Please select Excel files (.xlsx, .xls, .xlsm, or .xlsb)');
-      return;
-    }
-
-    if (fileType === 'excel_csv' &&
-        !((isExcel(ext1) && isCSV(ext2)) || (isCSV(ext1) && isExcel(ext2)))) {
-      setError('Please select one Excel and one CSV file');
       return;
     }
 
@@ -94,7 +71,7 @@ export default function Home() {
       } else if (fileType === 'excel') {
         comparisonResults = await compareExcelFiles(file1, file2);
       } else if (fileType === 'excel_csv') {
-        comparisonResults = await compareExcelAndCSVFiles(file1, file2);
+        comparisonResults = await compareExcelCSVFiles(file1, file2);
       }
 
       setResults(comparisonResults);
@@ -119,45 +96,30 @@ export default function Home() {
         <p className="description">Upload two files to compare their contents</p>
 
         <div className="file-type-selector">
-          <label><input type="radio" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
-          <label><input type="radio" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
-          <label><input type="radio" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
-          <label><input type="radio" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
-          <label><input type="radio" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
+          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
+          <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
+          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
+          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
+          <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
         </div>
 
         <form onSubmit={handleSubmit} className="form">
-          <input type="file" onChange={(e) => handleFileChange(e, 1)} />
-          <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-          <button type="submit" disabled={loading}>{loading ? 'Comparing...' : 'Compare Files'}</button>
+          <div className="file-inputs">
+            <input type="file" onChange={(e) => handleFileChange(e, 1)} />
+            <input type="file" onChange={(e) => handleFileChange(e, 2)} />
+          </div>
+
+          <button type="submit" disabled={loading}>
+            {loading ? 'Comparing...' : 'Compare Files'}
+          </button>
+
           {error && <p className="error">{error}</p>}
         </form>
 
         {results && (
           <div className="results">
-            <h2>Results</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Row</th>
-                  <th>Column</th>
-                  <th>Value 1</th>
-                  <th>Value 2</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((r, i) => (
-                  <tr key={i}>
-                    <td>{r.row}</td>
-                    <td>{r.column}</td>
-                    <td>{r.value1}</td>
-                    <td>{r.value2}</td>
-                    <td>{r.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <h2>Comparison Results</h2>
+            <pre>{JSON.stringify(results, null, 2)}</pre>
           </div>
         )}
       </main>
@@ -166,46 +128,34 @@ export default function Home() {
         .container {
           min-height: 100vh;
           padding: 2rem;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
         }
         .title {
           font-size: 3rem;
-          font-weight: bold;
+          text-align: center;
         }
         .description {
-          margin-top: 1rem;
-          font-size: 1.25rem;
+          text-align: center;
+          margin-bottom: 1rem;
         }
         .file-type-selector {
-          margin: 2rem 0;
           display: flex;
-          gap: 1rem;
-          flex-wrap: wrap;
           justify-content: center;
-        }
-        .form {
-          margin-bottom: 2rem;
-          display: flex;
-          flex-direction: column;
           gap: 1rem;
-          align-items: center;
+          margin-bottom: 1rem;
         }
-        .results {
-          max-width: 800px;
-          width: 100%;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        th, td {
-          padding: 0.5rem;
-          border: 1px solid #ccc;
+        .file-inputs {
+          display: flex;
+          justify-content: center;
+          gap: 1rem;
+          margin-bottom: 1rem;
         }
         .error {
           color: red;
+          text-align: center;
+        }
+        .results {
+          margin-top: 2rem;
+          white-space: pre-wrap;
         }
       `}</style>
     </div>
