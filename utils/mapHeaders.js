@@ -1,103 +1,83 @@
-// compareExcelCSVFiles.js (Updated)
-import * as XLSX from 'xlsx';
-import Papa from 'papaparse';
+// File: utils/mapHeaders.js
 
 /**
- * Parses an Excel file and extracts rows + headers
+ * Normalize header: lowercase, remove non-alphanumerics, trim spaces
+ * @param {string} header
+ * @returns {string}
  */
-const parseExcelFile = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-        const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
-        resolve({ rows, headers });
-      } catch (err) {
-        reject(err);
-      }
-    };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
-};
+function normalizeHeader(header) {
+  return header.toLowerCase().replace(/[^a-z0-9]/gi, '').trim();
+}
 
 /**
- * Parses a CSV file and extracts rows + headers
+ * Compute Levenshtein distance between two strings
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
  */
-const parseCSVFile = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const result = Papa.parse(e.target.result, { header: true, skipEmptyLines: true });
-        const headers = result.meta.fields;
-        resolve({ rows: result.data, headers });
-      } catch (err) {
-        reject(err);
-      }
-    };
-    reader.onerror = reject;
-    reader.readAsText(file);
-  });
-};
+function levenshtein(a, b) {
+  const matrix = Array.from({ length: a.length + 1 }, () => []);
 
-/**
- * Applies user-confirmed header mapping to the Excel dataset
- */
-const transformDataByMapping = (data, mapping) => {
-  return data.map(row => {
-    const transformed = {};
-    mapping.forEach(({ file1Header, file2Header }) => {
-      if (file2Header) {
-        transformed[file2Header] = row[file1Header] ?? '';
-      }
-    });
-    return transformed;
-  });
-};
+  for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
 
-/**
- * Compares two rows and returns differences
- */
-const compareRows = (data1, data2) => {
-  const results = [];
-  const maxLength = Math.max(data1.length, data2.length);
-  let matches = 0;
-  let differences = 0;
-
-  for (let i = 0; i < maxLength; i++) {
-    const row1 = data1[i] || {};
-    const row2 = data2[i] || {};
-    const allKeys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
-
-    allKeys.forEach(key => {
-      const val1 = row1[key] ?? '';
-      const val2 = row2[key] ?? '';
-      const match = val1 === val2;
-      results.push({
-        ID: i + 1,
-        COLUMN: key,
-        SOURCE_1_VALUE: val1,
-        SOURCE_2_VALUE: val2,
-        STATUS: match ? 'match' : 'difference'
-      });
-      match ? matches++ : differences++;
-    });
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
   }
 
-  return { results, matches, differences, total: maxLength };
-};
+  return matrix[a.length][b.length];
+}
 
 /**
- * Main function to compare Excel and CSV files
+ * Calculates similarity score from 0 to 1
+ * @param {string} a
+ * @param {string} b
+ * @returns {number}
  */
-export const compareExcelCSVFiles = async (file1, file2, mapping) => {
-  const excel = await parseExcelFile(file1);
-  const csv = await parseCSVFile(file2);
-  const transformedExcelData = transformDataByMapping(excel.rows, mapping);
-  return compareRows(transformedExcelData, csv.rows);
-};
+function similarity(a, b) {
+  const distance = levenshtein(a, b);
+  const maxLength = Math.max(a.length, b.length);
+  return maxLength === 0 ? 1 : 1 - distance / maxLength;
+}
+
+/**
+ * Attempts to map headers from file1 to file2 using normalization and similarity
+ * @param {Array<string>} headers1
+ * @param {Array<string>} headers2
+ * @returns {Array<{ file1Header: string, file2Header: string | null, similarity: number }>}
+ */
+export function mapHeaders(headers1, headers2) {
+  const normalized2 = headers2.map(h => ({
+    original: h,
+    normalized: normalizeHeader(h)
+  }));
+
+  return headers1.map(h1 => {
+    const norm1 = normalizeHeader(h1);
+
+    // Find best match using similarity score
+    let bestMatch = null;
+    let bestScore = 0;
+
+    for (const h2 of normalized2) {
+      const score = similarity(norm1, h2.normalized);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = h2.original;
+      }
+    }
+
+    return {
+      file1Header: h1,
+      file2Header: bestScore > 0.7 ? bestMatch : null,
+      similarity: parseFloat(bestScore.toFixed(2))
+    };
+  });
+}
