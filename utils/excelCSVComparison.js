@@ -75,10 +75,16 @@ export const compareExcelCSVFiles = async (file1, file2) => {
       parseCSV(file2)
     ]);
 
-    const headers1 = extractHeaders(excelData);
-    const headers2 = extractHeaders(csvData);
-    const headerMapping = mapHeaders(headers1, headers2);
+    const headers1 = extractHeaders(data1);
+const headers2 = extractHeaders(data2);
 
+if (!Array.isArray(headers1) || !Array.isArray(headers2)) {
+  throw new Error('Header extraction failed: One or both files did not return a valid header array.');
+}
+
+const headerMappings = mapHeaders(headers1, headers2);
+
+    
     const transformedFile1 = applyHeaderMapping(excelData, headerMapping, 'file1');
     const transformedFile2 = applyHeaderMapping(csvData, headerMapping, 'file2');
 
