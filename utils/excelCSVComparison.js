@@ -1,7 +1,7 @@
 import { parseExcelFile } from './excelFileComparison';
 import { parseCSVFile } from './simpleCSVComparison';
-import { extractHeaders } from './extractheaders';
-import { mapHeaders } from './mapheaders';
+import { extractHeaders } from './extractHeaders';
+import { mapHeaders } from './mapHeaders';
 
 export async function compareExcelCSVFiles(file1, file2) {
   try {
