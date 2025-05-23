@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import { compareFiles } from '../utils/fileComparison';
+import { compareFiles } from '../utils/simpleCSVComparison';
+import { compareTextFiles_main } from '../utils/textFileComparison';
+import { compareJSONFiles_main } from '../utils/jsonFileComparison';
+import { compareExcelFiles } from '../utils/excelFileComparison';
+import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -10,37 +14,28 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [fileType, setFileType] = useState('csv');
 
- const handleFileChange = (e, fileNum) => {
-  const file = e.target.files[0];
-  if (file) {
-    if (fileNum === 1) {
-      setFile1(file);
-    } else {
-      setFile2(file);
-    }
-
-    // Auto-detect file type ONLY if not already a multi-type comparison like 'excel_csv'
-    if (!['excel_csv'].includes(fileType)) {
-      const name = file.name.toLowerCase();
-      if (name.endsWith('.txt')) {
-        setFileType('text');
-      } else if (name.endsWith('.csv')) {
-        setFileType('csv');
-      } else if (name.endsWith('.json')) {
-        setFileType('json');
-      } else if (['.xlsx', '.xls', '.xlsm', '.xlsb'].some(ext => name.endsWith(ext))) {
-        setFileType('excel');
+  const handleFileChange = (e, fileNum) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (fileNum === 1) {
+        setFile1(file);
+      } else {
+        setFile2(file);
       }
-    }
-  }
-};
 
- 
-      const name = file.name.toLowerCase();
-      if (name.endsWith('.txt')) setFileType('text');
-      else if (name.endsWith('.csv')) setFileType('csv');
-      else if (name.endsWith('.json')) setFileType('json');
-      else if (['.xlsx', '.xls', '.xlsm', '.xlsb'].some(ext => name.endsWith(ext))) setFileType('excel');
+      // Avoid overriding if user has selected a composite type
+      if (!['excel_csv'].includes(fileType)) {
+        const name = file.name.toLowerCase();
+        if (name.endsWith('.txt')) {
+          setFileType('text');
+        } else if (name.endsWith('.csv')) {
+          setFileType('csv');
+        } else if (name.endsWith('.json')) {
+          setFileType('json');
+        } else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) {
+          setFileType('excel');
+        }
+      }
     }
   };
 
@@ -61,9 +56,19 @@ export default function Home() {
 
     setLoading(true);
     setError(null);
-
     try {
-      const comparisonResults = await compareFiles(file1, file2, fileType);
+      let comparisonResults;
+      if (fileType === 'csv') {
+        comparisonResults = await compareFiles(file1, file2);
+      } else if (fileType === 'text') {
+        comparisonResults = await compareTextFiles_main(file1, file2);
+      } else if (fileType === 'json') {
+        comparisonResults = await compareJSONFiles_main(file1, file2);
+      } else if (fileType === 'excel') {
+        comparisonResults = await compareExcelFiles(file1, file2);
+      } else if (fileType === 'excel_csv') {
+        comparisonResults = await compareExcelCSVFiles(file1, file2);
+      }
       setResults(comparisonResults);
     } catch (err) {
       console.error('Comparison error:', err);
@@ -78,7 +83,6 @@ export default function Home() {
       <Head>
         <title>VeriDiff - File Comparison Tool</title>
         <meta name="description" content="Compare files with precision" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
@@ -86,38 +90,18 @@ export default function Home() {
         <p className="description">Upload two files to compare their contents</p>
 
         <div className="file-type-selector">
-          {['csv', 'text', 'json', 'excel', 'excel_csv'].map(type => (
-            <label key={type}>
-              <input
-                type="radio"
-                name="fileType"
-                value={type}
-                checked={fileType === type}
-                onChange={handleFileTypeChange}
-              />
-              {type.toUpperCase().replace('_', '–')} Files
-            </label>
-          ))}
+          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
+          <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
+          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
+          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
+          <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
         </div>
 
-        <form onSubmit={handleSubmit} className="form">
-          <div className="file-inputs">
-            {[file1, file2].map((file, i) => (
-              <div className="file-input" key={i}>
-                <label htmlFor={`file${i+1}`}>{`${fileType.toUpperCase().replace('_', '–')} File ${i+1}:`}</label>
-                <input
-                  type="file"
-                  id={`file${i+1}`}
-                  onChange={(e) => handleFileChange(e, i+1)}
-                  accept={fileType === 'csv' ? '.csv' : fileType === 'text' ? '.txt' : fileType === 'json' ? '.json' : fileType === 'excel' ? '.xlsx,.xls,.xlsm,.xlsb' : '.xlsx,.xls,.csv'}
-                />
-                {file && <p className="file-info">Selected: {file.name}</p>}
-              </div>
-            ))}
-          </div>
-
+        <form onSubmit={handleSubmit}>
+          <input type="file" onChange={(e) => handleFileChange(e, 1)} />
+          <input type="file" onChange={(e) => handleFileChange(e, 2)} />
           <button type="submit" disabled={loading}>{loading ? 'Comparing...' : 'Compare Files'}</button>
-          {error && <p className="error">{error}</p>}
+          {error && <p style={{ color: 'red' }}>{error}</p>}
         </form>
 
         {results && (
