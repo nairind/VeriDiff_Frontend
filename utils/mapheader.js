@@ -1,80 +1,103 @@
-// File: utils/mapHeaders.js
+// compareExcelCSVFiles.js (Updated)
+import * as XLSX from 'xlsx';
+import Papa from 'papaparse';
 
 /**
- * Attempts to map headers from file1 to file2 using normalization and fuzzy matching.
- * Returns an array of mapped pairs and confidence score (1 = exact match, < 1 = partial match).
- *
- * @param {Array<string>} headers1 - Headers from File 1
- * @param {Array<string>} headers2 - Headers from File 2
- * @returns {Array<{ file1Header: string, file2Header: string | null, confidence: number }>}
+ * Parses an Excel file and extracts rows + headers
  */
-export function mapHeaders(headers1, headers2) {
-  const normalize = (header) =>
-    header.toLowerCase().replace(/[^a-z0-9]/gi, '').trim();
+const parseExcelFile = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
+        resolve({ rows, headers });
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+};
 
-  const normalizedHeaders2 = headers2.map((h) => ({
-    original: h,
-    normalized: normalize(h),
-  }));
+/**
+ * Parses a CSV file and extracts rows + headers
+ */
+const parseCSVFile = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = Papa.parse(e.target.result, { header: true, skipEmptyLines: true });
+        const headers = result.meta.fields;
+        resolve({ rows: result.data, headers });
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+};
 
-  return headers1.map((h1) => {
-    const norm1 = normalize(h1);
-
-    // Try exact match first
-    const exactMatch = normalizedHeaders2.find(
-      (h2) => h2.normalized === norm1
-    );
-
-    if (exactMatch) {
-      return {
-        file1Header: h1,
-        file2Header: exactMatch.original,
-        confidence: 1.0,
-      };
-    }
-
-    // Fallback to partial match based on substring similarity
-    let bestMatch = null;
-    let bestScore = 0;
-
-    normalizedHeaders2.forEach((h2) => {
-      const score = similarity(norm1, h2.normalized);
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = h2;
+/**
+ * Applies user-confirmed header mapping to the Excel dataset
+ */
+const transformDataByMapping = (data, mapping) => {
+  return data.map(row => {
+    const transformed = {};
+    mapping.forEach(({ file1Header, file2Header }) => {
+      if (file2Header) {
+        transformed[file2Header] = row[file1Header] ?? '';
       }
     });
-
-    if (bestScore >= 0.5) {
-      return {
-        file1Header: h1,
-        file2Header: bestMatch.original,
-        confidence: bestScore,
-      };
-    }
-
-    return {
-      file1Header: h1,
-      file2Header: null,
-      confidence: 0,
-    };
+    return transformed;
   });
-}
+};
 
 /**
- * Computes a simple similarity score (0–1) between two strings using
- * Dice’s Coefficient based on bigrams.
+ * Compares two rows and returns differences
  */
-function similarity(a, b) {
-  if (!a.length || !b.length) return 0;
-  if (a === b) return 1;
+const compareRows = (data1, data2) => {
+  const results = [];
+  const maxLength = Math.max(data1.length, data2.length);
+  let matches = 0;
+  let differences = 0;
 
-  const bigrams = (str) =>
-    new Set([...str].map((_, i) => str.slice(i, i + 2)).filter((s) => s.length === 2));
+  for (let i = 0; i < maxLength; i++) {
+    const row1 = data1[i] || {};
+    const row2 = data2[i] || {};
+    const allKeys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
 
-  const aBigrams = bigrams(a);
-  const bBigrams = bigrams(b);
+    allKeys.forEach(key => {
+      const val1 = row1[key] ?? '';
+      const val2 = row2[key] ?? '';
+      const match = val1 === val2;
+      results.push({
+        ID: i + 1,
+        COLUMN: key,
+        SOURCE_1_VALUE: val1,
+        SOURCE_2_VALUE: val2,
+        STATUS: match ? 'match' : 'difference'
+      });
+      match ? matches++ : differences++;
+    });
+  }
 
-  const intersection = [...aBigrams].filter((bg) => bBigrams.has(bg));
-  return (2 * intersection.length) / (aBigrams.size + bBigrams.size);
-}
+  return { results, matches, differences, total: maxLength };
+};
+
+/**
+ * Main function to compare Excel and CSV files
+ */
+export const compareExcelCSVFiles = async (file1, file2, mapping) => {
+  const excel = await parseExcelFile(file1);
+  const csv = await parseCSVFile(file2);
+  const transformedExcelData = transformDataByMapping(excel.rows, mapping);
+  return compareRows(transformedExcelData, csv.rows);
+};
