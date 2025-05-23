@@ -10,15 +10,32 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [fileType, setFileType] = useState('csv');
 
-  const handleFileChange = (e, fileNum) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (fileNum === 1) {
-        setFile1(file);
-      } else {
-        setFile2(file);
-      }
+ const handleFileChange = (e, fileNum) => {
+  const file = e.target.files[0];
+  if (file) {
+    if (fileNum === 1) {
+      setFile1(file);
+    } else {
+      setFile2(file);
+    }
 
+    // Auto-detect file type ONLY if not already a multi-type comparison like 'excel_csv'
+    if (!['excel_csv'].includes(fileType)) {
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.txt')) {
+        setFileType('text');
+      } else if (name.endsWith('.csv')) {
+        setFileType('csv');
+      } else if (name.endsWith('.json')) {
+        setFileType('json');
+      } else if (['.xlsx', '.xls', '.xlsm', '.xlsb'].some(ext => name.endsWith(ext))) {
+        setFileType('excel');
+      }
+    }
+  }
+};
+
+ 
       const name = file.name.toLowerCase();
       if (name.endsWith('.txt')) setFileType('text');
       else if (name.endsWith('.csv')) setFileType('csv');
