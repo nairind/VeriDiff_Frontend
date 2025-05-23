@@ -1,19 +1,20 @@
-// File: utils/excelCSVComparison.js
-import * as XLSX from "xlsx";
+// utils/excelCSVComparison.js
 
-// Helper: Parse Excel to array of objects
-const parseExcelFile = (file) => {
+import * as XLSX from 'xlsx';
+import Papa from 'papaparse';
+
+const parseExcel = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
         resolve(json);
-      } catch (error) {
-        reject(error);
+      } catch (err) {
+        reject(err);
       }
     };
     reader.onerror = reject;
@@ -21,19 +22,18 @@ const parseExcelFile = (file) => {
   });
 };
 
-// Helper: Parse CSV to array of objects
-const parseCSVFile = (file) => {
+const parseCSV = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const text = e.target.result;
-        const workbook = XLSX.read(text, { type: "string" });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-        resolve(json);
-      } catch (error) {
-        reject(error);
+        const result = Papa.parse(e.target.result, {
+          header: true,
+          skipEmptyLines: true,
+        });
+        resolve(result.data);
+      } catch (err) {
+        reject(err);
       }
     };
     reader.onerror = reject;
@@ -41,34 +41,44 @@ const parseCSVFile = (file) => {
   });
 };
 
-// Helper: Compare two arrays of JSON records
 const compareData = (data1, data2) => {
-  const diffs = [];
-  const max = Math.max(data1.length, data2.length);
-  for (let i = 0; i < max; i++) {
+  const results = [];
+  const allKeys = new Set([
+    ...data1.flatMap((row) => Object.keys(row)),
+    ...data2.flatMap((row) => Object.keys(row)),
+  ]);
+  const maxLen = Math.max(data1.length, data2.length);
+
+  for (let i = 0; i < maxLen; i++) {
     const row1 = data1[i] || {};
     const row2 = data2[i] || {};
-    const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
-    for (const key of keys) {
-      if ((row1[key] || "") !== (row2[key] || "")) {
-        diffs.push({
+    for (const key of allKeys) {
+      if ((row1[key] || '') !== (row2[key] || '')) {
+        results.push({
           row: i + 1,
           column: key,
-          value1: row1[key] || "",
-          value2: row2[key] || "",
-          status: "mismatch",
+          value1: row1[key] || '',
+          value2: row2[key] || '',
+          status: 'mismatch',
         });
       }
     }
   }
-  return diffs;
+  return results;
 };
 
-// Main export
-export const compareExcelToCSV = async (excelFile, csvFile) => {
+export const compareExcelCSVFiles = async (excelFile, csvFile) => {
   const [excelData, csvData] = await Promise.all([
-    parseExcelFile(excelFile),
-    parseCSVFile(csvFile),
+    parseExcel(excelFile),
+    parseCSV(csvFile),
   ]);
-  return compareData(excelData, csvData);
+
+  const differences = compareData(excelData, csvData);
+
+  return {
+    total_records: Math.max(excelData.length, csvData.length),
+    differences_found: differences.length,
+    matches_found: Math.max(excelData.length, csvData.length) - differences.length,
+    results: differences,
+  };
 };
