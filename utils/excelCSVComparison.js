@@ -1,106 +1,125 @@
+// File: utils/compareExcelCSVFiles.js
+
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
+import { extractHeaders } from './extractHeaders';
+import { mapHeaders } from './mapHeaders';
 
 /**
- * Parse Excel to JSON
+ * Parses Excel file into JSON
  */
-const parseExcelFile = (file) => {
+const parseExcel = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
         resolve(json);
       } catch (err) {
         reject(err);
       }
     };
-
     reader.onerror = reject;
     reader.readAsArrayBuffer(file);
   });
 };
 
 /**
- * Parse CSV to JSON
+ * Parses CSV file into JSON
  */
-const parseCSVFile = (file) => {
+const parseCSV = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
     reader.onload = (e) => {
       try {
-        const result = Papa.parse(e.target.result, {
+        const parsed = Papa.parse(e.target.result, {
           header: true,
-          skipEmptyLines: true,
-          transformHeader: h => h.trim(),
+          skipEmptyLines: true
         });
-        resolve(result.data);
+        resolve(parsed.data);
       } catch (err) {
         reject(err);
       }
     };
-
     reader.onerror = reject;
     reader.readAsText(file);
   });
 };
 
 /**
- * Compare Excel and CSV data
+ * Applies header mapping to dataset (maps target fields to standard fields)
+ */
+const applyHeaderMapping = (data, mapping, source = 'file2') => {
+  return data.map(row => {
+    const transformed = {};
+    mapping.forEach(({ file1Header, file2Header }) => {
+      transformed[file1Header] = source === 'file1'
+        ? row[file1Header]
+        : row[file2Header] ?? '';
+    });
+    return transformed;
+  });
+};
+
+/**
+ * Main comparison logic
  */
 export const compareExcelCSVFiles = async (file1, file2) => {
-  const [excelData, csvData] = await Promise.all([
-    parseExcelFile(file1),
-    parseCSVFile(file2)
-  ]);
+  try {
+    const [excelData, csvData] = await Promise.all([
+      parseExcel(file1),
+      parseCSV(file2)
+    ]);
 
-  const idColumn = Object.keys(excelData[0])[0]; // Use first column as ID
-  const csvMap = new Map(csvData.map(row => [row[idColumn], row]));
+    const headers1 = extractHeaders(excelData);
+    const headers2 = extractHeaders(csvData);
+    const headerMapping = mapHeaders(headers1, headers2);
 
-  let differencesFound = 0;
-  let matchesFound = 0;
-  const results = [];
+    const transformedFile1 = applyHeaderMapping(excelData, headerMapping, 'file1');
+    const transformedFile2 = applyHeaderMapping(csvData, headerMapping, 'file2');
 
-  for (const excelRow of excelData) {
-    const id = excelRow[idColumn];
-    const csvRow = csvMap.get(id) || {};
+    const results = [];
+    let matchesFound = 0;
+    let differencesFound = 0;
 
-    const allKeys = new Set([...Object.keys(excelRow), ...Object.keys(csvRow)]);
-    for (const key of allKeys) {
-      const val1 = (excelRow[key] || '').trim();
-      const val2 = (csvRow[key] || '').trim();
+    const maxLength = Math.max(transformedFile1.length, transformedFile2.length);
 
-      if (val1 !== val2) {
+    for (let i = 0; i < maxLength; i++) {
+      const row1 = transformedFile1[i] || {};
+      const row2 = transformedFile2[i] || {};
+
+      headerMapping.forEach(({ file1Header }) => {
+        const val1 = row1[file1Header] ?? '';
+        const val2 = row2[file1Header] ?? '';
+        const status = val1 === val2 ? 'match' : 'difference';
+
         results.push({
-          ID: id,
-          COLUMN: key,
+          ID: i + 1,
+          COLUMN: file1Header,
           SOURCE_1_VALUE: val1,
           SOURCE_2_VALUE: val2,
-          STATUS: 'difference'
+          STATUS: status
         });
-        differencesFound++;
-      } else if (val1 !== '') {
-        matchesFound++;
-        results.push({
-          ID: id,
-          COLUMN: key,
-          SOURCE_1_VALUE: val1,
-          SOURCE_2_VALUE: val2,
-          STATUS: 'match'
-        });
-      }
+
+        if (status === 'match') {
+          matchesFound++;
+        } else {
+          differencesFound++;
+        }
+      });
     }
-  }
 
-  return {
-    total_records: excelData.length,
-    differences_found: differencesFound,
-    matches_found: matchesFound,
-    results
-  };
+    return {
+      total_records: maxLength,
+      differences_found: differencesFound,
+      matches_found: matchesFound,
+      results
+    };
+  } catch (error) {
+    throw new Error(`Failed to compare Excel and CSV files: ${error.message}`);
+  }
 };
