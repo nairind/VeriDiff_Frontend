@@ -14,33 +14,32 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [fileType, setFileType] = useState('csv');
 
-  const handleFileChange = (e, fileNum) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const extension = file.name.split('.').pop().toLowerCase();
-
+ const handleFileChange = (e, fileNum) => {
+  const file = e.target.files[0];
+  if (file) {
     if (fileNum === 1) {
       setFile1(file);
     } else {
       setFile2(file);
     }
 
-    if ((file1 && file1.name.endsWith('.xlsx') && file.name.endsWith('.csv')) ||
-        (file2 && file2.name.endsWith('.xlsx') && file.name.endsWith('.csv'))) {
-      setFileType('excel_csv');
-    } else if (file.name.endsWith('.txt')) {
-      setFileType('text');
-    } else if (file.name.endsWith('.csv')) {
-      setFileType('csv');
-    } else if (file.name.endsWith('.json')) {
-      setFileType('json');
-    } else if (['xlsx', 'xls', 'xlsm', 'xlsb'].includes(extension)) {
-      setFileType('excel');
+    // Only auto-detect if user hasn’t explicitly selected a type
+    if (!fileType || fileType === 'csv' || fileType === 'excel' || fileType === 'text' || fileType === 'json') {
+      const lowerName = file.name.toLowerCase();
+      if (lowerName.endsWith('.txt')) {
+        setFileType('text');
+      } else if (lowerName.endsWith('.csv')) {
+        setFileType('csv');
+      } else if (['.xlsx', '.xls', '.xlsm', '.xlsb'].some(ext => lowerName.endsWith(ext))) {
+        setFileType('excel');
+      } else if (lowerName.endsWith('.json')) {
+        setFileType('json');
+      }
     }
-  };
+  }
+};
 
-  const handleFileTypeChange = (e) => {
+   const handleFileTypeChange = (e) => {
     setFileType(e.target.value);
     setFile1(null);
     setFile2(null);
@@ -48,41 +47,71 @@ export default function Home() {
     setError(null);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!file1 || !file2) {
-      setError('Please select two files to compare');
-      return;
+  if (!file1 || !file2) {
+    setError('Please select two files to compare');
+    return;
+  }
+
+  const lowerFile1 = file1.name.toLowerCase();
+  const lowerFile2 = file2.name.toLowerCase();
+
+  const isExcel = ext => ['.xlsx', '.xls', '.xlsm', '.xlsb'].some(x => ext.endsWith(x));
+
+  // File validation
+  if (fileType === 'csv' && (!lowerFile1.endsWith('.csv') || !lowerFile2.endsWith('.csv'))) {
+    setError('Please select CSV files');
+    return;
+  }
+  if (fileType === 'text' && (!lowerFile1.endsWith('.txt') || !lowerFile2.endsWith('.txt'))) {
+    setError('Please select TXT files');
+    return;
+  }
+  if (fileType === 'json' && (!lowerFile1.endsWith('.json') || !lowerFile2.endsWith('.json'))) {
+    setError('Please select JSON files');
+    return;
+  }
+  if (fileType === 'excel' && (!isExcel(lowerFile1) || !isExcel(lowerFile2))) {
+    setError('Please select Excel files');
+    return;
+  }
+  if (fileType === 'excel_csv' && (
+    !(isExcel(lowerFile1) && lowerFile2.endsWith('.csv')) &&
+    !(isExcel(lowerFile2) && lowerFile1.endsWith('.csv'))
+  )) {
+    setError('Please select one Excel and one CSV file for Excel–CSV comparison');
+    return;
+  }
+
+  setLoading(true);
+  setError(null);
+
+  try {
+    let comparisonResults;
+    if (fileType === 'csv') {
+      comparisonResults = await compareFiles(file1, file2);
+    } else if (fileType === 'text') {
+      comparisonResults = await compareTextFiles_main(file1, file2);
+    } else if (fileType === 'json') {
+      comparisonResults = await compareJSONFiles_main(file1, file2);
+    } else if (fileType === 'excel') {
+      comparisonResults = await compareExcelFiles(file1, file2);
+    } else if (fileType === 'excel_csv') {
+      comparisonResults = await compareExcelCSVFiles(file1, file2); // make sure this import exists
     }
 
-    setLoading(true);
-    setError(null);
+    setResults(comparisonResults);
+  } catch (err) {
+    console.error('Comparison error:', err);
+    setError(`Failed to compare files: ${err.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    try {
-      let comparisonResults;
-
-      if (fileType === 'csv') {
-        comparisonResults = await compareFiles(file1, file2);
-      } else if (fileType === 'text') {
-        comparisonResults = await compareTextFiles_main(file1, file2);
-      } else if (fileType === 'json') {
-        comparisonResults = await compareJSONFiles_main(file1, file2);
-      } else if (fileType === 'excel') {
-        comparisonResults = await compareExcelFiles(file1, file2);
-      } else if (fileType === 'excel_csv') {
-        comparisonResults = await compareExcelCSVFiles(file1, file2);
-      }
-
-      setResults(comparisonResults);
-    } catch (err) {
-      console.error('Comparison error:', err);
-      setError(`Failed to compare files: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+ 
   return (
     <div className="container">
       <Head>
