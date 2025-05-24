@@ -45,7 +45,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
   };
 
   const handleCompare = () => {
-    onCompare();
+    onCompare(mappings);
   };
 
   return (
