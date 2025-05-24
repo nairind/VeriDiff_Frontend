@@ -25,7 +25,6 @@ export default function Home() {
   const [finalMappings, setFinalMappings] = useState([]);
   const [pendingComparison, setPendingComparison] = useState(null);
   const [pendingType, setPendingType] = useState(null);
-  const [showCompareButton, setShowCompareButton] = useState(false);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
@@ -49,7 +48,6 @@ export default function Home() {
     setFile2(null);
     setResults(null);
     setError(null);
-    setShowCompareButton(false);
   };
 
   const handleSubmit = async (e) => {
@@ -108,7 +106,7 @@ export default function Home() {
   const handleMappingConfirm = (finalMappingsFromUI) => {
     setFinalMappings(finalMappingsFromUI);
     setShowMapper(false);
-    setShowCompareButton(true);
+    setTimeout(() => setShowMapper(true), 0); // Force re-render
   };
 
   const runFinalComparison = async () => {
@@ -125,7 +123,7 @@ export default function Home() {
       setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
-      setShowCompareButton(false);
+      setShowMapper(false);
     }
   };
 
@@ -161,13 +159,8 @@ export default function Home() {
             file2Headers={headers2}
             suggestedMappings={suggestedMappings}
             onConfirm={handleMappingConfirm}
+            onCompare={runFinalComparison}
           />
-        )}
-
-        {showCompareButton && (
-          <button onClick={runFinalComparison} disabled={loading}>
-            {loading ? 'Comparing...' : 'Run Comparison'}
-          </button>
         )}
 
         {results && (
