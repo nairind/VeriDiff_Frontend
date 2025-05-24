@@ -1,4 +1,3 @@
-// HeaderMapper.js (updated to support tolerance setup)
 import React, { useState, useEffect } from 'react';
 
 const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm }) => {
@@ -11,7 +10,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
         file2Header: m.file2Header || '',
         similarity: m.similarity,
         isAmount: false,
-        toleranceType: 'flat', // or 'percent'
+        toleranceType: '',
         toleranceValue: ''
       }))
     );
@@ -24,10 +23,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
   };
 
   const addMapping = () => {
-    setMappings([...mappings, {
-      file1Header: '', file2Header: '', similarity: 0,
-      isAmount: false, toleranceType: 'flat', toleranceValue: ''
-    }]);
+    setMappings([...mappings, { file1Header: '', file2Header: '', similarity: 0, isAmount: false, toleranceType: '', toleranceValue: '' }]);
   };
 
   const removeMapping = (index) => {
@@ -42,7 +38,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
 
   return (
     <div className="header-mapper">
-      <h2>Confirm Header Mappings</h2>
+      <h2>Confirm Header Mappings and Set Tolerances</h2>
       <form onSubmit={handleSubmit}>
         <table className="mapping-table">
           <thead>
@@ -50,7 +46,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
               <th>Source Header (File 1)</th>
               <th>Mapped Header (File 2)</th>
               <th>Similarity</th>
-              <th>Amount?</th>
+              <th>Amount Field</th>
               <th>Tolerance Type</th>
               <th>Tolerance Value</th>
               <th>Actions</th>
@@ -63,7 +59,8 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                 <td>
                   <select
                     value={mapping.file2Header}
-                    onChange={(e) => updateMapping(index, 'file2Header', e.target.value)}>
+                    onChange={(e) => updateMapping(index, 'file2Header', e.target.value)}
+                  >
                     <option value="">-- None --</option>
                     {file2Headers.map(h => (
                       <option key={h} value={h}>{h}</option>
@@ -82,9 +79,11 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                   <select
                     value={mapping.toleranceType}
                     onChange={(e) => updateMapping(index, 'toleranceType', e.target.value)}
-                    disabled={!mapping.isAmount}>
+                    disabled={!mapping.isAmount}
+                  >
+                    <option value="">None</option>
                     <option value="flat">Flat</option>
-                    <option value="percent">%</option>
+                    <option value="%">%</option>
                   </select>
                 </td>
                 <td>
@@ -93,7 +92,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                     step="any"
                     value={mapping.toleranceValue}
                     onChange={(e) => updateMapping(index, 'toleranceValue', e.target.value)}
-                    disabled={!mapping.isAmount}
+                    disabled={!mapping.isAmount || !mapping.toleranceType}
                   />
                 </td>
                 <td>
