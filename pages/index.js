@@ -1,10 +1,11 @@
+// File: pages/index.js
+
 import { useState } from 'react';
 import Head from 'next/head';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
 import { parseExcelFile } from '../utils/excelFileComparison';
 import { parseJSONFile } from '../utils/jsonFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
-import { compareTextFiles_main } from '../utils/textFileComparison';
 import HeaderMapper from '../components/HeaderMapper';
 import { mapHeaders } from '../utils/mapHeaders';
 
@@ -25,6 +26,7 @@ export default function Home() {
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (!file) return;
+
     if (fileNum === 1) setFile1(file);
     else setFile2(file);
   };
@@ -59,13 +61,7 @@ export default function Home() {
       } else if (fileType === 'json') {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
-      } else if (fileType === 'text') {
-        setShowMapper(false);
-        const result = await compareTextFiles_main(file1, file2);
-        setResults(result);
-        return;
       }
-
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
@@ -148,26 +144,28 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  {results.results[0] && Object.keys(results.results[0].fields).map((key) => (
-                    <>
-                      <th key={`${key}-src1`}>{key} (S1)</th>
-                      <th key={`${key}-src2`}>{key} (S2)</th>
-                      <th key={`${key}-diff`}>{key} (Diff)</th>
-                    </>
+                  {headers1.map((header, i) => (
+                    <th key={i}>{header}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {results.results.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
+                {results.results.map((row, i) => (
+                  <tr key={i}>
                     <td>{row.ID}</td>
-                    {Object.entries(row.fields).map(([key, value]) => (
-                      <>
-                        <td className={value.status}>{value.val1}</td>
-                        <td className={value.status}>{value.val2}</td>
-                        <td className={value.status}>{value.difference}</td>
-                      </>
-                    ))}
+                    {headers1.map((header, j) => {
+                      const field = row.fields[header];
+                      let className = '';
+                      if (field?.status === 'difference') className = 'difference';
+                      else if (field?.status === 'acceptable') className = 'acceptable';
+                      return (
+                        <td key={j} className={className}>
+                          <div>1: {field?.val1 ?? ''}</div>
+                          <div>2: {field?.val2 ?? ''}</div>
+                          <div>∆: {field?.difference ?? ''}</div>
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
