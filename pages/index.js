@@ -1,5 +1,3 @@
-// ✅ Known-working index.js version — supports tolerance (flat and %) and correct result display
-
 import { useState } from 'react';
 import Head from 'next/head';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
@@ -26,7 +24,6 @@ export default function Home() {
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (fileNum === 1) setFile1(file);
     else setFile2(file);
   };
@@ -61,8 +58,9 @@ export default function Home() {
       } else if (fileType === 'json') {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
+      } else {
+        throw new Error('Unsupported file type.');
       }
-
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
@@ -145,23 +143,29 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  {results.results[0] && Object.keys(results.results[0].fields).map((key) => (
-                    <th key={key}>{key}</th>
+                  {Object.keys(results.results[0].fields).map((field, idx) => (
+                    <th key={idx}>{field}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {results.results.map((row, index) => (
-                  <tr key={index}>
+                {results.results.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
                     <td>{row.ID}</td>
-                    {Object.entries(row.fields).map(([key, val]) => (
+                    {Object.entries(row.fields).map(([key, value], idx) => (
                       <td
-                        key={key}
-                        className={val.status === 'difference' ? 'difference' : val.status === 'acceptable' ? 'acceptable' : 'match'}
+                        key={idx}
+                        style={{
+                          backgroundColor:
+                            value.status === 'difference'
+                              ? '#fdd'
+                              : value.status === 'acceptable'
+                              ? '#ffd'
+                              : '#dfd'
+                        }}
                       >
-                        {val.val1} / {val.val2}
-                        <br />
-                        {val.status} {val.difference && `(Δ ${val.difference})`}
+                        {value.val1} / {value.val2} <br />
+                        <small>{value.status} {value.difference && `(Δ ${value.difference})`}</small>
                       </td>
                     ))}
                   </tr>
