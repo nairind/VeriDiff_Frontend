@@ -17,7 +17,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fileType, setFileType] = useState('csv');
-
   const [showMapper, setShowMapper] = useState(false);
   const [headers1, setHeaders1] = useState([]);
   const [headers2, setHeaders2] = useState([]);
@@ -34,15 +33,21 @@ export default function Home() {
         setFile2(file);
       }
 
-      const name = file.name.toLowerCase();
-      if (name.endsWith('.txt')) {
-        setFileType('text');
-      } else if (name.endsWith('.csv')) {
-        setFileType('csv');
-      } else if (name.endsWith('.json')) {
-        setFileType('json');
-      } else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) {
-        setFileType('excel');
+      // Only auto-update type if not excel_csv
+      if (fileType !== 'excel_csv') {
+        const name = file.name.toLowerCase();
+        if (name.endsWith('.txt')) {
+          setFileType('text');
+        } else if (name.endsWith('.csv')) {
+          setFileType('csv');
+        } else if (name.endsWith('.json')) {
+          setFileType('json');
+        } else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) {
+          // Don't override if both file types are present in excel_csv mode
+          if (fileType !== 'excel_csv') {
+            setFileType('excel');
+          }
+        }
       }
     }
   };
@@ -69,16 +74,16 @@ export default function Home() {
       if (["excel_csv", "csv", "excel", "json"].includes(fileType)) {
         let data1 = [], data2 = [];
 
-        if (fileType === 'excel_csv') {
+        if (fileType === "excel_csv") {
           data1 = await parseExcelFile(file1);
           data2 = await parseCSVFile(file2);
-        } else if (fileType === 'csv') {
+        } else if (fileType === "csv") {
           data1 = await parseCSVFile(file1);
           data2 = await parseCSVFile(file2);
-        } else if (fileType === 'excel') {
+        } else if (fileType === "excel") {
           data1 = await parseExcelFile(file1);
           data2 = await parseExcelFile(file2);
-        } else if (fileType === 'json') {
+        } else if (fileType === "json") {
           data1 = await parseJSONFile(file1);
           data2 = await parseJSONFile(file2);
         }
@@ -99,9 +104,8 @@ export default function Home() {
 
       const comparisonResults = await compareTextFiles_main(file1, file2);
       setResults(comparisonResults);
-
     } catch (err) {
-      console.error('Comparison error:', err);
+      console.error("Comparison error:", err);
       setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
@@ -119,7 +123,7 @@ export default function Home() {
       );
       setResults(result);
     } catch (err) {
-      console.error('Comparison error:', err);
+      console.error("Comparison error:", err);
       setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
@@ -161,7 +165,7 @@ export default function Home() {
           />
         )}
 
-        {results && results.rows && (
+        {results && (
           <div className="results">
             <h2>Comparison Results</h2>
             <div className="summary">
@@ -172,32 +176,26 @@ export default function Home() {
             <table className="results-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  {results.columns.map((col, idx) => (
-                    <th key={idx}>{col}</th>
+                  {Object.keys(results.results[0] || {}).map((key, index) => (
+                    <th key={index}>{key}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {results.rows.map((row, idx) => (
-                  <tr key={idx}>
-                    <td>{row.ID}</td>
-                    {results.columns.map((col, colIdx) => {
-                      const cell = row.fields[col] || {};
-                      const bgColor = cell.status === 'match'
-                        ? 'transparent'
-                        : cell.status === 'acceptable'
-                        ? 'yellow'
-                        : 'red';
-                      return (
-                        <td key={colIdx} style={{ backgroundColor: bgColor }}>
-                          <div><strong>1:</strong> {cell.val1}</div>
-                          <div><strong>2:</strong> {cell.val2}</div>
-                          <div><strong>Δ:</strong> {cell.diff ?? ''}</div>
-                          <div><strong>Status:</strong> {cell.status}</div>
-                        </td>
-                      );
-                    })}
+                {results.results.map((row, index) => (
+                  <tr key={index}>
+                    {Object.entries(row).map(([key, val]) => (
+                      <td
+                        key={key}
+                        style={{
+                          backgroundColor:
+                            key === 'STATUS' && val === 'difference' ? '#fdd' :
+                            key === 'STATUS' && val === 'acceptable' ? '#ffd' : 'inherit'
+                        }}
+                      >
+                        {val}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
