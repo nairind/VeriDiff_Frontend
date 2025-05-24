@@ -1,3 +1,5 @@
+// File: pages/index.js
+
 import { useState } from 'react';
 import Head from 'next/head';
 import { compareTextFiles_main } from '../utils/textFileComparison';
@@ -27,23 +29,15 @@ export default function Home() {
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (file) {
-      if (fileNum === 1) {
-        setFile1(file);
-      } else {
-        setFile2(file);
-      }
+      if (fileNum === 1) setFile1(file);
+      else setFile2(file);
 
       if (!['excel_csv'].includes(fileType)) {
         const name = file.name.toLowerCase();
-        if (name.endsWith('.txt')) {
-          setFileType('text');
-        } else if (name.endsWith('.csv')) {
-          setFileType('csv');
-        } else if (name.endsWith('.json')) {
-          setFileType('json');
-        } else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) {
-          setFileType('excel');
-        }
+        if (name.endsWith('.txt')) setFileType('text');
+        else if (name.endsWith('.csv')) setFileType('csv');
+        else if (name.endsWith('.json')) setFileType('json');
+        else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) setFileType('excel');
       }
     }
   };
@@ -67,7 +61,7 @@ export default function Home() {
     setError(null);
 
     try {
-      if (['excel_csv', 'csv', 'excel', 'json'].includes(fileType)) {
+      if (["excel_csv", "csv", "excel", "json"].includes(fileType)) {
         let data1 = [], data2 = [];
 
         if (fileType === 'excel_csv') {
@@ -98,8 +92,8 @@ export default function Home() {
         return;
       }
 
-      const comparisonResults = await compareTextFiles_main(file1, file2);
-      setResults(comparisonResults);
+      const result = await compareTextFiles_main(file1, file2);
+      setResults(result);
 
     } catch (err) {
       console.error('Comparison error:', err);
@@ -109,18 +103,16 @@ export default function Home() {
     }
   };
 
-  const handleMappingConfirm = (finalMappingsFromUI) => {
+  const handleMappingConfirm = async (finalMappingsFromUI) => {
     setFinalMappings(finalMappingsFromUI);
     setShowMapper(false);
-  };
 
-  const handleFinalCompare = async () => {
     setLoading(true);
     try {
       const result = await compareExcelCSVFiles(
         pendingComparison.file1,
         pendingComparison.file2,
-        finalMappings
+        finalMappingsFromUI
       );
       setResults(result);
     } catch (err) {
@@ -158,15 +150,12 @@ export default function Home() {
         </form>
 
         {showMapper && (
-          <>
-            <HeaderMapper
-              file1Headers={headers1}
-              file2Headers={headers2}
-              suggestedMappings={suggestedMappings}
-              onConfirm={handleMappingConfirm}
-            />
-            <button onClick={handleFinalCompare}>Compare with Tolerances</button>
-          </>
+          <HeaderMapper
+            file1Headers={headers1}
+            file2Headers={headers2}
+            suggestedMappings={suggestedMappings}
+            onConfirm={handleMappingConfirm}
+          />
         )}
 
         {results && (
