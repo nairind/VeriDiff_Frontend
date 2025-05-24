@@ -5,6 +5,8 @@ import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareJSONFiles_main } from '../utils/jsonFileComparison';
 import { compareExcelFiles } from '../utils/excelFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
+import HeaderMapper from '../components/HeaderMapper';
+import { mapHeaders } from '../utils/mapHeaders';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -13,6 +15,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fileType, setFileType] = useState('csv');
+
+  const [showMapper, setShowMapper] = useState(false);
+  const [headers1, setHeaders1] = useState([]);
+  const [headers2, setHeaders2] = useState([]);
+  const [suggestedMappings, setSuggestedMappings] = useState([]);
+  const [pendingComparison, setPendingComparison] = useState(null);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
@@ -23,7 +31,6 @@ export default function Home() {
         setFile2(file);
       }
 
-      // Avoid overriding if user has selected a composite type
       if (!['excel_csv'].includes(fileType)) {
         const name = file.name.toLowerCase();
         if (name.endsWith('.txt')) {
@@ -56,8 +63,30 @@ export default function Home() {
 
     setLoading(true);
     setError(null);
+
     try {
+      if (fileType === 'excel_csv') {
+        const parseExcelFile = (await import('../utils/excelFileComparison')).parseExcelFile;
+        const parseCSVFile = (await import('../utils/simpleCSVComparison')).parseCSVFile;
+
+        const excelData = await parseExcelFile(file1);
+        const csvData = await parseCSVFile(file2);
+
+        const headers1 = Object.keys(excelData[0] || {});
+        const headers2 = Object.keys(csvData[0] || {});
+        const suggested = mapHeaders(headers1, headers2);
+
+        setHeaders1(headers1);
+        setHeaders2(headers2);
+        setSuggestedMappings(suggested);
+        setPendingComparison({ file1, file2 });
+        setShowMapper(true);
+        setLoading(false);
+        return;
+      }
+
       let comparisonResults;
+
       if (fileType === 'csv') {
         comparisonResults = await compareFiles(file1, file2);
       } else if (fileType === 'text') {
@@ -66,15 +95,25 @@ export default function Home() {
         comparisonResults = await compareJSONFiles_main(file1, file2);
       } else if (fileType === 'excel') {
         comparisonResults = await compareExcelFiles(file1, file2);
-      } else if (fileType === 'excel_csv') {
-        comparisonResults = await compareExcelCSVFiles(file1, file2);
       }
+
       setResults(comparisonResults);
     } catch (err) {
       console.error('Comparison error:', err);
       setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMappingConfirm = async (finalMappings) => {
+    setShowMapper(false);
+    try {
+      const result = await compareExcelCSVFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
+      setResults(result);
+    } catch (err) {
+      console.error('Comparison error:', err);
+      setError(`Failed to compare files: ${err.message}`);
     }
   };
 
@@ -103,6 +142,15 @@ export default function Home() {
           <button type="submit" disabled={loading}>{loading ? 'Comparing...' : 'Compare Files'}</button>
           {error && <p style={{ color: 'red' }}>{error}</p>}
         </form>
+
+        {showMapper && (
+          <HeaderMapper
+            file1Headers={headers1}
+            file2Headers={headers2}
+            suggestedMappings={suggestedMappings}
+            onConfirm={handleMappingConfirm}
+          />
+        )}
 
         {results && (
           <div className="results">
