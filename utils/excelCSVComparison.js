@@ -3,15 +3,21 @@ import { parseCSVFile } from './simpleCSVComparison';
 import { mapHeaders } from './mapHeaders';
 
 /**
- * Compares an Excel file to a CSV file with header mapping and row comparison.
- * Supports optional user-confirmed mappings.
- *
- * @param {File} file1 - Excel file
- * @param {File} file2 - CSV file
- * @param {Array<{ file1Header: string, file2Header: string }>} [finalMappings=null] - Optional custom mappings
- * @returns {Promise<Object>} - Comparison result
+ * Applies tolerance to numeric comparison
  */
-export async function compareExcelCSVFiles(file1, file2, finalMappings = null) {
+function areValuesEqual(val1, val2, tolerance) {
+  const n1 = parseFloat(val1);
+  const n2 = parseFloat(val2);
+  if (isNaN(n1) || isNaN(n2)) return val1 === val2; // fallback to string match
+
+  const diff = Math.abs(n1 - n2);
+  if (tolerance.type === 'flat') return diff <= tolerance.value;
+  if (tolerance.type === 'percent') return (diff / Math.max(Math.abs(n1), Math.abs(n2))) * 100 <= tolerance.value;
+
+  return n1 === n2;
+}
+
+export async function compareExcelCSVFiles(file1, file2, finalMappings = [], toleranceConfig = {}) {
   try {
     const [excelData, csvData] = await Promise.all([
       parseExcelFile(file1),
@@ -25,11 +31,7 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = null) {
     const headers1 = Object.keys(excelData[0] || {});
     const headers2 = Object.keys(csvData[0] || {});
 
-    if (!headers1.length || !headers2.length) {
-      throw new Error('Header extraction failed');
-    }
-
-    const headerMappings = finalMappings || mapHeaders(headers1, headers2);
+    const headerMappings = finalMappings.length > 0 ? finalMappings : mapHeaders(headers1, headers2);
 
     const remappedCSVData = csvData.map(row => {
       const remappedRow = {};
@@ -42,8 +44,7 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = null) {
     });
 
     const results = [];
-    let matches = 0;
-    let differences = 0;
+    let matches = 0, differences = 0;
     const maxRows = Math.max(excelData.length, remappedCSVData.length);
 
     for (let i = 0; i < maxRows; i++) {
@@ -54,14 +55,21 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = null) {
       for (const key of keys) {
         const val1 = row1[key] ?? '';
         const val2 = row2[key] ?? '';
+
+        const isAmountField = (toleranceConfig.fields || []).includes(key);
+        const isMatch = isAmountField
+          ? areValuesEqual(val1, val2, toleranceConfig)
+          : val1 === val2;
+
         results.push({
           ID: row1['ID'] || i + 1,
           COLUMN: key,
           SOURCE_1_VALUE: val1,
           SOURCE_2_VALUE: val2,
-          STATUS: val1 === val2 ? 'match' : 'difference'
+          STATUS: isMatch ? 'match' : 'difference'
         });
-        val1 === val2 ? matches++ : differences++;
+
+        isMatch ? matches++ : differences++;
       }
     }
 
