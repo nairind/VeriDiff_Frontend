@@ -1,10 +1,5 @@
 import Papa from 'papaparse';
 
-/**
- * Parses a CSV file and returns its content as an array of objects.
- * @param {File} file
- * @returns {Promise<Array<Object>>}
- */
 export const parseCSVFile = async (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -28,12 +23,6 @@ export const parseCSVFile = async (file) => {
   });
 };
 
-/**
- * Compares two CSV datasets
- * @param {Array<Object>} data1
- * @param {Array<Object>} data2
- * @returns {Object} - Comparison results
- */
 export const compareCSVData = (data1, data2) => {
   const allColumns = new Set();
   data1.forEach(row => Object.keys(row).forEach(key => allColumns.add(key)));
@@ -77,4 +66,59 @@ export const compareCSVData = (data1, data2) => {
     }
 
     for (const column of allColumns) {
-      const
+      const value1 = row1[column] ?? '';
+      const value2 = row2[column] ?? '';
+      if (value1 === '' && value2 === '') continue;
+
+      const isMatch = String(value1) === String(value2);
+      results.push({
+        ID: String(id),
+        COLUMN: column,
+        SOURCE_1_VALUE: String(value1),
+        SOURCE_2_VALUE: String(value2),
+        STATUS: isMatch ? 'match' : 'difference',
+      });
+
+      isMatch ? matchesFound++ : differencesFound++;
+    }
+  });
+
+  const data1Ids = new Set(data1.map(row => String(row[idColumn])));
+  data2.forEach(row2 => {
+    const id = row2[idColumn];
+    if (id !== undefined && !data1Ids.has(String(id))) {
+      for (const column of allColumns) {
+        if (row2[column] !== undefined) {
+          results.push({
+            ID: String(id),
+            COLUMN: column,
+            SOURCE_1_VALUE: '',
+            SOURCE_2_VALUE: String(row2[column]),
+            STATUS: 'difference',
+          });
+          differencesFound++;
+        }
+      }
+    }
+  });
+
+  return {
+    total_records: data1.length,
+    differences_found: differencesFound,
+    matches_found: matchesFound,
+    results,
+  };
+};
+
+export const compareFiles = async (file1, file2) => {
+  try {
+    const [data1, data2] = await Promise.all([
+      parseCSVFile(file1),
+      parseCSVFile(file2)
+    ]);
+    return compareCSVData(data1, data2);
+  } catch (error) {
+    console.error('Comparison error:', error);
+    throw new Error(`Comparison failed: ${error.message}`);
+  }
+};
