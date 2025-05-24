@@ -26,7 +26,6 @@ export default function Home() {
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (fileNum === 1) setFile1(file);
     else setFile2(file);
   };
@@ -62,13 +61,16 @@ export default function Home() {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
       }
+
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
+
       setHeaders1(h1);
       setHeaders2(h2);
       setSuggestedMappings(suggested);
       setShowMapper(true);
+      setFinalMappings([]);
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -110,10 +112,10 @@ export default function Home() {
 
         <div className="file-type-selector">
           <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
-          <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
-          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
           <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
           <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
+          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
+          <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
         </div>
 
         <input type="file" onChange={(e) => handleFileChange(e, 1)} />
