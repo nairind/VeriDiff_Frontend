@@ -2,49 +2,37 @@
 
 import { useState } from 'react';
 import Head from 'next/head';
-import { compareTextFiles_main } from '../utils/textFileComparison';
-import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
 import { parseExcelFile } from '../utils/excelFileComparison';
 import { parseJSONFile } from '../utils/jsonFileComparison';
+import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
 import { mapHeaders } from '../utils/mapHeaders';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
-  const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [fileType, setFileType] = useState('');
+  const [fileType, setFileType] = useState('csv');
 
   const [showMapper, setShowMapper] = useState(false);
   const [headers1, setHeaders1] = useState([]);
   const [headers2, setHeaders2] = useState([]);
   const [suggestedMappings, setSuggestedMappings] = useState([]);
-  const [pendingComparison, setPendingComparison] = useState(null);
-  const [pendingType, setPendingType] = useState(null);
-  const [manualSelection, setManualSelection] = useState(false);
+  const [finalMappings, setFinalMappings] = useState([]);
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
-    if (file) {
-      if (fileNum === 1) setFile1(file);
-      else setFile2(file);
+    if (!file) return;
 
-      if (!manualSelection) {
-        const name = file.name.toLowerCase();
-        if (name.endsWith('.txt')) setFileType('text');
-        else if (name.endsWith('.csv')) setFileType('csv');
-        else if (name.endsWith('.json')) setFileType('json');
-        else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) setFileType('excel');
-      }
-    }
+    if (fileNum === 1) setFile1(file);
+    else setFile2(file);
   };
 
   const handleFileTypeChange = (e) => {
     setFileType(e.target.value);
-    setManualSelection(true);
     setFile1(null);
     setFile2(null);
     setResults(null);
@@ -52,15 +40,14 @@ export default function Home() {
     setShowMapper(false);
   };
 
-  const handleLoadClick = async () => {
+  const handleLoadFiles = async () => {
+    if (!file1 || !file2) {
+      setError('Please select two files.');
+      return;
+    }
     setLoading(true);
     setError(null);
-
     try {
-      if (!file1 || !file2) {
-        throw new Error('Both files must be selected');
-      }
-
       let data1 = [], data2 = [];
       if (fileType === 'excel_csv') {
         data1 = await parseExcelFile(file1);
@@ -74,41 +61,39 @@ export default function Home() {
       } else if (fileType === 'json') {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
-      } else {
-        throw new Error('Unsupported file type');
       }
-
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
-
       setHeaders1(h1);
       setHeaders2(h2);
       setSuggestedMappings(suggested);
-      setPendingComparison({ file1, file2 });
-      setPendingType(fileType);
       setShowMapper(true);
-      setResults(null);
     } catch (err) {
-      console.error('Load error:', err);
-      setError(`Failed to load files: ${err.message}`);
+      console.error(err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMappingConfirm = async (finalMappings) => {
+  const handleMappingConfirmed = (mappings) => {
+    setFinalMappings(mappings);
+  };
+
+  const handleRunComparison = async () => {
+    if (!file1 || !file2 || finalMappings.length === 0) {
+      setError('Missing files or mappings.');
+      return;
+    }
     setLoading(true);
+    setError(null);
     try {
-      const result = await compareExcelCSVFiles(
-        pendingComparison.file1,
-        pendingComparison.file2,
-        finalMappings
-      );
+      const result = await compareExcelCSVFiles(file1, file2, finalMappings);
       setResults(result);
     } catch (err) {
-      console.error('Comparison error:', err);
-      setError(`Failed to compare files: ${err.message}`);
+      console.error(err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -118,12 +103,10 @@ export default function Home() {
     <div className="container">
       <Head>
         <title>VeriDiff - File Comparison Tool</title>
-        <meta name="description" content="Compare files with precision" />
       </Head>
-
       <main>
         <h1 className="title">VeriDiff</h1>
-        <p className="description">Upload two files to compare their contents</p>
+        <p>Upload two files to compare their contents</p>
 
         <div className="file-type-selector">
           <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
@@ -131,20 +114,19 @@ export default function Home() {
           <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
         </div>
 
-        <div className="file-upload">
-          <input type="file" onChange={(e) => handleFileChange(e, 1)} />
-          <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-        </div>
+        <input type="file" onChange={(e) => handleFileChange(e, 1)} />
+        <input type="file" onChange={(e) => handleFileChange(e, 2)} />
 
-        <button onClick={handleLoadClick} disabled={loading}>Load Files</button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <button onClick={handleLoadFiles}>Load Files</button>
 
         {showMapper && (
           <HeaderMapper
             file1Headers={headers1}
             file2Headers={headers2}
             suggestedMappings={suggestedMappings}
-            onConfirm={handleMappingConfirm}
+            onConfirm={handleMappingConfirmed}
+            showRunButton={true}
+            onRun={handleRunComparison}
           />
         )}
 
