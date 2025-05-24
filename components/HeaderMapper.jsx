@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm }) => {
+const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm, onCompare }) => {
   const [mappings, setMappings] = useState([]);
 
   useEffect(() => {
@@ -39,15 +39,19 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
     setMappings(mappings.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleConfirm = (e) => {
     e.preventDefault();
     onConfirm(mappings);
+  };
+
+  const handleCompare = () => {
+    onCompare();
   };
 
   return (
     <div className="header-mapper">
       <h2>Confirm Header Mappings & Tolerances</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleConfirm}>
         <table className="mapping-table">
           <thead>
             <tr>
@@ -110,6 +114,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
         </table>
         <button type="button" onClick={addMapping}>Add Mapping</button>
         <button type="submit">Confirm Mapping</button>
+        <button type="button" onClick={handleCompare}>Run Comparison</button>
       </form>
     </div>
   );
