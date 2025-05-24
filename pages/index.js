@@ -33,7 +33,6 @@ export default function Home() {
         setFile2(file);
       }
 
-      // Only auto-update type if not excel_csv
       if (fileType !== 'excel_csv') {
         const name = file.name.toLowerCase();
         if (name.endsWith('.txt')) {
@@ -43,10 +42,7 @@ export default function Home() {
         } else if (name.endsWith('.json')) {
           setFileType('json');
         } else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) {
-          // Don't override if both file types are present in excel_csv mode
-          if (fileType !== 'excel_csv') {
-            setFileType('excel');
-          }
+          setFileType('excel');
         }
       }
     }
@@ -152,8 +148,7 @@ export default function Home() {
         <form onSubmit={handleSubmit}>
           <input type="file" onChange={(e) => handleFileChange(e, 1)} />
           <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-          <button type="submit" disabled={loading}>{loading ? 'Comparing...' : 'Compare Files'}</button>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
+          {/* Removed Compare Files button to fix redundancy */}
         </form>
 
         {showMapper && (
@@ -165,7 +160,7 @@ export default function Home() {
           />
         )}
 
-        {results && (
+        {results && results.rows && (
           <div className="results">
             <h2>Comparison Results</h2>
             <div className="summary">
@@ -176,26 +171,32 @@ export default function Home() {
             <table className="results-table">
               <thead>
                 <tr>
-                  {Object.keys(results.results[0] || {}).map((key, index) => (
-                    <th key={index}>{key}</th>
+                  <th>ID</th>
+                  {results.columns.map((col, idx) => (
+                    <th key={idx}>{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {results.results.map((row, index) => (
-                  <tr key={index}>
-                    {Object.entries(row).map(([key, val]) => (
-                      <td
-                        key={key}
-                        style={{
-                          backgroundColor:
-                            key === 'STATUS' && val === 'difference' ? '#fdd' :
-                            key === 'STATUS' && val === 'acceptable' ? '#ffd' : 'inherit'
-                        }}
-                      >
-                        {val}
-                      </td>
-                    ))}
+                {results.rows.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.ID}</td>
+                    {results.columns.map((col, colIdx) => {
+                      const cell = row.fields[col] || {};
+                      const bgColor = cell.status === 'match'
+                        ? 'transparent'
+                        : cell.status === 'acceptable'
+                        ? 'yellow'
+                        : 'red';
+                      return (
+                        <td key={colIdx} style={{ backgroundColor: bgColor }}>
+                          <div><strong>1:</strong> {cell.val1}</div>
+                          <div><strong>2:</strong> {cell.val2}</div>
+                          <div><strong>Δ:</strong> {cell.diff ?? ''}</div>
+                          <div><strong>Status:</strong> {cell.status}</div>
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
