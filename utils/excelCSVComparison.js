@@ -1,93 +1,207 @@
-import { parseExcelFile } from './excelFileComparison';
-import { parseCSVFile } from './simpleCSVComparison';
-import { mapHeaders } from './mapHeaders';
+import { useState } from 'react';
+import Head from 'next/head';
+import { compareTextFiles_main } from '../utils/textFileComparison';
+import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
+import { parseCSVFile } from '../utils/simpleCSVComparison';
+import { parseExcelFile } from '../utils/excelFileComparison';
+import { parseJSONFile } from '../utils/jsonFileComparison';
+import HeaderMapper from '../components/HeaderMapper';
+import { mapHeaders } from '../utils/mapHeaders';
 
-function isNumeric(val) {
-  return !isNaN(parseFloat(val)) && isFinite(val);
-}
+export default function Home() {
+  const [file1, setFile1] = useState(null);
+  const [file2, setFile2] = useState(null);
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [fileType, setFileType] = useState('csv');
 
-function compareWithTolerance(val1, val2, tolerance, type) {
-  const num1 = parseFloat(val1);
-  const num2 = parseFloat(val2);
-  if (!isNumeric(num1) || !isNumeric(num2)) return false;
+  const [showMapper, setShowMapper] = useState(false);
+  const [headers1, setHeaders1] = useState([]);
+  const [headers2, setHeaders2] = useState([]);
+  const [suggestedMappings, setSuggestedMappings] = useState([]);
+  const [finalMappings, setFinalMappings] = useState([]);
+  const [pendingComparison, setPendingComparison] = useState(null);
+  const [pendingType, setPendingType] = useState(null);
 
-  if (type === 'flat') {
-    return Math.abs(num1 - num2) <= parseFloat(tolerance);
-  } else if (type === '%') {
-    const maxVal = Math.max(Math.abs(num1), Math.abs(num2), 1);
-    return Math.abs(num1 - num2) / maxVal <= parseFloat(tolerance) / 100;
-  }
-  return false;
-}
+  const handleFileChange = (e, fileNum) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (fileNum === 1) {
+        setFile1(file);
+      } else {
+        setFile2(file);
+      }
 
-export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
-  try {
-    const [excelData, csvData] = await Promise.all([
-      parseExcelFile(file1),
-      parseCSVFile(file2)
-    ]);
-
-    if (!Array.isArray(excelData) || !Array.isArray(csvData)) {
-      throw new Error('Parsed data missing or invalid');
-    }
-
-    const remappedCSVData = csvData.map(row => {
-      const remappedRow = {};
-      finalMappings.forEach(mapping => {
-        if (mapping.file1Header && mapping.file2Header) {
-          remappedRow[mapping.file1Header] = row[mapping.file2Header] ?? '';
+      if (!['excel_csv'].includes(fileType)) {
+        const name = file.name.toLowerCase();
+        if (name.endsWith('.txt')) {
+          setFileType('text');
+        } else if (name.endsWith('.csv')) {
+          setFileType('csv');
+        } else if (name.endsWith('.json')) {
+          setFileType('json');
+        } else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) {
+          setFileType('excel');
         }
-      });
-      return remappedRow;
-    });
-
-    const results = [];
-    let matches = 0;
-    let differences = 0;
-    const maxRows = Math.max(excelData.length, remappedCSVData.length);
-
-    for (let i = 0; i < maxRows; i++) {
-      const row1 = excelData[i] || {};
-      const row2 = remappedCSVData[i] || {};
-      const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
-
-      for (const key of keys) {
-        const val1 = row1[key] ?? '';
-        const val2 = row2[key] ?? '';
-
-        const mapping = finalMappings.find(m => m.file1Header === key);
-        let status = 'difference';
-
-        if (val1 === val2) {
-          status = 'match';
-        } else if (
-          mapping?.isAmountField &&
-          mapping?.toleranceType &&
-          mapping?.toleranceValue !== '' &&
-          compareWithTolerance(val1, val2, mapping.toleranceValue, mapping.toleranceType)
-        ) {
-          status = 'match';
-        }
-
-        results.push({
-          ID: row1['ID'] || i + 1,
-          COLUMN: key,
-          SOURCE_1_VALUE: val1,
-          SOURCE_2_VALUE: val2,
-          STATUS: status
-        });
-
-        status === 'match' ? matches++ : differences++;
       }
     }
+  };
 
-    return {
-      total_records: maxRows,
-      differences_found: differences,
-      matches_found: matches,
-      results
-    };
-  } catch (error) {
-    throw new Error(`Failed to compare Excel and CSV files: ${error.message}`);
-  }
+  const handleFileTypeChange = (e) => {
+    setFileType(e.target.value);
+    setFile1(null);
+    setFile2(null);
+    setResults(null);
+    setError(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!file1 || !file2) {
+      setError('Please select two files to compare');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (['excel_csv', 'csv', 'excel', 'json'].includes(fileType)) {
+        let data1 = [], data2 = [];
+
+        if (fileType === 'excel_csv') {
+          data1 = await parseExcelFile(file1);
+          data2 = await parseCSVFile(file2);
+        } else if (fileType === 'csv') {
+          data1 = await parseCSVFile(file1);
+          data2 = await parseCSVFile(file2);
+        } else if (fileType === 'excel') {
+          data1 = await parseExcelFile(file1);
+          data2 = await parseExcelFile(file2);
+        } else if (fileType === 'json') {
+          data1 = await parseJSONFile(file1);
+          data2 = await parseJSONFile(file2);
+        }
+
+        const h1 = Object.keys(data1[0] || {});
+        const h2 = Object.keys(data2[0] || {});
+        const suggested = mapHeaders(h1, h2);
+
+        setHeaders1(h1);
+        setHeaders2(h2);
+        setSuggestedMappings(suggested);
+        setPendingComparison({ file1, file2 });
+        setPendingType(fileType);
+        setShowMapper(true);
+        setLoading(false);
+        return;
+      }
+
+      const comparisonResults = await compareTextFiles_main(file1, file2);
+      setResults(comparisonResults);
+
+    } catch (err) {
+      console.error('Comparison error:', err);
+      setError(`Failed to compare files: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMappingConfirm = (finalMappingsFromUI) => {
+    setFinalMappings(finalMappingsFromUI);
+    setShowMapper(false);
+  };
+
+  const handleFinalCompare = async () => {
+    setLoading(true);
+    try {
+      const result = await compareExcelCSVFiles(
+        pendingComparison.file1,
+        pendingComparison.file2,
+        finalMappings
+      );
+      setResults(result);
+    } catch (err) {
+      console.error('Comparison error:', err);
+      setError(`Failed to compare files: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="container">
+      <Head>
+        <title>VeriDiff - File Comparison Tool</title>
+        <meta name="description" content="Compare files with precision" />
+      </Head>
+
+      <main>
+        <h1 className="title">VeriDiff</h1>
+        <p className="description">Upload two files to compare their contents</p>
+
+        <div className="file-type-selector">
+          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
+          <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
+          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
+          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
+          <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <input type="file" onChange={(e) => handleFileChange(e, 1)} />
+          <input type="file" onChange={(e) => handleFileChange(e, 2)} />
+          <button type="submit" disabled={loading}>{loading ? 'Comparing...' : 'Compare Files'}</button>
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+        </form>
+
+        {showMapper && (
+          <>
+            <HeaderMapper
+              file1Headers={headers1}
+              file2Headers={headers2}
+              suggestedMappings={suggestedMappings}
+              onConfirm={handleMappingConfirm}
+            />
+            <button onClick={handleFinalCompare}>Compare with Tolerances</button>
+          </>
+        )}
+
+        {results && (
+          <div className="results">
+            <h2>Comparison Results</h2>
+            <div className="summary">
+              <p>Total Records: {results.total_records}</p>
+              <p>Differences Found: {results.differences_found}</p>
+              <p>Matches Found: {results.matches_found}</p>
+            </div>
+            <table className="results-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Column</th>
+                  <th>Source 1 Value</th>
+                  <th>Source 2 Value</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.results.map((row, index) => (
+                  <tr key={index} className={row.STATUS === 'difference' ? 'difference' : ''}>
+                    <td>{row.ID}</td>
+                    <td>{row.COLUMN}</td>
+                    <td>{row.SOURCE_1_VALUE}</td>
+                    <td>{row.SOURCE_2_VALUE}</td>
+                    <td>{row.STATUS}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </main>
+    </div>
+  );
 }
