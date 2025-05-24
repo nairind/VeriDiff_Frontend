@@ -1,3 +1,5 @@
+// File: utils/excelCSVComparison.js
+
 import { parseExcelFile } from './excelFileComparison';
 import { parseCSVFile } from './simpleCSVComparison';
 
@@ -89,4 +91,4 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
   } catch (error) {
     throw new Error(`Failed to compare Excel and CSV files: ${error.message}`);
   }
-} 
+}
