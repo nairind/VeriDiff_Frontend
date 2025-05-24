@@ -1,14 +1,11 @@
-// File: components/ExcelCompareClient.js
-"use client";
-
 import * as XLSX from "xlsx";
 
 /**
- * Parses an Excel file to JSON
+ * Parses an Excel file and returns its contents as JSON.
  * @param {File} file
  * @returns {Promise<Array<Object>>}
  */
-const parseExcelFile = (file) => {
+export const parseExcelFile = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -30,10 +27,10 @@ const parseExcelFile = (file) => {
 };
 
 /**
- * Compares two arrays of JSON rows from Excel
+ * Compares two arrays of Excel data row-by-row and field-by-field.
  * @param {Array<Object>} data1
  * @param {Array<Object>} data2
- * @returns {Array<Object>}
+ * @returns {Object} Comparison result
  */
 const compareExcelData = (data1, data2) => {
   const diffs = [];
@@ -46,11 +43,11 @@ const compareExcelData = (data1, data2) => {
     const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
 
     for (const key of keys) {
-      const val1 = row1[key] || "";
-      const val2 = row2[key] || "";
+      const val1 = row1[key] ?? "";
+      const val2 = row2[key] ?? "";
       if (val1 !== val2) {
         diffs.push({
-          ID: `${i + 1}-${key}`,
+          ID: row1['ID'] || `${i + 1}-${key}`,
           COLUMN: key,
           SOURCE_1_VALUE: val1,
           SOURCE_2_VALUE: val2,
@@ -59,7 +56,7 @@ const compareExcelData = (data1, data2) => {
       } else {
         matches++;
         diffs.push({
-          ID: `${i + 1}-${key}`,
+          ID: row1['ID'] || `${i + 1}-${key}`,
           COLUMN: key,
           SOURCE_1_VALUE: val1,
           SOURCE_2_VALUE: val2,
@@ -78,7 +75,7 @@ const compareExcelData = (data1, data2) => {
 };
 
 /**
- * Main entry to compare two Excel files
+ * Main method to compare two Excel files.
  * @param {File} file1
  * @param {File} file2
  * @returns {Promise<Object>} Formatted comparison result
@@ -88,6 +85,5 @@ export const compareExcelFiles = async (file1, file2) => {
     parseExcelFile(file1),
     parseExcelFile(file2),
   ]);
-
   return compareExcelData(data1, data2);
 };
