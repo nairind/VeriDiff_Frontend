@@ -58,6 +58,7 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
 
         const mapping = finalMappings.find(m => m.file1Header === key);
         let status = 'difference';
+        let differenceValue = '';
 
         if (val1 === val2) {
           status = 'match';
@@ -70,12 +71,17 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
           status = 'acceptable';
         }
 
+        if (isNumeric(val1) && isNumeric(val2)) {
+          differenceValue = Math.abs(parseFloat(val1) - parseFloat(val2)).toFixed(2);
+        }
+
         results.push({
           ID: row1['ID'] || i + 1,
           COLUMN: key,
           SOURCE_1_VALUE: val1,
           SOURCE_2_VALUE: val2,
-          STATUS: status
+          STATUS: status,
+          DIFFERENCE_VALUE: differenceValue
         });
 
         if (status === 'match' || status === 'acceptable') {
