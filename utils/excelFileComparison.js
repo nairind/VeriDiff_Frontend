@@ -76,14 +76,29 @@ const compareExcelData = (data1, data2) => {
 
 /**
  * Main method to compare two Excel files.
+ * Supports optional finalMappings to remap file2 headers.
  * @param {File} file1
  * @param {File} file2
+ * @param {Array<{file1Header: string, file2Header: string}>} [finalMappings]
  * @returns {Promise<Object>} Formatted comparison result
  */
-export const compareExcelFiles = async (file1, file2) => {
+export const compareExcelFiles = async (file1, file2, finalMappings = null) => {
   const [data1, data2] = await Promise.all([
     parseExcelFile(file1),
     parseExcelFile(file2),
   ]);
-  return compareExcelData(data1, data2);
+
+  let alignedData2 = data2;
+
+  if (finalMappings) {
+    alignedData2 = data2.map(row => {
+      const remapped = {};
+      finalMappings.forEach(({ file1Header, file2Header }) => {
+        remapped[file1Header] = row[file2Header] ?? '';
+      });
+      return remapped;
+    });
+  }
+
+  return compareExcelData(data1, alignedData2);
 };
