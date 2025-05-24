@@ -89,7 +89,22 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      const result = await compareExcelCSVFiles(file1, file2, finalMappings);
+      let result = null;
+      if (fileType === 'excel_csv') {
+        result = await compareExcelCSVFiles(file1, file2, finalMappings);
+      } else if (fileType === 'csv') {
+        await parseCSVFile(file1);
+        await parseCSVFile(file2);
+        result = await compareExcelCSVFiles(file1, file2, finalMappings);
+      } else if (fileType === 'excel') {
+        await parseExcelFile(file1);
+        await parseExcelFile(file2);
+        result = await compareExcelCSVFiles(file1, file2, finalMappings);
+      } else if (fileType === 'json') {
+        await parseJSONFile(file1);
+        await parseJSONFile(file2);
+        result = await compareExcelCSVFiles(file1, file2, finalMappings);
+      }
       setResults(result);
     } catch (err) {
       console.error(err);
@@ -120,14 +135,15 @@ export default function Home() {
         <button onClick={handleLoadFiles}>Load Files</button>
 
         {showMapper && (
-          <HeaderMapper
-            file1Headers={headers1}
-            file2Headers={headers2}
-            suggestedMappings={suggestedMappings}
-            onConfirm={handleMappingConfirmed}
-            showRunButton={true}
-            onRun={handleRunComparison}
-          />
+          <>
+            <HeaderMapper
+              file1Headers={headers1}
+              file2Headers={headers2}
+              suggestedMappings={suggestedMappings}
+              onConfirm={handleMappingConfirmed}
+            />
+            <button onClick={handleRunComparison}>Run Comparison</button>
+          </>
         )}
 
         {results && (
