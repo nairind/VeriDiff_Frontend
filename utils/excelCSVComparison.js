@@ -1,91 +1,93 @@
-// File: utils/excelCSVComparison.js
-
 import { parseExcelFile } from './excelFileComparison';
 import { parseCSVFile } from './simpleCSVComparison';
+import { mapHeaders } from './mapHeaders';
 
-/**
- * Checks if a given value is numeric.
- */
-const isNumeric = (val) => {
+function isNumeric(val) {
   return !isNaN(parseFloat(val)) && isFinite(val);
-};
+}
 
-/**
- * Determines if the two values match considering tolerance rules
- */
-const valuesMatch = (val1, val2, mapping) => {
-  if (val1 === val2) return true;
-
-  if (!mapping?.isAmountField) return false;
-
+function compareWithTolerance(val1, val2, tolerance, type) {
   const num1 = parseFloat(val1);
   const num2 = parseFloat(val2);
   if (!isNumeric(num1) || !isNumeric(num2)) return false;
 
-  const diff = Math.abs(num1 - num2);
-  const tolerance = parseFloat(mapping.toleranceValue || 0);
-  if (isNaN(tolerance)) return false;
-
-  if (mapping.toleranceType === '%') {
-    const percentDiff = (diff / Math.max(Math.abs(num1), Math.abs(num2))) * 100;
-    return percentDiff <= tolerance;
-  } else {
-    return diff <= tolerance;
+  if (type === 'flat') {
+    return Math.abs(num1 - num2) <= parseFloat(tolerance);
+  } else if (type === '%') {
+    const maxVal = Math.max(Math.abs(num1), Math.abs(num2), 1);
+    return Math.abs(num1 - num2) / maxVal <= parseFloat(tolerance) / 100;
   }
-};
+  return false;
+}
 
-/**
- * Main comparison function for Excel vs CSV
- */
-export const compareExcelCSVFiles = async (file1, file2, headerMappings) => {
-  const [excelData, csvData] = await Promise.all([
-    parseExcelFile(file1),
-    parseCSVFile(file2)
-  ]);
+export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
+  try {
+    const [excelData, csvData] = await Promise.all([
+      parseExcelFile(file1),
+      parseCSVFile(file2)
+    ]);
 
-  const remappedCSV = csvData.map(row => {
-    const remapped = {};
-    headerMappings.forEach(mapping => {
-      if (mapping.file1Header && mapping.file2Header) {
-        remapped[mapping.file1Header] = row[mapping.file2Header] ?? '';
-      }
-    });
-    return remapped;
-  });
-
-  const results = [];
-  let matches = 0;
-  let differences = 0;
-  const maxRows = Math.max(excelData.length, remappedCSV.length);
-
-  for (let i = 0; i < maxRows; i++) {
-    const row1 = excelData[i] || {};
-    const row2 = remappedCSV[i] || {};
-    const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
-
-    for (const key of keys) {
-      const val1 = row1[key] ?? '';
-      const val2 = row2[key] ?? '';
-
-      const mapping = headerMappings.find(m => m.file1Header === key);
-      const isMatch = valuesMatch(val1, val2, mapping);
-
-      results.push({
-        ID: row1['ID'] || i + 1,
-        COLUMN: key,
-        SOURCE_1_VALUE: val1,
-        SOURCE_2_VALUE: val2,
-        STATUS: isMatch ? 'match' : 'difference'
-      });
-
-      isMatch ? matches++ : differences++;
+    if (!Array.isArray(excelData) || !Array.isArray(csvData)) {
+      throw new Error('Parsed data missing or invalid');
     }
-  }
 
-  return {
-    total_records: results.length,
-    differences_found: differences,
-    matches_found: matches,
-    results
-  };
-};
+    const remappedCSVData = csvData.map(row => {
+      const remappedRow = {};
+      finalMappings.forEach(mapping => {
+        if (mapping.file1Header && mapping.file2Header) {
+          remappedRow[mapping.file1Header] = row[mapping.file2Header] ?? '';
+        }
+      });
+      return remappedRow;
+    });
+
+    const results = [];
+    let matches = 0;
+    let differences = 0;
+    const maxRows = Math.max(excelData.length, remappedCSVData.length);
+
+    for (let i = 0; i < maxRows; i++) {
+      const row1 = excelData[i] || {};
+      const row2 = remappedCSVData[i] || {};
+      const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+
+      for (const key of keys) {
+        const val1 = row1[key] ?? '';
+        const val2 = row2[key] ?? '';
+
+        const mapping = finalMappings.find(m => m.file1Header === key);
+        let status = 'difference';
+
+        if (val1 === val2) {
+          status = 'match';
+        } else if (
+          mapping?.isAmountField &&
+          mapping?.toleranceType &&
+          mapping?.toleranceValue !== '' &&
+          compareWithTolerance(val1, val2, mapping.toleranceValue, mapping.toleranceType)
+        ) {
+          status = 'match';
+        }
+
+        results.push({
+          ID: row1['ID'] || i + 1,
+          COLUMN: key,
+          SOURCE_1_VALUE: val1,
+          SOURCE_2_VALUE: val2,
+          STATUS: status
+        });
+
+        status === 'match' ? matches++ : differences++;
+      }
+    }
+
+    return {
+      total_records: maxRows,
+      differences_found: differences,
+      matches_found: matches,
+      results
+    };
+  } catch (error) {
+    throw new Error(`Failed to compare Excel and CSV files: ${error.message}`);
+  }
+}
