@@ -28,15 +28,21 @@ export default function Home() {
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (file) {
-      if (fileNum === 1) setFile1(file);
-      else setFile2(file);
+      if (fileNum === 1) {
+        setFile1(file);
+      } else {
+        setFile2(file);
+      }
 
-      if (!['excel_csv'].includes(fileType)) {
-        const name = file.name.toLowerCase();
-        if (name.endsWith('.txt')) setFileType('text');
-        else if (name.endsWith('.csv')) setFileType('csv');
-        else if (name.endsWith('.json')) setFileType('json');
-        else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) setFileType('excel');
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.txt')) {
+        setFileType('text');
+      } else if (name.endsWith('.csv')) {
+        setFileType('csv');
+      } else if (name.endsWith('.json')) {
+        setFileType('json');
+      } else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) {
+        setFileType('excel');
       }
     }
   };
@@ -91,8 +97,8 @@ export default function Home() {
         return;
       }
 
-      const result = await compareTextFiles_main(file1, file2);
-      setResults(result);
+      const comparisonResults = await compareTextFiles_main(file1, file2);
+      setResults(comparisonResults);
 
     } catch (err) {
       console.error('Comparison error:', err);
@@ -102,17 +108,14 @@ export default function Home() {
     }
   };
 
-  const handleMappingConfirm = (finalMappingsFromUI) => {
-    setShowMapper(true);
-  };
-
-  const runFinalComparison = async (finalMappingsToUse) => {
+  const handleMappingConfirm = async (finalMappings) => {
+    setShowMapper(false);
     setLoading(true);
     try {
       const result = await compareExcelCSVFiles(
         pendingComparison.file1,
         pendingComparison.file2,
-        finalMappingsToUse
+        finalMappings
       );
       setResults(result);
     } catch (err) {
@@ -120,7 +123,6 @@ export default function Home() {
       setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
-      setShowMapper(false);
     }
   };
 
@@ -146,7 +148,7 @@ export default function Home() {
         <form onSubmit={handleSubmit}>
           <input type="file" onChange={(e) => handleFileChange(e, 1)} />
           <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-          <button type="submit" disabled={loading}>{loading ? 'Loading...' : 'Load Files'}</button>
+          <button type="submit" disabled={loading}>{loading ? 'Comparing...' : 'Compare Files'}</button>
           {error && <p style={{ color: 'red' }}>{error}</p>}
         </form>
 
@@ -156,11 +158,10 @@ export default function Home() {
             file2Headers={headers2}
             suggestedMappings={suggestedMappings}
             onConfirm={handleMappingConfirm}
-            onCompare={runFinalComparison}
           />
         )}
 
-        {results && (
+        {results && results.rows && (
           <div className="results">
             <h2>Comparison Results</h2>
             <div className="summary">
@@ -172,22 +173,31 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Column</th>
-                  <th>Source 1 Value</th>
-                  <th>Source 2 Value</th>
-                  <th>Difference</th>
-                  <th>Status</th>
+                  {results.columns.map((col, idx) => (
+                    <th key={idx}>{col}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {results.results.map((row, index) => (
-                  <tr key={index} className={row.STATUS === 'difference' ? 'difference' : ''}>
+                {results.rows.map((row, idx) => (
+                  <tr key={idx}>
                     <td>{row.ID}</td>
-                    <td>{row.COLUMN}</td>
-                    <td>{row.SOURCE_1_VALUE}</td>
-                    <td>{row.SOURCE_2_VALUE}</td>
-                    <td>{row.DIFFERENCE_VALUE}</td>
-                    <td>{row.STATUS}</td>
+                    {results.columns.map((col, colIdx) => {
+                      const cell = row.fields[col] || {};
+                      const bgColor = cell.status === 'match'
+                        ? 'transparent'
+                        : cell.status === 'acceptable'
+                        ? 'yellow'
+                        : 'red';
+                      return (
+                        <td key={colIdx} style={{ backgroundColor: bgColor }}>
+                          <div><strong>1:</strong> {cell.val1}</div>
+                          <div><strong>2:</strong> {cell.val2}</div>
+                          <div><strong>Δ:</strong> {cell.diff ?? ''}</div>
+                          <div><strong>Status:</strong> {cell.status}</div>
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
