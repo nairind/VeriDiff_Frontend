@@ -1,205 +1,79 @@
-import { useState } from 'react';
-import Head from 'next/head';
-import { compareFiles, parseCSVFile } from '../utils/simpleCSVComparison';
-import { compareTextFiles_main } from '../utils/textFileComparison';
-import { compareJSONFiles_main, parseJSONFile } from '../utils/jsonFileComparison';
-import { compareExcelFiles, parseExcelFile } from '../utils/excelFileComparison';
-import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
-import HeaderMapper from '../components/HeaderMapper';
-import { mapHeaders } from '../utils/mapHeaders';
+import React, { useState, useEffect } from 'react';
 
-export default function Home() {
-  const [file1, setFile1] = useState(null);
-  const [file2, setFile2] = useState(null);
-  const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [fileType, setFileType] = useState('csv');
+const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm }) => {
+  const [mappings, setMappings] = useState([]);
 
-  const [showMapper, setShowMapper] = useState(false);
-  const [headers1, setHeaders1] = useState([]);
-  const [headers2, setHeaders2] = useState([]);
-  const [suggestedMappings, setSuggestedMappings] = useState([]);
-  const [pendingComparison, setPendingComparison] = useState(null);
-  const [pendingType, setPendingType] = useState(null);
+  useEffect(() => {
+    setMappings(
+      suggestedMappings.map(m => ({
+        file1Header: m.file1Header,
+        file2Header: m.file2Header || '',
+        similarity: m.similarity
+      }))
+    );
+  }, [suggestedMappings]);
 
-  const handleFileChange = (e, fileNum) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (fileNum === 1) {
-        setFile1(file);
-      } else {
-        setFile2(file);
-      }
-
-      if (!['excel_csv'].includes(fileType)) {
-        const name = file.name.toLowerCase();
-        if (name.endsWith('.txt')) {
-          setFileType('text');
-        } else if (name.endsWith('.csv')) {
-          setFileType('csv');
-        } else if (name.endsWith('.json')) {
-          setFileType('json');
-        } else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) {
-          setFileType('excel');
-        }
-      }
-    }
+  const updateMapping = (index, key, value) => {
+    const updated = [...mappings];
+    updated[index][key] = value;
+    setMappings(updated);
   };
 
-  const handleFileTypeChange = (e) => {
-    setFileType(e.target.value);
-    setFile1(null);
-    setFile2(null);
-    setResults(null);
-    setError(null);
+  const addMapping = () => {
+    setMappings([...mappings, { file1Header: '', file2Header: '', similarity: 0 }]);
   };
 
-  const handleSubmit = async (e) => {
+  const removeMapping = (index) => {
+    const updated = mappings.filter((_, i) => i !== index);
+    setMappings(updated);
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!file1 || !file2) {
-      setError('Please select two files to compare');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (['excel_csv', 'excel', 'csv', 'json'].includes(fileType)) {
-        let data1 = [], data2 = [];
-        if (fileType === 'excel_csv') {
-          data1 = await parseExcelFile(file1);
-          data2 = await parseCSVFile(file2);
-        } else if (fileType === 'excel') {
-          data1 = await parseExcelFile(file1);
-          data2 = await parseExcelFile(file2);
-        } else if (fileType === 'csv') {
-          data1 = await parseCSVFile(file1);
-          data2 = await parseCSVFile(file2);
-        } else if (fileType === 'json') {
-          data1 = await parseJSONFile(file1);
-          data2 = await parseJSONFile(file2);
-        }
-
-        const headers1 = Object.keys(data1[0] || {});
-        const headers2 = Object.keys(data2[0] || {});
-        const suggested = mapHeaders(headers1, headers2);
-
-        setHeaders1(headers1);
-        setHeaders2(headers2);
-        setSuggestedMappings(suggested);
-        setPendingComparison({ file1, file2 });
-        setPendingType(fileType);
-        setShowMapper(true);
-        setLoading(false);
-        return;
-      }
-
-      let comparisonResults = await compareTextFiles_main(file1, file2);
-      setResults(comparisonResults);
-    } catch (err) {
-      console.error('Comparison error:', err);
-      setError(`Failed to compare files: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMappingConfirm = async (finalMappings) => {
-    setShowMapper(false);
-    try {
-      let result;
-      if (pendingType === 'excel_csv') {
-        result = await compareExcelCSVFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-      } else if (pendingType === 'csv') {
-        const data1 = await parseCSVFile(pendingComparison.file1);
-        const data2 = await parseCSVFile(pendingComparison.file2);
-        result = await compareExcelCSVFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-      } else if (pendingType === 'excel') {
-        const data1 = await parseExcelFile(pendingComparison.file1);
-        const data2 = await parseExcelFile(pendingComparison.file2);
-        result = await compareExcelCSVFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-      } else if (pendingType === 'json') {
-        const data1 = await parseJSONFile(pendingComparison.file1);
-        const data2 = await parseJSONFile(pendingComparison.file2);
-        result = await compareExcelCSVFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-      }
-      setResults(result);
-    } catch (err) {
-      console.error('Comparison error:', err);
-      setError(`Failed to compare files: ${err.message}`);
-    }
+    onConfirm(mappings);
   };
 
   return (
-    <div className="container">
-      <Head>
-        <title>VeriDiff - File Comparison Tool</title>
-        <meta name="description" content="Compare files with precision" />
-      </Head>
-
-      <main>
-        <h1 className="title">VeriDiff</h1>
-        <p className="description">Upload two files to compare their contents</p>
-
-        <div className="file-type-selector">
-          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
-          <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
-          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
-          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
-          <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <input type="file" onChange={(e) => handleFileChange(e, 1)} />
-          <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-          <button type="submit" disabled={loading}>{loading ? 'Comparing...' : 'Compare Files'}</button>
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-        </form>
-
-        {showMapper && (
-          <HeaderMapper
-            file1Headers={headers1}
-            file2Headers={headers2}
-            suggestedMappings={suggestedMappings}
-            onConfirm={handleMappingConfirm}
-          />
-        )}
-
-        {results && (
-          <div className="results">
-            <h2>Comparison Results</h2>
-            <div className="summary">
-              <p>Total Records: {results.total_records}</p>
-              <p>Differences Found: {results.differences_found}</p>
-              <p>Matches Found: {results.matches_found}</p>
-            </div>
-            <table className="results-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Column</th>
-                  <th>Source 1 Value</th>
-                  <th>Source 2 Value</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.results.map((row, index) => (
-                  <tr key={index} className={row.STATUS === 'difference' ? 'difference' : ''}>
-                    <td>{row.ID}</td>
-                    <td>{row.COLUMN}</td>
-                    <td>{row.SOURCE_1_VALUE}</td>
-                    <td>{row.SOURCE_2_VALUE}</td>
-                    <td>{row.STATUS}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </main>
+    <div className="header-mapper">
+      <h2>Confirm Header Mappings</h2>
+      <form onSubmit={handleSubmit}>
+        <table className="mapping-table">
+          <thead>
+            <tr>
+              <th>Source Header (File 1)</th>
+              <th>Mapped Header (File 2)</th>
+              <th>Similarity</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mappings.map((mapping, index) => (
+              <tr key={index}>
+                <td>{mapping.file1Header}</td>
+                <td>
+                  <select
+                    value={mapping.file2Header}
+                    onChange={(e) => updateMapping(index, 'file2Header', e.target.value)}
+                  >
+                    <option value="">-- None --</option>
+                    {file2Headers.map(h => (
+                      <option key={h} value={h}>{h}</option>
+                    ))}
+                  </select>
+                </td>
+                <td>{mapping.similarity}</td>
+                <td>
+                  <button type="button" onClick={() => removeMapping(index)}>Remove</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button type="button" onClick={addMapping}>Add Mapping</button>
+        <button type="submit">Confirm Mappings</button>
+      </form>
     </div>
   );
-}
+};
+
+export default HeaderMapper;
