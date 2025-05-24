@@ -36,8 +36,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
   };
 
   const removeMapping = (index) => {
-    const updated = mappings.filter((_, i) => i !== index);
-    setMappings(updated);
+    setMappings(mappings.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e) => {
@@ -47,7 +46,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
 
   return (
     <div className="header-mapper">
-      <h2>Confirm Header Mappings & Set Tolerances</h2>
+      <h2>Confirm Header Mappings & Tolerances</h2>
       <form onSubmit={handleSubmit}>
         <table className="mapping-table">
           <thead>
@@ -68,7 +67,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                 <td>
                   <select
                     value={mapping.file2Header}
-                    onChange={(e) => updateMapping(index, 'file2Header', e.target.value)}
+                    onChange={e => updateMapping(index, 'file2Header', e.target.value)}
                   >
                     <option value="">-- None --</option>
                     {file2Headers.map(h => (
@@ -81,13 +80,13 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                   <input
                     type="checkbox"
                     checked={mapping.isAmountField}
-                    onChange={(e) => updateMapping(index, 'isAmountField', e.target.checked)}
+                    onChange={e => updateMapping(index, 'isAmountField', e.target.checked)}
                   />
                 </td>
                 <td>
                   <select
                     value={mapping.toleranceType}
-                    onChange={(e) => updateMapping(index, 'toleranceType', e.target.value)}
+                    onChange={e => updateMapping(index, 'toleranceType', e.target.value)}
                     disabled={!mapping.isAmountField}
                   >
                     <option value="flat">Flat</option>
@@ -98,9 +97,8 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                   <input
                     type="number"
                     value={mapping.toleranceValue}
-                    onChange={(e) => updateMapping(index, 'toleranceValue', e.target.value)}
+                    onChange={e => updateMapping(index, 'toleranceValue', e.target.value)}
                     disabled={!mapping.isAmountField}
-                    step="any"
                   />
                 </td>
                 <td>
@@ -111,7 +109,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
           </tbody>
         </table>
         <button type="button" onClick={addMapping}>Add Mapping</button>
-        <button type="submit">Confirm Mappings</button>
+        <button type="submit">Confirm Mapping</button>
       </form>
     </div>
   );
