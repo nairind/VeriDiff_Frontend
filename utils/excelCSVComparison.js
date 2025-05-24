@@ -1,45 +1,28 @@
-// File: utils/excelCSVComparison.js
-
 import { parseExcelFile } from './excelFileComparison';
 import { parseCSVFile } from './simpleCSVComparison';
 
-function isNumeric(value) {
-  return !isNaN(parseFloat(value)) && isFinite(value);
-}
-
-function withinTolerance(v1, v2, type, value) {
-  const num1 = parseFloat(v1);
-  const num2 = parseFloat(v2);
-  if (!isNumeric(num1) || !isNumeric(num2)) return false;
-  if (type === 'Flat') return Math.abs(num1 - num2) <= parseFloat(value);
-  if (type === '%') return Math.abs(num1 - num2) <= (parseFloat(value) / 100) * Math.abs(num1);
-  return false;
-}
-
-export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
+/**
+ * Compares an Excel file to a CSV file with header mapping, row comparison, and tolerance handling
+ */
+export async function compareExcelCSVFiles(file1, file2, headerMappings = []) {
   const [excelData, csvData] = await Promise.all([
     parseExcelFile(file1),
     parseCSVFile(file2)
   ]);
 
+  if (!Array.isArray(excelData) || !Array.isArray(csvData)) {
+    throw new Error('Parsed data missing or invalid');
+  }
+
+  // Remap CSV data based on header mappings
   const remappedCSVData = csvData.map(row => {
-    const mappedRow = {};
-    finalMappings.forEach(mapping => {
-      if (mapping.file1Header && mapping.file2Header) {
-        mappedRow[mapping.file1Header] = row[mapping.file2Header] ?? '';
+    const remapped = {};
+    headerMappings.forEach(m => {
+      if (m.file1Header && m.file2Header) {
+        remapped[m.file1Header] = row[m.file2Header] ?? '';
       }
     });
-    return mappedRow;
-  });
-
-  const toleranceMap = {};
-  finalMappings.forEach(({ file1Header, isAmountField, toleranceType, toleranceValue }) => {
-    if (isAmountField && toleranceType && toleranceValue !== '') {
-      toleranceMap[file1Header] = {
-        type: toleranceType,
-        value: parseFloat(toleranceValue)
-      };
-    }
+    return remapped;
   });
 
   const results = [];
@@ -52,40 +35,57 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
     const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
 
     for (const key of keys) {
-      const val1 = row1[key] ?? '';
-      const val2 = row2[key] ?? '';
+      const val1Raw = row1[key] ?? '';
+      const val2Raw = row2[key] ?? '';
 
+      const mapping = headerMappings.find(m => m.file1Header === key);
       let status = 'match';
 
-      if (val1 !== val2) {
-        if (
-          toleranceMap[key] &&
-          isNumeric(val1) && isNumeric(val2) &&
-          withinTolerance(val1, val2, toleranceMap[key].type, toleranceMap[key].value)
-        ) {
-          status = 'acceptable difference';
+      if (mapping?.isAmount && mapping.toleranceValue !== undefined && mapping.toleranceType) {
+        const val1Num = parseFloat(val1Raw);
+        const val2Num = parseFloat(val2Raw);
+        const isNumeric = !isNaN(val1Num) && !isNaN(val2Num);
+
+        if (isNumeric) {
+          let threshold = 0;
+          if (mapping.toleranceType === 'flat') {
+            threshold = parseFloat(mapping.toleranceValue);
+          } else if (mapping.toleranceType === '%') {
+            threshold = (parseFloat(mapping.toleranceValue) / 100) * Math.abs(val1Num);
+          }
+          const difference = Math.abs(val1Num - val2Num);
+          if (difference > threshold) {
+            status = 'difference';
+            differences++;
+          } else {
+            status = 'acceptable difference';
+            matches++;
+          }
         } else {
-          status = 'difference';
+          // If not numeric but marked as amount, just compare raw strings
+          status = val1Raw === val2Raw ? 'match' : 'difference';
+          status === 'match' ? matches++ : differences++;
         }
+      } else {
+        status = val1Raw === val2Raw ? 'match' : 'difference';
+        status === 'match' ? matches++ : differences++;
       }
 
       results.push({
-        ID: row1['ID'] || `${i + 1}`,
+        ID: row1['ID'] || `${i + 1}-${key}`,
         COLUMN: key,
-        SOURCE_1_VALUE: val1,
-        SOURCE_2_VALUE: val2,
+        SOURCE_1_VALUE: val1Raw,
+        SOURCE_2_VALUE: val2Raw,
         STATUS: status
       });
-
-      if (status === 'match') matches++;
-      else if (status === 'difference') differences++;
     }
   }
 
   return {
     total_records: results.length,
-    differences_found: differences,
-    matches_found: matches,
+    differences_found: results.filter(r => r.STATUS === 'difference').length,
+    matches_found: results.filter(r => r.STATUS === 'match').length,
+    acceptable_differences: results.filter(r => r.STATUS === 'acceptable difference').length,
     results
   };
 }
