@@ -51,15 +51,14 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
       const row1 = excelData[i] || {};
       const row2 = remappedCSVData[i] || {};
       const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+      const fieldResults = {};
 
       for (const key of keys) {
         const val1 = row1[key] ?? '';
         const val2 = row2[key] ?? '';
-
         const mapping = finalMappings.find(m => m.file1Header === key);
-        let status = 'difference';
-        let differenceValue = '';
 
+        let status = 'difference';
         if (val1 === val2) {
           status = 'match';
         } else if (
@@ -71,18 +70,12 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
           status = 'acceptable';
         }
 
-        if (isNumeric(val1) && isNumeric(val2)) {
-          differenceValue = Math.abs(parseFloat(val1) - parseFloat(val2)).toFixed(2);
-        }
-
-        results.push({
-          ID: row1['ID'] || i + 1,
-          COLUMN: key,
-          SOURCE_1_VALUE: val1,
-          SOURCE_2_VALUE: val2,
-          STATUS: status,
-          DIFFERENCE_VALUE: differenceValue
-        });
+        fieldResults[key] = {
+          val1,
+          val2,
+          status,
+          difference: isNumeric(val1) && isNumeric(val2) ? Math.abs(val1 - val2).toFixed(2) : ''
+        };
 
         if (status === 'match' || status === 'acceptable') {
           matches++;
@@ -90,10 +83,15 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
           differences++;
         }
       }
+
+      results.push({
+        ID: row1['ID'] || i + 1,
+        fields: fieldResults
+      });
     }
 
     return {
-      total_records: maxRows,
+      total_records: results.length,
       differences_found: differences,
       matches_found: matches,
       results
