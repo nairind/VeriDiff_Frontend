@@ -103,7 +103,6 @@ export default function Home() {
   };
 
   const handleMappingConfirm = (finalMappingsFromUI) => {
-    // Save mappings but don't run comparison yet
     setShowMapper(true);
   };
 
@@ -147,7 +146,7 @@ export default function Home() {
         <form onSubmit={handleSubmit}>
           <input type="file" onChange={(e) => handleFileChange(e, 1)} />
           <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-          <button type="submit" disabled={loading}>{loading ? 'Comparing...' : 'Compare Files'}</button>
+          <button type="submit" disabled={loading}>{loading ? 'Loading...' : 'Load Files'}</button>
           {error && <p style={{ color: 'red' }}>{error}</p>}
         </form>
 
@@ -176,6 +175,7 @@ export default function Home() {
                   <th>Column</th>
                   <th>Source 1 Value</th>
                   <th>Source 2 Value</th>
+                  <th>Difference</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -186,6 +186,7 @@ export default function Home() {
                     <td>{row.COLUMN}</td>
                     <td>{row.SOURCE_1_VALUE}</td>
                     <td>{row.SOURCE_2_VALUE}</td>
+                    <td>{row.DIFFERENCE_VALUE}</td>
                     <td>{row.STATUS}</td>
                   </tr>
                 ))}
