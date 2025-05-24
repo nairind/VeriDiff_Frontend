@@ -1,3 +1,5 @@
+// File: utils/jsonFileComparison.js
+
 /**
  * Utility to read file contents as text
  */
@@ -56,11 +58,15 @@ export const parseJSONFile = async (file) => {
   throw new Error('Unsupported JSON format. Expecting object or array of objects.');
 };
 
-function isNumeric(val) {
-  return !isNaN(parseFloat(val)) && isFinite(val);
-}
+/**
+ * Check if value is numeric
+ */
+const isNumeric = (val) => !isNaN(parseFloat(val)) && isFinite(val);
 
-function compareWithTolerance(val1, val2, tolerance, type) {
+/**
+ * Tolerance comparison logic
+ */
+const compareWithTolerance = (val1, val2, tolerance, type) => {
   const num1 = parseFloat(val1);
   const num2 = parseFloat(val2);
   if (!isNumeric(num1) || !isNumeric(num2)) return false;
@@ -72,16 +78,15 @@ function compareWithTolerance(val1, val2, tolerance, type) {
     return Math.abs(num1 - num2) / maxVal <= parseFloat(tolerance) / 100;
   }
   return false;
-}
+};
 
 /**
- * Compares two flattened JSON structures row-by-row
+ * Compares two flattened JSON structures row-by-row using final mappings
  */
 const compareJSONData = (data1, data2, finalMappings = []) => {
   const results = [];
   const maxRows = Math.max(data1.length, data2.length);
-  let matches = 0,
-    differences = 0;
+  let matches = 0, differences = 0;
 
   for (let i = 0; i < maxRows; i++) {
     const row1 = data1[i] || {};
@@ -92,7 +97,7 @@ const compareJSONData = (data1, data2, finalMappings = []) => {
     for (const key of keys) {
       const val1 = row1[key] ?? '';
       const val2 = row2[key] ?? '';
-      const mapping = finalMappings.find((m) => m.file1Header === key);
+      const mapping = finalMappings.find(m => m.file1Header === key);
 
       let status = 'difference';
       if (val1 === val2) {
@@ -110,7 +115,9 @@ const compareJSONData = (data1, data2, finalMappings = []) => {
         val1,
         val2,
         status,
-        difference: isNumeric(val1) && isNumeric(val2) ? Math.abs(val1 - val2).toFixed(2) : ''
+        difference: isNumeric(val1) && isNumeric(val2)
+          ? Math.abs(parseFloat(val1) - parseFloat(val2)).toFixed(2)
+          : ''
       };
 
       if (status === 'match' || status === 'acceptable') {
@@ -121,7 +128,7 @@ const compareJSONData = (data1, data2, finalMappings = []) => {
     }
 
     results.push({
-      ID: row1['ID'] || i + 1,
+      ID: `row${i + 1}`,
       fields: fieldResults
     });
   }
@@ -135,7 +142,7 @@ const compareJSONData = (data1, data2, finalMappings = []) => {
 };
 
 /**
- * Main comparison function with optional field mapping
+ * Main comparison function with optional field mapping and tolerance
  */
 export const compareJSONFiles_main = async (file1, file2, finalMappings = null) => {
   try {
@@ -151,7 +158,7 @@ export const compareJSONFiles_main = async (file1, file2, finalMappings = null) 
     let data2 = rawData2;
 
     if (finalMappings) {
-      data2 = rawData2.map((row) => {
+      data2 = rawData2.map(row => {
         const remapped = {};
         finalMappings.forEach(({ file1Header, file2Header }) => {
           remapped[file1Header] = row[file2Header] ?? '';
