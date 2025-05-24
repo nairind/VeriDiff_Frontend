@@ -1,5 +1,3 @@
-// File: pages/index.js
-
 import { useState } from 'react';
 import Head from 'next/head';
 import { compareTextFiles_main } from '../utils/textFileComparison';
@@ -17,12 +15,15 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fileType, setFileType] = useState('csv');
+
   const [showMapper, setShowMapper] = useState(false);
   const [headers1, setHeaders1] = useState([]);
   const [headers2, setHeaders2] = useState([]);
   const [suggestedMappings, setSuggestedMappings] = useState([]);
+  const [finalMappings, setFinalMappings] = useState([]);
   const [pendingComparison, setPendingComparison] = useState(null);
   const [pendingType, setPendingType] = useState(null);
+  const [showRunButton, setShowRunButton] = useState(false);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
@@ -31,19 +32,6 @@ export default function Home() {
         setFile1(file);
       } else {
         setFile2(file);
-      }
-
-      if (fileType !== 'excel_csv') {
-        const name = file.name.toLowerCase();
-        if (name.endsWith('.txt')) {
-          setFileType('text');
-        } else if (name.endsWith('.csv')) {
-          setFileType('csv');
-        } else if (name.endsWith('.json')) {
-          setFileType('json');
-        } else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) {
-          setFileType('excel');
-        }
       }
     }
   };
@@ -54,6 +42,8 @@ export default function Home() {
     setFile2(null);
     setResults(null);
     setError(null);
+    setShowMapper(false);
+    setShowRunButton(false);
   };
 
   const handleSubmit = async (e) => {
@@ -67,19 +57,19 @@ export default function Home() {
     setError(null);
 
     try {
-      if (["excel_csv", "csv", "excel", "json"].includes(fileType)) {
+      if (['excel_csv', 'csv', 'excel', 'json'].includes(fileType)) {
         let data1 = [], data2 = [];
 
-        if (fileType === "excel_csv") {
+        if (fileType === 'excel_csv') {
           data1 = await parseExcelFile(file1);
           data2 = await parseCSVFile(file2);
-        } else if (fileType === "csv") {
+        } else if (fileType === 'csv') {
           data1 = await parseCSVFile(file1);
           data2 = await parseCSVFile(file2);
-        } else if (fileType === "excel") {
+        } else if (fileType === 'excel') {
           data1 = await parseExcelFile(file1);
           data2 = await parseExcelFile(file2);
-        } else if (fileType === "json") {
+        } else if (fileType === 'json') {
           data1 = await parseJSONFile(file1);
           data2 = await parseJSONFile(file2);
         }
@@ -94,24 +84,28 @@ export default function Home() {
         setPendingComparison({ file1, file2 });
         setPendingType(fileType);
         setShowMapper(true);
-        setLoading(false);
+        setShowRunButton(false);
         return;
       }
 
       const comparisonResults = await compareTextFiles_main(file1, file2);
       setResults(comparisonResults);
     } catch (err) {
-      console.error("Comparison error:", err);
+      console.error('Comparison error:', err);
       setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMappingConfirm = async (finalMappings) => {
-    setShowMapper(false);
-    setLoading(true);
+  const handleMappingConfirm = (mappings) => {
+    setFinalMappings(mappings);
+    setShowRunButton(true);
+  };
+
+  const handleRunComparison = async () => {
     try {
+      setLoading(true);
       const result = await compareExcelCSVFiles(
         pendingComparison.file1,
         pendingComparison.file2,
@@ -119,7 +113,7 @@ export default function Home() {
       );
       setResults(result);
     } catch (err) {
-      console.error("Comparison error:", err);
+      console.error('Run comparison error:', err);
       setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
@@ -148,7 +142,8 @@ export default function Home() {
         <form onSubmit={handleSubmit}>
           <input type="file" onChange={(e) => handleFileChange(e, 1)} />
           <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-          {/* Removed Compare Files button to fix redundancy */}
+          <button type="submit" disabled={loading}>{loading ? 'Loading...' : 'Load Files'}</button>
+          {error && <p style={{ color: 'red' }}>{error}</p>}
         </form>
 
         {showMapper && (
@@ -160,7 +155,13 @@ export default function Home() {
           />
         )}
 
-        {results && results.rows && (
+        {showRunButton && (
+          <button onClick={handleRunComparison} disabled={loading} style={{ marginTop: '1rem' }}>
+            {loading ? 'Comparing...' : 'Run Comparison'}
+          </button>
+        )}
+
+        {results && (
           <div className="results">
             <h2>Comparison Results</h2>
             <div className="summary">
@@ -172,31 +173,22 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  {results.columns.map((col, idx) => (
-                    <th key={idx}>{col}</th>
-                  ))}
+                  <th>Column</th>
+                  <th>Source 1 Value</th>
+                  <th>Source 2 Value</th>
+                  <th>Difference</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {results.rows.map((row, idx) => (
-                  <tr key={idx}>
+                {results.results.map((row, index) => (
+                  <tr key={index} className={row.STATUS === 'difference' ? 'difference' : row.STATUS === 'acceptable' ? 'acceptable' : ''}>
                     <td>{row.ID}</td>
-                    {results.columns.map((col, colIdx) => {
-                      const cell = row.fields[col] || {};
-                      const bgColor = cell.status === 'match'
-                        ? 'transparent'
-                        : cell.status === 'acceptable'
-                        ? 'yellow'
-                        : 'red';
-                      return (
-                        <td key={colIdx} style={{ backgroundColor: bgColor }}>
-                          <div><strong>1:</strong> {cell.val1}</div>
-                          <div><strong>2:</strong> {cell.val2}</div>
-                          <div><strong>Δ:</strong> {cell.diff ?? ''}</div>
-                          <div><strong>Status:</strong> {cell.status}</div>
-                        </td>
-                      );
-                    })}
+                    <td>{row.COLUMN}</td>
+                    <td>{row.SOURCE_1_VALUE}</td>
+                    <td>{row.SOURCE_2_VALUE}</td>
+                    <td>{row.DIFFERENCE ?? '0.00'}</td>
+                    <td>{row.STATUS}</td>
                   </tr>
                 ))}
               </tbody>
