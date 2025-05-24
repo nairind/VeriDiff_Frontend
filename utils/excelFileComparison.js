@@ -1,12 +1,23 @@
-// File: utils/excelFileComparison.js
-
 import * as XLSX from "xlsx";
 
-/**
- * Parses an Excel file and returns its contents as JSON.
- * @param {File} file
- * @returns {Promise<Array<Object>>}
- */
+function isNumeric(val) {
+  return !isNaN(parseFloat(val)) && isFinite(val);
+}
+
+function compareWithTolerance(val1, val2, tolerance, type) {
+  const num1 = parseFloat(val1);
+  const num2 = parseFloat(val2);
+  if (!isNumeric(num1) || !isNumeric(num2)) return false;
+
+  if (type === 'flat') {
+    return Math.abs(num1 - num2) <= parseFloat(tolerance);
+  } else if (type === '%') {
+    const maxVal = Math.max(Math.abs(num1), Math.abs(num2), 1);
+    return Math.abs(num1 - num2) / maxVal <= parseFloat(tolerance) / 100;
+  }
+  return false;
+}
+
 export const parseExcelFile = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -28,31 +39,6 @@ export const parseExcelFile = (file) => {
   });
 };
 
-/**
- * Utility: check if a value is numeric
- */
-const isNumeric = (val) => !isNaN(parseFloat(val)) && isFinite(val);
-
-/**
- * Compares two numeric values with tolerance
- */
-const compareWithTolerance = (val1, val2, tolerance, type) => {
-  const num1 = parseFloat(val1);
-  const num2 = parseFloat(val2);
-  if (!isNumeric(num1) || !isNumeric(num2)) return false;
-
-  if (type === 'flat') {
-    return Math.abs(num1 - num2) <= parseFloat(tolerance);
-  } else if (type === '%') {
-    const maxVal = Math.max(Math.abs(num1), Math.abs(num2), 1);
-    return Math.abs(num1 - num2) / maxVal <= parseFloat(tolerance) / 100;
-  }
-  return false;
-};
-
-/**
- * Compares two arrays of Excel data with mappings + tolerance logic
- */
 const compareExcelData = (data1, data2, finalMappings = []) => {
   const results = [];
   const maxRows = Math.max(data1.length, data2.length);
@@ -66,33 +52,30 @@ const compareExcelData = (data1, data2, finalMappings = []) => {
     const fieldResults = {};
 
     for (const key of keys) {
-      const val1 = row1[key] ?? "";
-      const val2 = row2[key] ?? "";
-
+      const val1 = row1[key] ?? '';
+      const val2 = row2[key] ?? '';
       const mapping = finalMappings.find(m => m.file1Header === key);
-      let status = "difference";
 
+      let status = 'difference';
       if (val1 === val2) {
-        status = "match";
+        status = 'match';
       } else if (
         mapping?.isAmountField &&
         mapping?.toleranceType &&
         mapping?.toleranceValue !== '' &&
         compareWithTolerance(val1, val2, mapping.toleranceValue, mapping.toleranceType)
       ) {
-        status = "acceptable";
+        status = 'acceptable';
       }
 
       fieldResults[key] = {
         val1,
         val2,
         status,
-        difference: isNumeric(val1) && isNumeric(val2)
-          ? Math.abs(val1 - val2).toFixed(2)
-          : ''
+        difference: isNumeric(val1) && isNumeric(val2) ? Math.abs(val1 - val2).toFixed(2) : ''
       };
 
-      if (status === "match" || status === "acceptable") {
+      if (status === 'match' || status === 'acceptable') {
         matches++;
       } else {
         differences++;
@@ -100,7 +83,7 @@ const compareExcelData = (data1, data2, finalMappings = []) => {
     }
 
     results.push({
-      ID: row1["ID"] || i + 1,
+      ID: row1['ID'] || i + 1,
       fields: fieldResults
     });
   }
@@ -113,21 +96,15 @@ const compareExcelData = (data1, data2, finalMappings = []) => {
   };
 };
 
-/**
- * Main comparison function for Excel–Excel with optional mapping
- * @param {File} file1
- * @param {File} file2
- * @param {Array} [finalMappings]
- */
 export const compareExcelFiles = async (file1, file2, finalMappings = []) => {
   const [data1, data2] = await Promise.all([
     parseExcelFile(file1),
-    parseExcelFile(file2),
+    parseExcelFile(file2)
   ]);
 
   let alignedData2 = data2;
 
-  if (finalMappings?.length > 0) {
+  if (finalMappings?.length) {
     alignedData2 = data2.map(row => {
       const remapped = {};
       finalMappings.forEach(({ file1Header, file2Header }) => {
