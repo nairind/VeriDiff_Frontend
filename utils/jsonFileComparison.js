@@ -56,34 +56,74 @@ export const parseJSONFile = async (file) => {
   throw new Error('Unsupported JSON format. Expecting object or array of objects.');
 };
 
+function isNumeric(val) {
+  return !isNaN(parseFloat(val)) && isFinite(val);
+}
+
+function compareWithTolerance(val1, val2, tolerance, type) {
+  const num1 = parseFloat(val1);
+  const num2 = parseFloat(val2);
+  if (!isNumeric(num1) || !isNumeric(num2)) return false;
+
+  if (type === 'flat') {
+    return Math.abs(num1 - num2) <= parseFloat(tolerance);
+  } else if (type === '%') {
+    const maxVal = Math.max(Math.abs(num1), Math.abs(num2), 1);
+    return Math.abs(num1 - num2) / maxVal <= parseFloat(tolerance) / 100;
+  }
+  return false;
+}
+
 /**
  * Compares two flattened JSON structures row-by-row
  */
-const compareJSONData = (data1, data2) => {
+const compareJSONData = (data1, data2, finalMappings = []) => {
   const results = [];
   const maxRows = Math.max(data1.length, data2.length);
-  let matches = 0, differences = 0;
+  let matches = 0,
+    differences = 0;
 
   for (let i = 0; i < maxRows; i++) {
     const row1 = data1[i] || {};
     const row2 = data2[i] || {};
     const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+    const fieldResults = {};
 
     for (const key of keys) {
       const val1 = row1[key] ?? '';
       const val2 = row2[key] ?? '';
-      const isMatch = val1 === val2;
+      const mapping = finalMappings.find((m) => m.file1Header === key);
 
-      results.push({
-        ID: `${i + 1}-${key}`,
-        COLUMN: key,
-        SOURCE_1_VALUE: val1,
-        SOURCE_2_VALUE: val2,
-        STATUS: isMatch ? 'match' : 'difference'
-      });
+      let status = 'difference';
+      if (val1 === val2) {
+        status = 'match';
+      } else if (
+        mapping?.isAmountField &&
+        mapping?.toleranceType &&
+        mapping?.toleranceValue !== '' &&
+        compareWithTolerance(val1, val2, mapping.toleranceValue, mapping.toleranceType)
+      ) {
+        status = 'acceptable';
+      }
 
-      isMatch ? matches++ : differences++;
+      fieldResults[key] = {
+        val1,
+        val2,
+        status,
+        difference: isNumeric(val1) && isNumeric(val2) ? Math.abs(val1 - val2).toFixed(2) : ''
+      };
+
+      if (status === 'match' || status === 'acceptable') {
+        matches++;
+      } else {
+        differences++;
+      }
     }
+
+    results.push({
+      ID: row1['ID'] || i + 1,
+      fields: fieldResults
+    });
   }
 
   return {
@@ -111,7 +151,7 @@ export const compareJSONFiles_main = async (file1, file2, finalMappings = null) 
     let data2 = rawData2;
 
     if (finalMappings) {
-      data2 = rawData2.map(row => {
+      data2 = rawData2.map((row) => {
         const remapped = {};
         finalMappings.forEach(({ file1Header, file2Header }) => {
           remapped[file1Header] = row[file2Header] ?? '';
@@ -120,7 +160,7 @@ export const compareJSONFiles_main = async (file1, file2, finalMappings = null) 
       });
     }
 
-    return compareJSONData(data1, data2);
+    return compareJSONData(data1, data2, finalMappings);
   } catch (err) {
     console.error('JSON comparison error:', err);
     throw new Error(`JSON comparison failed: ${err.message}`);
