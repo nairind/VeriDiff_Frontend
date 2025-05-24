@@ -3,9 +3,15 @@ import { parseCSVFile } from './simpleCSVComparison';
 import { mapHeaders } from './mapHeaders';
 
 /**
- * Compares an Excel file to a CSV file with header mapping and row comparison
+ * Compares an Excel file to a CSV file with header mapping and row comparison.
+ * Supports optional user-confirmed mappings.
+ *
+ * @param {File} file1 - Excel file
+ * @param {File} file2 - CSV file
+ * @param {Array<{ file1Header: string, file2Header: string }>} [finalMappings=null] - Optional custom mappings
+ * @returns {Promise<Object>} - Comparison result
  */
-export async function compareExcelCSVFiles(file1, file2) {
+export async function compareExcelCSVFiles(file1, file2, finalMappings = null) {
   try {
     const [excelData, csvData] = await Promise.all([
       parseExcelFile(file1),
@@ -23,7 +29,7 @@ export async function compareExcelCSVFiles(file1, file2) {
       throw new Error('Header extraction failed');
     }
 
-    const headerMappings = mapHeaders(headers1, headers2);
+    const headerMappings = finalMappings || mapHeaders(headers1, headers2);
 
     const remappedCSVData = csvData.map(row => {
       const remappedRow = {};
