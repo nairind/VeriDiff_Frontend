@@ -5,7 +5,6 @@ import Head from 'next/head';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
 import { parseExcelFile } from '../utils/excelFileComparison';
 import { parseJSONFile } from '../utils/jsonFileComparison';
-import { parseTextFile, compareTextFiles_main } from '../utils/textFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
 import { mapHeaders } from '../utils/mapHeaders';
@@ -27,6 +26,7 @@ export default function Home() {
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (!file) return;
+
     if (fileNum === 1) setFile1(file);
     else setFile2(file);
   };
@@ -61,16 +61,10 @@ export default function Home() {
       } else if (fileType === 'json') {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
-      } else if (fileType === 'text') {
-        const result = await compareTextFiles_main(file1, file2);
-        setResults(result);
-        return;
       }
-
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
-
       setHeaders1(h1);
       setHeaders2(h2);
       setSuggestedMappings(suggested);
@@ -122,10 +116,8 @@ export default function Home() {
           <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
         </div>
 
-        <div className="file-inputs">
-          <input type="file" onChange={(e) => handleFileChange(e, 1)} />
-          <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-        </div>
+        <input type="file" onChange={(e) => handleFileChange(e, 1)} />
+        <input type="file" onChange={(e) => handleFileChange(e, 2)} />
 
         <button onClick={handleLoadFiles}>Load Files</button>
 
@@ -152,30 +144,26 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  {Object.keys(results.results[0]?.fields || {}).map(key => (
-                    <th key={key}>{key}</th>
+                  {Object.keys(results.results[0]?.fields || {}).map(col => (
+                    <th key={col}>{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {results.results.map((row, index) => (
-                  <tr key={index}>
+                {results.results.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
                     <td>{row.ID}</td>
-                    {Object.entries(row.fields).map(([key, field]) => (
+                    {Object.entries(row.fields).map(([key, field], colIndex) => (
                       <td
-                        key={key}
+                        key={colIndex}
                         className={
-                          field.status === 'difference'
-                            ? 'diff-cell'
-                            : field.status === 'acceptable'
-                            ? 'acceptable-cell'
-                            : 'match-cell'
+                          field.status === 'difference' ? 'difference' :
+                          field.status === 'acceptable' ? 'acceptable' : 'match'
                         }
                       >
                         {field.val1} / {field.val2}
                         <br />
-                        {field.status}
-                        {field.difference && ` (Δ ${field.difference})`}
+                        {field.status} {field.difference ? `(Δ ${field.difference})` : ''}
                       </td>
                     ))}
                   </tr>
