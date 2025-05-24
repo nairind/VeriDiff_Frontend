@@ -1,5 +1,3 @@
-import { diffJson } from 'diff';
-
 /**
  * Reads a file and returns its contents as text
  */
@@ -31,14 +29,23 @@ export const parseJSON = (content) => {
 export const parseJSONFile = async (file) => {
   const text = await readFileAsText(file);
   const parsed = parseJSON(text);
-  if (!Array.isArray(parsed)) throw new Error('JSON must be an array of objects');
-  return parsed;
+
+  if (Array.isArray(parsed)) return parsed;
+
+  // Handle common wrappers like { data: [...] }
+  const wrappedArray = Object.values(parsed).find(val => Array.isArray(val));
+  if (wrappedArray) return wrappedArray;
+
+  throw new Error('JSON must be or contain an array of objects');
 };
 
 /**
- * Flattens and compares two JSON arrays using header-aligned comparison
+ * Compares two arrays of JSON data
+ * @param {Array<Object>} data1
+ * @param {Array<Object>} data2
+ * @returns {Object}
  */
-export const compareJSONArrays = (data1, data2) => {
+const compareJSONData = (data1, data2) => {
   const results = [];
   const maxRows = Math.max(data1.length, data2.length);
   let matches = 0;
@@ -52,14 +59,17 @@ export const compareJSONArrays = (data1, data2) => {
     for (const key of keys) {
       const val1 = row1[key] ?? '';
       const val2 = row2[key] ?? '';
+      const status = val1 === val2 ? 'match' : 'difference';
+
       results.push({
         ID: row1['ID'] || `${i + 1}-${key}`,
         COLUMN: key,
         SOURCE_1_VALUE: val1,
         SOURCE_2_VALUE: val2,
-        STATUS: val1 === val2 ? 'match' : 'difference'
+        STATUS: status
       });
-      val1 === val2 ? matches++ : differences++;
+
+      status === 'match' ? matches++ : differences++;
     }
   }
 
@@ -72,10 +82,11 @@ export const compareJSONArrays = (data1, data2) => {
 };
 
 /**
- * Main function to compare two JSON files with optional header mapping
+ * Main function to compare two JSON files with optional mapping
  * @param {File} file1
  * @param {File} file2
  * @param {Array<{ file1Header: string, file2Header: string }>} [finalMappings=null]
+ * @returns {Promise<Object>}
  */
 export const compareJSONFiles_main = async (file1, file2, finalMappings = null) => {
   try {
@@ -100,7 +111,7 @@ export const compareJSONFiles_main = async (file1, file2, finalMappings = null) 
       });
     }
 
-    return compareJSONArrays(data1, alignedData2);
+    return compareJSONData(data1, alignedData2);
   } catch (error) {
     console.error('JSON comparison error:', error);
     throw new Error(`JSON comparison failed: ${error.message}`);
