@@ -109,10 +109,10 @@ export default function Home() {
         <p>Upload two files to compare their contents</p>
 
         <div className="file-type-selector">
-          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV</label>
+          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
           <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
-          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON</label>
-          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel</label>
+          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
+          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
           <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
         </div>
 
@@ -144,8 +144,8 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  {Object.keys(results.results[0]?.fields || {}).map(col => (
-                    <th key={col}>{col}</th>
+                  {Object.keys(results.results[0]?.fields || {}).map((col, idx) => (
+                    <th key={idx}>{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -153,17 +153,10 @@ export default function Home() {
                 {results.results.map((row, rowIndex) => (
                   <tr key={rowIndex}>
                     <td>{row.ID}</td>
-                    {Object.entries(row.fields).map(([key, field], colIndex) => (
-                      <td
-                        key={colIndex}
-                        className={
-                          field.status === 'difference' ? 'difference' :
-                          field.status === 'acceptable' ? 'acceptable' : 'match'
-                        }
-                      >
-                        {field.val1} / {field.val2}
-                        <br />
-                        {field.status} {field.difference ? `(Δ ${field.difference})` : ''}
+                    {Object.entries(row.fields).map(([key, { val1, val2, status, difference }], idx) => (
+                      <td key={idx} className={status}>
+                        {val1} / {val2}<br />
+                        {status} {difference && `(Δ ${difference})`}
                       </td>
                     ))}
                   </tr>
