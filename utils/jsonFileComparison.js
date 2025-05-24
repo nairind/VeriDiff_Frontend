@@ -1,5 +1,5 @@
 /**
- * Reads a file and returns its contents as text
+ * Utility to read file contents as text
  */
 export const readFileAsText = (file) => {
   return new Promise((resolve, reject) => {
@@ -11,7 +11,7 @@ export const readFileAsText = (file) => {
 };
 
 /**
- * Parses JSON content
+ * Parse JSON content safely
  */
 export const parseJSON = (content) => {
   try {
@@ -22,34 +22,47 @@ export const parseJSON = (content) => {
 };
 
 /**
- * Parses a JSON file into an array of objects
- * @param {File} file
- * @returns {Promise<Array<Object>>}
+ * Flattens a nested JSON object using dot notation
+ */
+const flattenObject = (obj, prefix = '', res = {}) => {
+  for (const key in obj) {
+    const value = obj[key];
+    const newKey = prefix ? `${prefix}.${key}` : key;
+
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      flattenObject(value, newKey, res);
+    } else {
+      res[newKey] = Array.isArray(value) ? JSON.stringify(value) : value;
+    }
+  }
+  return res;
+};
+
+/**
+ * Loads and flattens JSON file content
  */
 export const parseJSONFile = async (file) => {
   const text = await readFileAsText(file);
   const parsed = parseJSON(text);
 
-  if (Array.isArray(parsed)) return parsed;
+  if (Array.isArray(parsed)) {
+    return parsed.map((item, i) => flattenObject(item, `row${i}`));
+  }
 
-  // Handle common wrappers like { data: [...] }
-  const wrappedArray = Object.values(parsed).find(val => Array.isArray(val));
-  if (wrappedArray) return wrappedArray;
+  if (typeof parsed === 'object') {
+    return [flattenObject(parsed)];
+  }
 
-  throw new Error('JSON must be or contain an array of objects');
+  throw new Error('Unsupported JSON format. Expecting object or array of objects.');
 };
 
 /**
- * Compares two arrays of JSON data
- * @param {Array<Object>} data1
- * @param {Array<Object>} data2
- * @returns {Object}
+ * Compares two flattened JSON structures row-by-row
  */
 const compareJSONData = (data1, data2) => {
   const results = [];
   const maxRows = Math.max(data1.length, data2.length);
-  let matches = 0;
-  let differences = 0;
+  let matches = 0, differences = 0;
 
   for (let i = 0; i < maxRows; i++) {
     const row1 = data1[i] || {};
@@ -59,17 +72,17 @@ const compareJSONData = (data1, data2) => {
     for (const key of keys) {
       const val1 = row1[key] ?? '';
       const val2 = row2[key] ?? '';
-      const status = val1 === val2 ? 'match' : 'difference';
+      const isMatch = val1 === val2;
 
       results.push({
-        ID: row1['ID'] || `${i + 1}-${key}`,
+        ID: `${i + 1}-${key}`,
         COLUMN: key,
         SOURCE_1_VALUE: val1,
         SOURCE_2_VALUE: val2,
-        STATUS: status
+        STATUS: isMatch ? 'match' : 'difference'
       });
 
-      status === 'match' ? matches++ : differences++;
+      isMatch ? matches++ : differences++;
     }
   }
 
@@ -82,27 +95,23 @@ const compareJSONData = (data1, data2) => {
 };
 
 /**
- * Main function to compare two JSON files with optional mapping
- * @param {File} file1
- * @param {File} file2
- * @param {Array<{ file1Header: string, file2Header: string }>} [finalMappings=null]
- * @returns {Promise<Object>}
+ * Main comparison function with optional field mapping
  */
 export const compareJSONFiles_main = async (file1, file2, finalMappings = null) => {
   try {
     if (!file1.name.endsWith('.json') || !file2.name.endsWith('.json')) {
-      throw new Error('Both files must be JSON (.json) files');
+      throw new Error('Both files must be JSON (.json)');
     }
 
-    const [data1, data2] = await Promise.all([
+    const [data1, rawData2] = await Promise.all([
       parseJSONFile(file1),
       parseJSONFile(file2)
     ]);
 
-    let alignedData2 = data2;
+    let data2 = rawData2;
 
     if (finalMappings) {
-      alignedData2 = data2.map(row => {
+      data2 = rawData2.map(row => {
         const remapped = {};
         finalMappings.forEach(({ file1Header, file2Header }) => {
           remapped[file1Header] = row[file2Header] ?? '';
@@ -111,9 +120,9 @@ export const compareJSONFiles_main = async (file1, file2, finalMappings = null) 
       });
     }
 
-    return compareJSONData(data1, alignedData2);
-  } catch (error) {
-    console.error('JSON comparison error:', error);
-    throw new Error(`JSON comparison failed: ${error.message}`);
+    return compareJSONData(data1, data2);
+  } catch (err) {
+    console.error('JSON comparison error:', err);
+    throw new Error(`JSON comparison failed: ${err.message}`);
   }
 };
