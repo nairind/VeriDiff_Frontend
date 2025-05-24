@@ -67,7 +67,7 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
           mapping?.toleranceValue !== '' &&
           compareWithTolerance(val1, val2, mapping.toleranceValue, mapping.toleranceType)
         ) {
-          status = 'match';
+          status = 'acceptable';
         }
 
         results.push({
@@ -78,7 +78,11 @@ export async function compareExcelCSVFiles(file1, file2, finalMappings = []) {
           STATUS: status
         });
 
-        status === 'match' ? matches++ : differences++;
+        if (status === 'match' || status === 'acceptable') {
+          matches++;
+        } else {
+          differences++;
+        }
       }
     }
 
