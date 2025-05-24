@@ -2,9 +2,9 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
-import { parseCSVFile, compareFiles } from '../utils/simpleCSVComparison';
-import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison';
-import { parseJSONFile, compareJSONFiles_main } from '../utils/jsonFileComparison';
+import { parseCSVFile } from '../utils/simpleCSVComparison';
+import { parseExcelFile } from '../utils/excelFileComparison';
+import { parseJSONFile } from '../utils/jsonFileComparison';
 import HeaderMapper from '../components/HeaderMapper';
 import { mapHeaders } from '../utils/mapHeaders';
 
@@ -20,6 +20,7 @@ export default function Home() {
   const [headers1, setHeaders1] = useState([]);
   const [headers2, setHeaders2] = useState([]);
   const [suggestedMappings, setSuggestedMappings] = useState([]);
+  const [finalMappings, setFinalMappings] = useState([]);
   const [pendingComparison, setPendingComparison] = useState(null);
   const [pendingType, setPendingType] = useState(null);
 
@@ -97,7 +98,6 @@ export default function Home() {
         return;
       }
 
-      // Plain text comparison
       const comparisonResults = await compareTextFiles_main(file1, file2);
       setResults(comparisonResults);
 
@@ -109,22 +109,19 @@ export default function Home() {
     }
   };
 
-  const handleMappingConfirm = async (finalMappings) => {
+  const handleMappingConfirm = async (finalConfirmedMappings) => {
+    setFinalMappings(finalConfirmedMappings);
     setShowMapper(false);
+  };
+
+  const handleFinalCompare = async () => {
     setLoading(true);
     try {
-      let result;
-
-      if (pendingType === 'excel_csv') {
-        result = await compareExcelCSVFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-      } else if (pendingType === 'csv') {
-        result = await compareFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-      } else if (pendingType === 'excel') {
-        result = await compareExcelFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-      } else if (pendingType === 'json') {
-        result = await compareJSONFiles_main(pendingComparison.file1, pendingComparison.file2, finalMappings);
-      }
-
+      const result = await compareExcelCSVFiles(
+        pendingComparison.file1,
+        pendingComparison.file2,
+        finalMappings
+      );
       setResults(result);
     } catch (err) {
       console.error('Comparison error:', err);
@@ -156,7 +153,7 @@ export default function Home() {
         <form onSubmit={handleSubmit}>
           <input type="file" onChange={(e) => handleFileChange(e, 1)} />
           <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-          <button type="submit" disabled={loading}>{loading ? 'Comparing...' : 'Compare Files'}</button>
+          <button type="submit" disabled={loading}>{loading ? 'Loading...' : 'Prepare Mapping'}</button>
           {error && <p style={{ color: 'red' }}>{error}</p>}
         </form>
 
@@ -167,6 +164,12 @@ export default function Home() {
             suggestedMappings={suggestedMappings}
             onConfirm={handleMappingConfirm}
           />
+        )}
+
+        {!showMapper && finalMappings.length > 0 && (
+          <button onClick={handleFinalCompare} disabled={loading} style={{ marginTop: '20px' }}>
+            {loading ? 'Comparing...' : 'Compare Files'}
+          </button>
         )}
 
         {results && (
@@ -200,8 +203,3 @@ export default function Home() {
               </tbody>
             </table>
           </div>
-        )}
-      </main>
-    </div>
-  );
-}
