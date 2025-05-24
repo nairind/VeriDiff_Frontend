@@ -22,7 +22,6 @@ export default function Home() {
   const [headers1, setHeaders1] = useState([]);
   const [headers2, setHeaders2] = useState([]);
   const [suggestedMappings, setSuggestedMappings] = useState([]);
-  const [finalMappings, setFinalMappings] = useState([]);
   const [pendingComparison, setPendingComparison] = useState(null);
   const [pendingType, setPendingType] = useState(null);
 
@@ -104,18 +103,17 @@ export default function Home() {
   };
 
   const handleMappingConfirm = (finalMappingsFromUI) => {
-    setFinalMappings(finalMappingsFromUI);
-    setShowMapper(false);
-    setTimeout(() => setShowMapper(true), 0); // Force re-render
+    // Save mappings but don't run comparison yet
+    setShowMapper(true);
   };
 
-  const runFinalComparison = async () => {
+  const runFinalComparison = async (finalMappingsToUse) => {
     setLoading(true);
     try {
       const result = await compareExcelCSVFiles(
         pendingComparison.file1,
         pendingComparison.file2,
-        finalMappings
+        finalMappingsToUse
       );
       setResults(result);
     } catch (err) {
