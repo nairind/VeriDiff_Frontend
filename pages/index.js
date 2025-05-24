@@ -13,6 +13,8 @@ export default function Home() {
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
   const [fileType, setFileType] = useState('csv');
+
+  const [showMapper, setShowMapper] = useState(false);
   const [headers1, setHeaders1] = useState([]);
   const [headers2, setHeaders2] = useState([]);
   const [suggestedMappings, setSuggestedMappings] = useState([]);
@@ -20,7 +22,14 @@ export default function Home() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showMapper, setShowMapper] = useState(false);
+
+  const handleFileChange = (e, fileNum) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (fileNum === 1) setFile1(file);
+    else setFile2(file);
+  };
 
   const handleFileTypeChange = (e) => {
     setFileType(e.target.value);
@@ -31,12 +40,6 @@ export default function Home() {
     setShowMapper(false);
   };
 
-  const handleFileChange = (e, fileNum) => {
-    const file = e.target.files[0];
-    if (fileNum === 1) setFile1(file);
-    else setFile2(file);
-  };
-
   const handleLoadFiles = async () => {
     if (!file1 || !file2) {
       setError('Please select two files.');
@@ -44,33 +47,31 @@ export default function Home() {
     }
     setLoading(true);
     setError(null);
-
     try {
       let data1 = [], data2 = [];
-      if (fileType === 'csv') {
+      if (fileType === 'excel_csv') {
+        data1 = await parseExcelFile(file1);
+        data2 = await parseCSVFile(file2);
+      } else if (fileType === 'csv') {
         data1 = await parseCSVFile(file1);
         data2 = await parseCSVFile(file2);
       } else if (fileType === 'excel') {
         data1 = await parseExcelFile(file1);
         data2 = await parseExcelFile(file2);
-      } else if (fileType === 'excel_csv') {
-        data1 = await parseExcelFile(file1);
-        data2 = await parseCSVFile(file2);
       } else if (fileType === 'json') {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
       }
-
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
-
       setHeaders1(h1);
       setHeaders2(h2);
       setSuggestedMappings(suggested);
       setShowMapper(true);
     } catch (err) {
-      setError(`Failed to load files: ${err.message}`);
+      console.error(err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -91,7 +92,8 @@ export default function Home() {
       const result = await compareExcelCSVFiles(file1, file2, finalMappings);
       setResults(result);
     } catch (err) {
-      setError(`Comparison failed: ${err.message}`);
+      console.error(err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -117,7 +119,7 @@ export default function Home() {
         <input type="file" onChange={(e) => handleFileChange(e, 1)} />
         <input type="file" onChange={(e) => handleFileChange(e, 2)} />
 
-        <button onClick={handleLoadFiles} disabled={loading}>Load Files</button>
+        <button onClick={handleLoadFiles}>Load Files</button>
 
         {showMapper && (
           <HeaderMapper
@@ -125,6 +127,7 @@ export default function Home() {
             file2Headers={headers2}
             suggestedMappings={suggestedMappings}
             onConfirm={handleMappingConfirmed}
+            showRunButton={true}
             onRun={handleRunComparison}
           />
         )}
@@ -163,6 +166,7 @@ export default function Home() {
             </table>
           </div>
         )}
+
         {error && <p style={{ color: 'red' }}>{error}</p>}
       </main>
     </div>
