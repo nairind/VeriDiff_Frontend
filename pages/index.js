@@ -26,6 +26,7 @@ export default function Home() {
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (!file) return;
+
     if (fileNum === 1) setFile1(file);
     else setFile2(file);
   };
@@ -61,16 +62,13 @@ export default function Home() {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
       }
-
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
-
       setHeaders1(h1);
       setHeaders2(h2);
       setSuggestedMappings(suggested);
       setShowMapper(true);
-      setFinalMappings([]);
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -114,8 +112,6 @@ export default function Home() {
           <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
           <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
           <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
-          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
-          <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
         </div>
 
         <input type="file" onChange={(e) => handleFileChange(e, 1)} />
@@ -146,30 +142,53 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Column</th>
-                  <th>Source 1 Value</th>
-                  <th>Source 2 Value</th>
-                  <th>Difference</th>
-                  <th>Status</th>
+                  {headers1.map(header => (
+                    <th key={header} colSpan={3}>{header}</th>
+                  ))}
+                </tr>
+                <tr>
+                  <th></th>
+                  {headers1.map(header => (
+                    <>
+                      <th key={`${header}-val1`}>File 1</th>
+                      <th key={`${header}-val2`}>File 2</th>
+                      <th key={`${header}-status`}>Status</th>
+                    </>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {results.results.map((row, index) => (
-                  <tr key={index} className={row.STATUS === 'difference' ? 'difference' : row.STATUS === 'acceptable' ? 'acceptable' : ''}>
+                {results.results.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
                     <td>{row.ID}</td>
-                    <td>{row.COLUMN}</td>
-                    <td>{row.SOURCE_1_VALUE}</td>
-                    <td>{row.SOURCE_2_VALUE}</td>
-                    <td>{row.DIFFERENCE ?? ''}</td>
-                    <td>{row.STATUS}</td>
+                    {headers1.map(header => {
+                      const field = row.fields[header] || {};
+                      return (
+                        <>
+                          <td>{field.val1}</td>
+                          <td>{field.val2}</td>
+                          <td
+                            style={{
+                              backgroundColor:
+                                field.status === 'difference'
+                                  ? 'lightcoral'
+                                  : field.status === 'acceptable'
+                                  ? 'khaki'
+                                  : 'lightgreen',
+                            }}
+                          >
+                            {field.status}
+                            {field.difference ? ` (${field.difference})` : ''}
+                          </td>
+                        </>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-
-        {error && <p style={{ color: 'red' }}>{error}</p>}
       </main>
     </div>
   );
