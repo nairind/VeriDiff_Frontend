@@ -1,4 +1,4 @@
-// File: pages/index.js
+// ✅ Known-working index.js version — supports tolerance (flat and %) and correct result display
 
 import { useState } from 'react';
 import Head from 'next/head';
@@ -62,6 +62,7 @@ export default function Home() {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
       }
+
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
@@ -109,10 +110,10 @@ export default function Home() {
         <p>Upload two files to compare their contents</p>
 
         <div className="file-type-selector">
-          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
+          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV</label>
           <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
-          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON Files</label>
-          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
+          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON</label>
+          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel</label>
           <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
         </div>
 
@@ -144,19 +145,23 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  {Object.keys(results.results[0]?.fields || {}).map((col, idx) => (
-                    <th key={idx}>{col}</th>
+                  {results.results[0] && Object.keys(results.results[0].fields).map((key) => (
+                    <th key={key}>{key}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {results.results.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
+                {results.results.map((row, index) => (
+                  <tr key={index}>
                     <td>{row.ID}</td>
-                    {Object.entries(row.fields).map(([key, { val1, val2, status, difference }], idx) => (
-                      <td key={idx} className={status}>
-                        {val1} / {val2}<br />
-                        {status} {difference && `(Δ ${difference})`}
+                    {Object.entries(row.fields).map(([key, val]) => (
+                      <td
+                        key={key}
+                        className={val.status === 'difference' ? 'difference' : val.status === 'acceptable' ? 'acceptable' : 'match'}
+                      >
+                        {val.val1} / {val.val2}
+                        <br />
+                        {val.status} {val.difference && `(Δ ${val.difference})`}
                       </td>
                     ))}
                   </tr>
