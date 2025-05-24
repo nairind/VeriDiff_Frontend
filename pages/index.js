@@ -11,33 +11,21 @@ export default function Home() {
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
   const [fileType, setFileType] = useState('csv');
+
+  const [showMapper, setShowMapper] = useState(false);
   const [headers1, setHeaders1] = useState([]);
   const [headers2, setHeaders2] = useState([]);
   const [suggestedMappings, setSuggestedMappings] = useState([]);
   const [finalMappings, setFinalMappings] = useState([]);
-  const [showMapper, setShowMapper] = useState(false);
   const [results, setResults] = useState(null);
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    if (fileNum === 1) {
-      setFile1(file);
-      inferFileType(file);
-    } else {
-      setFile2(file);
-      inferFileType(file);
-    }
-  };
-
-  const inferFileType = (file) => {
-    const name = file.name.toLowerCase();
-    if (name.endsWith('.csv')) setFileType('csv');
-    else if (name.endsWith('.json')) setFileType('json');
-    else if ([".xlsx", ".xls", ".xlsm", ".xlsb"].some(ext => name.endsWith(ext))) setFileType('excel');
+    if (fileNum === 1) setFile1(file);
+    else setFile2(file);
   };
 
   const handleFileTypeChange = (e) => {
@@ -47,7 +35,6 @@ export default function Home() {
     setResults(null);
     setError(null);
     setShowMapper(false);
-    setFinalMappings([]);
   };
 
   const handleLoadFiles = async () => {
@@ -55,10 +42,8 @@ export default function Home() {
       setError('Please select two files.');
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
       let data1 = [], data2 = [];
       if (fileType === 'excel_csv') {
@@ -73,17 +58,16 @@ export default function Home() {
       } else if (fileType === 'json') {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
+      } else {
+        throw new Error('Unsupported file type.');
       }
-
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
-
       setHeaders1(h1);
       setHeaders2(h2);
       setSuggestedMappings(suggested);
       setShowMapper(true);
-      setResults(null);
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -98,19 +82,17 @@ export default function Home() {
 
   const handleRunComparison = async () => {
     if (!file1 || !file2 || finalMappings.length === 0) {
-      setError('Files or confirmed mappings are missing.');
+      setError('Missing files or mappings.');
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
       const result = await compareExcelCSVFiles(file1, file2, finalMappings);
       setResults(result);
     } catch (err) {
       console.error(err);
-      setError('Comparison failed: ' + err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -127,15 +109,16 @@ export default function Home() {
 
         <div className="file-type-selector">
           <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV</label>
+          <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
+          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON</label>
           <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel</label>
           <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
-          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON</label>
         </div>
 
         <input type="file" onChange={(e) => handleFileChange(e, 1)} />
         <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-        <button onClick={handleLoadFiles} disabled={loading}>Load Files</button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        <button onClick={handleLoadFiles}>Load Files</button>
 
         {showMapper && (
           <HeaderMapper
@@ -143,6 +126,7 @@ export default function Home() {
             file2Headers={headers2}
             suggestedMappings={suggestedMappings}
             onConfirm={handleMappingConfirmed}
+            showRunButton={true}
             onRun={handleRunComparison}
           />
         )}
@@ -155,30 +139,35 @@ export default function Home() {
               <p>Differences Found: {results.differences_found}</p>
               <p>Matches Found: {results.matches_found}</p>
             </div>
-            <table>
+            <table className="results-table">
               <thead>
                 <tr>
                   <th>ID</th>
-                  {headers1.map(h => <th key={h}>{h}</th>)}
+                  {Object.keys(results.results[0].fields).map((field, idx) => (
+                    <th key={idx}>{field}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {results.results.map((row, i) => (
-                  <tr key={i}>
+                {results.results.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
                     <td>{row.ID}</td>
-                    {headers1.map(h => {
-                      const cell = row.fields[h] || {};
-                      const bg = cell.status === 'difference'
-                        ? 'salmon' : cell.status === 'acceptable'
-                        ? 'khaki' : 'transparent';
-                      return (
-                        <td key={h} style={{ backgroundColor: bg }}>
-                          <div>{cell.val1}</div>
-                          <div>{cell.val2}</div>
-                          <div><small>{cell.difference}</small></div>
-                        </td>
-                      );
-                    })}
+                    {Object.entries(row.fields).map(([key, value], idx) => (
+                      <td
+                        key={idx}
+                        style={{
+                          backgroundColor:
+                            value.status === 'difference'
+                              ? '#fdd'
+                              : value.status === 'acceptable'
+                              ? '#ffd'
+                              : '#dfd'
+                        }}
+                      >
+                        {value.val1} / {value.val2} <br />
+                        <small>{value.status} {value.difference && `(Δ ${value.difference})`}</small>
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
