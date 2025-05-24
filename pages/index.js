@@ -13,22 +13,19 @@ export default function Home() {
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
   const [fileType, setFileType] = useState('csv');
-
-  const [showMapper, setShowMapper] = useState(false);
   const [headers1, setHeaders1] = useState([]);
   const [headers2, setHeaders2] = useState([]);
   const [suggestedMappings, setSuggestedMappings] = useState([]);
   const [finalMappings, setFinalMappings] = useState([]);
   const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showMapper, setShowMapper] = useState(false);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
-    if (!file) return;
-
     if (fileNum === 1) setFile1(file);
-    else setFile2(file);
+    if (fileNum === 2) setFile2(file);
   };
 
   const handleFileTypeChange = (e) => {
@@ -36,17 +33,17 @@ export default function Home() {
     setFile1(null);
     setFile2(null);
     setResults(null);
-    setError(null);
     setShowMapper(false);
+    setFinalMappings([]);
   };
 
   const handleLoadFiles = async () => {
+    setError(null);
     if (!file1 || !file2) {
-      setError('Please select two files.');
+      setError('Please select both files.');
       return;
     }
-    setLoading(true);
-    setError(null);
+
     try {
       let data1 = [], data2 = [];
       if (fileType === 'excel_csv') {
@@ -61,7 +58,11 @@ export default function Home() {
       } else if (fileType === 'json') {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
+      } else {
+        setError('Unsupported file type');
+        return;
       }
+
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
@@ -70,10 +71,7 @@ export default function Home() {
       setSuggestedMappings(suggested);
       setShowMapper(true);
     } catch (err) {
-      console.error(err);
       setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -82,17 +80,16 @@ export default function Home() {
   };
 
   const handleRunComparison = async () => {
+    setError(null);
     if (!file1 || !file2 || finalMappings.length === 0) {
-      setError('Missing files or mappings.');
+      setError('Ensure both files are selected and mappings are confirmed.');
       return;
     }
     setLoading(true);
-    setError(null);
     try {
       const result = await compareExcelCSVFiles(file1, file2, finalMappings);
       setResults(result);
     } catch (err) {
-      console.error(err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -102,94 +99,69 @@ export default function Home() {
   return (
     <div className="container">
       <Head>
-        <title>VeriDiff - File Comparison Tool</title>
+        <title>VeriDiff</title>
       </Head>
-      <main>
-        <h1 className="title">VeriDiff</h1>
-        <p>Upload two files to compare their contents</p>
 
-        <div className="file-type-selector">
-          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV Files</label>
-          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL Files</label>
-          <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
-        </div>
+      <h1>VeriDiff</h1>
+      <p>Upload two files to compare their contents</p>
 
-        <input type="file" onChange={(e) => handleFileChange(e, 1)} />
-        <input type="file" onChange={(e) => handleFileChange(e, 2)} />
+      <div>
+        <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV</label>
+        <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT</label>
+        <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON</label>
+        <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> EXCEL</label>
+        <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
+      </div>
 
-        <button onClick={handleLoadFiles}>Load Files</button>
+      <input type="file" onChange={(e) => handleFileChange(e, 1)} />
+      <input type="file" onChange={(e) => handleFileChange(e, 2)} />
+      <button onClick={handleLoadFiles}>Load Files</button>
 
-        {showMapper && (
-          <HeaderMapper
-            file1Headers={headers1}
-            file2Headers={headers2}
-            suggestedMappings={suggestedMappings}
-            onConfirm={handleMappingConfirmed}
-            showRunButton={true}
-            onRun={handleRunComparison}
-          />
-        )}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
-        {results && (
-          <div className="results">
-            <h2>Comparison Results</h2>
-            <div className="summary">
-              <p>Total Records: {results.total_records}</p>
-              <p>Differences Found: {results.differences_found}</p>
-              <p>Matches Found: {results.matches_found}</p>
-            </div>
-            <table className="results-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  {headers1.map(header => (
-                    <th key={header} colSpan={3}>{header}</th>
-                  ))}
-                </tr>
-                <tr>
-                  <th></th>
-                  {headers1.map(header => (
-                    <>
-                      <th key={`${header}-val1`}>File 1</th>
-                      <th key={`${header}-val2`}>File 2</th>
-                      <th key={`${header}-status`}>Status</th>
-                    </>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {results.results.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    <td>{row.ID}</td>
-                    {headers1.map(header => {
-                      const field = row.fields[header] || {};
-                      return (
-                        <>
-                          <td>{field.val1}</td>
-                          <td>{field.val2}</td>
-                          <td
-                            style={{
-                              backgroundColor:
-                                field.status === 'difference'
-                                  ? 'lightcoral'
-                                  : field.status === 'acceptable'
-                                  ? 'khaki'
-                                  : 'lightgreen',
-                            }}
-                          >
-                            {field.status}
-                            {field.difference ? ` (${field.difference})` : ''}
-                          </td>
-                        </>
-                      );
-                    })}
-                  </tr>
+      {showMapper && (
+        <HeaderMapper
+          file1Headers={headers1}
+          file2Headers={headers2}
+          suggestedMappings={suggestedMappings}
+          onConfirm={handleMappingConfirmed}
+          showRunButton={true}
+          onRun={handleRunComparison}
+        />
+      )}
+
+      {results && (
+        <div className="results">
+          <h2>Comparison Results</h2>
+          <p>Total Records: {results.total_records}</p>
+          <p>Matches: {results.matches_found} | Differences: {results.differences_found}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                {Object.keys(results.results[0].fields).map(col => (
+                  <th key={col}>{col}</th>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </main>
+              </tr>
+            </thead>
+            <tbody>
+              {results.results.map((row, i) => (
+                <tr key={i}>
+                  <td>{row.ID}</td>
+                  {Object.entries(row.fields).map(([key, val], j) => (
+                    <td key={j} className={
+                      val.status === 'difference' ? 'difference' :
+                      val.status === 'acceptable' ? 'acceptable' : 'match'
+                    }>
+                      {val.val1} vs {val.val2} ({val.difference})
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
