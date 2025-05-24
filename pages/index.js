@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import { compareFiles } from '../utils/simpleCSVComparison';
 import { compareTextFiles_main } from '../utils/textFileComparison';
-import { compareJSONFiles_main } from '../utils/jsonFileComparison';
-import { compareExcelFiles } from '../utils/excelFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
+import { parseCSVFile } from '../utils/simpleCSVComparison';
+import { parseExcelFile } from '../utils/excelFileComparison';
+import { parseJSONFile } from '../utils/jsonFileComparison';
 import HeaderMapper from '../components/HeaderMapper';
 import { mapHeaders } from '../utils/mapHeaders';
 
@@ -21,6 +21,7 @@ export default function Home() {
   const [headers2, setHeaders2] = useState([]);
   const [suggestedMappings, setSuggestedMappings] = useState([]);
   const [pendingComparison, setPendingComparison] = useState(null);
+  const [pendingType, setPendingType] = useState(null);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
@@ -65,39 +66,42 @@ export default function Home() {
     setError(null);
 
     try {
-      if (fileType === 'excel_csv') {
-        const parseExcelFile = (await import('../utils/excelFileComparison')).parseExcelFile;
-        const parseCSVFile = (await import('../utils/simpleCSVComparison')).parseCSVFile;
+      // All structured types pass through mapping
+      if (['excel_csv', 'csv', 'excel', 'json'].includes(fileType)) {
+        let data1 = [], data2 = [];
 
-        const excelData = await parseExcelFile(file1);
-        const csvData = await parseCSVFile(file2);
+        if (fileType === 'excel_csv') {
+          data1 = await parseExcelFile(file1);
+          data2 = await parseCSVFile(file2);
+        } else if (fileType === 'csv') {
+          data1 = await parseCSVFile(file1);
+          data2 = await parseCSVFile(file2);
+        } else if (fileType === 'excel') {
+          data1 = await parseExcelFile(file1);
+          data2 = await parseExcelFile(file2);
+        } else if (fileType === 'json') {
+          data1 = await parseJSONFile(file1);
+          data2 = await parseJSONFile(file2);
+        }
 
-        const headers1 = Object.keys(excelData[0] || {});
-        const headers2 = Object.keys(csvData[0] || {});
-        const suggested = mapHeaders(headers1, headers2);
+        const h1 = Object.keys(data1[0] || {});
+        const h2 = Object.keys(data2[0] || {});
+        const suggested = mapHeaders(h1, h2);
 
-        setHeaders1(headers1);
-        setHeaders2(headers2);
+        setHeaders1(h1);
+        setHeaders2(h2);
         setSuggestedMappings(suggested);
         setPendingComparison({ file1, file2 });
+        setPendingType(fileType);
         setShowMapper(true);
         setLoading(false);
         return;
       }
 
-      let comparisonResults;
-
-      if (fileType === 'csv') {
-        comparisonResults = await compareFiles(file1, file2);
-      } else if (fileType === 'text') {
-        comparisonResults = await compareTextFiles_main(file1, file2);
-      } else if (fileType === 'json') {
-        comparisonResults = await compareJSONFiles_main(file1, file2);
-      } else if (fileType === 'excel') {
-        comparisonResults = await compareExcelFiles(file1, file2);
-      }
-
+      // Text file comparison
+      const comparisonResults = await compareTextFiles_main(file1, file2);
       setResults(comparisonResults);
+
     } catch (err) {
       console.error('Comparison error:', err);
       setError(`Failed to compare files: ${err.message}`);
@@ -108,12 +112,19 @@ export default function Home() {
 
   const handleMappingConfirm = async (finalMappings) => {
     setShowMapper(false);
+    setLoading(true);
     try {
-      const result = await compareExcelCSVFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
+      const result = await compareExcelCSVFiles(
+        pendingComparison.file1,
+        pendingComparison.file2,
+        finalMappings
+      );
       setResults(result);
     } catch (err) {
       console.error('Comparison error:', err);
       setError(`Failed to compare files: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
