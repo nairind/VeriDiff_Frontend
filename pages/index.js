@@ -2,9 +2,9 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
-import { parseCSVFile } from '../utils/simpleCSVComparison';
-import { parseExcelFile } from '../utils/excelFileComparison';
-import { parseJSONFile } from '../utils/jsonFileComparison';
+import { parseCSVFile, compareFiles } from '../utils/simpleCSVComparison';
+import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison';
+import { parseJSONFile, compareJSONFiles_main } from '../utils/jsonFileComparison';
 import HeaderMapper from '../components/HeaderMapper';
 import { mapHeaders } from '../utils/mapHeaders';
 
@@ -66,7 +66,6 @@ export default function Home() {
     setError(null);
 
     try {
-      // All structured types pass through mapping
       if (['excel_csv', 'csv', 'excel', 'json'].includes(fileType)) {
         let data1 = [], data2 = [];
 
@@ -98,7 +97,7 @@ export default function Home() {
         return;
       }
 
-      // Text file comparison
+      // Plain text comparison
       const comparisonResults = await compareTextFiles_main(file1, file2);
       setResults(comparisonResults);
 
@@ -111,35 +110,30 @@ export default function Home() {
   };
 
   const handleMappingConfirm = async (finalMappings) => {
-  setShowMapper(false);
-  setLoading(true);
+    setShowMapper(false);
+    setLoading(true);
+    try {
+      let result;
 
-  try {
-    let result;
+      if (pendingType === 'excel_csv') {
+        result = await compareExcelCSVFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
+      } else if (pendingType === 'csv') {
+        result = await compareFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
+      } else if (pendingType === 'excel') {
+        result = await compareExcelFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
+      } else if (pendingType === 'json') {
+        result = await compareJSONFiles_main(pendingComparison.file1, pendingComparison.file2, finalMappings);
+      }
 
-    if (pendingType === 'excel_csv') {
-      result = await compareExcelCSVFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-    } else if (pendingType === 'csv') {
-      const { compareFiles } = await import('../utils/simpleCSVComparison');
-      result = await compareFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-    } else if (pendingType === 'excel') {
-      const { compareExcelFiles } = await import('../utils/excelFileComparison');
-      result = await compareExcelFiles(pendingComparison.file1, pendingComparison.file2, finalMappings);
-    } else if (pendingType === 'json') {
-      const { compareJSONFiles_main } = await import('../utils/jsonFileComparison');
-      result = await compareJSONFiles_main(pendingComparison.file1, pendingComparison.file2, finalMappings);
+      setResults(result);
+    } catch (err) {
+      console.error('Comparison error:', err);
+      setError(`Failed to compare files: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setResults(result);
-  } catch (err) {
-    console.error('Comparison error:', err);
-    setError(`Failed to compare files: ${err.message}`);
-  } finally {
-    setLoading(false);
-  }
-};
-
- 
   return (
     <div className="container">
       <Head>
