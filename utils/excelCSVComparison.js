@@ -2,6 +2,9 @@ import { parseExcelFile } from './excelFileComparison';
 import { parseCSVFile } from './simpleCSVComparison';
 import { mapHeaders } from './mapHeaders';
 
+/**
+ * Compares an Excel file to a CSV file with header mapping and row comparison
+ */
 export async function compareExcelCSVFiles(file1, file2) {
   try {
     const [excelData, csvData] = await Promise.all([
@@ -33,7 +36,8 @@ export async function compareExcelCSVFiles(file1, file2) {
     });
 
     const results = [];
-    let matches = 0, differences = 0;
+    let matches = 0;
+    let differences = 0;
     const maxRows = Math.max(excelData.length, remappedCSVData.length);
 
     for (let i = 0; i < maxRows; i++) {
