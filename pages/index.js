@@ -25,6 +25,7 @@ export default function Home() {
   const [finalMappings, setFinalMappings] = useState([]);
   const [pendingComparison, setPendingComparison] = useState(null);
   const [pendingType, setPendingType] = useState(null);
+  const [showCompareButton, setShowCompareButton] = useState(false);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
@@ -48,6 +49,7 @@ export default function Home() {
     setFile2(null);
     setResults(null);
     setError(null);
+    setShowCompareButton(false);
   };
 
   const handleSubmit = async (e) => {
@@ -103,16 +105,19 @@ export default function Home() {
     }
   };
 
-  const handleMappingConfirm = async (finalMappingsFromUI) => {
+  const handleMappingConfirm = (finalMappingsFromUI) => {
     setFinalMappings(finalMappingsFromUI);
     setShowMapper(false);
+    setShowCompareButton(true);
+  };
 
+  const runFinalComparison = async () => {
     setLoading(true);
     try {
       const result = await compareExcelCSVFiles(
         pendingComparison.file1,
         pendingComparison.file2,
-        finalMappingsFromUI
+        finalMappings
       );
       setResults(result);
     } catch (err) {
@@ -120,6 +125,7 @@ export default function Home() {
       setError(`Failed to compare files: ${err.message}`);
     } finally {
       setLoading(false);
+      setShowCompareButton(false);
     }
   };
 
@@ -156,6 +162,12 @@ export default function Home() {
             suggestedMappings={suggestedMappings}
             onConfirm={handleMappingConfirm}
           />
+        )}
+
+        {showCompareButton && (
+          <button onClick={runFinalComparison} disabled={loading}>
+            {loading ? 'Comparing...' : 'Run Comparison'}
+          </button>
         )}
 
         {results && (
