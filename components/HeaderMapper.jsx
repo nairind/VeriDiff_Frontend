@@ -31,7 +31,10 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
   };
 
   const removeMapping = (index) => {
-    setMappings(mappings.filter((_, i) => i !== index));
+    const updated = mappings.filter((_, i) => i !== index);
+    setMappings(updated);
+    // Immediately update the parent component with the new mappings
+    onConfirm(updated);
   };
 
   const handleConfirm = (e) => {
@@ -57,7 +60,15 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
           <tbody>
             {mappings.map((m, i) => (
               <tr key={i}>
-                <td>{m.file1Header}</td>
+                <td>
+                  <select
+                    value={m.file1Header}
+                    onChange={(e) => updateMapping(i, 'file1Header', e.target.value)}
+                  >
+                    <option value="">-- None --</option>
+                    {file1Headers.map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                </td>
                 <td>
                   <select
                     value={m.file2Header}
