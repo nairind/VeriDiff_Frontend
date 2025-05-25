@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
 import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison';
 import { parseJSONFile, compareJSONFiles } from '../utils/jsonFileComparison';
@@ -167,6 +168,40 @@ export default function Home() {
       <Head>
         <title>VeriDiff - File Comparison Tool</title>
       </Head>
+
+      {/* Simple Navigation */}
+      <nav style={{
+        background: 'white',
+        borderBottom: '1px solid #e5e7eb',
+        padding: '1rem 0',
+        marginBottom: '20px'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <span style={{
+            fontSize: '1.5rem',
+            fontWeight: 'bold',
+            color: '#667eea'
+          }}>VeriDiff</span>
+          <div style={{ display: 'flex', gap: '2rem' }}>
+            <span style={{ color: '#667eea', fontWeight: '500' }}>Compare Files</span>
+            <Link href="/about">
+              <span style={{ 
+                color: '#6b7280', 
+                cursor: 'pointer', 
+                textDecoration: 'none'
+              }}>About</span>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       <main>
         <h1 className="title">VeriDiff</h1>
         <p>Upload two files to compare their contents</p>
@@ -388,6 +423,205 @@ export default function Home() {
         button:disabled {
           background-color: #ccc;
           cursor: not-allowed;
+        }
+
+        /* Info Section Styles */
+        .info-section {
+          max-width: 1200px;
+          margin: 40px auto;
+          padding: 0 20px;
+        }
+
+        .hero-banner {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 40px;
+          border-radius: 16px;
+          text-align: center;
+          margin-bottom: 40px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .hero-banner h2 {
+          font-size: 2.5em;
+          margin: 0 0 20px 0;
+          font-weight: 700;
+        }
+
+        .hero-banner p {
+          font-size: 1.2em;
+          opacity: 0.9;
+          margin: 0;
+          line-height: 1.6;
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 30px;
+          margin-bottom: 40px;
+        }
+
+        .feature-card {
+          background: white;
+          padding: 30px;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          border: 1px solid #e5e7eb;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+          width: 60px;
+          height: 60px;
+          margin: 0 auto 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 30px;
+          border-radius: 50%;
+          color: white;
+        }
+
+        .feature-icon.security { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .feature-icon.formats { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .feature-icon.speed { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .feature-icon.accuracy { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .feature-card h3 {
+          color: #1f2937;
+          font-size: 1.3em;
+          margin: 0 0 15px 0;
+          text-align: center;
+          font-weight: 600;
+        }
+
+        .feature-card p {
+          color: #6b7280;
+          line-height: 1.6;
+          margin: 0;
+          text-align: center;
+        }
+
+        .security-banner {
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          padding: 30px;
+          border-radius: 12px;
+          margin: 40px 0;
+          text-align: center;
+        }
+
+        .security-banner h3 {
+          font-size: 1.5em;
+          margin: 0 0 15px 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .security-banner p {
+          margin: 0;
+          font-size: 1.1em;
+          opacity: 0.9;
+          line-height: 1.6;
+        }
+
+        .restrictions-section {
+          background: #fef3c7;
+          border: 1px solid #fbbf24;
+          border-radius: 12px;
+          padding: 30px;
+          margin: 40px 0;
+        }
+
+        .restrictions-section h3 {
+          color: #92400e;
+          font-size: 1.3em;
+          margin: 0 0 20px 0;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .restrictions-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+
+        .restrictions-list li {
+          color: #78350f;
+          margin: 12px 0;
+          padding-left: 25px;
+          position: relative;
+          line-height: 1.5;
+        }
+
+        .restrictions-list li:before {
+          content: "⚠️";
+          position: absolute;
+          left: 0;
+          top: 0;
+        }
+
+        .formats-showcase {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 15px;
+          margin: 30px 0;
+        }
+
+        .format-badge {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 0.9em;
+          font-weight: 500;
+          box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .cta-section {
+          text-align: center;
+          padding: 40px;
+          background: #f8fafc;
+          border-radius: 12px;
+          margin: 40px 0;
+        }
+
+        .cta-section h3 {
+          color: #1f2937;
+          font-size: 1.5em;
+          margin: 0 0 15px 0;
+        }
+
+        .cta-section p {
+          color: #6b7280;
+          font-size: 1.1em;
+          margin: 0;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+          .hero-banner h2 {
+            font-size: 2em;
+          }
+          
+          .features-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .formats-showcase {
+            justify-content: center;
+          }
         }
       `}</style>
     </div>
