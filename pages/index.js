@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
 import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison'; // Added compareExcelFiles import
-import { parseJSONFile } from '../utils/jsonFileComparison';
+import { parseJSONFile, compareJSONFiles } from '../utils/jsonFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
 import { mapHeaders } from '../utils/mapHeaders';
@@ -98,9 +98,14 @@ export default function Home() {
       } else if (fileType === 'excel') {
         // Excel-Excel comparison (now fixed)
         result = await compareExcelFiles(file1, file2, finalMappings);
+      } else if (fileType === 'json') {
+        // JSON comparison (now fixed)
+        result = await compareJSONFiles(file1, file2, finalMappings);
+      } else if (fileType === 'csv') {
+        // CSV comparison - you may need to create a compareCSVFiles function
+        result = await compareExcelCSVFiles(file1, file2, finalMappings);
       } else {
-        // For other file types, you might need to create similar comparison functions
-        // For now, using the Excel-CSV function as fallback
+        // For other file types, fallback
         result = await compareExcelCSVFiles(file1, file2, finalMappings);
       }
       
