@@ -122,6 +122,58 @@ export default function About() {
           </div>
         </div>
 
+        {/* Google Sheets Section */}
+        <div className="google-sheets-section">
+          <h2>📊 Working with Google Sheets</h2>
+          <p>VeriDiff works great with Google Sheets! Here's how:</p>
+          
+          <div className="steps-grid">
+            <div className="step">
+              <div className="step-number">1</div>
+              <div className="step-content">
+                <h4>Download from Google Sheets</h4>
+                <p>Go to <strong>File → Download</strong> and choose:</p>
+                <ul>
+                  <li><strong>Microsoft Excel (.xlsx)</strong> - Best option</li>
+                  <li><strong>CSV (.csv)</strong> - Simple data</li>
+                  <li><strong>PDF (.pdf)</strong> - For document comparison</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="step">
+              <div className="step-number">2</div>
+              <div className="step-content">
+                <h4>Select Comparison Type</h4>
+                <p>Choose the appropriate comparison:</p>
+                <ul>
+                  <li><strong>Excel</strong> - For .xlsx downloads</li>
+                  <li><strong>Excel-CSV</strong> - Excel vs CSV</li>
+                  <li><strong>PDF</strong> - For document comparison</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="step">
+              <div className="step-number">3</div>
+              <div className="step-content">
+                <h4>Compare as Normal</h4>
+                <p>Upload both files and compare! All features work:</p>
+                <ul>
+                  <li>Field mapping</li>
+                  <li>Tolerance settings</li>
+                  <li>Sheet selection (for .xlsx)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="tip-box">
+            <strong>💡 Pro Tip:</strong> For best results, download Google Sheets as Excel (.xlsx) format. 
+            This preserves formatting, multiple sheets, and data types.
+          </div>
+        </div>
+
         {/* Call to Action */}
         <div className="cta-section">
           <h2>✨ Ready to Compare?</h2>
@@ -414,6 +466,96 @@ export default function About() {
           margin: 0;
           text-align: left;
           font-size: 1em;
+        }
+
+        .google-sheets-section {
+          background: #f0fdf4;
+          border: 1px solid #22c55e;
+          border-radius: 16px;
+          padding: 40px;
+          margin: 60px 0;
+        }
+
+        .google-sheets-section h2 {
+          color: #15803d;
+          margin: 0 0 20px 0;
+          text-align: center;
+          font-size: 2em;
+        }
+
+        .google-sheets-section > p {
+          color: #166534;
+          margin: 0 0 30px 0;
+          text-align: center;
+          font-size: 1.2em;
+        }
+
+        .steps-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 25px;
+          margin: 30px 0;
+        }
+
+        .step {
+          background: white;
+          border-radius: 12px;
+          padding: 25px;
+          border: 1px solid #bbf7d0;
+          display: flex;
+          gap: 20px;
+          box-shadow: 0 2px 10px rgba(34, 197, 94, 0.1);
+        }
+
+        .step-number {
+          background: #22c55e;
+          color: white;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          flex-shrink: 0;
+          font-size: 1.2em;
+        }
+
+        .step-content h4 {
+          color: #15803d;
+          margin: 0 0 12px 0;
+          font-size: 1.2em;
+          font-weight: 600;
+        }
+
+        .step-content p {
+          color: #166534;
+          margin: 0 0 10px 0;
+          font-size: 1em;
+          line-height: 1.5;
+        }
+
+        .step-content ul {
+          margin: 10px 0 0 0;
+          padding-left: 20px;
+        }
+
+        .step-content li {
+          color: #166534;
+          font-size: 0.95em;
+          margin: 6px 0;
+          line-height: 1.4;
+        }
+
+        .tip-box {
+          background: #dcfce7;
+          border: 1px solid #86efac;
+          border-radius: 8px;
+          padding: 20px;
+          margin-top: 30px;
+          color: #15803d;
+          font-size: 1em;
+          line-height: 1.5;
         }
 
         .cta-section {
