@@ -180,10 +180,12 @@ function compareWithTolerance(val1, val2, tolerance, type) {
 }
 
 /**
- * Compare PDF data with tolerance support
+ * Compare PDF data with tolerance support - FIXED VERSION
  */
 const comparePDFData = (data1, data2, finalMappings = []) => {
   let remappedData2 = data2;
+  
+  // Apply mappings to data2 if provided
   if (finalMappings.length > 0) {
     remappedData2 = data2.map(row => {
       const remappedRow = {};
@@ -204,10 +206,25 @@ const comparePDFData = (data1, data2, finalMappings = []) => {
   for (let i = 0; i < maxRows; i++) {
     const row1 = data1[i] || {};
     const row2 = remappedData2[i] || {};
-    const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+    
+    // FIXED: Only process fields that are in the final mappings
+    // If no mappings provided, process all fields (backward compatibility)
+    let keysToProcess;
+    if (finalMappings.length > 0) {
+      // Only process mapped fields
+      keysToProcess = new Set(
+        finalMappings
+          .filter(m => m.file1Header && m.file2Header) // Only valid mappings
+          .map(m => m.file1Header)
+      );
+    } else {
+      // Fallback: process all available keys (original behavior)
+      keysToProcess = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+    }
+    
     const fieldResults = {};
 
-    for (const key of keys) {
+    for (const key of keysToProcess) {
       const val1 = row1[key] ?? '';
       const val2 = row2[key] ?? '';
       const mapping = finalMappings.find(m => m.file1Header === key);
