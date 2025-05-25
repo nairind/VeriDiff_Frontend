@@ -26,47 +26,59 @@ export const parseJSON = (content) => {
 /**
  * Flattens a nested JSON object using dot notation
  */
-const flattenObject = (obj, prefix = '', res = {}) => {
+const flattenObject = (obj, prefix = '') => {
+  const flattened = {};
+  
   for (const key in obj) {
-    const value = obj[key];
-    const newKey = prefix ? `${prefix}.${key}` : key;
+    if (obj.hasOwnProperty(key)) {
+      const value = obj[key];
+      const newKey = prefix ? `${prefix}.${key}` : key;
 
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      flattenObject(value, newKey, res);
-    } else {
-      res[newKey] = Array.isArray(value) ? JSON.stringify(value) : value;
+      if (value === null || value === undefined) {
+        flattened[newKey] = '';
+      } else if (Array.isArray(value)) {
+        flattened[newKey] = JSON.stringify(value);
+      } else if (typeof value === 'object') {
+        // Recursively flatten nested objects
+        Object.assign(flattened, flattenObject(value, newKey));
+      } else {
+        flattened[newKey] = String(value);
+      }
     }
   }
-  return res;
+  
+  return flattened;
 };
 
 /**
- * Loads and flattens JSON file content
+ * Loads and parses JSON file content
  */
 export const parseJSONFile = async (file) => {
   const text = await readFileAsText(file);
   const parsed = parseJSON(text);
 
   if (Array.isArray(parsed)) {
-    return parsed.map((item, i) => flattenObject(item, `row${i}`));
-  }
-
-  if (typeof parsed === 'object') {
+    // Handle array of objects
+    return parsed.map(item => flattenObject(item));
+  } else if (typeof parsed === 'object' && parsed !== null) {
+    // Handle single object - wrap in array to maintain consistency
     return [flattenObject(parsed)];
+  } else {
+    throw new Error('Unsupported JSON format. Expecting object or array of objects.');
   }
-
-  throw new Error('Unsupported JSON format. Expecting object or array of objects.');
 };
 
 /**
  * Check if value is numeric
  */
-const isNumeric = (val) => !isNaN(parseFloat(val)) && isFinite(val);
+function isNumeric(val) {
+  return !isNaN(parseFloat(val)) && isFinite(val);
+}
 
 /**
  * Tolerance comparison logic
  */
-const compareWithTolerance = (val1, val2, tolerance, type) => {
+function compareWithTolerance(val1, val2, tolerance, type) {
   const num1 = parseFloat(val1);
   const num2 = parseFloat(val2);
   if (!isNumeric(num1) || !isNumeric(num2)) return false;
@@ -78,19 +90,34 @@ const compareWithTolerance = (val1, val2, tolerance, type) => {
     return Math.abs(num1 - num2) / maxVal <= parseFloat(tolerance) / 100;
   }
   return false;
-};
+}
 
 /**
- * Compares two flattened JSON structures row-by-row using final mappings
+ * Compares two arrays of JSON data row-by-row and field-by-field with tolerance support.
  */
 const compareJSONData = (data1, data2, finalMappings = []) => {
+  // Apply mappings to data2 if provided
+  let remappedData2 = data2;
+  if (finalMappings.length > 0) {
+    remappedData2 = data2.map(row => {
+      const remappedRow = {};
+      finalMappings.forEach(mapping => {
+        if (mapping.file1Header && mapping.file2Header) {
+          remappedRow[mapping.file1Header] = row[mapping.file2Header] ?? '';
+        }
+      });
+      return remappedRow;
+    });
+  }
+
   const results = [];
-  const maxRows = Math.max(data1.length, data2.length);
-  let matches = 0, differences = 0;
+  let matches = 0;
+  let differences = 0;
+  const maxRows = Math.max(data1.length, remappedData2.length);
 
   for (let i = 0; i < maxRows; i++) {
     const row1 = data1[i] || {};
-    const row2 = data2[i] || {};
+    const row2 = remappedData2[i] || {};
     const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
     const fieldResults = {};
 
@@ -115,9 +142,7 @@ const compareJSONData = (data1, data2, finalMappings = []) => {
         val1,
         val2,
         status,
-        difference: isNumeric(val1) && isNumeric(val2)
-          ? Math.abs(parseFloat(val1) - parseFloat(val2)).toFixed(2)
-          : ''
+        difference: isNumeric(val1) && isNumeric(val2) ? Math.abs(val1 - val2).toFixed(2) : ''
       };
 
       if (status === 'match' || status === 'acceptable') {
@@ -128,7 +153,7 @@ const compareJSONData = (data1, data2, finalMappings = []) => {
     }
 
     results.push({
-      ID: `row${i + 1}`,
+      ID: i + 1,
       fields: fieldResults
     });
   }
@@ -142,34 +167,28 @@ const compareJSONData = (data1, data2, finalMappings = []) => {
 };
 
 /**
- * Main comparison function with optional field mapping and tolerance
+ * Main JSON file comparison function
  */
-export const compareJSONFiles_main = async (file1, file2, finalMappings = null) => {
+export const compareJSONFiles = async (file1, file2, finalMappings = []) => {
   try {
     if (!file1.name.endsWith('.json') || !file2.name.endsWith('.json')) {
       throw new Error('Both files must be JSON (.json)');
     }
 
-    const [data1, rawData2] = await Promise.all([
+    const [data1, data2] = await Promise.all([
       parseJSONFile(file1),
       parseJSONFile(file2)
     ]);
 
-    let data2 = rawData2;
-
-    if (finalMappings) {
-      data2 = rawData2.map(row => {
-        const remapped = {};
-        finalMappings.forEach(({ file1Header, file2Header }) => {
-          remapped[file1Header] = row[file2Header] ?? '';
-        });
-        return remapped;
-      });
+    if (!Array.isArray(data1) || !Array.isArray(data2)) {
+      throw new Error('Parsed data missing or invalid');
     }
 
     return compareJSONData(data1, data2, finalMappings);
-  } catch (err) {
-    console.error('JSON comparison error:', err);
-    throw new Error(`JSON comparison failed: ${err.message}`);
+  } catch (error) {
+    throw new Error(`Failed to compare JSON files: ${error.message}`);
   }
 };
+
+// Keep the old function name for backward compatibility
+export const compareJSONFiles_main = compareJSONFiles;
