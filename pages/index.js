@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
-import { parseExcelFile } from '../utils/excelFileComparison';
+import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison'; // Added compareExcelFiles import
 import { parseJSONFile } from '../utils/jsonFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
@@ -80,6 +80,7 @@ export default function Home() {
     setFinalMappings(mappings);
   };
 
+  // UPDATED: Fixed comparison function routing
   const handleRunComparison = async () => {
     if (!file1 || !file2 || finalMappings.length === 0) {
       setError('Missing files or mappings.');
@@ -88,7 +89,21 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      const result = await compareExcelCSVFiles(file1, file2, finalMappings);
+      let result;
+      
+      // Call the appropriate comparison function based on file type
+      if (fileType === 'excel_csv') {
+        // Excel-CSV comparison (your working functionality)
+        result = await compareExcelCSVFiles(file1, file2, finalMappings);
+      } else if (fileType === 'excel') {
+        // Excel-Excel comparison (now fixed)
+        result = await compareExcelFiles(file1, file2, finalMappings);
+      } else {
+        // For other file types, you might need to create similar comparison functions
+        // For now, using the Excel-CSV function as fallback
+        result = await compareExcelCSVFiles(file1, file2, finalMappings);
+      }
+      
       setResults(result);
     } catch (err) {
       console.error(err);
@@ -118,7 +133,9 @@ export default function Home() {
         <input type="file" onChange={(e) => handleFileChange(e, 1)} />
         <input type="file" onChange={(e) => handleFileChange(e, 2)} />
 
-        <button onClick={handleLoadFiles}>Load Files</button>
+        <button onClick={handleLoadFiles} disabled={loading}>
+          {loading ? 'Loading...' : 'Load Files'}
+        </button>
 
         {showMapper && (
           <HeaderMapper
@@ -131,50 +148,166 @@ export default function Home() {
           />
         )}
 
+        {/* Error display */}
+        {error && (
+          <div className="error" style={{
+            color: 'red', 
+            margin: '10px 0', 
+            padding: '10px', 
+            border: '1px solid red', 
+            borderRadius: '4px',
+            backgroundColor: '#fee'
+          }}>
+            <strong>Error:</strong> {error}
+          </div>
+        )}
+
+        {/* Loading indicator */}
+        {loading && (
+          <div className="loading" style={{
+            margin: '10px 0', 
+            padding: '10px', 
+            backgroundColor: '#f0f8ff',
+            border: '1px solid #ddd',
+            borderRadius: '4px'
+          }}>
+            <strong>Loading...</strong> Processing files...
+          </div>
+        )}
+
+        {/* Results display */}
         {results && (
           <div className="results">
             <h2>Comparison Results</h2>
-            <div className="summary">
-              <p>Total Records: {results.total_records}</p>
-              <p>Differences Found: {results.differences_found}</p>
-              <p>Matches Found: {results.matches_found}</p>
+            <div className="summary" style={{
+              margin: '20px 0',
+              padding: '15px',
+              backgroundColor: '#f9f9f9',
+              border: '1px solid #ddd',
+              borderRadius: '4px'
+            }}>
+              <p><strong>Total Records:</strong> {results.total_records}</p>
+              <p><strong>Differences Found:</strong> {results.differences_found}</p>
+              <p><strong>Matches Found:</strong> {results.matches_found}</p>
             </div>
-            <table className="results-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  {Object.keys(results.results[0].fields).map((field, idx) => (
-                    <th key={idx}>{field}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {results.results.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    <td>{row.ID}</td>
-                    {Object.entries(row.fields).map(([key, value], idx) => (
-                      <td
-                        key={idx}
-                        style={{
-                          backgroundColor:
-                            value.status === 'difference'
-                              ? '#fdd'
-                              : value.status === 'acceptable'
-                              ? '#ffd'
-                              : '#dfd'
-                        }}
-                      >
-                        {value.val1} / {value.val2} <br />
-                        <small>{value.status} {value.difference && `(Δ ${value.difference})`}</small>
-                      </td>
+            
+            {results.results && results.results.length > 0 && (
+              <table className="results-table" style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                margin: '20px 0'
+              }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f5f5f5' }}>
+                    <th style={{ 
+                      border: '1px solid #ddd', 
+                      padding: '8px', 
+                      textAlign: 'left' 
+                    }}>ID</th>
+                    {Object.keys(results.results[0].fields).map((field, idx) => (
+                      <th key={idx} style={{ 
+                        border: '1px solid #ddd', 
+                        padding: '8px', 
+                        textAlign: 'left' 
+                      }}>{field}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {results.results.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      <td style={{ 
+                        border: '1px solid #ddd', 
+                        padding: '8px' 
+                      }}>{row.ID}</td>
+                      {Object.entries(row.fields).map(([key, value], idx) => (
+                        <td
+                          key={idx}
+                          style={{
+                            border: '1px solid #ddd',
+                            padding: '8px',
+                            backgroundColor:
+                              value.status === 'difference'
+                                ? '#fdd'  // Light red for differences
+                                : value.status === 'acceptable'
+                                ? '#ffd'  // Light yellow for acceptable (within tolerance)
+                                : '#dfd'  // Light green for matches
+                          }}
+                        >
+                          <div>
+                            <strong>{value.val1} / {value.val2}</strong>
+                          </div>
+                          <small style={{ color: '#666' }}>
+                            {value.status}
+                            {value.difference && ` (Δ ${value.difference})`}
+                          </small>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </main>
+
+      <style jsx>{`
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+          font-family: Arial, sans-serif;
+        }
+        
+        .title {
+          text-align: center;
+          color: #333;
+          margin-bottom: 10px;
+        }
+        
+        .file-type-selector {
+          margin: 20px 0;
+          padding: 15px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          background-color: #f9f9f9;
+        }
+        
+        .file-type-selector label {
+          margin-right: 15px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+        }
+        
+        input[type="file"] {
+          margin: 10px 0;
+          padding: 5px;
+          display: block;
+          width: 300px;
+        }
+        
+        button {
+          background-color: #007bff;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          margin: 10px 5px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+        }
+        
+        button:hover:not(:disabled) {
+          background-color: #0056b3;
+        }
+        
+        button:disabled {
+          background-color: #ccc;
+          cursor: not-allowed;
+        }
+      `}</style>
     </div>
   );
 }
