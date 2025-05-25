@@ -5,6 +5,7 @@ import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison'
 import { parseJSONFile, compareJSONFiles } from '../utils/jsonFileComparison';
 import { parseXMLFile, compareXMLFiles } from '../utils/xmlFileComparison';
 import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
+import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
 import { mapHeaders } from '../utils/mapHeaders';
@@ -67,6 +68,10 @@ export default function Home() {
       } else if (fileType === 'pdf') {
         data1 = await parsePDFFile(file1);
         data2 = await parsePDFFile(file2);
+      } else if (fileType === 'text') {
+        // Text files don't need parsing - handle differently
+        data1 = [{}]; // Dummy data for text files
+        data2 = [{}]; // Text comparison works differently
       } else {
         throw new Error('Unsupported file type.');
       }
@@ -135,6 +140,9 @@ export default function Home() {
       } else if (fileType === 'pdf') {
         // PDF comparison (new functionality)
         result = await comparePDFFiles(file1, file2, finalMappings);
+      } else if (fileType === 'text') {
+        // Text comparison (line-by-line)
+        result = await compareTextFiles_main(file1, file2);
       } else if (fileType === 'csv') {
         // CSV comparison - you may need to create a compareCSVFiles function
         result = await compareExcelCSVFiles(file1, file2, finalMappings);
