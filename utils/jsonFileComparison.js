@@ -93,7 +93,7 @@ function compareWithTolerance(val1, val2, tolerance, type) {
 }
 
 /**
- * Compares two arrays of JSON data row-by-row and field-by-field with tolerance support.
+ * Compares two arrays of JSON data row-by-row and field-by-field with tolerance support - FIXED VERSION
  */
 const compareJSONData = (data1, data2, finalMappings = []) => {
   // Apply mappings to data2 if provided
@@ -118,10 +118,24 @@ const compareJSONData = (data1, data2, finalMappings = []) => {
   for (let i = 0; i < maxRows; i++) {
     const row1 = data1[i] || {};
     const row2 = remappedData2[i] || {};
-    const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+    
+    // FIXED: Only process fields that are in the final mappings
+    let keysToProcess;
+    if (finalMappings.length > 0) {
+      // Only process mapped fields
+      keysToProcess = new Set(
+        finalMappings
+          .filter(m => m.file1Header && m.file2Header)
+          .map(m => m.file1Header)
+      );
+    } else {
+      // Fallback: process all available keys
+      keysToProcess = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+    }
+    
     const fieldResults = {};
 
-    for (const key of keys) {
+    for (const key of keysToProcess) {
       const val1 = row1[key] ?? '';
       const val2 = row2[key] ?? '';
       const mapping = finalMappings.find(m => m.file1Header === key);
