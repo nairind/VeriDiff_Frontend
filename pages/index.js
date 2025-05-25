@@ -46,6 +46,57 @@ export default function Home() {
   const [selectedSheet2, setSelectedSheet2] = useState(null);
   const [showSheetSelector, setShowSheetSelector] = useState(false);
 
+  // INLINE FILE DETECTION (inside component)
+  const detectFileTypeInline = (file) => {
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.xlsm')) {
+      return { type: 'excel', label: 'Excel' };
+    }
+    if (fileName.endsWith('.csv')) {
+      return { type: 'csv', label: 'CSV' };
+    }
+    if (fileName.endsWith('.json')) {
+      return { type: 'json', label: 'JSON' };
+    }
+    if (fileName.endsWith('.txt')) {
+      return { type: 'text', label: 'Text' };
+    }
+    
+    return { type: 'unknown', label: 'Unknown' };
+  };
+
+  const validateFilesInline = (file1, file2) => {
+    const file1Type = detectFileTypeInline(file1);
+    const file2Type = detectFileTypeInline(file2);
+    
+    console.log(`🔍 File 1 (${file1.name}) detected as: ${file1Type.type}`);
+    console.log(`🔍 File 2 (${file2.name}) detected as: ${file2Type.type}`);
+    
+    // Check if we have one Excel and one CSV file
+    const hasExcel = file1Type.type === 'excel' || file2Type.type === 'excel';
+    const hasCSV = file1Type.type === 'csv' || file2Type.type === 'csv';
+    const isValidCombo = hasExcel && hasCSV && file1Type.type !== file2Type.type;
+    
+    if (!isValidCombo) {
+      return {
+        valid: false,
+        error: `❌ Invalid file combination!\n\nExpected: Excel + CSV\nReceived: ${file1Type.label} + ${file2Type.label}\n\nPlease upload one Excel file and one CSV file.`
+      };
+    }
+    
+    // Determine which file is Excel and which is CSV
+    const excelFile = file1Type.type === 'excel' ? file1 : file2;
+    const csvFile = file1Type.type === 'csv' ? file1 : file2;
+    
+    return {
+      valid: true,
+      excelFile,
+      csvFile,
+      swapped: file1Type.type === 'csv' // True if we need to swap order
+    };
+  };
+
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
     if (!file) return;
