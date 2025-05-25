@@ -546,8 +546,48 @@ export default function Home() {
           </div>
         )}
 
-        <input type="file" onChange={(e) => handleFileChange(e, 1)} />
-        <input type="file" onChange={(e) => handleFileChange(e, 2)} />
+        {/* FILE INPUTS - Enhanced for Excel-CSV */}
+        {fileType === 'excel_csv' ? (
+          <div className="excel-csv-file-inputs">
+            <div className="file-input-group">
+              <label className="file-input-label">
+                <span className="input-number">1</span>
+                <span className="input-title">Excel File</span>
+                <input 
+                  type="file" 
+                  accept=".xlsx,.xls,.xlsm"
+                  onChange={(e) => handleFileChange(e, 1)}
+                  className="file-input"
+                />
+                <div className="file-name-display">
+                  {file1 ? `📊 ${file1.name}` : 'No Excel file selected'}
+                </div>
+              </label>
+            </div>
+            
+            <div className="file-input-group">
+              <label className="file-input-label">
+                <span className="input-number">2</span>
+                <span className="input-title">CSV File</span>
+                <input 
+                  type="file" 
+                  accept=".csv"
+                  onChange={(e) => handleFileChange(e, 2)}
+                  className="file-input"
+                />
+                <div className="file-name-display">
+                  {file2 ? `📄 ${file2.name}` : 'No CSV file selected'}
+                </div>
+              </label>
+            </div>
+          </div>
+        ) : (
+          // Standard file inputs for other types
+          <>
+            <input type="file" onChange={(e) => handleFileChange(e, 1)} />
+            <input type="file" onChange={(e) => handleFileChange(e, 2)} />
+          </>
+        )}
 
         <button onClick={handleLoadFiles} disabled={loading}>
           {loading ? 'Loading...' : 'Load Files'}
@@ -863,6 +903,86 @@ export default function Home() {
           .arrow {
             transform: rotate(90deg);
           }
+          
+          .excel-csv-file-inputs {
+            flex-direction: column;
+          }
+        }
+
+        /* Excel-CSV File Input Styles */
+        .excel-csv-file-inputs {
+          display: flex;
+          gap: 20px;
+          margin: 20px 0;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .file-input-group {
+          flex: 1;
+          min-width: 280px;
+          max-width: 400px;
+        }
+
+        .file-input-label {
+          display: block;
+          background: white;
+          border: 2px solid #2196f3;
+          border-radius: 12px;
+          padding: 20px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-align: center;
+        }
+
+        .file-input-label:hover {
+          border-color: #1976d2;
+          box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+          transform: translateY(-2px);
+        }
+
+        .input-number {
+          display: inline-block;
+          background: #2196f3;
+          color: white;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          line-height: 30px;
+          font-weight: bold;
+          margin-bottom: 10px;
+        }
+
+        .input-title {
+          display: block;
+          font-size: 1.1em;
+          font-weight: bold;
+          color: #1976d2;
+          margin-bottom: 15px;
+        }
+
+        .file-input {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-size: 0.9em;
+          margin-bottom: 10px;
+        }
+
+        .file-name-display {
+          min-height: 24px;
+          padding: 8px;
+          background: #f5f5f5;
+          border-radius: 4px;
+          font-size: 0.9em;
+          color: #666;
+          border: 1px solid #e0e0e0;
+        }
+
+        .file-input-label:hover .file-name-display {
+          background: #e3f2fd;
+          border-color: #2196f3;
         }
       `}</style>
     </div>
