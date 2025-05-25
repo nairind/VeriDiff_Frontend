@@ -162,15 +162,8 @@ export default function Home() {
           try {
             console.log("🔍 Starting file validation...");
             
-            // Test if the import is working
-            console.log("📦 Testing import:", typeof validateCrossFormatCombination);
-            
-            if (typeof validateCrossFormatCombination === 'undefined') {
-              throw new Error("validateCrossFormatCombination is not imported correctly");
-            }
-            
-            // Validate file combination first
-            const validation = validateCrossFormatCombination(file1, file2, 'excel_csv');
+            // Use inline validation instead of import
+            const validation = validateFilesInline(file1, file2);
             console.log("🔍 Validation result:", validation);
             
             if (!validation.valid) {
@@ -179,25 +172,22 @@ export default function Home() {
             
             console.log("✅ File validation passed");
             
-            // Test if parseFilesFlexibly is imported
-            console.log("📦 Testing parseFilesFlexibly import:", typeof parseFilesFlexibly);
-            
-            if (typeof parseFilesFlexibly === 'undefined') {
-              throw new Error("parseFilesFlexibly is not imported correctly");
+            // Parse files in correct order based on validation
+            if (validation.swapped) {
+              console.log("🔄 Files are swapped - CSV first, Excel second");
+              console.log("📊 Parsing CSV file:", validation.csvFile.name);
+              data2 = await parseCSVFile(validation.csvFile);
+              console.log("📊 Parsing Excel file:", validation.excelFile.name);
+              const excelResult = await parseExcelFile(validation.excelFile, selectedSheet1);
+              data1 = safeExtractExcelData(excelResult);
+            } else {
+              console.log("✅ Files in correct order - Excel first, CSV second");
+              console.log("📊 Parsing Excel file:", validation.excelFile.name);
+              const excelResult = await parseExcelFile(validation.excelFile, selectedSheet1);
+              data1 = safeExtractExcelData(excelResult);
+              console.log("📊 Parsing CSV file:", validation.csvFile.name);
+              data2 = await parseCSVFile(validation.csvFile);
             }
-            
-            // Parse files flexibly (handles any order)
-            console.log("🔄 Starting flexible parsing...");
-            const flexibleResult = await parseFilesFlexibly(file1, file2, 'excel_csv', {
-              file1Options: selectedSheet1,
-              file2Options: selectedSheet2
-            });
-            
-            console.log("✅ Flexible parsing completed:", flexibleResult);
-            
-            // Extract data in consistent format
-            data1 = flexibleResult.file1.data;
-            data2 = flexibleResult.file2.data;
             
             console.log("📊 Final data1 length:", data1?.length);
             console.log("📊 Final data2 length:", data2?.length);
