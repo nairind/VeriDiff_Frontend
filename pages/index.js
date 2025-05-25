@@ -137,6 +137,11 @@ export default function Home() {
   };
 
   const handleLoadFiles = async () => {
+    console.log("🚀 handleLoadFiles started");
+    console.log("📁 File 1:", file1?.name);
+    console.log("📁 File 2:", file2?.name);
+    console.log("🎯 File type:", fileType);
+    
     if (!file1 || !file2) {
       setError('Please select two files.');
       return;
@@ -148,42 +153,66 @@ export default function Home() {
       let data1 = [], data2 = []; // FIXED: Properly declare variables
       
       if (fileType === 'excel_csv') {
+        console.log("📊 Processing Excel-CSV combination");
+        console.log("🔧 FLEXIBLE_CROSS_FORMAT feature:", FEATURES.FLEXIBLE_CROSS_FORMAT);
+        
         if (FEATURES.FLEXIBLE_CROSS_FORMAT) {
-          // NEW: Use flexible cross-format system
-          console.log("=== USING FLEXIBLE CROSS-FORMAT SYSTEM ===");
+          console.log("✅ Using flexible cross-format system");
           
           try {
+            console.log("🔍 Starting file validation...");
+            
+            // Test if the import is working
+            console.log("📦 Testing import:", typeof validateCrossFormatCombination);
+            
+            if (typeof validateCrossFormatCombination === 'undefined') {
+              throw new Error("validateCrossFormatCombination is not imported correctly");
+            }
+            
             // Validate file combination first
             const validation = validateCrossFormatCombination(file1, file2, 'excel_csv');
+            console.log("🔍 Validation result:", validation);
+            
             if (!validation.valid) {
               throw new Error(validation.error);
             }
             
-            console.log("File validation passed:", validation);
+            console.log("✅ File validation passed");
+            
+            // Test if parseFilesFlexibly is imported
+            console.log("📦 Testing parseFilesFlexibly import:", typeof parseFilesFlexibly);
+            
+            if (typeof parseFilesFlexibly === 'undefined') {
+              throw new Error("parseFilesFlexibly is not imported correctly");
+            }
             
             // Parse files flexibly (handles any order)
+            console.log("🔄 Starting flexible parsing...");
             const flexibleResult = await parseFilesFlexibly(file1, file2, 'excel_csv', {
-              file1Options: selectedSheet1, // Pass sheet selection if available
+              file1Options: selectedSheet1,
               file2Options: selectedSheet2
             });
             
-            console.log("Flexible parsing result:", flexibleResult);
+            console.log("✅ Flexible parsing completed:", flexibleResult);
             
             // Extract data in consistent format
             data1 = flexibleResult.file1.data;
             data2 = flexibleResult.file2.data;
             
-            console.log("Final data1:", data1);
-            console.log("Final data2:", data2);
+            console.log("📊 Final data1 length:", data1?.length);
+            console.log("📊 Final data2 length:", data2?.length);
             
           } catch (flexibleError) {
-            console.warn("Flexible cross-format failed, using legacy approach:", flexibleError);
+            console.warn("❌ Flexible cross-format failed:", flexibleError);
+            console.log("🔄 Falling back to legacy approach");
+            
             // Fallback to original logic
             const legacyResult = await legacyExcelCSVParsing();
             data1 = legacyResult.data1;
             data2 = legacyResult.data2;
           }
         } else {
+          console.log("🔄 Using legacy approach (feature disabled)");
           // Original logic as fallback
           const legacyResult = await legacyExcelCSVParsing();
           data1 = legacyResult.data1;
