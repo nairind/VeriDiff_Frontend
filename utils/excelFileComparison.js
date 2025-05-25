@@ -1,4 +1,4 @@
-// File: utils/excelFileComparison.js
+// File: utils/excelFileComparison.js - Enhanced Version
 
 import * as XLSX from "xlsx";
 
@@ -21,11 +21,9 @@ function compareWithTolerance(val1, val2, tolerance, type) {
 }
 
 /**
- * Parses an Excel file and returns its contents as JSON.
- * @param {File} file
- * @returns {Promise<Array<Object>>}
+ * Enhanced function to get Excel file info including all sheets
  */
-export const parseExcelFile = (file) => {
+export const getExcelFileInfo = async (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -33,9 +31,35 @@ export const parseExcelFile = (file) => {
       try {
         const data = new Uint8Array(event.target.result);
         const workbook = XLSX.read(data, { type: "array" });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-        resolve(json);
+        
+        // Get all sheet information
+        const sheets = workbook.SheetNames.map(sheetName => {
+          const worksheet = workbook.Sheets[sheetName];
+          const isHidden = workbook.Workbook?.Sheets?.find(s => s.name === sheetName)?.Hidden === 1;
+          
+          // Get row count for preview
+          const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+          const rowCount = range.e.r + 1;
+          
+          // Get first few headers for preview
+          const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", header: 1 });
+          const headers = json[0] || [];
+          const previewHeaders = headers.slice(0, 5).map(h => String(h).trim());
+          
+          return {
+            name: sheetName,
+            isHidden,
+            rowCount,
+            headers: previewHeaders,
+            hasData: rowCount > 1
+          };
+        });
+
+        resolve({
+          fileName: file.name,
+          sheets: sheets,
+          defaultSheet: sheets.find(s => !s.isHidden && s.hasData)?.name || sheets[0]?.name
+        });
       } catch (error) {
         reject(error);
       }
@@ -47,13 +71,107 @@ export const parseExcelFile = (file) => {
 };
 
 /**
- * Compares two arrays of Excel data row-by-row and field-by-field with tolerance support - FIXED VERSION
- * @param {Array<Object>} data1
- * @param {Array<Object>} data2
- * @param {Array} finalMappings - Array of mapping objects with tolerance settings
- * @returns {Object} Comparison result
+ * Enhanced Excel parsing with sheet selection and cell cleanup
  */
-const compareExcelData = (data1, data2, finalMappings = []) => {
+export const parseExcelFile = (file, selectedSheet = null) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        
+        // Determine which sheet to use
+        let sheetName = selectedSheet;
+        if (!sheetName) {
+          // Auto-select: first visible sheet with data, or just first sheet
+          const visibleSheetsWithData = workbook.SheetNames.filter(name => {
+            const isHidden = workbook.Workbook?.Sheets?.find(s => s.name === name)?.Hidden === 1;
+            const worksheet = workbook.Sheets[name];
+            const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+            const hasData = range.e.r > 0; // More than just header row
+            return !isHidden && hasData;
+          });
+          
+          sheetName = visibleSheetsWithData[0] || workbook.SheetNames[0];
+        }
+
+        const worksheet = workbook.Sheets[sheetName];
+        if (!worksheet) {
+          throw new Error(`Sheet "${sheetName}" not found`);
+        }
+
+        // Parse with enhanced cleaning
+        const json = XLSX.utils.sheet_to_json(worksheet, { 
+          defval: "",
+          raw: false, // Convert everything to strings first for consistent cleaning
+          dateNF: 'yyyy-mm-dd' // Standardize date format
+        });
+
+        // Clean and process the data
+        const cleanedData = json.map(row => {
+          const cleanedRow = {};
+          Object.keys(row).forEach(key => {
+            // Clean header names (remove padding, normalize)
+            const cleanKey = String(key).trim().replace(/\s+/g, ' ');
+            
+            // Clean cell values
+            let cleanValue = row[key];
+            if (typeof cleanValue === 'string') {
+              cleanValue = cleanValue.trim();
+              // Handle special cases
+              if (cleanValue === '') cleanValue = '';
+              // Remove non-breaking spaces and other hidden characters
+              cleanValue = cleanValue.replace(/[\u00A0\u2000-\u200B\u2028-\u2029]/g, ' ').trim();
+            }
+            
+            cleanedRow[cleanKey] = cleanValue;
+          });
+          return cleanedRow;
+        });
+
+        resolve({
+          data: cleanedData,
+          sheetName: sheetName,
+          totalSheets: workbook.SheetNames.length
+        });
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+};
+
+/**
+ * Auto-detect amount fields based on name and content
+ */
+const isLikelyAmountField = (fieldName, sampleValues) => {
+  // Check field name patterns
+  const numericFieldNames = /amount|price|cost|total|sum|value|balance|fee|qty|quantity|rate|charge|payment|invoice|bill/i;
+  const hasNumericName = numericFieldNames.test(fieldName);
+  
+  // Check if values look like numbers (even as text)
+  const cleanNumericValues = sampleValues.filter(val => {
+    if (!val && val !== 0) return false;
+    // Clean common formatting
+    const cleaned = String(val).replace(/[$,\s€£¥]/g, '');
+    return !isNaN(parseFloat(cleaned)) && isFinite(cleaned);
+  });
+  
+  const percentNumeric = cleanNumericValues.length / Math.max(sampleValues.length, 1);
+  
+  // Auto-detect if field name suggests numbers OR >70% of values are numeric
+  return hasNumericName || percentNumeric > 0.7;
+};
+
+/**
+ * Enhanced comparison with auto-tolerance detection
+ */
+const compareExcelData = (data1, data2, finalMappings = [], autoDetectAmounts = true) => {
   // Apply mappings to data2 if provided
   let remappedData2 = data2;
   if (finalMappings.length > 0) {
@@ -68,6 +186,29 @@ const compareExcelData = (data1, data2, finalMappings = []) => {
     });
   }
 
+  // Auto-detect amount fields if enabled
+  let enhancedMappings = finalMappings;
+  if (autoDetectAmounts && data1.length > 0) {
+    enhancedMappings = finalMappings.map(mapping => {
+      if (!mapping.isAmountField && mapping.file1Header) {
+        // Get sample values from both datasets
+        const sampleValues1 = data1.slice(0, 10).map(row => row[mapping.file1Header]).filter(v => v != null);
+        const sampleValues2 = remappedData2.slice(0, 10).map(row => row[mapping.file1Header]).filter(v => v != null);
+        const allSamples = [...sampleValues1, ...sampleValues2];
+        
+        if (isLikelyAmountField(mapping.file1Header, allSamples)) {
+          return {
+            ...mapping,
+            isAmountField: true,
+            toleranceType: mapping.toleranceType || 'flat',
+            toleranceValue: mapping.toleranceValue || '0.01' // Default small tolerance
+          };
+        }
+      }
+      return mapping;
+    });
+  }
+
   const results = [];
   let matches = 0;
   let differences = 0;
@@ -77,17 +218,15 @@ const compareExcelData = (data1, data2, finalMappings = []) => {
     const row1 = data1[i] || {};
     const row2 = remappedData2[i] || {};
     
-    // FIXED: Only process fields that are in the final mappings
+    // Only process fields that are in the final mappings
     let keysToProcess;
-    if (finalMappings.length > 0) {
-      // Only process mapped fields
+    if (enhancedMappings.length > 0) {
       keysToProcess = new Set(
-        finalMappings
+        enhancedMappings
           .filter(m => m.file1Header && m.file2Header)
           .map(m => m.file1Header)
       );
     } else {
-      // Fallback: process all available keys
       keysToProcess = new Set([...Object.keys(row1), ...Object.keys(row2)]);
     }
     
@@ -96,7 +235,7 @@ const compareExcelData = (data1, data2, finalMappings = []) => {
     for (const key of keysToProcess) {
       const val1 = row1[key] ?? '';
       const val2 = row2[key] ?? '';
-      const mapping = finalMappings.find(m => m.file1Header === key);
+      const mapping = enhancedMappings.find(m => m.file1Header === key);
 
       let status = 'difference';
       if (val1 === val2) {
@@ -114,7 +253,8 @@ const compareExcelData = (data1, data2, finalMappings = []) => {
         val1,
         val2,
         status,
-        difference: isNumeric(val1) && isNumeric(val2) ? Math.abs(val1 - val2).toFixed(2) : ''
+        difference: isNumeric(val1) && isNumeric(val2) ? Math.abs(val1 - val2).toFixed(2) : '',
+        isAutoDetectedAmount: autoDetectAmounts && mapping?.isAmountField && !finalMappings.find(m => m.file1Header === key)?.isAmountField
       };
 
       if (status === 'match' || status === 'acceptable') {
@@ -134,29 +274,36 @@ const compareExcelData = (data1, data2, finalMappings = []) => {
     total_records: results.length,
     differences_found: differences,
     matches_found: matches,
-    results
+    results,
+    autoDetectedFields: autoDetectAmounts ? enhancedMappings.filter(m => 
+      m.isAmountField && !finalMappings.find(f => f.file1Header === m.file1Header)?.isAmountField
+    ).map(m => m.file1Header) : []
   };
 };
 
 /**
- * Compares two Excel files with optional mappings and tolerance settings.
- * @param {File} file1
- * @param {File} file2
- * @param {Array} finalMappings - Optional array of mapping objects
- * @returns {Promise<Object>}
+ * Main Excel comparison function with enhanced features
  */
-export const compareExcelFiles = async (file1, file2, finalMappings = []) => {
+export const compareExcelFiles = async (file1, file2, finalMappings = [], options = {}) => {
   try {
-    const [data1, data2] = await Promise.all([
-      parseExcelFile(file1),
-      parseExcelFile(file2),
+    const { sheet1, sheet2, autoDetectAmounts = true } = options;
+    
+    const [result1, result2] = await Promise.all([
+      parseExcelFile(file1, sheet1),
+      parseExcelFile(file2, sheet2),
     ]);
 
-    if (!Array.isArray(data1) || !Array.isArray(data2)) {
+    if (!Array.isArray(result1.data) || !Array.isArray(result2.data)) {
       throw new Error('Parsed data missing or invalid');
     }
 
-    return compareExcelData(data1, data2, finalMappings);
+    const comparison = compareExcelData(result1.data, result2.data, finalMappings, autoDetectAmounts);
+    
+    return {
+      ...comparison,
+      file1Info: { sheet: result1.sheetName, totalSheets: result1.totalSheets },
+      file2Info: { sheet: result2.sheetName, totalSheets: result2.totalSheets }
+    };
   } catch (error) {
     throw new Error(`Failed to compare Excel files: ${error.message}`);
   }
