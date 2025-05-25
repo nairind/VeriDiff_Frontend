@@ -2,21 +2,31 @@ import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
-import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison';
+import { parseExcelFile, compareExcelFiles, getExcelFileInfo } from '../utils/excelFileComparison';
 import { parseJSONFile, compareJSONFiles } from '../utils/jsonFileComparison';
 import { parseXMLFile, compareXMLFiles } from '../utils/xmlFileComparison';
 import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
 import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
+// import SheetSelector from '../components/SheetSelector';  // OPTIONAL IMPORT - only if needed
 import { mapHeaders } from '../utils/mapHeaders';
 import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
+
+// FEATURE FLAGS - easily disable problematic features
+const FEATURES = {
+  SHEET_SELECTION: false,        // Set to true when SheetSelector is ready
+  AUTO_DETECTION: true,          // Auto-detection of amount fields
+  AUTO_RERUN: true,             // Auto-rerun functionality
+  ENHANCED_EXCEL_PARSING: true  // Use enhanced Excel parsing with data extraction
+};
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
   const [fileType, setFileType] = useState('csv');
 
+  // Core states (always present)
   const [showMapper, setShowMapper] = useState(false);
   const [headers1, setHeaders1] = useState([]);
   const [headers2, setHeaders2] = useState([]);
@@ -27,6 +37,13 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [sampleData1, setSampleData1] = useState(null);
   const [sampleData2, setSampleData2] = useState(null);
+
+  // Optional states (only used if features enabled)
+  const [file1Info, setFile1Info] = useState(null);
+  const [file2Info, setFile2Info] = useState(null);
+  const [selectedSheet1, setSelectedSheet1] = useState(null);
+  const [selectedSheet2, setSelectedSheet2] = useState(null);
+  const [showSheetSelector, setShowSheetSelector] = useState(false);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
@@ -42,6 +59,48 @@ export default function Home() {
     setResults(null);
     setError(null);
     setShowMapper(false);
+    
+    // Reset optional states
+    if (FEATURES.SHEET_SELECTION) {
+      setShowSheetSelector(false);
+      setFile1Info(null);
+      setFile2Info(null);
+    }
+  };
+
+  // MODULAR: Safe Excel data extraction
+  const safeExtractExcelData = (result) => {
+    if (FEATURES.ENHANCED_EXCEL_PARSING && result && typeof result === 'object' && result.data) {
+      return result.data;
+    }
+    // Fallback for legacy format
+    return Array.isArray(result) ? result : [];
+  };
+
+  // MODULAR: Safe data validation (can be disabled if causing issues)
+  const validateDataFormat = (data1, data2) => {
+    if (!FEATURES.ENHANCED_EXCEL_PARSING) return; // Skip validation if feature disabled
+    
+    if (!Array.isArray(data1) || data1.length === 0) {
+      throw new Error('File 1 contains no valid data rows');
+    }
+    if (!Array.isArray(data2) || data2.length === 0) {
+      throw new Error('File 2 contains no valid data rows');
+    }
+    
+    if (typeof data1[0] !== 'object' || Array.isArray(data1[0])) {
+      throw new Error('File 1 data format is not supported - expected object rows');
+    }
+    if (typeof data2[0] !== 'object' || Array.isArray(data2[0])) {
+      throw new Error('File 2 data format is not supported - expected object rows');
+    }
+  };
+
+  // MODULAR: Sheet selection handler (only if feature enabled)
+  const handleSheetSelect = (sheet1, sheet2) => {
+    if (!FEATURES.SHEET_SELECTION) return;
+    setSelectedSheet1(sheet1);
+    setSelectedSheet2(sheet2);
   };
 
   const handleLoadFiles = async () => {
@@ -51,17 +110,85 @@ export default function Home() {
     }
     setLoading(true);
     setError(null);
+    
     try {
       let data1 = [], data2 = [];
+      
       if (fileType === 'excel_csv') {
-        data1 = await parseExcelFile(file1);
+        // MODULAR: Try enhanced Excel parsing, fallback to simple
+        try {
+          if (FEATURES.SHEET_SELECTION) {
+            const excelInfo = await getExcelFileInfo(file1);
+            setFile1Info(excelInfo);
+            
+            if (excelInfo.sheets.length > 1) {
+              setShowSheetSelector(true);
+              setLoading(false);
+              return;
+            }
+            
+            const result1 = await parseExcelFile(file1, excelInfo.defaultSheet);
+            data1 = safeExtractExcelData(result1);
+          } else {
+            // Fallback: simple parsing without sheet selection
+            const result1 = await parseExcelFile(file1);
+            data1 = safeExtractExcelData(result1);
+          }
+        } catch (excelError) {
+          console.warn('Enhanced Excel parsing failed, using fallback:', excelError);
+          // Fallback to basic parsing
+          const result1 = await parseExcelFile(file1);
+          data1 = Array.isArray(result1) ? result1 : (result1.data || []);
+        }
+        
         data2 = await parseCSVFile(file2);
+        
       } else if (fileType === 'csv') {
         data1 = await parseCSVFile(file1);
         data2 = await parseCSVFile(file2);
+        
       } else if (fileType === 'excel') {
-        data1 = await parseExcelFile(file1);
-        data2 = await parseExcelFile(file2);
+        // MODULAR: Enhanced Excel-Excel comparison
+        try {
+          if (FEATURES.SHEET_SELECTION) {
+            const [excelInfo1, excelInfo2] = await Promise.all([
+              getExcelFileInfo(file1),
+              getExcelFileInfo(file2)
+            ]);
+            setFile1Info(excelInfo1);
+            setFile2Info(excelInfo2);
+            
+            if (excelInfo1.sheets.length > 1 || excelInfo2.sheets.length > 1) {
+              setShowSheetSelector(true);
+              setLoading(false);
+              return;
+            }
+            
+            const [result1, result2] = await Promise.all([
+              parseExcelFile(file1, excelInfo1.defaultSheet),
+              parseExcelFile(file2, excelInfo2.defaultSheet)
+            ]);
+            data1 = safeExtractExcelData(result1);
+            data2 = safeExtractExcelData(result2);
+          } else {
+            // Fallback: simple Excel parsing
+            const [result1, result2] = await Promise.all([
+              parseExcelFile(file1),
+              parseExcelFile(file2)
+            ]);
+            data1 = safeExtractExcelData(result1);
+            data2 = safeExtractExcelData(result2);
+          }
+        } catch (excelError) {
+          console.warn('Enhanced Excel parsing failed, using fallback:', excelError);
+          const [result1, result2] = await Promise.all([
+            parseExcelFile(file1),
+            parseExcelFile(file2)
+          ]);
+          data1 = Array.isArray(result1) ? result1 : (result1.data || []);
+          data2 = Array.isArray(result2) ? result2 : (result2.data || []);
+        }
+        
       } else if (fileType === 'json') {
         data1 = await parseJSONFile(file1);
         data2 = await parseJSONFile(file2);
@@ -72,25 +199,86 @@ export default function Home() {
         data1 = await parsePDFFile(file1);
         data2 = await parsePDFFile(file2);
       } else if (fileType === 'text') {
-        // Text files don't use header mapping - skip to comparison
+        // Text files bypass header mapping
         const result = await compareTextFiles_main(file1, file2);
         setResults(result);
         setLoading(false);
-        return; // Skip header mapping for text files
+        return;
       } else {
         throw new Error('Unsupported file type.');
       }
+      
+      // MODULAR: Safe data validation
+      try {
+        validateDataFormat(data1, data2);
+      } catch (validationError) {
+        console.warn('Data validation warning:', validationError.message);
+        // Continue anyway for backwards compatibility
+      }
+      
+      // Setup header mapping (existing functionality)
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
+      
       setHeaders1(h1);
       setHeaders2(h2);
       setSuggestedMappings(suggested);
-      setSampleData1(data1.slice(0, 10)); // Store sample data for auto-detection
+      setSampleData1(data1.slice(0, 10));
       setSampleData2(data2.slice(0, 10));
       setShowMapper(true);
+      
     } catch (err) {
-      console.error(err);
+      console.error('File loading error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // MODULAR: Sheet selection continuation (only if feature enabled)
+  const handleProceedWithSheets = async () => {
+    if (!FEATURES.SHEET_SELECTION) return;
+    
+    if (!selectedSheet1 || (fileType === 'excel' && !selectedSheet2)) {
+      setError('Please select sheets for both files.');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      let data1 = [], data2 = [];
+      
+      if (fileType === 'excel_csv') {
+        const result1 = await parseExcelFile(file1, selectedSheet1);
+        data1 = safeExtractExcelData(result1);
+        data2 = await parseCSVFile(file2);
+      } else if (fileType === 'excel') {
+        const [result1, result2] = await Promise.all([
+          parseExcelFile(file1, selectedSheet1),
+          parseExcelFile(file2, selectedSheet2)
+        ]);
+        data1 = safeExtractExcelData(result1);
+        data2 = safeExtractExcelData(result2);
+      }
+      
+      // Setup header mapping
+      const h1 = Object.keys(data1[0] || {});
+      const h2 = Object.keys(data2[0] || {});
+      const suggested = mapHeaders(h1, h2);
+      
+      setHeaders1(h1);
+      setHeaders2(h2);
+      setSuggestedMappings(suggested);
+      setSampleData1(data1.slice(0, 10));
+      setSampleData2(data2.slice(0, 10));
+      setShowMapper(true);
+      setShowSheetSelector(false);
+      
+    } catch (err) {
+      console.error('Sheet processing error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -128,39 +316,42 @@ export default function Home() {
     }
     setLoading(true);
     setError(null);
+    
     try {
       let result;
       
-      // Call the appropriate comparison function based on file type
+      // MODULAR: Build options only if features are enabled
+      const options = {};
+      if (FEATURES.SHEET_SELECTION) {
+        options.sheet1 = selectedSheet1;
+        options.sheet2 = selectedSheet2;
+      }
+      if (FEATURES.AUTO_DETECTION) {
+        options.autoDetectAmounts = true;
+      }
+      
+      // Call appropriate comparison function
       if (fileType === 'excel_csv') {
-        // Excel-CSV comparison (your working functionality)
         result = await compareExcelCSVFiles(file1, file2, finalMappings);
       } else if (fileType === 'excel') {
-        // Excel-Excel comparison (now fixed)
-        result = await compareExcelFiles(file1, file2, finalMappings);
+        result = await compareExcelFiles(file1, file2, finalMappings, options);
       } else if (fileType === 'json') {
-        // JSON comparison (now fixed)
         result = await compareJSONFiles(file1, file2, finalMappings);
       } else if (fileType === 'xml') {
-        // XML comparison (new functionality)
         result = await compareXMLFiles(file1, file2, finalMappings);
       } else if (fileType === 'pdf') {
-        // PDF comparison (new functionality)
         result = await comparePDFFiles(file1, file2, finalMappings);
       } else if (fileType === 'text') {
-        // Text comparison (line-by-line)
         result = await compareTextFiles_main(file1, file2);
       } else if (fileType === 'csv') {
-        // CSV comparison - you may need to create a compareCSVFiles function
         result = await compareExcelCSVFiles(file1, file2, finalMappings);
       } else {
-        // For other file types, fallback
         result = await compareExcelCSVFiles(file1, file2, finalMappings);
       }
       
       setResults(result);
     } catch (err) {
-      console.error(err);
+      console.error('Comparison error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -173,7 +364,7 @@ export default function Home() {
         <title>VeriDiff - File Comparison Tool</title>
       </Head>
 
-      {/* Simple Navigation */}
+      {/* Navigation */}
       <nav style={{
         background: 'white',
         borderBottom: '1px solid #e5e7eb',
@@ -226,6 +417,17 @@ export default function Home() {
         <button onClick={handleLoadFiles} disabled={loading}>
           {loading ? 'Loading...' : 'Load Files'}
         </button>
+
+        {/* MODULAR: Sheet selector only if feature enabled */}
+        {FEATURES.SHEET_SELECTION && showSheetSelector && (
+          <>
+            {/* Dynamic import of SheetSelector component */}
+            {React.lazy(() => import('../components/SheetSelector').then(module => ({ default: module.default })))}
+            <button onClick={handleProceedWithSheets} disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}>
+              {loading ? 'Processing...' : 'Proceed with Selected Sheets'}
+            </button>
+          </>
+        )}
 
         {showMapper && (
           <HeaderMapper
@@ -282,7 +484,11 @@ export default function Home() {
               <p><strong>Differences Found:</strong> {results.differences_found}</p>
               <p><strong>Matches Found:</strong> {results.matches_found}</p>
               
-              {/* Download Buttons */}
+              {/* MODULAR: Show auto-detected fields only if feature enabled and data exists */}
+              {FEATURES.AUTO_DETECTION && results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
+                <p><strong>🤖 Auto-detected Amount Fields:</strong> {results.autoDetectedFields.join(', ')}</p>
+              )}
+              
               <div style={{ marginTop: '15px' }}>
                 <button 
                   onClick={handleDownloadExcel}
@@ -351,14 +557,18 @@ export default function Home() {
                             padding: '8px',
                             backgroundColor:
                               value.status === 'difference'
-                                ? '#fdd'  // Light red for differences
+                                ? '#fdd'
                                 : value.status === 'acceptable'
-                                ? '#ffd'  // Light yellow for acceptable (within tolerance)
-                                : '#dfd'  // Light green for matches
+                                ? '#ffd'
+                                : '#dfd'
                           }}
                         >
                           <div>
                             <strong>{value.val1} / {value.val2}</strong>
+                            {/* MODULAR: Auto-detected indicator only if feature enabled */}
+                            {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
+                              <span style={{ marginLeft: '5px', fontSize: '0.8em' }}>🤖</span>
+                            )}
                           </div>
                           <small style={{ color: '#666' }}>
                             {value.status}
@@ -429,205 +639,6 @@ export default function Home() {
         button:disabled {
           background-color: #ccc;
           cursor: not-allowed;
-        }
-
-        /* Info Section Styles */
-        .info-section {
-          max-width: 1200px;
-          margin: 40px auto;
-          padding: 0 20px;
-        }
-
-        .hero-banner {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          padding: 40px;
-          border-radius: 16px;
-          text-align: center;
-          margin-bottom: 40px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .hero-banner h2 {
-          font-size: 2.5em;
-          margin: 0 0 20px 0;
-          font-weight: 700;
-        }
-
-        .hero-banner p {
-          font-size: 1.2em;
-          opacity: 0.9;
-          margin: 0;
-          line-height: 1.6;
-        }
-
-        .features-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 30px;
-          margin-bottom: 40px;
-        }
-
-        .feature-card {
-          background: white;
-          padding: 30px;
-          border-radius: 12px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-          border: 1px solid #e5e7eb;
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .feature-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-        }
-
-        .feature-icon {
-          width: 60px;
-          height: 60px;
-          margin: 0 auto 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 30px;
-          border-radius: 50%;
-          color: white;
-        }
-
-        .feature-icon.security { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .feature-icon.formats { background: linear-gradient(135deg, #f093fb, #f5576c); }
-        .feature-icon.speed { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .feature-icon.accuracy { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-
-        .feature-card h3 {
-          color: #1f2937;
-          font-size: 1.3em;
-          margin: 0 0 15px 0;
-          text-align: center;
-          font-weight: 600;
-        }
-
-        .feature-card p {
-          color: #6b7280;
-          line-height: 1.6;
-          margin: 0;
-          text-align: center;
-        }
-
-        .security-banner {
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          padding: 30px;
-          border-radius: 12px;
-          margin: 40px 0;
-          text-align: center;
-        }
-
-        .security-banner h3 {
-          font-size: 1.5em;
-          margin: 0 0 15px 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-
-        .security-banner p {
-          margin: 0;
-          font-size: 1.1em;
-          opacity: 0.9;
-          line-height: 1.6;
-        }
-
-        .restrictions-section {
-          background: #fef3c7;
-          border: 1px solid #fbbf24;
-          border-radius: 12px;
-          padding: 30px;
-          margin: 40px 0;
-        }
-
-        .restrictions-section h3 {
-          color: #92400e;
-          font-size: 1.3em;
-          margin: 0 0 20px 0;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .restrictions-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-
-        .restrictions-list li {
-          color: #78350f;
-          margin: 12px 0;
-          padding-left: 25px;
-          position: relative;
-          line-height: 1.5;
-        }
-
-        .restrictions-list li:before {
-          content: "⚠️";
-          position: absolute;
-          left: 0;
-          top: 0;
-        }
-
-        .formats-showcase {
-          display: flex;
-          justify-content: center;
-          flex-wrap: wrap;
-          gap: 15px;
-          margin: 30px 0;
-        }
-
-        .format-badge {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          padding: 8px 16px;
-          border-radius: 20px;
-          font-size: 0.9em;
-          font-weight: 500;
-          box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
-        }
-
-        .cta-section {
-          text-align: center;
-          padding: 40px;
-          background: #f8fafc;
-          border-radius: 12px;
-          margin: 40px 0;
-        }
-
-        .cta-section h3 {
-          color: #1f2937;
-          font-size: 1.5em;
-          margin: 0 0 15px 0;
-        }
-
-        .cta-section p {
-          color: #6b7280;
-          font-size: 1.1em;
-          margin: 0;
-          line-height: 1.6;
-        }
-
-        @media (max-width: 768px) {
-          .hero-banner h2 {
-            font-size: 2em;
-          }
-          
-          .features-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .formats-showcase {
-            justify-content: center;
-          }
         }
       `}</style>
     </div>
