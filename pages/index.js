@@ -4,6 +4,7 @@ import { parseCSVFile } from '../utils/simpleCSVComparison';
 import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison'; // Added compareExcelFiles import
 import { parseJSONFile, compareJSONFiles } from '../utils/jsonFileComparison';
 import { parseXMLFile, compareXMLFiles } from '../utils/xmlFileComparison';
+import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
 import { mapHeaders } from '../utils/mapHeaders';
@@ -62,6 +63,9 @@ export default function Home() {
       } else if (fileType === 'xml') {
         data1 = await parseXMLFile(file1);
         data2 = await parseXMLFile(file2);
+      } else if (fileType === 'pdf') {
+        data1 = await parsePDFFile(file1);
+        data2 = await parsePDFFile(file2);
       } else {
         throw new Error('Unsupported file type.');
       }
@@ -108,6 +112,9 @@ export default function Home() {
       } else if (fileType === 'xml') {
         // XML comparison (new functionality)
         result = await compareXMLFiles(file1, file2, finalMappings);
+      } else if (fileType === 'pdf') {
+        // PDF comparison (new functionality)
+        result = await comparePDFFiles(file1, file2, finalMappings);
       } else if (fileType === 'csv') {
         // CSV comparison - you may need to create a compareCSVFiles function
         result = await compareExcelCSVFiles(file1, file2, finalMappings);
@@ -139,6 +146,7 @@ export default function Home() {
           <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
           <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON</label>
           <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML</label>
+          <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF</label>
           <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel</label>
           <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
         </div>
