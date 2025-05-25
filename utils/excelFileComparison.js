@@ -47,7 +47,7 @@ export const parseExcelFile = (file) => {
 };
 
 /**
- * Compares two arrays of Excel data row-by-row and field-by-field with tolerance support.
+ * Compares two arrays of Excel data row-by-row and field-by-field with tolerance support - FIXED VERSION
  * @param {Array<Object>} data1
  * @param {Array<Object>} data2
  * @param {Array} finalMappings - Array of mapping objects with tolerance settings
@@ -76,10 +76,24 @@ const compareExcelData = (data1, data2, finalMappings = []) => {
   for (let i = 0; i < maxRows; i++) {
     const row1 = data1[i] || {};
     const row2 = remappedData2[i] || {};
-    const keys = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+    
+    // FIXED: Only process fields that are in the final mappings
+    let keysToProcess;
+    if (finalMappings.length > 0) {
+      // Only process mapped fields
+      keysToProcess = new Set(
+        finalMappings
+          .filter(m => m.file1Header && m.file2Header)
+          .map(m => m.file1Header)
+      );
+    } else {
+      // Fallback: process all available keys
+      keysToProcess = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+    }
+    
     const fieldResults = {};
 
-    for (const key of keys) {
+    for (const key of keysToProcess) {
       const val1 = row1[key] ?? '';
       const val2 = row2[key] ?? '';
       const mapping = finalMappings.find(m => m.file1Header === key);
