@@ -25,6 +25,8 @@ export default function Home() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [sampleData1, setSampleData1] = useState(null);
+  const [sampleData2, setSampleData2] = useState(null);
 
   const handleFileChange = (e, fileNum) => {
     const file = e.target.files[0];
@@ -84,6 +86,8 @@ export default function Home() {
       setHeaders1(h1);
       setHeaders2(h2);
       setSuggestedMappings(suggested);
+      setSampleData1(data1.slice(0, 10)); // Store sample data for auto-detection
+      setSampleData2(data2.slice(0, 10));
       setShowMapper(true);
     } catch (err) {
       console.error(err);
@@ -228,6 +232,8 @@ export default function Home() {
             file1Headers={headers1}
             file2Headers={headers2}
             suggestedMappings={suggestedMappings}
+            sampleData1={sampleData1}
+            sampleData2={sampleData2}
             onConfirm={handleMappingConfirmed}
             showRunButton={true}
             onRun={handleRunComparison}
