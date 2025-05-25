@@ -69,9 +69,11 @@ export default function Home() {
         data1 = await parsePDFFile(file1);
         data2 = await parsePDFFile(file2);
       } else if (fileType === 'text') {
-        // Text files don't need parsing - handle differently
-        data1 = [{}]; // Dummy data for text files
-        data2 = [{}]; // Text comparison works differently
+        // Text files don't use header mapping - skip to comparison
+        const result = await compareTextFiles_main(file1, file2);
+        setResults(result);
+        setLoading(false);
+        return; // Skip header mapping for text files
       } else {
         throw new Error('Unsupported file type.');
       }
