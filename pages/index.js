@@ -66,34 +66,34 @@ export default function Home() {
     return { type: 'unknown', label: 'Unknown' };
   };
 
-  const validateFilesInline = (file1, file2) => {
+  // ENFORCED FILE ORDER VALIDATION - Simple and Clear
+  const validateExcelCSVOrder = (file1, file2) => {
     const file1Type = detectFileTypeInline(file1);
     const file2Type = detectFileTypeInline(file2);
     
     console.log(`🔍 File 1 (${file1.name}) detected as: ${file1Type.type}`);
     console.log(`🔍 File 2 (${file2.name}) detected as: ${file2Type.type}`);
     
-    // Check if we have one Excel and one CSV file
-    const hasExcel = file1Type.type === 'excel' || file2Type.type === 'excel';
-    const hasCSV = file1Type.type === 'csv' || file2Type.type === 'csv';
-    const isValidCombo = hasExcel && hasCSV && file1Type.type !== file2Type.type;
-    
-    if (!isValidCombo) {
+    // STRICT: File 1 must be Excel, File 2 must be CSV
+    if (file1Type.type !== 'excel') {
       return {
         valid: false,
-        error: `❌ Invalid file combination!\n\nExpected: Excel + CSV\nReceived: ${file1Type.label} + ${file2Type.label}\n\nPlease upload one Excel file and one CSV file.`
+        error: `❌ File Order Error!\n\nFile 1 must be an Excel file (.xlsx, .xls)\nYou uploaded: ${file1Type.label}\n\nPlease upload Excel file first, then CSV file.`
       };
     }
     
-    // Determine which file is Excel and which is CSV
-    const excelFile = file1Type.type === 'excel' ? file1 : file2;
-    const csvFile = file1Type.type === 'csv' ? file1 : file2;
+    if (file2Type.type !== 'csv') {
+      return {
+        valid: false,
+        error: `❌ File Order Error!\n\nFile 2 must be a CSV file (.csv)\nYou uploaded: ${file2Type.label}\n\nPlease upload Excel file first, then CSV file.`
+      };
+    }
     
+    console.log("✅ Correct file order: Excel → CSV");
     return {
       valid: true,
-      excelFile,
-      csvFile,
-      swapped: file1Type.type === 'csv' // True if we need to swap order
+      excelFile: file1,
+      csvFile: file2
     };
   };
 
@@ -213,8 +213,8 @@ export default function Home() {
           try {
             console.log("🔍 Starting file validation...");
             
-            // Use inline validation instead of import
-            const validation = validateFilesInline(file1, file2);
+            // Use strict order validation
+            const validation = validateExcelCSVOrder(file1, file2);
             console.log("🔍 Validation result:", validation);
             
             if (!validation.valid) {
@@ -223,22 +223,13 @@ export default function Home() {
             
             console.log("✅ File validation passed");
             
-            // Parse files in correct order based on validation
-            if (validation.swapped) {
-              console.log("🔄 Files are swapped - CSV first, Excel second");
-              console.log("📊 Parsing CSV file:", validation.csvFile.name);
-              data2 = await parseCSVFile(validation.csvFile);
-              console.log("📊 Parsing Excel file:", validation.excelFile.name);
-              const excelResult = await parseExcelFile(validation.excelFile, selectedSheet1);
-              data1 = safeExtractExcelData(excelResult);
-            } else {
-              console.log("✅ Files in correct order - Excel first, CSV second");
-              console.log("📊 Parsing Excel file:", validation.excelFile.name);
-              const excelResult = await parseExcelFile(validation.excelFile, selectedSheet1);
-              data1 = safeExtractExcelData(excelResult);
-              console.log("📊 Parsing CSV file:", validation.csvFile.name);
-              data2 = await parseCSVFile(validation.csvFile);
-            }
+            // Parse files in the REQUIRED order: Excel first, CSV second
+            console.log("📊 Parsing Excel file (File 1):", validation.excelFile.name);
+            const excelResult = await parseExcelFile(validation.excelFile, selectedSheet1);
+            data1 = safeExtractExcelData(excelResult);
+            
+            console.log("📊 Parsing CSV file (File 2):", validation.csvFile.name);
+            data2 = await parseCSVFile(validation.csvFile);
             
             console.log("📊 Final data1 length:", data1?.length);
             console.log("📊 Final data2 length:", data2?.length);
@@ -528,6 +519,33 @@ export default function Home() {
           <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
         </div>
 
+        {/* FILE ORDER GUIDANCE */}
+        {fileType === 'excel_csv' && (
+          <div className="file-order-guidance">
+            <h3>📋 File Upload Order</h3>
+            <div className="order-instruction">
+              <div className="file-slot">
+                <span className="slot-number">1</span>
+                <span className="slot-description">
+                  <strong>Excel File</strong><br />
+                  Upload your .xlsx or .xls file first
+                </span>
+              </div>
+              <div className="arrow">→</div>
+              <div className="file-slot">
+                <span className="slot-number">2</span>
+                <span className="slot-description">
+                  <strong>CSV File</strong><br />
+                  Upload your .csv file second
+                </span>
+              </div>
+            </div>
+            <p className="order-note">
+              ⚠️ <strong>Important:</strong> Please upload files in this exact order for accurate comparison.
+            </p>
+          </div>
+        )}
+
         <input type="file" onChange={(e) => handleFileChange(e, 1)} />
         <input type="file" onChange={(e) => handleFileChange(e, 2)} />
 
@@ -760,6 +778,91 @@ export default function Home() {
         button:disabled {
           background-color: #ccc;
           cursor: not-allowed;
+        }
+
+        /* File Order Guidance Styles */
+        .file-order-guidance {
+          background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+          border: 2px solid #2196f3;
+          border-radius: 12px;
+          padding: 20px;
+          margin: 20px 0;
+          text-align: center;
+        }
+
+        .file-order-guidance h3 {
+          color: #1976d2;
+          margin: 0 0 15px 0;
+          font-size: 1.1em;
+        }
+
+        .order-instruction {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 20px;
+          margin: 15px 0;
+          flex-wrap: wrap;
+        }
+
+        .file-slot {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: white;
+          padding: 15px 20px;
+          border-radius: 8px;
+          border: 2px solid #2196f3;
+          min-width: 180px;
+        }
+
+        .slot-number {
+          background: #2196f3;
+          color: white;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 1.1em;
+        }
+
+        .slot-description {
+          text-align: left;
+          line-height: 1.4;
+        }
+
+        .slot-description strong {
+          color: #1976d2;
+          font-size: 1em;
+        }
+
+        .arrow {
+          font-size: 1.5em;
+          color: #2196f3;
+          font-weight: bold;
+        }
+
+        .order-note {
+          background: #fff3cd;
+          border: 1px solid #ffc107;
+          border-radius: 6px;
+          padding: 10px;
+          margin: 15px 0 0 0;
+          color: #856404;
+          font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+          .order-instruction {
+            flex-direction: column;
+          }
+          
+          .arrow {
+            transform: rotate(90deg);
+          }
         }
       `}</style>
     </div>
