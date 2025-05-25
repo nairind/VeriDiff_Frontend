@@ -1,4 +1,4 @@
-import { diffLines } from 'diff';
+// File: utils/textFileComparison.js
 
 /**
  * Text file comparison utility
@@ -27,68 +27,49 @@ export const readFileAsText = (file) => {
 };
 
 /**
- * Compares two text files line by line
+ * Simple line-by-line comparison (without external diff library)
  * @param {string} text1 - The first text content
  * @param {string} text2 - The second text content
- * @returns {Object} - The comparison results
+ * @returns {Object} - The comparison results in consistent format
  */
 export const compareTextFiles = (text1, text2) => {
   const lines1 = text1.split('\n');
   const lines2 = text2.split('\n');
   
-  const diff = diffLines(text1, text2);
+  const maxLines = Math.max(lines1.length, lines2.length);
+  const fieldResults = {};
+  let matches = 0;
+  let differences = 0;
   
-  const results = [];
-  let differencesFound = 0;
-  let matchesFound = 0;
-  let lineNumber = 0;
-  
-  diff.forEach((part) => {
-    const lines = part.value.split('\n');
-    // Remove the last empty line if the part ends with a newline
-    if (part.value.endsWith('\n')) {
-      lines.pop();
+  for (let i = 0; i < maxLines; i++) {
+    const line1 = lines1[i] || '';
+    const line2 = lines2[i] || '';
+    const lineKey = `line.${i + 1}`;
+    
+    let status = 'difference';
+    if (line1 === line2) {
+      status = 'match';
+      matches++;
+    } else {
+      differences++;
     }
     
-    lines.forEach((line) => {
-      lineNumber++;
-      
-      if (part.added) {
-        results.push({
-          ID: lineNumber.toString(),
-          COLUMN: 'Line',
-          SOURCE_1_VALUE: '',
-          SOURCE_2_VALUE: line,
-          STATUS: 'difference'
-        });
-        differencesFound++;
-      } else if (part.removed) {
-        results.push({
-          ID: lineNumber.toString(),
-          COLUMN: 'Line',
-          SOURCE_1_VALUE: line,
-          SOURCE_2_VALUE: '',
-          STATUS: 'difference'
-        });
-        differencesFound++;
-      } else {
-        results.push({
-          ID: lineNumber.toString(),
-          COLUMN: 'Line',
-          SOURCE_1_VALUE: line,
-          SOURCE_2_VALUE: line,
-          STATUS: 'match'
-        });
-        matchesFound++;
-      }
-    });
-  });
+    fieldResults[lineKey] = {
+      val1: line1,
+      val2: line2,
+      status: status,
+      difference: ''
+    };
+  }
   
   return {
-    total_records: Math.max(lines1.length, lines2.length),
-    differences_found: differencesFound,
-    matches_found: matchesFound,
-    results: results
+    total_records: 1, // Text comparison is treated as one record with multiple line fields
+    differences_found: differences,
+    matches_found: matches,
+    results: [{
+      ID: 1,
+      fields: fieldResults
+    }]
   };
 };
 
@@ -101,7 +82,10 @@ export const compareTextFiles = (text1, text2) => {
 export const compareTextFiles_main = async (file1, file2) => {
   try {
     // Validate file types
-    if (!file1.name.toLowerCase().endsWith('.txt') || !file2.name.toLowerCase().endsWith('.txt')) {
+    const isText1 = file1.name.toLowerCase().endsWith('.txt');
+    const isText2 = file2.name.toLowerCase().endsWith('.txt');
+    
+    if (!isText1 || !isText2) {
       throw new Error('Both files must be text (.txt) files');
     }
     
