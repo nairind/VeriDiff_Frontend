@@ -493,14 +493,18 @@ export default function Home() {
             color: '#667eea'
           }}>VeriDiff</span>
           <div style={{ display: 'flex', gap: '2rem' }}>
-            <span style={{ color: '#667eea', fontWeight: '500' }}>Compare Files</span>
             <Link href="/about">
               <span style={{ 
-                color: '#6b7280', 
+                color: '#FF6B35', 
                 cursor: 'pointer', 
-                textDecoration: 'none'
-              }}>About</span>
+                textDecoration: 'none',
+                fontSize: '1.2rem',
+                fontWeight: '700'
+              }}>
+                📖 <strong>MUST READ</strong> - About
+              </span>
             </Link>
+            <span style={{ color: '#667eea', fontWeight: '500' }}>Compare Files</span>
           </div>
         </div>
       </nav>
