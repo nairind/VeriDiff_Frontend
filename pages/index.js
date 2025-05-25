@@ -18,7 +18,8 @@ const FEATURES = {
   SHEET_SELECTION: true,         // ENABLED: SheetSelector is ready to test
   AUTO_DETECTION: true,          // Auto-detection of amount fields
   AUTO_RERUN: true,             // Auto-rerun functionality
-  ENHANCED_EXCEL_PARSING: true  // Use enhanced Excel parsing with data extraction
+  ENHANCED_EXCEL_PARSING: true,  // Use enhanced Excel parsing with data extraction
+  FLEXIBLE_CROSS_FORMAT: true   // NEW: Use flexible cross-format comparison
 };
 
 export default function Home() {
@@ -68,6 +69,36 @@ export default function Home() {
     }
   };
 
+  // LEGACY EXCEL-CSV PARSING FUNCTION (fallback)
+  const legacyExcelCSVParsing = async () => {
+    console.log("Using legacy Excel-CSV parsing...");
+    
+    try {
+      if (FEATURES.SHEET_SELECTION) {
+        const excelInfo = await getExcelFileInfo(file1);
+        setFile1Info(excelInfo);
+        
+        if (excelInfo.sheets.length > 1) {
+          setShowSheetSelector(true);
+          setLoading(false);
+          return;
+        }
+        
+        const result1 = await parseExcelFile(file1, excelInfo.defaultSheet);
+        data1 = safeExtractExcelData(result1);
+      } else {
+        const result1 = await parseExcelFile(file1);
+        data1 = safeExtractExcelData(result1);
+      }
+    } catch (excelError) {
+      console.warn('Enhanced Excel parsing failed, using fallback:', excelError);
+      const result1 = await parseExcelFile(file1);
+      data1 = Array.isArray(result1) ? result1 : (result1.data || []);
+    }
+    
+    data2 = await parseCSVFile(file2);
+  };
+
   // MODULAR: Safe Excel data extraction
   const safeExtractExcelData = (result) => {
     if (FEATURES.ENHANCED_EXCEL_PARSING && result && typeof result === 'object' && result.data) {
@@ -115,57 +146,43 @@ export default function Home() {
       let data1 = [], data2 = [];
       
       if (fileType === 'excel_csv') {
-        // TEMPORARY DEBUG VERSION - Enhanced logging
-        console.log("=== DEBUGGING EXCEL-CSV PARSING ===");
-        
-        try {
-          if (FEATURES.SHEET_SELECTION) {
-            console.log("1. Getting Excel file info...");
-            const excelInfo = await getExcelFileInfo(file1);
-            console.log("Excel info:", excelInfo);
-            setFile1Info(excelInfo);
-            
-            if (excelInfo.sheets.length > 1) {
-              console.log("Multiple sheets detected, showing sheet selector");
-              setShowSheetSelector(true);
-              setLoading(false);
-              return;
+        if (FEATURES.FLEXIBLE_CROSS_FORMAT) {
+          // NEW: Use flexible cross-format system
+          console.log("=== USING FLEXIBLE CROSS-FORMAT SYSTEM ===");
+          
+          try {
+            // Validate file combination first
+            const validation = validateCrossFormatCombination(file1, file2, 'excel_csv');
+            if (!validation.valid) {
+              throw new Error(validation.error);
             }
             
-            console.log("2. Parsing Excel file with sheet:", excelInfo.defaultSheet);
-            const result1 = await parseExcelFile(file1, excelInfo.defaultSheet);
-            console.log("Excel parse result:", result1);
-            console.log("Excel result type:", typeof result1);
-            console.log("Excel result keys:", Object.keys(result1 || {}));
+            console.log("File validation passed:", validation);
             
-            data1 = safeExtractExcelData(result1);
-            console.log("Extracted Excel data1:", data1);
-            console.log("Excel data1 length:", data1.length);
-            console.log("Excel data1 first row:", data1[0]);
-            console.log("Excel headers:", Object.keys(data1[0] || {}));
-          } else {
-            // Fallback: simple parsing without sheet selection
-            console.log("2. Parsing Excel file (simple mode)...");
-            const result1 = await parseExcelFile(file1);
-            console.log("Excel parse result (simple):", result1);
-            data1 = safeExtractExcelData(result1);
-            console.log("Extracted Excel data1 (simple):", data1);
+            // Parse files flexibly (handles any order)
+            const flexibleResult = await parseFilesFlexibly(file1, file2, 'excel_csv', {
+              file1Options: selectedSheet1, // Pass sheet selection if available
+              file2Options: selectedSheet2
+            });
+            
+            console.log("Flexible parsing result:", flexibleResult);
+            
+            // Extract data in consistent format
+            data1 = flexibleResult.file1.data;
+            data2 = flexibleResult.file2.data;
+            
+            console.log("Final data1:", data1);
+            console.log("Final data2:", data2);
+            
+          } catch (flexibleError) {
+            console.warn("Flexible cross-format failed, using legacy approach:", flexibleError);
+            // Fallback to original logic
+            await legacyExcelCSVParsing();
           }
-        } catch (excelError) {
-          console.warn('Enhanced Excel parsing failed, using fallback:', excelError);
-          // Fallback to basic parsing
-          const result1 = await parseExcelFile(file1);
-          console.log("Fallback Excel result:", result1);
-          data1 = Array.isArray(result1) ? result1 : (result1.data || []);
-          console.log("Fallback Excel data1:", data1);
+        } else {
+          // Original logic as fallback
+          await legacyExcelCSVParsing();
         }
-        
-        console.log("3. Parsing CSV file...");
-        data2 = await parseCSVFile(file2);
-        console.log("CSV data2:", data2);
-        console.log("CSV data2 length:", data2.length);
-        console.log("CSV data2 first row:", data2[0]);
-        console.log("CSV headers:", Object.keys(data2[0] || {}));
         
       } else if (fileType === 'csv') {
         data1 = await parseCSVFile(file1);
