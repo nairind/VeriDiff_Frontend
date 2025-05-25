@@ -46,8 +46,14 @@ export const getExcelFileInfo = async (file) => {
             // Check if worksheet has any reference range
             if (worksheet['!ref']) {
               const range = XLSX.utils.decode_range(worksheet['!ref']);
-              rowCount = range.e.r + 1;
-              hasData = rowCount > 1;
+              // FIXED: Safe access to range.e
+              if (range && range.e && typeof range.e.r === 'number') {
+                rowCount = range.e.r + 1;
+                hasData = rowCount > 1;
+              } else {
+                rowCount = 0;
+                hasData = false;
+              }
               
               // Get first few headers for preview
               const json = XLSX.utils.sheet_to_json(worksheet, { defval: "", header: 1 });
@@ -111,8 +117,19 @@ export const parseExcelFile = (file, selectedSheet = null) => {
           const visibleSheetsWithData = workbook.SheetNames.filter(name => {
             const isHidden = workbook.Workbook?.Sheets?.find(s => s.name === name)?.Hidden === 1;
             const worksheet = workbook.Sheets[name];
-            const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-            const hasData = range.e.r > 0; // More than just header row
+            
+            // FIXED: Safe range checking
+            let hasData = false;
+            try {
+              if (worksheet['!ref']) {
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
+                hasData = range.e && range.e.r > 0; // More than just header row
+              }
+            } catch (error) {
+              console.warn(`Error checking sheet ${name}:`, error);
+              hasData = false;
+            }
+            
             return !isHidden && hasData;
           });
           
