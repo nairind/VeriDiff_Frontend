@@ -9,13 +9,13 @@ import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
 import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
-// import SheetSelector from '../components/SheetSelector';  // OPTIONAL IMPORT - only if needed
+import SheetSelector from '../components/SheetSelector';  // ENABLED: Now importing SheetSelector
 import { mapHeaders } from '../utils/mapHeaders';
 import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
 
 // FEATURE FLAGS - easily disable problematic features
 const FEATURES = {
-  SHEET_SELECTION: false,        // Set to true when SheetSelector is ready
+  SHEET_SELECTION: true,         // ENABLED: SheetSelector is ready to test
   AUTO_DETECTION: true,          // Auto-detection of amount fields
   AUTO_RERUN: true,             // Auto-rerun functionality
   ENHANCED_EXCEL_PARSING: true  // Use enhanced Excel parsing with data extraction
@@ -418,11 +418,15 @@ export default function Home() {
           {loading ? 'Loading...' : 'Load Files'}
         </button>
 
-        {/* MODULAR: Sheet selector only if feature enabled */}
+        {/* MODULAR: Sheet selector when feature enabled and needed */}
         {FEATURES.SHEET_SELECTION && showSheetSelector && (
           <>
-            {/* Dynamic import of SheetSelector component */}
-            {React.lazy(() => import('../components/SheetSelector').then(module => ({ default: module.default })))}
+            <SheetSelector
+              file1Info={file1Info}
+              file2Info={file2Info}
+              onSheetSelect={handleSheetSelect}
+              fileType={fileType}
+            />
             <button onClick={handleProceedWithSheets} disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}>
               {loading ? 'Processing...' : 'Proceed with Selected Sheets'}
             </button>
