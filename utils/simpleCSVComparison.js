@@ -53,3 +53,85 @@ const compareWithTolerance = (val1, val2, tolerance, type) => {
 export const compareFiles = async (file1, file2, finalMappings = []) => {
   const [data1, data2] = await Promise.all([
     parseCSVFile(file1),
+    parseCSVFile(file2)
+  ]);
+
+  const remappedData2 = data2.map(row => {
+    const remapped = {};
+    finalMappings.forEach(({ file1Header, file2Header }) => {
+      remapped[file1Header] = row[file2Header] ?? '';
+    });
+    return remapped;
+  });
+
+  const results = [];
+  let matches = 0;
+  let differences = 0;
+  const maxRows = Math.max(data1.length, remappedData2.length);
+
+  for (let i = 0; i < maxRows; i++) {
+    const row1 = data1[i] || {};
+    const row2 = remappedData2[i] || {};
+    
+    // FIXED: Only process fields that are in the final mappings
+    let keysToProcess;
+    if (finalMappings.length > 0) {
+      // Only process mapped fields
+      keysToProcess = new Set(
+        finalMappings
+          .filter(m => m.file1Header && m.file2Header)
+          .map(m => m.file1Header)
+      );
+    } else {
+      // Fallback: process all available keys
+      keysToProcess = new Set([...Object.keys(row1), ...Object.keys(row2)]);
+    }
+    
+    const fieldResults = {};
+
+    for (const key of keysToProcess) {
+      const val1 = row1[key] ?? '';
+      const val2 = row2[key] ?? '';
+      const mapping = finalMappings.find(m => m.file1Header === key);
+
+      let status = 'difference';
+      if (val1 === val2) {
+        status = 'match';
+      } else if (
+        mapping?.isAmountField &&
+        mapping?.toleranceType &&
+        mapping?.toleranceValue !== '' &&
+        compareWithTolerance(val1, val2, mapping.toleranceValue, mapping.toleranceType)
+      ) {
+        status = 'acceptable';
+      }
+
+      fieldResults[key] = {
+        val1,
+        val2,
+        status,
+        difference: isNumeric(val1) && isNumeric(val2)
+          ? Math.abs(parseFloat(val1) - parseFloat(val2)).toFixed(2)
+          : ''
+      };
+
+      if (status === 'match' || status === 'acceptable') {
+        matches++;
+      } else {
+        differences++;
+      }
+    }
+
+    results.push({
+      ID: row1['ID'] || i + 1,
+      fields: fieldResults
+    });
+  }
+
+  return {
+    total_records: results.length,
+    differences_found: differences,
+    matches_found: matches,
+    results
+  };
+};
