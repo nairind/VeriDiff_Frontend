@@ -72,6 +72,7 @@ export default function Home() {
   // LEGACY EXCEL-CSV PARSING FUNCTION (fallback)
   const legacyExcelCSVParsing = async () => {
     console.log("Using legacy Excel-CSV parsing...");
+    let data1 = [], data2 = []; // Declare variables in function scope
     
     try {
       if (FEATURES.SHEET_SELECTION) {
@@ -81,7 +82,7 @@ export default function Home() {
         if (excelInfo.sheets.length > 1) {
           setShowSheetSelector(true);
           setLoading(false);
-          return;
+          return { data1: [], data2: [] }; // Return empty data to continue flow
         }
         
         const result1 = await parseExcelFile(file1, excelInfo.defaultSheet);
@@ -97,6 +98,7 @@ export default function Home() {
     }
     
     data2 = await parseCSVFile(file2);
+    return { data1, data2 }; // Return the parsed data
   };
 
   // MODULAR: Safe Excel data extraction
@@ -143,7 +145,7 @@ export default function Home() {
     setError(null);
     
     try {
-      let data1 = [], data2 = [];
+      let data1 = [], data2 = []; // FIXED: Properly declare variables
       
       if (fileType === 'excel_csv') {
         if (FEATURES.FLEXIBLE_CROSS_FORMAT) {
@@ -177,11 +179,15 @@ export default function Home() {
           } catch (flexibleError) {
             console.warn("Flexible cross-format failed, using legacy approach:", flexibleError);
             // Fallback to original logic
-            await legacyExcelCSVParsing();
+            const legacyResult = await legacyExcelCSVParsing();
+            data1 = legacyResult.data1;
+            data2 = legacyResult.data2;
           }
         } else {
           // Original logic as fallback
-          await legacyExcelCSVParsing();
+          const legacyResult = await legacyExcelCSVParsing();
+          data1 = legacyResult.data1;
+          data2 = legacyResult.data2;
         }
         
       } else if (fileType === 'csv') {
