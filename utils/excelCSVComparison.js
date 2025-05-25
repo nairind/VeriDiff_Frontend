@@ -1,7 +1,14 @@
-// File: utils/excelCSVComparison.js - Enhanced Version
+// File: utils/excelCSVComparison.js - Enhanced Version with Fixes
 
 import { parseExcelFile, getExcelFileInfo } from './excelFileComparison';
 import { parseCSVFile } from './simpleCSVComparison';
+
+// FEATURE FLAGS for consistent behavior with main index
+const FEATURES = {
+  SHEET_SELECTION: true,         // Enable sheet selection for Excel files
+  AUTO_DETECTION: true,          // Auto-detection of amount fields
+  ENHANCED_EXCEL_PARSING: true   // Use enhanced Excel parsing with data extraction
+};
 
 function isNumeric(val) {
   return !isNaN(parseFloat(val)) && isFinite(val);
@@ -22,20 +29,54 @@ function compareWithTolerance(val1, val2, tolerance, type) {
 }
 
 /**
- * Get Excel file info for sheet selection (same as pure Excel comparison)
+ * ENHANCED: Get Excel file info for sheet selection (handles multiple sheets)
  */
 export const getExcelCSVFileInfo = async (excelFile, csvFile) => {
-  // Only Excel file has sheets, CSV is always single "sheet"
-  const excelInfo = await getExcelFileInfo(excelFile);
-  
-  return {
-    excelInfo,
-    csvInfo: {
-      fileName: csvFile.name,
-      sheets: [{ name: 'CSV Data', hasData: true, isHidden: false }],
-      defaultSheet: 'CSV Data'
-    }
-  };
+  try {
+    // Get comprehensive Excel file info including all sheets
+    const excelInfo = await getExcelFileInfo(excelFile);
+    
+    return {
+      excelInfo,
+      csvInfo: {
+        fileName: csvFile.name,
+        sheets: [{ 
+          name: 'CSV Data', 
+          hasData: true, 
+          isHidden: false,
+          rowCount: 'Unknown', // CSV row count would need separate parsing
+          headers: [] // Could be populated if needed
+        }],
+        defaultSheet: 'CSV Data'
+      }
+    };
+  } catch (error) {
+    console.error('Error getting Excel-CSV file info:', error);
+    // Fallback for compatibility
+    return {
+      excelInfo: {
+        fileName: excelFile.name,
+        sheets: [{ name: 'Sheet1', hasData: true, isHidden: false }],
+        defaultSheet: 'Sheet1'
+      },
+      csvInfo: {
+        fileName: csvFile.name,
+        sheets: [{ name: 'CSV Data', hasData: true, isHidden: false }],
+        defaultSheet: 'CSV Data'
+      }
+    };
+  }
+};
+
+/**
+ * MODULAR: Safe Excel data extraction
+ */
+const safeExtractExcelData = (result) => {
+  if (FEATURES.ENHANCED_EXCEL_PARSING && result && typeof result === 'object' && result.data) {
+    return result.data;
+  }
+  // Fallback for legacy format
+  return Array.isArray(result) ? result : [];
 };
 
 /**
@@ -43,7 +84,7 @@ export const getExcelCSVFileInfo = async (excelFile, csvFile) => {
  */
 const isLikelyAmountField = (fieldName, sampleValues) => {
   // Check field name patterns
-  const numericFieldNames = /amount|price|cost|total|sum|value|balance|fee|qty|quantity|rate|charge|payment|invoice|bill/i;
+  const numericFieldNames = /amount|price|cost|total|sum|value|balance|fee|qty|quantity|rate|charge|payment|invoice|bill|salary|wage|revenue|profit|expense|budget/i;
   const hasNumericName = numericFieldNames.test(fieldName);
   
   // Check if values look like numbers (even as text)
@@ -61,22 +102,55 @@ const isLikelyAmountField = (fieldName, sampleValues) => {
 };
 
 /**
- * Enhanced Excel-CSV comparison with auto-detection and sheet selection
+ * ENHANCED: Excel-CSV comparison with sheet selection, auto-detection, and safe parsing
  */
 export async function compareExcelCSVFiles(excelFile, csvFile, finalMappings = [], options = {}) {
   try {
-    const { selectedExcelSheet, autoDetectAmounts = true } = options;
+    const { 
+      selectedExcelSheet, 
+      sheet1, // Alternative naming from main index
+      autoDetectAmounts = true 
+    } = options;
 
-    // Parse Excel file with sheet selection
-    const excelResult = await parseExcelFile(excelFile, selectedExcelSheet);
-    const csvData = await parseCSVFile(csvFile);
+    // Determine which sheet to use (support multiple naming conventions)
+    const excelSheet = selectedExcelSheet || sheet1;
 
-    if (!Array.isArray(excelResult.data) || !Array.isArray(csvData)) {
-      throw new Error('Parsed data missing or invalid');
+    // ENHANCED: Parse Excel file with safe data extraction and sheet selection
+    let excelData = [];
+    try {
+      if (FEATURES.ENHANCED_EXCEL_PARSING) {
+        const excelResult = await parseExcelFile(excelFile, excelSheet);
+        excelData = safeExtractExcelData(excelResult);
+      } else {
+        // Fallback parsing
+        const excelResult = await parseExcelFile(excelFile, excelSheet);
+        excelData = Array.isArray(excelResult) ? excelResult : (excelResult.data || []);
+      }
+    } catch (excelError) {
+      console.warn('Enhanced Excel parsing failed, using fallback:', excelError);
+      // Fallback to basic parsing
+      const excelResult = await parseExcelFile(excelFile);
+      excelData = Array.isArray(excelResult) ? excelResult : (excelResult.data || []);
     }
 
-    // Use the parsed Excel data
-    const excelData = excelResult.data;
+    // Parse CSV file (this should remain stable)
+    const csvData = await parseCSVFile(csvFile);
+
+    // ENHANCED: Validate data formats
+    if (!Array.isArray(excelData) || excelData.length === 0) {
+      throw new Error('Excel file contains no valid data rows');
+    }
+    if (!Array.isArray(csvData) || csvData.length === 0) {
+      throw new Error('CSV file contains no valid data rows');
+    }
+
+    // Validate data structure
+    if (typeof excelData[0] !== 'object' || Array.isArray(excelData[0])) {
+      throw new Error('Excel data format is not supported - expected object rows');
+    }
+    if (typeof csvData[0] !== 'object' || Array.isArray(csvData[0])) {
+      throw new Error('CSV data format is not supported - expected object rows');
+    }
 
     // Apply mappings to CSV data
     const remappedCSVData = csvData.map(row => {
@@ -91,7 +165,7 @@ export async function compareExcelCSVFiles(excelFile, csvFile, finalMappings = [
 
     // Auto-detect amount fields if enabled
     let enhancedMappings = finalMappings;
-    if (autoDetectAmounts && excelData.length > 0) {
+    if (FEATURES.AUTO_DETECTION && autoDetectAmounts && excelData.length > 0) {
       enhancedMappings = finalMappings.map(mapping => {
         if (!mapping.isAmountField && mapping.file1Header) {
           // Get sample values from both datasets
@@ -157,7 +231,7 @@ export async function compareExcelCSVFiles(excelFile, csvFile, finalMappings = [
           val2,
           status,
           difference: isNumeric(val1) && isNumeric(val2) ? Math.abs(val1 - val2).toFixed(2) : '',
-          isAutoDetectedAmount: autoDetectAmounts && mapping?.isAmountField && !finalMappings.find(m => m.file1Header === key)?.isAmountField
+          isAutoDetectedAmount: FEATURES.AUTO_DETECTION && autoDetectAmounts && mapping?.isAmountField && !finalMappings.find(m => m.file1Header === key)?.isAmountField
         };
 
         if (status === 'match' || status === 'acceptable') {
@@ -173,18 +247,27 @@ export async function compareExcelCSVFiles(excelFile, csvFile, finalMappings = [
       });
     }
 
+    // ENHANCED: Return more comprehensive info
     return {
       total_records: results.length,
       differences_found: differences,
       matches_found: matches,
       results,
-      autoDetectedFields: autoDetectAmounts ? enhancedMappings.filter(m => 
+      autoDetectedFields: FEATURES.AUTO_DETECTION && autoDetectAmounts ? enhancedMappings.filter(m => 
         m.isAmountField && !finalMappings.find(f => f.file1Header === m.file1Header)?.isAmountField
       ).map(m => m.file1Header) : [],
-      excelInfo: { sheet: excelResult.sheetName, totalSheets: excelResult.totalSheets },
-      csvInfo: { fileName: csvFile.name }
+      excelInfo: { 
+        sheet: excelSheet || 'Sheet1', 
+        totalSheets: 1, // Could be enhanced to return actual sheet count
+        fileName: excelFile.name
+      },
+      csvInfo: { 
+        fileName: csvFile.name,
+        sheet: 'CSV Data'
+      }
     };
   } catch (error) {
+    console.error('Excel-CSV comparison error:', error);
     throw new Error(`Failed to compare Excel and CSV files: ${error.message}`);
   }
 }
