@@ -7,7 +7,7 @@ import { parseXMLFile, compareXMLFiles } from '../utils/xmlFileComparison';
 import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
-import { mapHeaders } from '../utils/mapHeaders';
+import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
 
 export default function Home() {
   const [file1, setFile1] = useState(null);
@@ -89,7 +89,25 @@ export default function Home() {
   };
 
   // UPDATED: Fixed comparison function routing
-  const handleRunComparison = async () => {
+  const handleDownloadExcel = () => {
+    try {
+      const timestamp = new Date().toISOString().slice(0,10);
+      const filename = `comparison_results_${timestamp}.xlsx`;
+      downloadResultsAsExcel(results, filename);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleDownloadCSV = () => {
+    try {
+      const timestamp = new Date().toISOString().slice(0,10);
+      const filename = `comparison_results_${timestamp}.csv`;
+      downloadResultsAsCSV(results, filename);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
     if (!file1 || !file2 || finalMappings.length === 0) {
       setError('Missing files or mappings.');
       return;
@@ -210,6 +228,37 @@ export default function Home() {
               <p><strong>Total Records:</strong> {results.total_records}</p>
               <p><strong>Differences Found:</strong> {results.differences_found}</p>
               <p><strong>Matches Found:</strong> {results.matches_found}</p>
+              
+              {/* Download Buttons */}
+              <div style={{ marginTop: '15px' }}>
+                <button 
+                  onClick={handleDownloadExcel}
+                  style={{
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    marginRight: '10px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  📊 Download Excel
+                </button>
+                <button 
+                  onClick={handleDownloadCSV}
+                  style={{
+                    backgroundColor: '#17a2b8',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  📄 Download CSV
+                </button>
+              </div>
             </div>
             
             {results.results && results.results.length > 0 && (
