@@ -34,7 +34,10 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
     const updated = mappings.filter((_, i) => i !== index);
     setMappings(updated);
     // Immediately update the parent component with the new mappings
-    onConfirm(updated);
+    // This will trigger a re-comparison with the updated mappings
+    setTimeout(() => {
+      onConfirm(updated);
+    }, 100);
   };
 
   const handleConfirm = (e) => {
