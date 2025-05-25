@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
-import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison'; // Added compareExcelFiles import
+import { parseExcelFile, compareExcelFiles } from '../utils/excelFileComparison';
 import { parseJSONFile, compareJSONFiles } from '../utils/jsonFileComparison';
 import { parseXMLFile, compareXMLFiles } from '../utils/xmlFileComparison';
 import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
+import { mapHeaders } from '../utils/mapHeaders';
 import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
 
 export default function Home() {
@@ -88,7 +89,6 @@ export default function Home() {
     setFinalMappings(mappings);
   };
 
-  // UPDATED: Fixed comparison function routing
   const handleDownloadExcel = () => {
     try {
       const timestamp = new Date().toISOString().slice(0,10);
@@ -108,6 +108,8 @@ export default function Home() {
       setError(error.message);
     }
   };
+
+  const handleRunComparison = async () => {
     if (!file1 || !file2 || finalMappings.length === 0) {
       setError('Missing files or mappings.');
       return;
