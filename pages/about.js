@@ -197,6 +197,23 @@ export default function About() {
             <button className="cta-button">Start Comparing Files →</button>
           </Link>
         </div>
+
+        {/* Beta Testing Section */}
+        <div className="beta-section">
+          <h2>🚀 Beta Testing Program</h2>
+          <p>VeriDiff is currently in beta testing. We're working with select partners to refine the experience and gather valuable feedback from real-world usage.</p>
+          <div className="beta-docs-links">
+            <Link href="/training">
+              <span className="beta-link">📖 Training Guide</span>
+            </Link>
+            <Link href="/faq">
+              <span className="beta-link">❓ FAQ & Help</span>
+            </Link>
+          </div>
+          <div className="beta-feedback">
+            <p><strong>Beta Testers:</strong> Your feedback shapes VeriDiff's future. Help us build the perfect file comparison tool!</p>
+          </div>
+        </div>
       </main>
 
       <style jsx>{`
@@ -613,6 +630,70 @@ export default function About() {
           box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
+        /* Beta Section Styles */
+        .beta-section {
+          background: linear-gradient(135deg, #fef3c7, #fde68a);
+          border: 2px solid #f59e0b;
+          border-radius: 16px;
+          padding: 40px;
+          margin: 60px 0;
+          text-align: center;
+        }
+
+        .beta-section h2 {
+          color: #92400e;
+          font-size: 2em;
+          margin: 0 0 20px 0;
+        }
+
+        .beta-section p {
+          color: #78350f;
+          font-size: 1.1em;
+          margin: 0 0 25px 0;
+          line-height: 1.6;
+        }
+
+        .beta-docs-links {
+          display: flex;
+          gap: 20px;
+          justify-content: center;
+          margin: 25px 0;
+          flex-wrap: wrap;
+        }
+
+        .beta-link {
+          background: white;
+          color: #f59e0b;
+          padding: 12px 24px;
+          border-radius: 25px;
+          text-decoration: none;
+          font-weight: 600;
+          border: 2px solid #f59e0b;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: inline-block;
+        }
+
+        .beta-link:hover {
+          background: #f59e0b;
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .beta-feedback {
+          background: rgba(255,255,255,0.7);
+          border-radius: 8px;
+          padding: 15px;
+          margin-top: 20px;
+        }
+
+        .beta-feedback p {
+          margin: 0;
+          font-size: 1em;
+          color: #92400e;
+        }
+
         @media (max-width: 768px) {
           .hero-image {
             max-height: 400px;
@@ -634,6 +715,21 @@ export default function About() {
           .nav-container {
             flex-direction: column;
             gap: 1rem;
+          }
+
+          .beta-section {
+            padding: 25px 20px;
+            margin: 40px 0;
+          }
+          
+          .beta-docs-links {
+            flex-direction: column;
+            align-items: center;
+          }
+          
+          .beta-link {
+            width: 200px;
+            text-align: center;
           }
         }
       `}</style>
