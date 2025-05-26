@@ -269,7 +269,7 @@ export default function FAQ() {
           <div className="contact-options">
             <div className="contact-method">
               <h4>📧 Email Support</h4>
-              <p>Send us your questions at: <strong>[your-email@domain.com]</strong></p>
+              <p>Send us your questions at: <strong>[sales@veridiff.com]</strong></p>
             </div>
             
             <div className="contact-method">
