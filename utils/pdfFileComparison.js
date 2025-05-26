@@ -1,4 +1,4 @@
-// File: utils/pdfFileComparison.js
+// File: utils/pdfFileComparison.js - COMPLETE ENHANCED VERSION
 
 /**
  * Wait for PDF.js to be available
@@ -72,21 +72,143 @@ export const extractTextFromPDF = async (file) => {
 };
 
 /**
- * Parse extracted PDF text into structured data
+ * NEW: Detect document type based on content
  */
-const parsePDFContent = (extractedData, documentType = 'general') => {
+const detectDocumentType = (fullText) => {
+  const text = fullText.toLowerCase();
+  
+  // Invoice detection
+  if (text.includes('invoice') || text.includes('bill to') || text.includes('invoice number') || text.includes('inv #')) {
+    return 'invoice';
+  }
+  
+  // Receipt detection
+  if (text.includes('receipt') || text.includes('thank you for your purchase') || text.includes('transaction receipt') || text.includes('sales receipt')) {
+    return 'receipt';
+  }
+  
+  // Statement detection
+  if (text.includes('statement') || text.includes('account summary') || text.includes('monthly statement') || text.includes('billing statement')) {
+    return 'statement';
+  }
+  
+  // Quote/Estimate detection
+  if (text.includes('quote') || text.includes('estimate') || text.includes('quotation') || text.includes('proposal')) {
+    return 'quote';
+  }
+  
+  // Purchase Order detection
+  if (text.includes('purchase order') || text.includes('po #') || text.includes('p.o.')) {
+    return 'purchase_order';
+  }
+  
+  // Contract detection
+  if (text.includes('contract') || text.includes('agreement') || text.includes('terms and conditions')) {
+    return 'contract';
+  }
+  
+  // Report detection
+  if (text.includes('report') || text.includes('summary report') || text.includes('financial report')) {
+    return 'report';
+  }
+  
+  // Default fallback
+  return 'document';
+};
+
+/**
+ * NEW: Enhanced field extraction based on document type
+ */
+const getDocumentSpecificFields = (documentType, fullText) => {
+  const fields = {};
+  
+  switch (documentType) {
+    case 'invoice':
+      // Invoice-specific field extraction
+      const invoiceFields = {
+        'invoice.number': /(?:invoice|inv)[#\s]*:?\s*([a-z0-9\-]+)/i,
+        'invoice.date': /(?:invoice date|date)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+        'due.date': /(?:due date|payment due)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+        'customer.number': /(?:customer|account)[#\s]*:?\s*([a-z0-9\-]+)/i,
+        'total.amount': /(?:total|amount due|balance due)[:\s]*\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i,
+        'subtotal.amount': /(?:subtotal|sub total)[:\s]*\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i,
+        'tax.amount': /(?:tax|sales tax|vat)[:\s]*\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i
+      };
+      
+      Object.entries(invoiceFields).forEach(([fieldName, pattern]) => {
+        const match = fullText.match(pattern);
+        if (match) {
+          fields[fieldName] = match[1].replace(/,/g, '');
+        }
+      });
+      break;
+      
+    case 'receipt':
+      // Receipt-specific field extraction
+      const receiptFields = {
+        'receipt.number': /(?:receipt|transaction)[#\s]*:?\s*([a-z0-9\-]+)/i,
+        'store.number': /(?:store|location)[#\s]*:?\s*([a-z0-9\-]+)/i,
+        'total.paid': /(?:total|amount paid|paid)[:\s]*\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i,
+        'payment.method': /(?:paid by|payment|method)[:\s]*([a-z\s]+)/i
+      };
+      
+      Object.entries(receiptFields).forEach(([fieldName, pattern]) => {
+        const match = fullText.match(pattern);
+        if (match) {
+          fields[fieldName] = match[1].replace(/,/g, '');
+        }
+      });
+      break;
+      
+    case 'statement':
+      // Statement-specific field extraction
+      const statementFields = {
+        'account.number': /(?:account|acct)[#\s]*:?\s*([a-z0-9\-]+)/i,
+        'statement.date': /(?:statement date|as of)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+        'previous.balance': /(?:previous balance|prior balance)[:\s]*\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i,
+        'current.balance': /(?:current balance|new balance)[:\s]*\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i
+      };
+      
+      Object.entries(statementFields).forEach(([fieldName, pattern]) => {
+        const match = fullText.match(pattern);
+        if (match) {
+          fields[fieldName] = match[1].replace(/,/g, '');
+        }
+      });
+      break;
+      
+    default:
+      // Generic document - no specific fields
+      break;
+  }
+  
+  return fields;
+};
+
+/**
+ * ENHANCED: Parse extracted PDF text into structured data with document type detection
+ */
+const parsePDFContent = (extractedData, documentType = 'auto') => {
   const { fullText, pages } = extractedData;
   
   if (!fullText) {
-    return [{ 'document.type': documentType, 'document.pageCount': pages.length.toString() }];
+    return [{ 'document.type': 'empty', 'document.pageCount': pages.length.toString() }];
   }
+  
+  // AUTO-DETECT document type if not specified
+  const detectedType = documentType === 'auto' ? detectDocumentType(fullText) : documentType;
   
   const lines = fullText.split('\n').filter(line => line.trim());
   const structured = {
-    'document.type': documentType,
+    'document.type': detectedType,
     'document.pageCount': pages.length.toString(),
   };
 
+  // Get document-specific fields first
+  const specificFields = getDocumentSpecificFields(detectedType, fullText);
+  Object.assign(structured, specificFields);
+
+  // Continue with original logic for additional data extraction
   let amountCount = 0;
   let dateCount = 0;
 
@@ -94,19 +216,23 @@ const parsePDFContent = (extractedData, documentType = 'general') => {
     const trimmedLine = line.trim();
     if (!trimmedLine) return;
     
-    // Look for invoice number
-    const invoiceMatch = trimmedLine.match(/(?:invoice|inv)[#\s]*:?\s*([a-z0-9\-]+)/i);
-    if (invoiceMatch && !structured['invoice.number']) {
-      structured['invoice.number'] = invoiceMatch[1];
+    // Original invoice number logic (fallback if specific extraction didn't work)
+    if (!structured['invoice.number']) {
+      const invoiceMatch = trimmedLine.match(/(?:invoice|inv)[#\s]*:?\s*([a-z0-9\-]+)/i);
+      if (invoiceMatch) {
+        structured['invoice.number'] = invoiceMatch[1];
+      }
     }
 
-    // Look for total amount
-    const totalMatch = trimmedLine.match(/(?:total|amount due|balance)[:\s]*\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i);
-    if (totalMatch && !structured['total.amount']) {
-      structured['total.amount'] = totalMatch[1].replace(/,/g, '');
+    // Original total amount logic (fallback if specific extraction didn't work)
+    if (!structured['total.amount']) {
+      const totalMatch = trimmedLine.match(/(?:total|amount due|balance)[:\s]*\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i);
+      if (totalMatch) {
+        structured['total.amount'] = totalMatch[1].replace(/,/g, '');
+      }
     }
 
-    // Extract amounts (limit to 10)
+    // Extract additional amounts (limit to 10)
     const amountMatches = trimmedLine.match(/\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/g);
     if (amountMatches && amountCount < 10) {
       amountMatches.forEach((amount) => {
@@ -121,7 +247,7 @@ const parsePDFContent = (extractedData, documentType = 'general') => {
       });
     }
 
-    // Extract dates (limit to 5)
+    // Extract additional dates (limit to 5)
     const dateMatches = trimmedLine.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/g);
     if (dateMatches && dateCount < 5) {
       dateMatches.forEach((date) => {
@@ -144,9 +270,9 @@ const parsePDFContent = (extractedData, documentType = 'general') => {
 };
 
 /**
- * Main PDF parsing function
+ * ENHANCED: Main PDF parsing function with auto-detection
  */
-export const parsePDFFile = async (file, documentType = 'general') => {
+export const parsePDFFile = async (file, documentType = 'auto') => {
   try {
     const extractedData = await extractTextFromPDF(file);
     return parsePDFContent(extractedData, documentType);
@@ -282,8 +408,8 @@ export const comparePDFFiles = async (file1, file2, finalMappings = []) => {
     }
 
     const [data1, data2] = await Promise.all([
-      parsePDFFile(file1, 'document1'),
-      parsePDFFile(file2, 'document2')
+      parsePDFFile(file1, 'auto'), // Now uses auto-detection
+      parsePDFFile(file2, 'auto')  // Now uses auto-detection
     ]);
 
     if (!Array.isArray(data1) || !Array.isArray(data2)) {
