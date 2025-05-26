@@ -9,7 +9,7 @@ import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
 import { compareTextFiles_main } from '../utils/textFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import HeaderMapper from '../components/HeaderMapper';
-import SheetSelector from '../components/SheetSelector';  // ENABLED: Now importing SheetSelector
+import SheetSelector from '../components/SheetSelector';
 import { mapHeaders } from '../utils/mapHeaders';
 import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
 
@@ -123,7 +123,7 @@ export default function Home() {
   // LEGACY EXCEL-CSV PARSING FUNCTION (fallback)
   const legacyExcelCSVParsing = async () => {
     console.log("Using legacy Excel-CSV parsing...");
-    let data1 = [], data2 = []; // Declare variables in function scope
+    let data1 = [], data2 = [];
     
     try {
       if (FEATURES.SHEET_SELECTION) {
@@ -133,7 +133,7 @@ export default function Home() {
         if (excelInfo.sheets.length > 1) {
           setShowSheetSelector(true);
           setLoading(false);
-          return { data1: [], data2: [] }; // Return empty data to continue flow
+          return { data1: [], data2: [] };
         }
         
         const result1 = await parseExcelFile(file1, excelInfo.defaultSheet);
@@ -149,7 +149,7 @@ export default function Home() {
     }
     
     data2 = await parseCSVFile(file2);
-    return { data1, data2 }; // Return the parsed data
+    return { data1, data2 };
   };
 
   // MODULAR: Safe Excel data extraction
@@ -157,13 +157,12 @@ export default function Home() {
     if (FEATURES.ENHANCED_EXCEL_PARSING && result && typeof result === 'object' && result.data) {
       return result.data;
     }
-    // Fallback for legacy format
     return Array.isArray(result) ? result : [];
   };
 
-  // MODULAR: Safe data validation (can be disabled if causing issues)
+  // MODULAR: Safe data validation
   const validateDataFormat = (data1, data2) => {
-    if (!FEATURES.ENHANCED_EXCEL_PARSING) return; // Skip validation if feature disabled
+    if (!FEATURES.ENHANCED_EXCEL_PARSING) return;
     
     if (!Array.isArray(data1) || data1.length === 0) {
       throw new Error('File 1 contains no valid data rows');
@@ -180,7 +179,7 @@ export default function Home() {
     }
   };
 
-  // MODULAR: Sheet selection handler (only if feature enabled)
+  // MODULAR: Sheet selection handler
   const handleSheetSelect = (sheet1, sheet2) => {
     if (!FEATURES.SHEET_SELECTION) return;
     setSelectedSheet1(sheet1);
@@ -201,7 +200,7 @@ export default function Home() {
     setError(null);
     
     try {
-      let data1 = [], data2 = []; // FIXED: Properly declare variables
+      let data1 = [], data2 = [];
       
       if (fileType === 'excel_csv') {
         console.log("📊 Processing Excel-CSV combination");
@@ -213,7 +212,6 @@ export default function Home() {
           try {
             console.log("🔍 Starting file validation...");
             
-            // Use strict order validation
             const validation = validateExcelCSVOrder(file1, file2);
             console.log("🔍 Validation result:", validation);
             
@@ -223,7 +221,6 @@ export default function Home() {
             
             console.log("✅ File validation passed");
             
-            // Parse files in the REQUIRED order: Excel first, CSV second
             console.log("📊 Parsing Excel file (File 1):", validation.excelFile.name);
             const excelResult = await parseExcelFile(validation.excelFile, selectedSheet1);
             data1 = safeExtractExcelData(excelResult);
@@ -238,14 +235,12 @@ export default function Home() {
             console.warn("❌ Flexible cross-format failed:", flexibleError);
             console.log("🔄 Falling back to legacy approach");
             
-            // Fallback to original logic
             const legacyResult = await legacyExcelCSVParsing();
             data1 = legacyResult.data1;
             data2 = legacyResult.data2;
           }
         } else {
           console.log("🔄 Using legacy approach (feature disabled)");
-          // Original logic as fallback
           const legacyResult = await legacyExcelCSVParsing();
           data1 = legacyResult.data1;
           data2 = legacyResult.data2;
@@ -256,7 +251,6 @@ export default function Home() {
         data2 = await parseCSVFile(file2);
         
       } else if (fileType === 'excel') {
-        // MODULAR: Enhanced Excel-Excel comparison
         try {
           if (FEATURES.SHEET_SELECTION) {
             const [excelInfo1, excelInfo2] = await Promise.all([
@@ -279,7 +273,6 @@ export default function Home() {
             data1 = safeExtractExcelData(result1);
             data2 = safeExtractExcelData(result2);
           } else {
-            // Fallback: simple Excel parsing
             const [result1, result2] = await Promise.all([
               parseExcelFile(file1),
               parseExcelFile(file2)
@@ -307,7 +300,6 @@ export default function Home() {
         data1 = await parsePDFFile(file1);
         data2 = await parsePDFFile(file2);
       } else if (fileType === 'text') {
-        // Text files bypass header mapping
         const result = await compareTextFiles_main(file1, file2);
         setResults(result);
         setLoading(false);
@@ -316,15 +308,12 @@ export default function Home() {
         throw new Error('Unsupported file type.');
       }
       
-      // MODULAR: Safe data validation
       try {
         validateDataFormat(data1, data2);
       } catch (validationError) {
         console.warn('Data validation warning:', validationError.message);
-        // Continue anyway for backwards compatibility
       }
       
-      // Setup header mapping (existing functionality)
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
@@ -344,7 +333,6 @@ export default function Home() {
     }
   };
 
-  // MODULAR: Sheet selection continuation (only if feature enabled)
   const handleProceedWithSheets = async () => {
     if (!FEATURES.SHEET_SELECTION) return;
     
@@ -372,7 +360,6 @@ export default function Home() {
         data2 = safeExtractExcelData(result2);
       }
       
-      // Setup header mapping
       const h1 = Object.keys(data1[0] || {});
       const h2 = Object.keys(data2[0] || {});
       const suggested = mapHeaders(h1, h2);
@@ -428,7 +415,6 @@ export default function Home() {
     try {
       let result;
       
-      // MODULAR: Build options only if features are enabled
       const options = {};
       if (FEATURES.SHEET_SELECTION) {
         options.sheet1 = selectedSheet1;
@@ -438,7 +424,6 @@ export default function Home() {
         options.autoDetectAmounts = true;
       }
       
-      // Call appropriate comparison function
       if (fileType === 'excel_csv') {
         result = await compareExcelCSVFiles(file1, file2, finalMappings);
       } else if (fileType === 'excel') {
@@ -472,268 +457,110 @@ export default function Home() {
         <title>VeriDiff - File Comparison Tool</title>
       </Head>
 
-      {/* Navigation */}
-      <nav style={{
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '1rem 0',
-        marginBottom: '20px'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <span style={{
-            fontSize: '1.5rem',
-            fontWeight: 'bold',
-            color: '#667eea'
-          }}>VeriDiff</span>
-          <div style={{ display: 'flex', gap: '2rem' }}>
+      {/* Simple Navigation */}
+      <nav className="nav">
+        <div className="nav-content">
+          <span className="nav-brand">VeriDiff</span>
+          <div className="nav-links">
             <Link href="/about">
-              <span style={{ 
-                color: '#FF6B35', 
-                cursor: 'pointer', 
-                textDecoration: 'none',
-                fontSize: '1.2rem',
-                fontWeight: '700'
-              }}>
-                📖 <strong>MUST READ</strong> - About
-              </span>
+              <span className="nav-about">📖 MUST READ - About</span>
             </Link>
-            <span style={{ color: '#667eea', fontWeight: '500' }}>Compare Files</span>
+            <span className="nav-current">Compare Files</span>
           </div>
         </div>
       </nav>
 
       <main>
-        {/* Hero Section */}
-        <div className="hero-section">
-          <div className="hero-content">
-            <h1 className="hero-title">
-              <span className="gradient-text">VeriDiff</span>
-              <span className="hero-subtitle">Smart File Comparison</span>
-            </h1>
-            <p className="hero-description">
-              Compare documents with precision and confidence. From Excel to PDFs, 
-              VeriDiff handles your most critical file comparisons with professional-grade accuracy.
-            </p>
-            <div className="hero-badges">
-              <span className="badge">🔒 100% Private</span>
-              <span className="badge">⚡ Instant Results</span>
-              <span className="badge">🎯 Smart Mapping</span>
-            </div>
-          </div>
+        {/* Simple Hero */}
+        <div className="hero">
+          <h1 className="hero-title">VeriDiff</h1>
+          <h2 className="hero-subtitle">Smart File Comparison</h2>
+          <p className="hero-description">
+            Compare documents with precision and confidence. From Excel to PDFs, 
+            VeriDiff handles your most critical file comparisons with professional-grade accuracy.
+          </p>
         </div>
 
         {/* File Type Selection */}
-        <div className="comparison-section">
+        <div className="section">
           <h2 className="section-title">Choose Your Comparison Type</h2>
           <p className="section-subtitle">Select the file formats you want to compare</p>
           
-          <div className="file-type-grid">
-            <label className={`file-type-card ${fileType === 'csv' ? 'selected' : ''}`}>
-              <input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} />
-              <div className="card-icon">📄</div>
-              <div className="card-title">CSV</div>
-              <div className="card-description">Compare CSV spreadsheets</div>
-            </label>
-            
-            <label className={`file-type-card ${fileType === 'text' ? 'selected' : ''}`}>
-              <input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} />
-              <div className="card-icon">📝</div>
-              <div className="card-title">Text Files</div>
-              <div className="card-description">Line-by-line text comparison</div>
-            </label>
-            
-            <label className={`file-type-card ${fileType === 'json' ? 'selected' : ''}`}>
-              <input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} />
-              <div className="card-icon">🔗</div>
-              <div className="card-title">JSON</div>
-              <div className="card-description">Structured data comparison</div>
-            </label>
-            
-            <label className={`file-type-card ${fileType === 'xml' ? 'selected' : ''}`}>
-              <input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} />
-              <div className="card-icon">📋</div>
-              <div className="card-title">XML</div>
-              <div className="card-description">Markup document comparison</div>
-            </label>
-            
-            <label className={`file-type-card ${fileType === 'pdf' ? 'selected' : ''}`}>
-              <input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} />
-              <div className="card-icon">📑</div>
-              <div className="card-title">PDF</div>
-              <div className="card-description">Document text comparison</div>
-            </label>
-            
-            <label className={`file-type-card ${fileType === 'excel' ? 'selected' : ''}`}>
-              <input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} />
-              <div className="card-icon">📊</div>
-              <div className="card-title">Excel</div>
-              <div className="card-description">Spreadsheet comparison</div>
-            </label>
-            
-            <label className={`file-type-card featured ${fileType === 'excel_csv' ? 'selected' : ''}`}>
-              <input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} />
-              <div className="card-icon">⭐</div>
-              <div className="card-title">Excel–CSV</div>
-              <div className="card-description">Cross-format comparison</div>
-              <div className="featured-badge">Most Popular</div>
-            </label>
+          <div className="file-type-selector">
+            <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV</label>
+            <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> Text Files</label>
+            <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON</label>
+            <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML</label>
+            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF</label>
+            <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel</label>
+            <label className="featured"><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV (Most Popular)</label>
           </div>
         </div>
 
-        {/* FILE ORDER GUIDANCE - Enhanced Design */}
+        {/* File Order Guidance for Excel-CSV */}
         {fileType === 'excel_csv' && (
-          <div className="file-order-guidance enhanced">
-            <div className="guidance-header">
-              <h3>📋 File Upload Instructions</h3>
-              <p>Please upload your files in the correct order for accurate comparison</p>
+          <div className="guidance">
+            <h3>📋 File Upload Instructions</h3>
+            <p>Please upload your files in the correct order:</p>
+            <div className="order-guide">
+              <span className="step">1. Excel File First (.xlsx, .xls, .xlsm)</span>
+              <span className="arrow">→</span>
+              <span className="step">2. CSV File Second (.csv)</span>
             </div>
-            <div className="order-instruction">
-              <div className="file-slot excel-slot">
-                <div className="slot-header">
-                  <span className="slot-number">1</span>
-                  <div className="slot-info">
-                    <div className="slot-title">Excel File First</div>
-                    <div className="slot-formats">.xlsx • .xls • .xlsm</div>
-                  </div>
-                </div>
-                <div className="slot-icon">📊</div>
-              </div>
-              <div className="arrow-container">
-                <div className="arrow">→</div>
-                <div className="then-text">then</div>
-              </div>
-              <div className="file-slot csv-slot">
-                <div className="slot-header">
-                  <span className="slot-number">2</span>
-                  <div className="slot-info">
-                    <div className="slot-title">CSV File Second</div>
-                    <div className="slot-formats">.csv</div>
-                  </div>
-                </div>
-                <div className="slot-icon">📄</div>
-              </div>
-            </div>
-            <div className="guidance-note">
-              <div className="note-icon">⚠️</div>
-              <div className="note-text">
-                <strong>Important:</strong> File order matters for accurate data mapping and comparison results.
-              </div>
-            </div>
+            <p className="note">⚠️ File order matters for accurate data mapping and comparison results.</p>
           </div>
         )}
 
-        {/* FILE UPLOAD SECTION */}
-        <div className="upload-section">
+        {/* File Upload */}
+        <div className="section">
           <h2 className="section-title">Upload Your Files</h2>
           <p className="section-subtitle">
             {fileType === 'excel_csv' ? 'Upload Excel file first, then CSV file' : 'Select two files to compare'}
           </p>
 
-          {/* Enhanced File Inputs */}
-          {fileType === 'excel_csv' ? (
-            <div className="excel-csv-file-inputs enhanced">
-              <div className="file-input-group">
-                <div className="file-input-header">
-                  <span className="input-number">1</span>
-                  <div className="input-info">
-                    <div className="input-title">Excel File</div>
-                    <div className="input-subtitle">Upload your .xlsx, .xls, or .xlsm file</div>
-                  </div>
-                </div>
-                <label className="file-input-label enhanced">
-                  <input 
-                    type="file" 
-                    accept=".xlsx,.xls,.xlsm"
-                    onChange={(e) => handleFileChange(e, 1)}
-                    className="file-input"
-                  />
-                  <div className="file-input-area">
-                    <div className="upload-icon">📊</div>
-                    <div className="upload-text">
-                      {file1 ? (
-                        <div className="file-selected">
-                          <div className="file-name">✅ {file1.name}</div>
-                          <div className="file-size">{(file1.size / 1024).toFixed(1)} KB</div>
-                        </div>
-                      ) : (
-                        <div className="file-placeholder">
-                          <div className="placeholder-main">Click to select Excel file</div>
-                          <div className="placeholder-sub">or drag and drop here</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </label>
-              </div>
+          <div className="file-inputs">
+            <div className="file-input-group">
+              <label>File 1:</label>
+              <input type="file" onChange={(e) => handleFileChange(e, 1)} />
+              {file1 && <div className="file-name">✅ {file1.name}</div>}
             </div>
-          ) : (
-            <div className="standard-file-inputs">
-              <div className="file-input-group standard">
-                <label className="file-input-label standard">
-                  <input type="file" onChange={(e) => handleFileChange(e, 1)} className="file-input" />
-                  <div className="file-input-area standard">
-                    <div className="upload-icon">📎</div>
-                    <div className="upload-text">
-                      {file1 ? `✅ ${file1.name}` : 'Choose File 1'}
-                    </div>
-                  </div>
-                </label>
-              </div>
-              <div className="file-input-group standard">
-                <label className="file-input-label standard">
-                  <input type="file" onChange={(e) => handleFileChange(e, 2)} className="file-input" />
-                  <div className="file-input-area standard">
-                    <div className="upload-icon">📎</div>
-                    <div className="upload-text">
-                      {file2 ? `✅ ${file2.name}` : 'Choose File 2'}
-                    </div>
-                  </div>
-                </label>
-              </div>
+            
+            <div className="file-input-group">
+              <label>File 2:</label>
+              <input type="file" onChange={(e) => handleFileChange(e, 2)} />
+              {file2 && <div className="file-name">✅ {file2.name}</div>}
             </div>
-          )}
+          </div>
 
           <button 
             onClick={handleLoadFiles} 
             disabled={loading || !file1 || !file2}
-            className={`load-files-button ${loading ? 'loading' : ''} ${!file1 || !file2 ? 'disabled' : ''}`}
+            className="load-button"
           >
-            {loading ? (
-              <>
-                <span className="loading-spinner"></span>
-                Processing Files...
-              </>
-            ) : (
-              <>
-                <span className="button-icon">🚀</span>
-                Load Files & Start Comparison
-              </>
-            )}
+            {loading ? 'Processing Files...' : '🚀 Load Files & Start Comparison'}
           </button>
         </div>
 
-        {/* MODULAR: Sheet selector when feature enabled and needed */}
+        {/* Sheet Selector */}
         {FEATURES.SHEET_SELECTION && showSheetSelector && (
-          <>
+          <div className="section">
             <SheetSelector
               file1Info={file1Info}
               file2Info={file2Info}
               onSheetSelect={handleSheetSelect}
               fileType={fileType}
             />
-            <button onClick={handleProceedWithSheets} disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}>
+            <button 
+              onClick={handleProceedWithSheets} 
+              disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
+              className="load-button"
+            >
               {loading ? 'Processing...' : 'Proceed with Selected Sheets'}
             </button>
-          </>
+          </div>
         )}
 
+        {/* Header Mapper */}
         {showMapper && (
           <HeaderMapper
             file1Headers={headers1}
@@ -747,135 +574,65 @@ export default function Home() {
           />
         )}
 
-        {/* Error display */}
+        {/* Error Display */}
         {error && (
-          <div className="error" style={{
-            color: 'red', 
-            margin: '10px 0', 
-            padding: '10px', 
-            border: '1px solid red', 
-            borderRadius: '4px',
-            backgroundColor: '#fee'
-          }}>
+          <div className="error">
             <strong>Error:</strong> {error}
           </div>
         )}
 
-        {/* Loading indicator */}
+        {/* Loading */}
         {loading && (
-          <div className="loading" style={{
-            margin: '10px 0', 
-            padding: '10px', 
-            backgroundColor: '#f0f8ff',
-            border: '1px solid #ddd',
-            borderRadius: '4px'
-          }}>
+          <div className="loading">
             <strong>Loading...</strong> Processing files...
           </div>
         )}
 
-        {/* Results display */}
+        {/* Results */}
         {results && (
           <div className="results">
             <h2>Comparison Results</h2>
-            <div className="summary" style={{
-              margin: '20px 0',
-              padding: '15px',
-              backgroundColor: '#f9f9f9',
-              border: '1px solid #ddd',
-              borderRadius: '4px'
-            }}>
+            <div className="summary">
               <p><strong>Total Records:</strong> {results.total_records}</p>
               <p><strong>Differences Found:</strong> {results.differences_found}</p>
               <p><strong>Matches Found:</strong> {results.matches_found}</p>
               
-              {/* MODULAR: Show auto-detected fields only if feature enabled and data exists */}
               {FEATURES.AUTO_DETECTION && results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
                 <p><strong>🤖 Auto-detected Amount Fields:</strong> {results.autoDetectedFields.join(', ')}</p>
               )}
               
-              <div style={{ marginTop: '15px' }}>
-                <button 
-                  onClick={handleDownloadExcel}
-                  style={{
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    marginRight: '10px',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  📊 Download Excel
-                </button>
-                <button 
-                  onClick={handleDownloadCSV}
-                  style={{
-                    backgroundColor: '#17a2b8',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  📄 Download CSV
-                </button>
+              <div className="download-buttons">
+                <button onClick={handleDownloadExcel} className="download-btn excel">📊 Download Excel</button>
+                <button onClick={handleDownloadCSV} className="download-btn csv">📄 Download CSV</button>
               </div>
             </div>
             
             {results.results && results.results.length > 0 && (
-              <table className="results-table" style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                margin: '20px 0'
-              }}>
+              <table className="results-table">
                 <thead>
-                  <tr style={{ backgroundColor: '#f5f5f5' }}>
-                    <th style={{ 
-                      border: '1px solid #ddd', 
-                      padding: '8px', 
-                      textAlign: 'left' 
-                    }}>ID</th>
+                  <tr>
+                    <th>ID</th>
                     {Object.keys(results.results[0].fields).map((field, idx) => (
-                      <th key={idx} style={{ 
-                        border: '1px solid #ddd', 
-                        padding: '8px', 
-                        textAlign: 'left' 
-                      }}>{field}</th>
+                      <th key={idx}>{field}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {results.results.map((row, rowIndex) => (
                     <tr key={rowIndex}>
-                      <td style={{ 
-                        border: '1px solid #ddd', 
-                        padding: '8px' 
-                      }}>{row.ID}</td>
+                      <td>{row.ID}</td>
                       {Object.entries(row.fields).map(([key, value], idx) => (
                         <td
                           key={idx}
-                          style={{
-                            border: '1px solid #ddd',
-                            padding: '8px',
-                            backgroundColor:
-                              value.status === 'difference'
-                                ? '#fdd'
-                                : value.status === 'acceptable'
-                                ? '#ffd'
-                                : '#dfd'
-                          }}
+                          className={`cell-${value.status}`}
                         >
                           <div>
                             <strong>{value.val1} / {value.val2}</strong>
-                            {/* MODULAR: Auto-detected indicator only if feature enabled */}
                             {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
-                              <span style={{ marginLeft: '5px', fontSize: '0.8em' }}>🤖</span>
+                              <span className="auto-detected">🤖</span>
                             )}
                           </div>
-                          <small style={{ color: '#666' }}>
+                          <small>
                             {value.status}
                             {value.difference && ` (Δ ${value.difference})`}
                           </small>
@@ -900,564 +657,378 @@ export default function Home() {
           min-height: 100vh;
         }
 
-        /* Hero Section */
-        .hero-section {
-          text-align: center;
-          padding: 60px 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 20px;
-          margin-bottom: 50px;
-          color: white;
-          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        .nav {
+          background: white;
+          border-bottom: 1px solid #e5e7eb;
+          padding: 1rem 0;
+          margin-bottom: 20px;
+          border-radius: 8px;
         }
 
-        .hero-content {
-          max-width: 800px;
+        .nav-content {
+          max-width: 1200px;
           margin: 0 auto;
           padding: 0 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .nav-brand {
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: #667eea;
+        }
+
+        .nav-links {
+          display: flex;
+          gap: 2rem;
+        }
+
+        .nav-about {
+          color: #FF6B35;
+          cursor: pointer;
+          text-decoration: none;
+          font-size: 1.1rem;
+          font-weight: 700;
+        }
+
+        .nav-current {
+          color: #667eea;
+          font-weight: 500;
+        }
+
+        .hero {
+          text-align: center;
+          padding: 40px 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 16px;
+          margin-bottom: 30px;
+          color: white;
         }
 
         .hero-title {
-          margin: 0 0 20px 0;
-          font-size: 3.5em;
+          font-size: 3rem;
           font-weight: 700;
-          line-height: 1.1;
-        }
-
-        .gradient-text {
-          background: linear-gradient(45deg, #ffffff, #e3f2fd);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          display: block;
+          margin: 0 0 10px 0;
         }
 
         .hero-subtitle {
-          display: block;
-          font-size: 0.6em;
-          opacity: 0.9;
+          font-size: 1.5rem;
           font-weight: 400;
-          margin-top: 10px;
+          margin: 0 0 20px 0;
+          opacity: 0.9;
         }
 
         .hero-description {
-          font-size: 1.3em;
+          font-size: 1.1rem;
           opacity: 0.9;
           line-height: 1.6;
-          margin: 0 0 30px 0;
+          max-width: 600px;
+          margin: 0 auto;
         }
 
-        .hero-badges {
-          display: flex;
-          justify-content: center;
-          gap: 20px;
-          flex-wrap: wrap;
-        }
-
-        .badge {
-          background: rgba(255,255,255,0.2);
-          padding: 8px 16px;
-          border-radius: 25px;
-          font-size: 0.9em;
-          font-weight: 500;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* Section Styling */
-        .comparison-section, .upload-section {
+        .section {
           background: white;
-          border-radius: 16px;
-          padding: 40px;
-          margin-bottom: 30px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 30px;
+          margin-bottom: 20px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
         .section-title {
-          font-size: 2.2em;
+          font-size: 1.8rem;
           color: #1f2937;
-          margin: 0 0 15px 0;
+          margin: 0 0 10px 0;
           text-align: center;
-          font-weight: 700;
+          font-weight: 600;
         }
 
         .section-subtitle {
-          font-size: 1.1em;
+          font-size: 1rem;
           color: #6b7280;
           text-align: center;
-          margin: 0 0 40px 0;
-          line-height: 1.5;
+          margin: 0 0 30px 0;
         }
 
-        /* File Type Grid */
-        .file-type-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 20px;
-          margin-bottom: 40px;
+        .file-type-selector {
+          margin: 20px 0;
+          padding: 20px;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          background: #f9fafb;
         }
 
-        .file-type-card {
-          background: white;
-          border: 2px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 25px 20px;
-          text-align: center;
+        .file-type-selector label {
+          margin-right: 20px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border-radius: 6px;
           cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
-          display: block;
+          transition: background-color 0.2s;
         }
 
-        .file-type-card input[type="radio"] {
-          display: none;
+        .file-type-selector label:hover {
+          background: #e5e7eb;
         }
 
-        .file-type-card:hover {
-          border-color: #667eea;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
-        }
-
-        .file-type-card.selected {
-          border-color: #667eea;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .file-type-card.featured {
-          border-color: #f59e0b;
-          background: linear-gradient(135deg, #f59e0b, #f97316);
-          color: white;
-        }
-
-        .file-type-card.featured.selected {
-          background: linear-gradient(135deg, #d97706, #ea580c);
-        }
-
-        .card-icon {
-          font-size: 2.5em;
-          margin-bottom: 15px;
-          display: block;
-        }
-
-        .card-title {
-          font-size: 1.2em;
-          font-weight: 600;
-          margin-bottom: 8px;
-        }
-
-        .card-description {
-          font-size: 0.9em;
-          opacity: 0.8;
-          line-height: 1.4;
-        }
-
-        .featured-badge {
-          position: absolute;
-          top: -8px;
-          right: -8px;
-          background: #ef4444;
-          color: white;
-          font-size: 0.7em;
-          padding: 4px 8px;
-          border-radius: 10px;
+        .file-type-selector label.featured {
+          background: #fef3c7;
+          border: 1px solid #f59e0b;
           font-weight: 600;
         }
 
-        /* Enhanced File Order Guidance */
-        .file-order-guidance.enhanced {
+        .guidance {
           background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
           border: 2px solid #2196f3;
-          border-radius: 16px;
-          padding: 30px;
-          margin: 30px 0;
+          border-radius: 12px;
+          padding: 20px;
+          margin: 20px 0;
         }
 
-        .guidance-header {
-          text-align: center;
-          margin-bottom: 30px;
-        }
-
-        .guidance-header h3 {
+        .guidance h3 {
           color: #1976d2;
           margin: 0 0 10px 0;
-          font-size: 1.4em;
-          font-weight: 700;
+          font-size: 1.2rem;
         }
 
-        .guidance-header p {
-          color: #1565c0;
-          margin: 0;
-          font-size: 1em;
-        }
-
-        .order-instruction {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 30px;
-          margin: 30px 0;
-          flex-wrap: wrap;
-        }
-
-        .file-slot {
-          background: white;
-          padding: 25px;
-          border-radius: 12px;
-          border: 2px solid #2196f3;
-          min-width: 220px;
-          box-shadow: 0 4px 15px rgba(33, 150, 243, 0.1);
-        }
-
-        .excel-slot {
-          border-color: #4caf50;
-        }
-
-        .csv-slot {
-          border-color: #ff9800;
-        }
-
-        .slot-header {
+        .order-guide {
           display: flex;
           align-items: center;
           gap: 15px;
-          margin-bottom: 15px;
-        }
-
-        .slot-number {
-          background: #2196f3;
-          color: white;
-          width: 35px;
-          height: 35px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
+          margin: 15px 0;
+          flex-wrap: wrap;
           justify-content: center;
-          font-weight: bold;
-          font-size: 1.2em;
         }
 
-        .excel-slot .slot-number {
-          background: #4caf50;
-        }
-
-        .csv-slot .slot-number {
-          background: #ff9800;
-        }
-
-        .slot-info {
-          flex: 1;
-        }
-
-        .slot-title {
+        .step {
+          background: white;
+          padding: 10px 15px;
+          border-radius: 8px;
+          border: 2px solid #2196f3;
           font-weight: 600;
-          color: #1976d2;
-          font-size: 1.1em;
-        }
-
-        .slot-formats {
-          font-size: 0.85em;
-          color: #666;
-          margin-top: 2px;
-        }
-
-        .slot-icon {
-          font-size: 2em;
-          text-align: center;
-        }
-
-        .arrow-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 5px;
         }
 
         .arrow {
-          font-size: 2em;
+          font-size: 1.5rem;
           color: #2196f3;
           font-weight: bold;
         }
 
-        .then-text {
-          font-size: 0.8em;
-          color: #666;
-          font-weight: 500;
-        }
-
-        .guidance-note {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
+        .note {
           background: #fff3cd;
           border: 1px solid #ffc107;
-          border-radius: 8px;
-          padding: 15px;
-          margin-top: 25px;
-        }
-
-        .note-icon {
-          font-size: 1.2em;
-          flex-shrink: 0;
-        }
-
-        .note-text {
+          border-radius: 6px;
+          padding: 10px;
+          margin: 10px 0 0 0;
           color: #856404;
-          font-size: 0.95em;
-          line-height: 1.4;
+          font-size: 0.9rem;
         }
 
-        /* Enhanced File Inputs */
-        .excel-csv-file-inputs.enhanced {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 30px;
-          margin: 30px 0;
-        }
-
-        .file-input-header {
+        .file-inputs {
           display: flex;
-          align-items: center;
-          gap: 15px;
-          margin-bottom: 15px;
+          gap: 20px;
+          margin: 20px 0;
+          flex-wrap: wrap;
         }
 
-        .input-number {
-          background: #667eea;
-          color: white;
-          width: 35px;
-          height: 35px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          font-size: 1.1em;
-        }
-
-        .input-info {
+        .file-input-group {
           flex: 1;
+          min-width: 250px;
         }
 
-        .input-title {
-          font-size: 1.2em;
+        .file-input-group label {
+          display: block;
           font-weight: 600;
-          color: #1f2937;
+          margin-bottom: 8px;
+          color: #374151;
         }
 
-        .input-subtitle {
-          font-size: 0.9em;
-          color: #6b7280;
-        }
-
-        .file-input-label.enhanced {
-          display: block;
-          cursor: pointer;
-        }
-
-        .file-input-area {
-          border: 2px dashed #d1d5db;
-          border-radius: 12px;
-          padding: 30px 20px;
-          text-align: center;
-          transition: all 0.3s ease;
-          background: #fafafa;
-        }
-
-        .file-input-area:hover {
-          border-color: #667eea;
-          background: #f0f4ff;
-        }
-
-        .upload-icon {
-          font-size: 2.5em;
-          margin-bottom: 15px;
-          display: block;
-        }
-
-        .file-selected {
-          color: #059669;
+        .file-input-group input[type="file"] {
+          width: 100%;
+          padding: 10px;
+          border: 2px solid #d1d5db;
+          border-radius: 6px;
+          font-size: 0.9rem;
         }
 
         .file-name {
-          font-weight: 600;
-          font-size: 1em;
-          margin-bottom: 5px;
+          margin-top: 8px;
+          padding: 8px;
+          background: #f0f9ff;
+          border: 1px solid #0ea5e9;
+          border-radius: 4px;
+          font-size: 0.9rem;
+          color: #0c4a6e;
         }
 
-        .file-size {
-          font-size: 0.85em;
-          opacity: 0.7;
-        }
-
-        .file-placeholder {
-          color: #6b7280;
-        }
-
-        .placeholder-main {
-          font-weight: 500;
-          font-size: 1em;
-          margin-bottom: 5px;
-        }
-
-        .placeholder-sub {
-          font-size: 0.85em;
-          opacity: 0.7;
-        }
-
-        .file-input {
-          display: none;
-        }
-
-        /* Standard File Inputs */
-        .standard-file-inputs {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-          flex-wrap: wrap;
-          margin: 30px 0;
-        }
-
-        .file-input-group.standard {
-          flex: 1;
-          min-width: 250px;
-          max-width: 400px;
-        }
-
-        .file-input-label.standard {
-          display: block;
-          cursor: pointer;
-        }
-
-        .file-input-area.standard {
-          border: 2px solid #d1d5db;
-          border-radius: 8px;
-          padding: 20px;
-          text-align: center;
-          transition: all 0.3s ease;
-          background: white;
-        }
-
-        .file-input-area.standard:hover {
-          border-color: #667eea;
-          background: #f0f4ff;
-        }
-
-        /* Load Files Button */
-        .load-files-button {
+        .load-button {
           background: linear-gradient(135deg, #667eea, #764ba2);
           color: white;
           border: none;
-          padding: 18px 40px;
-          border-radius: 50px;
-          font-size: 1.2em;
+          padding: 15px 30px;
+          border-radius: 25px;
+          font-size: 1.1rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          margin: 30px auto 0;
-          min-width: 280px;
+          display: block;
+          margin: 20px auto 0;
+          min-width: 250px;
+        }
+
+        .load-button:hover:not(:disabled) {
+          transform: translateY(-2px);
           box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
-        .load-files-button:hover:not(.disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .load-files-button.disabled {
-          background: #d1d5db;
+        .load-button:disabled {
+          background: #9ca3af;
           cursor: not-allowed;
           transform: none;
-          box-shadow: none;
         }
 
-        .load-files-button.loading {
-          background: #6b7280;
-          cursor: wait;
+        .error {
+          color: #dc2626;
+          margin: 10px 0;
+          padding: 15px;
+          border: 1px solid #dc2626;
+          border-radius: 6px;
+          background: #fef2f2;
         }
 
-        .button-icon {
-          font-size: 1.1em;
+        .loading {
+          margin: 10px 0;
+          padding: 15px;
+          background: #f0f8ff;
+          border: 1px solid #3b82f6;
+          border-radius: 6px;
+          color: #1e40af;
         }
 
-        .loading-spinner {
-          width: 20px;
-          height: 20px;
-          border: 2px solid rgba(255,255,255,0.3);
-          border-top: 2px solid white;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
+        .results {
+          background: white;
+          border-radius: 12px;
+          padding: 30px;
+          margin: 20px 0;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
 
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        .summary {
+          margin: 20px 0;
+          padding: 20px;
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+        }
+
+        .download-buttons {
+          margin-top: 15px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .download-btn {
+          border: none;
+          padding: 10px 20px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: background-color 0.2s;
+        }
+
+        .download-btn.excel {
+          background: #10b981;
+          color: white;
+        }
+
+        .download-btn.excel:hover {
+          background: #059669;
+        }
+
+        .download-btn.csv {
+          background: #0ea5e9;
+          color: white;
+        }
+
+        .download-btn.csv:hover {
+          background: #0284c7;
+        }
+
+        .results-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 20px 0;
+          font-size: 0.9rem;
+        }
+
+        .results-table th {
+          border: 1px solid #d1d5db;
+          padding: 10px 8px;
+          text-align: left;
+          background: #f9fafb;
+          font-weight: 600;
+        }
+
+        .results-table td {
+          border: 1px solid #d1d5db;
+          padding: 10px 8px;
+          vertical-align: top;
+        }
+
+        .cell-difference {
+          background: #fef2f2;
+        }
+
+        .cell-acceptable {
+          background: #fefce8;
+        }
+
+        .cell-match {
+          background: #f0fdf4;
+        }
+
+        .auto-detected {
+          margin-left: 5px;
+          font-size: 0.8em;
+        }
+
+        .results-table small {
+          color: #6b7280;
+          display: block;
+          margin-top: 4px;
         }
 
         @media (max-width: 768px) {
           .hero-title {
-            font-size: 2.5em;
+            font-size: 2rem;
           }
           
           .section-title {
-            font-size: 1.8em;
+            font-size: 1.5rem;
           }
           
-          .file-type-grid {
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          .file-inputs {
+            flex-direction: column;
           }
           
-          .order-instruction {
+          .order-guide {
             flex-direction: column;
           }
           
           .arrow {
             transform: rotate(90deg);
           }
+          
+          .nav-content {
+            flex-direction: column;
+            gap: 1rem;
+          }
         }
       `}</style>
     </div>
   );
-}>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </label>
-              </div>
-              
-              <div className="file-input-group">
-                <div className="file-input-header">
-                  <span className="input-number">2</span>
-                  <div className="input-info">
-                    <div className="input-title">CSV File</div>
-                    <div className="input-subtitle">Upload your .csv file</div>
-                  </div>
-                </div>
-                <label className="file-input-label enhanced">
-                  <input 
-                    type="file" 
-                    accept=".csv"
-                    onChange={(e) => handleFileChange(e, 2)}
-                    className="file-input"
-                  />
-                  <div className="file-input-area">
-                    <div className="upload-icon">📄</div>
-                    <div className="upload-text">
-                      {file2 ? (
-                        <div className="file-selected">
-                          <div className="file-name">✅ {file2.name}</div>
-                          <div className="file-size">{(file2.size / 1024).toFixed(1)} KB</div>
-                        </div>
-                      ) : (
-                        <div className="file-placeholder">
-                          <div className="placeholder-main">Click to select CSV file</div>
-                          <div className="placeholder-sub">or drag and drop here</div
+}
