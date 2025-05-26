@@ -1,4 +1,4 @@
-// File: utils/pdfFileComparison.js - COMPLETE ENHANCED VERSION
+// File: utils/pdfFileComparison.js - COMPLETE ENHANCED VERSION 
 
 /**
  * Wait for PDF.js to be available
