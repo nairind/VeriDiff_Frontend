@@ -487,13 +487,13 @@ export default function Home() {
           <p className="section-subtitle">Select the file formats you want to compare</p>
           
           <div className="file-type-selector">
+            <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel–Excel</label>
+            <label className="featured"><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
             <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV–CSV</label>
-            <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> Text–Text</label>
+            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF–PDF</label>
+            <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TXT–TXT</label>
             <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON–JSON</label>
             <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML–XML</label>
-            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF–PDF</label>
-            <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel–Excel</label>
-            <label className="featured"><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV <span className="popular-badge">(Most Popular)</span></label>
           </div>
         </div>
 
@@ -758,15 +758,15 @@ export default function Home() {
           border: 1px solid #e5e7eb;
           border-radius: 8px;
           background: #f9fafb;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          display: flex;
+          flex-direction: column;
           gap: 12px;
         }
 
         .file-type-selector label {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 12px;
           padding: 12px 16px;
           border-radius: 8px;
           cursor: pointer;
@@ -774,15 +774,16 @@ export default function Home() {
           background: white;
           border: 2px solid #e5e7eb;
           font-weight: 500;
-          justify-content: center;
-          text-align: center;
-          min-height: 50px;
+          text-align: left;
+          min-height: 48px;
+          width: 100%;
+          max-width: 300px;
         }
 
         .file-type-selector label:hover {
           border-color: #667eea;
           background: #f0f4ff;
-          transform: translateY(-1px);
+          transform: translateX(4px);
         }
 
         .file-type-selector label.featured {
@@ -800,6 +801,28 @@ export default function Home() {
           font-size: 0.8em;
           color: #92400e;
           font-weight: 600;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+          .file-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            align-items: start;
+          }
+
+          .file-type-selector label {
+            max-width: none;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .file-type-selector {
+            grid-template-columns: repeat(2, 1fr);
+            max-width: 800px;
+            margin: 20px auto;
+          }
         }
 
         .guidance {
@@ -1072,39 +1095,20 @@ export default function Home() {
             font-size: 0.9rem;
           }
 
-          /* Mobile-friendly file type selector */
+          /* Mobile-friendly file type selector - simplified */
           .file-type-selector {
             padding: 15px;
-            display: block; /* Override desktop grid */
-            gap: 0;
+            gap: 10px;
           }
 
           .file-type-selector label {
-            display: block;
-            margin-right: 0;
-            margin-bottom: 10px;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            background: white;
+            padding: 14px 16px;
             font-size: 0.95rem;
-            min-height: auto;
-            justify-content: flex-start;
-            text-align: left;
+            min-height: 52px; /* Larger touch target on mobile */
           }
 
           .file-type-selector label:hover {
-            background: #f3f4f6;
-            transform: none; /* Remove desktop hover transform */
-          }
-
-          .file-type-selector label.featured {
-            background: #fef3c7;
-            border: 2px solid #f59e0b;
-          }
-
-          .file-type-selector label.featured:hover {
-            background: #fde68a;
+            transform: none; /* Remove slide animation on mobile */
           }
 
           /* Mobile guidance section */
