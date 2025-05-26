@@ -620,10 +620,11 @@ export default function Home() {
                 <tbody>
                   {results.results.map((row, rowIndex) => (
                     <tr key={rowIndex}>
-                      <td>{row.ID}</td>
+                      <td data-label="ID">{row.ID}</td>
                       {Object.entries(row.fields).map(([key, value], idx) => (
                         <td
                           key={idx}
+                          data-label={key}
                           className={`cell-${value.status}`}
                         >
                           <div>
@@ -1002,30 +1003,286 @@ export default function Home() {
           margin-top: 4px;
         }
 
+        /* Mobile-First Responsive Design */
         @media (max-width: 768px) {
-          .hero-title {
-            font-size: 2rem;
+          .container {
+            padding: 10px;
           }
-          
-          .section-title {
-            font-size: 1.5rem;
-          }
-          
-          .file-inputs {
-            flex-direction: column;
-          }
-          
-          .order-guide {
-            flex-direction: column;
-          }
-          
-          .arrow {
-            transform: rotate(90deg);
-          }
-          
+
           .nav-content {
             flex-direction: column;
             gap: 1rem;
+            text-align: center;
+          }
+
+          .nav-links {
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          .hero {
+            padding: 30px 15px;
+            margin-bottom: 20px;
+          }
+
+          .hero-title {
+            font-size: 2.2rem;
+          }
+
+          .hero-subtitle {
+            font-size: 1.2rem;
+          }
+
+          .hero-description {
+            font-size: 1rem;
+            padding: 0 10px;
+          }
+
+          .section {
+            padding: 20px 15px;
+            margin-bottom: 15px;
+          }
+          
+          .section-title {
+            font-size: 1.4rem;
+          }
+
+          .section-subtitle {
+            font-size: 0.9rem;
+          }
+
+          /* Mobile-friendly file type selector */
+          .file-type-selector {
+            padding: 15px;
+          }
+
+          .file-type-selector label {
+            display: block;
+            margin-right: 0;
+            margin-bottom: 10px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.95rem;
+          }
+
+          .file-type-selector label:hover {
+            background: #f3f4f6;
+          }
+
+          .file-type-selector label.featured {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+          }
+
+          /* Mobile guidance section */
+          .guidance {
+            padding: 15px;
+            margin: 15px 0;
+          }
+
+          .guidance h3 {
+            font-size: 1.1rem;
+            text-align: center;
+          }
+
+          .order-guide {
+            flex-direction: column;
+            gap: 10px;
+          }
+
+          .step {
+            padding: 12px;
+            text-align: center;
+            font-size: 0.9rem;
+          }
+
+          .arrow {
+            transform: rotate(90deg);
+            font-size: 1.2rem;
+          }
+
+          /* Mobile file inputs */
+          .file-inputs {
+            flex-direction: column;
+            gap: 15px;
+          }
+
+          .file-input-group {
+            min-width: auto;
+          }
+
+          .file-input-group input[type="file"] {
+            padding: 12px;
+            font-size: 1rem;
+            min-height: 48px; /* Touch-friendly */
+          }
+
+          .file-name {
+            padding: 10px;
+            font-size: 0.9rem;
+          }
+
+          /* Mobile-friendly buttons */
+          .load-button {
+            min-width: auto;
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1rem;
+            margin: 15px 0;
+          }
+
+          /* Mobile results */
+          .results {
+            padding: 15px;
+            margin: 15px 0;
+          }
+
+          .summary {
+            padding: 15px;
+            font-size: 0.9rem;
+          }
+
+          .download-buttons {
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .download-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 0.95rem;
+          }
+
+          /* Mobile table - make it scrollable */
+          .results-table {
+            font-size: 0.8rem;
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+            border: 1px solid #d1d5db;
+          }
+
+          .results-table thead,
+          .results-table tbody,
+          .results-table th,
+          .results-table td,
+          .results-table tr {
+            display: block;
+          }
+
+          .results-table thead tr {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+          }
+
+          .results-table tr {
+            border: 1px solid #d1d5db;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+          }
+
+          .results-table td {
+            border: none;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+            padding: 8px 8px 8px 35%;
+            white-space: normal;
+            text-align: left;
+          }
+
+          .results-table td:before {
+            content: attr(data-label) ": ";
+            position: absolute;
+            left: 6px;
+            width: 30%;
+            padding-right: 10px;
+            white-space: nowrap;
+            font-weight: 600;
+            color: #374151;
+          }
+
+          /* Error and loading mobile styles */
+          .error, .loading {
+            padding: 12px;
+            font-size: 0.9rem;
+            margin: 10px 0;
+          }
+        }
+
+        /* Small mobile devices */
+        @media (max-width: 480px) {
+          .hero-title {
+            font-size: 1.8rem;
+          }
+
+          .hero-subtitle {
+            font-size: 1rem;
+          }
+
+          .section-title {
+            font-size: 1.2rem;
+          }
+
+          .file-type-selector label {
+            padding: 10px;
+            font-size: 0.9rem;
+          }
+
+          .step {
+            padding: 10px;
+            font-size: 0.85rem;
+          }
+
+          .load-button {
+            padding: 14px 16px;
+            font-size: 0.95rem;
+          }
+        }
+
+        /* Landscape orientation adjustments */
+        @media (max-width: 768px) and (orientation: landscape) {
+          .hero {
+            padding: 20px 15px;
+          }
+
+          .hero-title {
+            font-size: 2rem;
+          }
+
+          .section {
+            padding: 20px;
+          }
+        }
+
+        /* Touch-friendly improvements for all devices */
+        @media (pointer: coarse) {
+          .file-type-selector label {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+          }
+
+          .load-button {
+            min-height: 48px;
+          }
+
+          .download-btn {
+            min-height: 44px;
+          }
+
+          input[type="file"] {
+            min-height: 44px;
+          }
+
+          input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
           }
         }
       `}</style>
