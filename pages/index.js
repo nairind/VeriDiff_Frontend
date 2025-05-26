@@ -490,10 +490,11 @@ export default function Home() {
             <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel–Excel</label>
             <label className="featured"><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
             <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV–CSV</label>
-            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF–PDF</label>
+            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF–PDF <span className="version-flag">v1</span></label>
             <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TXT–TXT</label>
             <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON–JSON</label>
             <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML–XML</label>
+            <label className="coming-soon"><input type="radio" name="fileType" value="pdf_ocr" disabled /> PDF–PDF <span className="ocr-flag">OCR checks coming</span></label>
           </div>
         </div>
 
@@ -514,9 +515,7 @@ export default function Home() {
         {/* File Upload */}
         <div className="section">
           <h2 className="section-title">Upload Your Files</h2>
-          <p className="section-subtitle">
-            {fileType === 'excel_csv' ? 'Upload Excel file first, then CSV file' : 'Select two files to compare'}
-          </p>
+          <p className="section-subtitle">Select files to compare</p>
 
           <div className="file-inputs">
             <div className="file-input-group">
@@ -795,6 +794,44 @@ export default function Home() {
         .file-type-selector label.featured:hover {
           background: linear-gradient(135deg, #fde68a, #fcd34d);
           border-color: #d97706;
+        }
+
+        .file-type-selector label.coming-soon {
+          background: #f9fafb;
+          border: 2px dashed #9ca3af;
+          color: #6b7280;
+          cursor: not-allowed;
+          opacity: 0.7;
+        }
+
+        .file-type-selector label.coming-soon:hover {
+          background: #f9fafb;
+          border-color: #9ca3af;
+          transform: none;
+        }
+
+        .file-type-selector label.coming-soon input[type="radio"] {
+          cursor: not-allowed;
+        }
+
+        .version-flag {
+          font-size: 0.75em;
+          background: #dbeafe;
+          color: #1e40af;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 600;
+          margin-left: 8px;
+        }
+
+        .ocr-flag {
+          font-size: 0.75em;
+          background: #fef3c7;
+          color: #92400e;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 500;
+          margin-left: 8px;
         }
 
         .popular-badge {
