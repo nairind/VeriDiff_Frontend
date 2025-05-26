@@ -1,4 +1,507 @@
-import { useState } from 'react';
+.container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #f8fafc;
+          min-height: 100vh;
+        }
+
+        /* Hero Section */
+        .hero-section {
+          text-align: center;
+          padding: 60px 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 20px;
+          margin-bottom: 50px;
+          color: white;
+          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .hero-content {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 0 20px;
+        }
+
+        .hero-title {
+          margin: 0 0 20px 0;
+          font-size: 3.5em;
+          font-weight: 700;
+          line-height: 1.1;
+        }
+
+        .gradient-text {
+          background: linear-gradient(45deg, #ffffff, #e3f2fd);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          display: block;
+        }
+
+        .hero-subtitle {
+          display: block;
+          font-size: 0.6em;
+          opacity: 0.9;
+          font-weight: 400;
+          margin-top: 10px;
+        }
+
+        .hero-description {
+          font-size: 1.3em;
+          opacity: 0.9;
+          line-height: 1.6;
+          margin: 0 0 30px 0;
+        }
+
+        .hero-badges {
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+          flex-wrap: wrap;
+        }
+
+        .badge {
+          background: rgba(255,255,255,0.2);
+          padding: 8px 16px;
+          border-radius: 25px;
+          font-size: 0.9em;
+          font-weight: 500;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Section Styling */
+        .comparison-section, .upload-section {
+          background: white;
+          border-radius: 16px;
+          padding: 40px;
+          margin-bottom: 30px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          border: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+          font-size: 2.2em;
+          color: #1f2937;
+          margin: 0 0 15px 0;
+          text-align: center;
+          font-weight: 700;
+        }
+
+        .section-subtitle {
+          font-size: 1.1em;
+          color: #6b7280;
+          text-align: center;
+          margin: 0 0 40px 0;
+          line-height: 1.5;
+        }
+
+        /* File Type Grid */
+        .file-type-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 20px;
+          margin-bottom: 40px;
+        }
+
+        .file-type-card {
+          background: white;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 25px 20px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+          display: block;
+        }
+
+        .file-type-card input[type="radio"] {
+          display: none;
+        }
+
+        .file-type-card:hover {
+          border-color: #667eea;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .file-type-card.selected {
+          border-color: #667eea;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .file-type-card.featured {
+          border-color: #f59e0b;
+          background: linear-gradient(135deg, #f59e0b, #f97316);
+          color: white;
+        }
+
+        .file-type-card.featured.selected {
+          background: linear-gradient(135deg, #d97706, #ea580c);
+        }
+
+        .card-icon {
+          font-size: 2.5em;
+          margin-bottom: 15px;
+          display: block;
+        }
+
+        .card-title {
+          font-size: 1.2em;
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+
+        .card-description {
+          font-size: 0.9em;
+          opacity: 0.8;
+          line-height: 1.4;
+        }
+
+        .featured-badge {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: #ef4444;
+          color: white;
+          font-size: 0.7em;
+          padding: 4px 8px;
+          border-radius: 10px;
+          font-weight: 600;
+        }
+
+        /* Enhanced File Order Guidance */
+        .file-order-guidance.enhanced {
+          background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+          border: 2px solid #2196f3;
+          border-radius: 16px;
+          padding: 30px;
+          margin: 30px 0;
+        }
+
+        .guidance-header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+
+        .guidance-header h3 {
+          color: #1976d2;
+          margin: 0 0 10px 0;
+          font-size: 1.4em;
+          font-weight: 700;
+        }
+
+        .guidance-header p {
+          color: #1565c0;
+          margin: 0;
+          font-size: 1em;
+        }
+
+        .order-instruction {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 30px;
+          margin: 30px 0;
+          flex-wrap: wrap;
+        }
+
+        .file-slot {
+          background: white;
+          padding: 25px;
+          border-radius: 12px;
+          border: 2px solid #2196f3;
+          min-width: 220px;
+          box-shadow: 0 4px 15px rgba(33, 150, 243, 0.1);
+        }
+
+        .excel-slot {
+          border-color: #4caf50;
+        }
+
+        .csv-slot {
+          border-color: #ff9800;
+        }
+
+        .slot-header {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+
+        .slot-number {
+          background: #2196f3;
+          color: white;
+          width: 35px;
+          height: 35px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 1.2em;
+        }
+
+        .excel-slot .slot-number {
+          background: #4caf50;
+        }
+
+        .csv-slot .slot-number {
+          background: #ff9800;
+        }
+
+        .slot-info {
+          flex: 1;
+        }
+
+        .slot-title {
+          font-weight: 600;
+          color: #1976d2;
+          font-size: 1.1em;
+        }
+
+        .slot-formats {
+          font-size: 0.85em;
+          color: #666;
+          margin-top: 2px;
+        }
+
+        .slot-icon {
+          font-size: 2em;
+          text-align: center;
+        }
+
+        .arrow-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .arrow {
+          font-size: 2em;
+          color: #2196f3;
+          font-weight: bold;
+        }
+
+        .then-text {
+          font-size: 0.8em;
+          color: #666;
+          font-weight: 500;
+        }
+
+        .guidance-note {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          background: #fff3cd;
+          border: 1px solid #ffc107;
+          border-radius: 8px;
+          padding: 15px;
+          margin-top: 25px;
+        }
+
+        .note-icon {
+          font-size: 1.2em;
+          flex-shrink: 0;
+        }
+
+        .note-text {
+          color: #856404;
+          font-size: 0.95em;
+          line-height: 1.4;
+        }
+
+        /* Enhanced File Inputs */
+        .excel-csv-file-inputs.enhanced {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 30px;
+          margin: 30px 0;
+        }
+
+        .file-input-header {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+
+        .input-number {
+          background: #667eea;
+          color: white;
+          width: 35px;
+          height: 35px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 1.1em;
+        }
+
+        .input-info {
+          flex: 1;
+        }
+
+        .input-title {
+          font-size: 1.2em;
+          font-weight: 600;
+          color: #1f2937;
+        }
+
+        .input-subtitle {
+          font-size: 0.9em;
+          color: #6b7280;
+        }
+
+        .file-input-label.enhanced {
+          display: block;
+          cursor: pointer;
+        }
+
+        .file-input-area {
+          border: 2px dashed #d1d5db;
+          border-radius: 12px;
+          padding: 30px 20px;
+          text-align: center;
+          transition: all 0.3s ease;
+          background: #fafafa;
+        }
+
+        .file-input-area:hover {
+          border-color: #667eea;
+          background: #f0f4ff;
+        }
+
+        .upload-icon {
+          font-size: 2.5em;
+          margin-bottom: 15px;
+          display: block;
+        }
+
+        .file-selected {
+          color: #059669;
+        }
+
+        .file-name {
+          font-weight: 600;
+          font-size: 1em;
+          margin-bottom: 5px;
+        }
+
+        .file-size {
+          font-size: 0.85em;
+          opacity: 0.7;
+        }
+
+        .file-placeholder {
+          color: #6b7280;
+        }
+
+        .placeholder-main {
+          font-weight: 500;
+          font-size: 1em;
+          margin-bottom: 5px;
+        }
+
+        .placeholder-sub {
+          font-size: 0.85em;
+          opacity: 0.7;
+        }
+
+        .file-input {
+          display: none;
+        }
+
+        /* Standard File Inputs */
+        .standard-file-inputs {
+          display: flex;
+          gap: 20px;
+          justify-content: center;
+          flex-wrap: wrap;
+          margin: 30px 0;
+        }
+
+        .file-input-group.standard {
+          flex: 1;
+          min-width: 250px;
+          max-width: 400px;
+        }
+
+        .file-input-label.standard {
+          display: block;
+          cursor: pointer;
+        }
+
+        .file-input-area.standard {
+          border: 2px solid #d1d5db;
+          border-radius: 8px;
+          padding: 20px;
+          text-align: center;
+          transition: all 0.3s ease;
+          background: white;
+        }
+
+        .file-input-area.standard:hover {
+          border-color: #667eea;
+          background: #f0f4ff;
+        }
+
+        /* Load Files Button */
+        .load-files-button {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          padding: 18px 40px;
+          border-radius: 50px;
+          font-size: 1.2em;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin: 30px auto 0;
+          min-width: 280px;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .load-files-button:hover:not(.disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .load-files-button.disabled {
+          background: #d1d5db;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
+
+        .load-files-button.loading {
+          background: #6b7280;
+          cursor: wait;
+        }
+
+        .button-icon {
+          font-size: 1.1em;
+        }
+
+        .loading-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-top: 2px solid white;
+          border-radius: 50%;
+          import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
@@ -510,92 +1013,248 @@ export default function Home() {
       </nav>
 
       <main>
-        <h1 className="title">VeriDiff</h1>
-        <p>Upload two files to compare their contents</p>
-
-        <div className="file-type-selector">
-          <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV</label>
-          <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TEXT Files</label>
-          <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON</label>
-          <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML</label>
-          <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF</label>
-          <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel</label>
-          <label><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
+        {/* Hero Section */}
+        <div className="hero-section">
+          <div className="hero-content">
+            <h1 className="hero-title">
+              <span className="gradient-text">VeriDiff</span>
+              <span className="hero-subtitle">Smart File Comparison</span>
+            </h1>
+            <p className="hero-description">
+              Compare documents with precision and confidence. From Excel to PDFs, 
+              VeriDiff handles your most critical file comparisons with professional-grade accuracy.
+            </p>
+            <div className="hero-badges">
+              <span className="badge">🔒 100% Private</span>
+              <span className="badge">⚡ Instant Results</span>
+              <span className="badge">🎯 Smart Mapping</span>
+            </div>
+          </div>
         </div>
 
-        {/* FILE ORDER GUIDANCE */}
-        {fileType === 'excel_csv' && (
-          <div className="file-order-guidance">
-            <h3>📋 File Upload Order</h3>
-            <div className="order-instruction">
-              <div className="file-slot">
-                <span className="slot-number">1</span>
-                <span className="slot-description">
-                  <strong>Excel File</strong><br />
-                  Upload your .xlsx or .xls file first
-                </span>
-              </div>
-              <div className="arrow">→</div>
-              <div className="file-slot">
-                <span className="slot-number">2</span>
-                <span className="slot-description">
-                  <strong>CSV File</strong><br />
-                  Upload your .csv file second
-                </span>
-              </div>
-            </div>
-            <p className="order-note">
-              ⚠️ <strong>Important:</strong> Please upload files in this exact order for accurate comparison.
-            </p>
-          </div>
-        )}
-
-        {/* FILE INPUTS - Enhanced for Excel-CSV */}
-        {fileType === 'excel_csv' ? (
-          <div className="excel-csv-file-inputs">
-            <div className="file-input-group">
-              <label className="file-input-label">
-                <span className="input-number">1</span>
-                <span className="input-title">Excel File</span>
-                <input 
-                  type="file" 
-                  accept=".xlsx,.xls,.xlsm"
-                  onChange={(e) => handleFileChange(e, 1)}
-                  className="file-input"
-                />
-                <div className="file-name-display">
-                  {file1 ? `📊 ${file1.name}` : 'No Excel file selected'}
-                </div>
-              </label>
-            </div>
+        {/* File Type Selection */}
+        <div className="comparison-section">
+          <h2 className="section-title">Choose Your Comparison Type</h2>
+          <p className="section-subtitle">Select the file formats you want to compare</p>
+          
+          <div className="file-type-grid">
+            <label className={`file-type-card ${fileType === 'csv' ? 'selected' : ''}`}>
+              <input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} />
+              <div className="card-icon">📄</div>
+              <div className="card-title">CSV</div>
+              <div className="card-description">Compare CSV spreadsheets</div>
+            </label>
             
-            <div className="file-input-group">
-              <label className="file-input-label">
-                <span className="input-number">2</span>
-                <span className="input-title">CSV File</span>
-                <input 
-                  type="file" 
-                  accept=".csv"
-                  onChange={(e) => handleFileChange(e, 2)}
-                  className="file-input"
-                />
-                <div className="file-name-display">
-                  {file2 ? `📄 ${file2.name}` : 'No CSV file selected'}
+            <label className={`file-type-card ${fileType === 'text' ? 'selected' : ''}`}>
+              <input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} />
+              <div className="card-icon">📝</div>
+              <div className="card-title">Text Files</div>
+              <div className="card-description">Line-by-line text comparison</div>
+            </label>
+            
+            <label className={`file-type-card ${fileType === 'json' ? 'selected' : ''}`}>
+              <input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} />
+              <div className="card-icon">🔗</div>
+              <div className="card-title">JSON</div>
+              <div className="card-description">Structured data comparison</div>
+            </label>
+            
+            <label className={`file-type-card ${fileType === 'xml' ? 'selected' : ''}`}>
+              <input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} />
+              <div className="card-icon">📋</div>
+              <div className="card-title">XML</div>
+              <div className="card-description">Markup document comparison</div>
+            </label>
+            
+            <label className={`file-type-card ${fileType === 'pdf' ? 'selected' : ''}`}>
+              <input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} />
+              <div className="card-icon">📑</div>
+              <div className="card-title">PDF</div>
+              <div className="card-description">Document text comparison</div>
+            </label>
+            
+            <label className={`file-type-card ${fileType === 'excel' ? 'selected' : ''}`}>
+              <input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} />
+              <div className="card-icon">📊</div>
+              <div className="card-title">Excel</div>
+              <div className="card-description">Spreadsheet comparison</div>
+            </label>
+            
+            <label className={`file-type-card featured ${fileType === 'excel_csv' ? 'selected' : ''}`}>
+              <input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} />
+              <div className="card-icon">⭐</div>
+              <div className="card-title">Excel–CSV</div>
+              <div className="card-description">Cross-format comparison</div>
+              <div className="featured-badge">Most Popular</div>
+            </label>
+          </div>
+        </div>
+
+        {/* FILE ORDER GUIDANCE - Enhanced Design */}
+        {fileType === 'excel_csv' && (
+          <div className="file-order-guidance enhanced">
+            <div className="guidance-header">
+              <h3>📋 File Upload Instructions</h3>
+              <p>Please upload your files in the correct order for accurate comparison</p>
+            </div>
+            <div className="order-instruction">
+              <div className="file-slot excel-slot">
+                <div className="slot-header">
+                  <span className="slot-number">1</span>
+                  <div className="slot-info">
+                    <div className="slot-title">Excel File First</div>
+                    <div className="slot-formats">.xlsx • .xls • .xlsm</div>
+                  </div>
                 </div>
-              </label>
+                <div className="slot-icon">📊</div>
+              </div>
+              <div className="arrow-container">
+                <div className="arrow">→</div>
+                <div className="then-text">then</div>
+              </div>
+              <div className="file-slot csv-slot">
+                <div className="slot-header">
+                  <span className="slot-number">2</span>
+                  <div className="slot-info">
+                    <div className="slot-title">CSV File Second</div>
+                    <div className="slot-formats">.csv</div>
+                  </div>
+                </div>
+                <div className="slot-icon">📄</div>
+              </div>
+            </div>
+            <div className="guidance-note">
+              <div className="note-icon">⚠️</div>
+              <div className="note-text">
+                <strong>Important:</strong> File order matters for accurate data mapping and comparison results.
+              </div>
             </div>
           </div>
-        ) : (
-          // Standard file inputs for other types
-          <>
-            <input type="file" onChange={(e) => handleFileChange(e, 1)} />
-            <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-          </>
         )}
 
-        <button onClick={handleLoadFiles} disabled={loading}>
-          {loading ? 'Loading...' : 'Load Files'}
-        </button>
+        {/* FILE UPLOAD SECTION */}
+        <div className="upload-section">
+          <h2 className="section-title">Upload Your Files</h2>
+          <p className="section-subtitle">
+            {fileType === 'excel_csv' ? 'Upload Excel file first, then CSV file' : 'Select two files to compare'}
+          </p>
+
+          {/* Enhanced File Inputs */}
+          {fileType === 'excel_csv' ? (
+            <div className="excel-csv-file-inputs enhanced">
+              <div className="file-input-group">
+                <div className="file-input-header">
+                  <span className="input-number">1</span>
+                  <div className="input-info">
+                    <div className="input-title">Excel File</div>
+                    <div className="input-subtitle">Upload your .xlsx, .xls, or .xlsm file</div>
+                  </div>
+                </div>
+                <label className="file-input-label enhanced">
+                  <input 
+                    type="file" 
+                    accept=".xlsx,.xls,.xlsm"
+                    onChange={(e) => handleFileChange(e, 1)}
+                    className="file-input"
+                  />
+                  <div className="file-input-area">
+                    <div className="upload-icon">📊</div>
+                    <div className="upload-text">
+                      {file1 ? (
+                        <div className="file-selected">
+                          <div className="file-name">✅ {file1.name}</div>
+                          <div className="file-size">{(file1.size / 1024).toFixed(1)} KB</div>
+                        </div>
+                      ) : (
+                        <div className="file-placeholder">
+                          <div className="placeholder-main">Click to select Excel file</div>
+                          <div className="placeholder-sub">or drag and drop here</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </label>
+              </div>
+              
+              <div className="file-input-group">
+                <div className="file-input-header">
+                  <span className="input-number">2</span>
+                  <div className="input-info">
+                    <div className="input-title">CSV File</div>
+                    <div className="input-subtitle">Upload your .csv file</div>
+                  </div>
+                </div>
+                <label className="file-input-label enhanced">
+                  <input 
+                    type="file" 
+                    accept=".csv"
+                    onChange={(e) => handleFileChange(e, 2)}
+                    className="file-input"
+                  />
+                  <div className="file-input-area">
+                    <div className="upload-icon">📄</div>
+                    <div className="upload-text">
+                      {file2 ? (
+                        <div className="file-selected">
+                          <div className="file-name">✅ {file2.name}</div>
+                          <div className="file-size">{(file2.size / 1024).toFixed(1)} KB</div>
+                        </div>
+                      ) : (
+                        <div className="file-placeholder">
+                          <div className="placeholder-main">Click to select CSV file</div>
+                          <div className="placeholder-sub">or drag and drop here</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div className="standard-file-inputs">
+              <div className="file-input-group standard">
+                <label className="file-input-label standard">
+                  <input type="file" onChange={(e) => handleFileChange(e, 1)} className="file-input" />
+                  <div className="file-input-area standard">
+                    <div className="upload-icon">📎</div>
+                    <div className="upload-text">
+                      {file1 ? `✅ ${file1.name}` : 'Choose File 1'}
+                    </div>
+                  </div>
+                </label>
+              </div>
+              <div className="file-input-group standard">
+                <label className="file-input-label standard">
+                  <input type="file" onChange={(e) => handleFileChange(e, 2)} className="file-input" />
+                  <div className="file-input-area standard">
+                    <div className="upload-icon">📎</div>
+                    <div className="upload-text">
+                      {file2 ? `✅ ${file2.name}` : 'Choose File 2'}
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
+
+          <button 
+            onClick={handleLoadFiles} 
+            disabled={loading || !file1 || !file2}
+            className={`load-files-button ${loading ? 'loading' : ''} ${!file1 || !file2 ? 'disabled' : 'ready'}`}
+          >
+            {loading ? (
+              <>
+                <span className="loading-spinner"></span>
+                Processing Files...
+              </>
+            ) : (
+              <>
+                <span className="button-icon">🚀</span>
+                Load Files & Start Comparison
+              </>
+            )}
+          </button>
+        </div>
 
         {/* MODULAR: Sheet selector when feature enabled and needed */}
         {FEATURES.SHEET_SELECTION && showSheetSelector && (
