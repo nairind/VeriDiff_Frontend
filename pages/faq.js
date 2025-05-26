@@ -100,7 +100,6 @@ export default function FAQ() {
   </div>
   
   <!-- Add any other known issues you're aware of -->
-
       </section>
       
       {/* Then regular FAQ content */}
