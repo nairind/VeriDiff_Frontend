@@ -17,21 +17,35 @@ export default function About() {
             <span className="logo">VeriDiff</span>
           </Link>
           <div className="nav-links">
+            <Link href="/about">
+              <span style={{ 
+                color: '#FF6B35', 
+                cursor: 'pointer', 
+                textDecoration: 'none',
+                fontSize: '1.2rem',
+                fontWeight: '700'
+              }}>
+                📖 <strong>MUST READ</strong> - About
+              </span>
+            </Link>
             <Link href="/"><span className="nav-link">Compare Files</span></Link>
-            <Link href="/about"><span className="nav-link active">About</span></Link>
           </div>
         </div>
       </nav>
 
       <main className="main-content">
-        {/* Hero Banner */}
-        <div className="hero-banner">
-          <h1>🚀 VeriDiff - Smart File Comparison</h1>
-          <p>Compare documents with precision, confidence, and security. From invoices to contracts, 
-          VeriDiff handles your most critical file comparisons with professional-grade accuracy.</p>
-          <Link href="/">
-            <button className="cta-button">Start Comparing Files →</button>
-          </Link>
+        {/* NEW Hero Image Section */}
+        <div className="hero-image-section">
+          <img 
+            src="/veridiff-hero.png" 
+            alt="VeriDiff - Stop wasting hours on document reconciliation. Compare Excel, Google Sheets, and PDF Documents with Precision"
+            className="hero-image"
+          />
+          <div className="hero-overlay">
+            <Link href="/">
+              <button className="hero-cta-button">Start Comparing Files →</button>
+            </Link>
+          </div>
         </div>
 
         {/* Supported Formats */}
@@ -239,49 +253,50 @@ export default function About() {
           padding: 40px 20px;
         }
 
-        .hero-banner {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          padding: 60px 40px;
-          border-radius: 16px;
-          text-align: center;
+        /* NEW Hero Image Styles */
+        .hero-image-section {
+          position: relative;
           margin-bottom: 60px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
 
-        .hero-banner h1 {
-          font-size: 3em;
-          margin: 0 0 20px 0;
-          font-weight: 700;
+        .hero-image {
+          width: 100%;
+          height: auto;
+          display: block;
+          max-height: 600px;
+          object-fit: cover;
         }
 
-        .hero-banner p {
-          font-size: 1.3em;
-          opacity: 0.9;
-          margin: 0 0 30px 0;
-          line-height: 1.6;
-          max-width: 800px;
-          margin-left: auto;
-          margin-right: auto;
+        .hero-overlay {
+          position: absolute;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 10;
         }
 
-        .cta-button {
-          background: rgba(255,255,255,0.2);
-          color: white;
-          border: 2px solid rgba(255,255,255,0.3);
-          padding: 15px 30px;
+        .hero-cta-button {
+          background: rgba(255,255,255,0.95);
+          color: #667eea;
+          border: 2px solid rgba(255,255,255,0.8);
+          padding: 15px 35px;
           border-radius: 50px;
-          font-size: 1.1em;
-          font-weight: 600;
+          font-size: 1.2em;
+          font-weight: 700;
           cursor: pointer;
           transition: all 0.3s ease;
           backdrop-filter: blur(10px);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
 
-        .cta-button:hover {
-          background: rgba(255,255,255,0.3);
-          border-color: rgba(255,255,255,0.5);
-          transform: translateY(-2px);
+        .hero-cta-button:hover {
+          background: white;
+          color: #5a67d8;
+          transform: translateY(-3px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         }
 
         .section {
@@ -580,13 +595,36 @@ export default function About() {
           line-height: 1.6;
         }
 
+        .cta-button {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          padding: 15px 30px;
+          border-radius: 50px;
+          font-size: 1.1em;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .cta-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
         @media (max-width: 768px) {
-          .hero-banner h1 {
-            font-size: 2.2em;
+          .hero-image {
+            max-height: 400px;
           }
           
-          .hero-banner {
-            padding: 40px 20px;
+          .hero-overlay {
+            bottom: 20px;
+          }
+          
+          .hero-cta-button {
+            font-size: 1em;
+            padding: 12px 25px;
           }
           
           .features-grid {
