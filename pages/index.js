@@ -487,13 +487,13 @@ export default function Home() {
           <p className="section-subtitle">Select the file formats you want to compare</p>
           
           <div className="file-type-selector">
-            <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV</label>
-            <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> Text Files</label>
-            <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON</label>
-            <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML</label>
-            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF</label>
-            <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel</label>
-            <label className="featured"><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV (Most Popular)</label>
+            <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV–CSV</label>
+            <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> Text–Text</label>
+            <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON–JSON</label>
+            <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML–XML</label>
+            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF–PDF</label>
+            <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel–Excel</label>
+            <label className="featured"><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV <span className="popular-badge">(Most Popular)</span></label>
           </div>
         </div>
 
@@ -758,26 +758,47 @@ export default function Home() {
           border: 1px solid #e5e7eb;
           border-radius: 8px;
           background: #f9fafb;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 12px;
         }
 
         .file-type-selector label {
-          margin-right: 20px;
-          display: inline-flex;
+          display: flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 12px;
-          border-radius: 6px;
+          padding: 12px 16px;
+          border-radius: 8px;
           cursor: pointer;
-          transition: background-color 0.2s;
+          transition: all 0.2s ease;
+          background: white;
+          border: 2px solid #e5e7eb;
+          font-weight: 500;
+          justify-content: center;
+          text-align: center;
+          min-height: 50px;
         }
 
         .file-type-selector label:hover {
-          background: #e5e7eb;
+          border-color: #667eea;
+          background: #f0f4ff;
+          transform: translateY(-1px);
         }
 
         .file-type-selector label.featured {
-          background: #fef3c7;
-          border: 1px solid #f59e0b;
+          background: linear-gradient(135deg, #fef3c7, #fde68a);
+          border: 2px solid #f59e0b;
+          font-weight: 600;
+        }
+
+        .file-type-selector label.featured:hover {
+          background: linear-gradient(135deg, #fde68a, #fcd34d);
+          border-color: #d97706;
+        }
+
+        .popular-badge {
+          font-size: 0.8em;
+          color: #92400e;
           font-weight: 600;
         }
 
@@ -1054,6 +1075,8 @@ export default function Home() {
           /* Mobile-friendly file type selector */
           .file-type-selector {
             padding: 15px;
+            display: block; /* Override desktop grid */
+            gap: 0;
           }
 
           .file-type-selector label {
@@ -1065,15 +1088,23 @@ export default function Home() {
             border-radius: 8px;
             background: white;
             font-size: 0.95rem;
+            min-height: auto;
+            justify-content: flex-start;
+            text-align: left;
           }
 
           .file-type-selector label:hover {
             background: #f3f4f6;
+            transform: none; /* Remove desktop hover transform */
           }
 
           .file-type-selector label.featured {
             background: #fef3c7;
             border: 2px solid #f59e0b;
+          }
+
+          .file-type-selector label.featured:hover {
+            background: #fde68a;
           }
 
           /* Mobile guidance section */
