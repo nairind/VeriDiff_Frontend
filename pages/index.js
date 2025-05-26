@@ -1,507 +1,4 @@
-.container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: #f8fafc;
-          min-height: 100vh;
-        }
-
-        /* Hero Section */
-        .hero-section {
-          text-align: center;
-          padding: 60px 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 20px;
-          margin-bottom: 50px;
-          color: white;
-          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .hero-content {
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 0 20px;
-        }
-
-        .hero-title {
-          margin: 0 0 20px 0;
-          font-size: 3.5em;
-          font-weight: 700;
-          line-height: 1.1;
-        }
-
-        .gradient-text {
-          background: linear-gradient(45deg, #ffffff, #e3f2fd);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          display: block;
-        }
-
-        .hero-subtitle {
-          display: block;
-          font-size: 0.6em;
-          opacity: 0.9;
-          font-weight: 400;
-          margin-top: 10px;
-        }
-
-        .hero-description {
-          font-size: 1.3em;
-          opacity: 0.9;
-          line-height: 1.6;
-          margin: 0 0 30px 0;
-        }
-
-        .hero-badges {
-          display: flex;
-          justify-content: center;
-          gap: 20px;
-          flex-wrap: wrap;
-        }
-
-        .badge {
-          background: rgba(255,255,255,0.2);
-          padding: 8px 16px;
-          border-radius: 25px;
-          font-size: 0.9em;
-          font-weight: 500;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* Section Styling */
-        .comparison-section, .upload-section {
-          background: white;
-          border-radius: 16px;
-          padding: 40px;
-          margin-bottom: 30px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-          border: 1px solid #e5e7eb;
-        }
-
-        .section-title {
-          font-size: 2.2em;
-          color: #1f2937;
-          margin: 0 0 15px 0;
-          text-align: center;
-          font-weight: 700;
-        }
-
-        .section-subtitle {
-          font-size: 1.1em;
-          color: #6b7280;
-          text-align: center;
-          margin: 0 0 40px 0;
-          line-height: 1.5;
-        }
-
-        /* File Type Grid */
-        .file-type-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 20px;
-          margin-bottom: 40px;
-        }
-
-        .file-type-card {
-          background: white;
-          border: 2px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 25px 20px;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
-          display: block;
-        }
-
-        .file-type-card input[type="radio"] {
-          display: none;
-        }
-
-        .file-type-card:hover {
-          border-color: #667eea;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
-        }
-
-        .file-type-card.selected {
-          border-color: #667eea;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .file-type-card.featured {
-          border-color: #f59e0b;
-          background: linear-gradient(135deg, #f59e0b, #f97316);
-          color: white;
-        }
-
-        .file-type-card.featured.selected {
-          background: linear-gradient(135deg, #d97706, #ea580c);
-        }
-
-        .card-icon {
-          font-size: 2.5em;
-          margin-bottom: 15px;
-          display: block;
-        }
-
-        .card-title {
-          font-size: 1.2em;
-          font-weight: 600;
-          margin-bottom: 8px;
-        }
-
-        .card-description {
-          font-size: 0.9em;
-          opacity: 0.8;
-          line-height: 1.4;
-        }
-
-        .featured-badge {
-          position: absolute;
-          top: -8px;
-          right: -8px;
-          background: #ef4444;
-          color: white;
-          font-size: 0.7em;
-          padding: 4px 8px;
-          border-radius: 10px;
-          font-weight: 600;
-        }
-
-        /* Enhanced File Order Guidance */
-        .file-order-guidance.enhanced {
-          background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-          border: 2px solid #2196f3;
-          border-radius: 16px;
-          padding: 30px;
-          margin: 30px 0;
-        }
-
-        .guidance-header {
-          text-align: center;
-          margin-bottom: 30px;
-        }
-
-        .guidance-header h3 {
-          color: #1976d2;
-          margin: 0 0 10px 0;
-          font-size: 1.4em;
-          font-weight: 700;
-        }
-
-        .guidance-header p {
-          color: #1565c0;
-          margin: 0;
-          font-size: 1em;
-        }
-
-        .order-instruction {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 30px;
-          margin: 30px 0;
-          flex-wrap: wrap;
-        }
-
-        .file-slot {
-          background: white;
-          padding: 25px;
-          border-radius: 12px;
-          border: 2px solid #2196f3;
-          min-width: 220px;
-          box-shadow: 0 4px 15px rgba(33, 150, 243, 0.1);
-        }
-
-        .excel-slot {
-          border-color: #4caf50;
-        }
-
-        .csv-slot {
-          border-color: #ff9800;
-        }
-
-        .slot-header {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          margin-bottom: 15px;
-        }
-
-        .slot-number {
-          background: #2196f3;
-          color: white;
-          width: 35px;
-          height: 35px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          font-size: 1.2em;
-        }
-
-        .excel-slot .slot-number {
-          background: #4caf50;
-        }
-
-        .csv-slot .slot-number {
-          background: #ff9800;
-        }
-
-        .slot-info {
-          flex: 1;
-        }
-
-        .slot-title {
-          font-weight: 600;
-          color: #1976d2;
-          font-size: 1.1em;
-        }
-
-        .slot-formats {
-          font-size: 0.85em;
-          color: #666;
-          margin-top: 2px;
-        }
-
-        .slot-icon {
-          font-size: 2em;
-          text-align: center;
-        }
-
-        .arrow-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 5px;
-        }
-
-        .arrow {
-          font-size: 2em;
-          color: #2196f3;
-          font-weight: bold;
-        }
-
-        .then-text {
-          font-size: 0.8em;
-          color: #666;
-          font-weight: 500;
-        }
-
-        .guidance-note {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          background: #fff3cd;
-          border: 1px solid #ffc107;
-          border-radius: 8px;
-          padding: 15px;
-          margin-top: 25px;
-        }
-
-        .note-icon {
-          font-size: 1.2em;
-          flex-shrink: 0;
-        }
-
-        .note-text {
-          color: #856404;
-          font-size: 0.95em;
-          line-height: 1.4;
-        }
-
-        /* Enhanced File Inputs */
-        .excel-csv-file-inputs.enhanced {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 30px;
-          margin: 30px 0;
-        }
-
-        .file-input-header {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          margin-bottom: 15px;
-        }
-
-        .input-number {
-          background: #667eea;
-          color: white;
-          width: 35px;
-          height: 35px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          font-size: 1.1em;
-        }
-
-        .input-info {
-          flex: 1;
-        }
-
-        .input-title {
-          font-size: 1.2em;
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .input-subtitle {
-          font-size: 0.9em;
-          color: #6b7280;
-        }
-
-        .file-input-label.enhanced {
-          display: block;
-          cursor: pointer;
-        }
-
-        .file-input-area {
-          border: 2px dashed #d1d5db;
-          border-radius: 12px;
-          padding: 30px 20px;
-          text-align: center;
-          transition: all 0.3s ease;
-          background: #fafafa;
-        }
-
-        .file-input-area:hover {
-          border-color: #667eea;
-          background: #f0f4ff;
-        }
-
-        .upload-icon {
-          font-size: 2.5em;
-          margin-bottom: 15px;
-          display: block;
-        }
-
-        .file-selected {
-          color: #059669;
-        }
-
-        .file-name {
-          font-weight: 600;
-          font-size: 1em;
-          margin-bottom: 5px;
-        }
-
-        .file-size {
-          font-size: 0.85em;
-          opacity: 0.7;
-        }
-
-        .file-placeholder {
-          color: #6b7280;
-        }
-
-        .placeholder-main {
-          font-weight: 500;
-          font-size: 1em;
-          margin-bottom: 5px;
-        }
-
-        .placeholder-sub {
-          font-size: 0.85em;
-          opacity: 0.7;
-        }
-
-        .file-input {
-          display: none;
-        }
-
-        /* Standard File Inputs */
-        .standard-file-inputs {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-          flex-wrap: wrap;
-          margin: 30px 0;
-        }
-
-        .file-input-group.standard {
-          flex: 1;
-          min-width: 250px;
-          max-width: 400px;
-        }
-
-        .file-input-label.standard {
-          display: block;
-          cursor: pointer;
-        }
-
-        .file-input-area.standard {
-          border: 2px solid #d1d5db;
-          border-radius: 8px;
-          padding: 20px;
-          text-align: center;
-          transition: all 0.3s ease;
-          background: white;
-        }
-
-        .file-input-area.standard:hover {
-          border-color: #667eea;
-          background: #f0f4ff;
-        }
-
-        /* Load Files Button */
-        .load-files-button {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          border: none;
-          padding: 18px 40px;
-          border-radius: 50px;
-          font-size: 1.2em;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          margin: 30px auto 0;
-          min-width: 280px;
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .load-files-button:hover:not(.disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .load-files-button.disabled {
-          background: #d1d5db;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
-
-        .load-files-button.loading {
-          background: #6b7280;
-          cursor: wait;
-        }
-
-        .button-icon {
-          font-size: 1.1em;
-        }
-
-        .loading-spinner {
-          width: 20px;
-          height: 20px;
-          border: 2px solid rgba(255,255,255,0.3);
-          border-top: 2px solid white;
-          border-radius: 50%;
-          import { useState } from 'react';
+import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
@@ -1175,40 +672,6 @@ export default function Home() {
                   </div>
                 </label>
               </div>
-              
-              <div className="file-input-group">
-                <div className="file-input-header">
-                  <span className="input-number">2</span>
-                  <div className="input-info">
-                    <div className="input-title">CSV File</div>
-                    <div className="input-subtitle">Upload your .csv file</div>
-                  </div>
-                </div>
-                <label className="file-input-label enhanced">
-                  <input 
-                    type="file" 
-                    accept=".csv"
-                    onChange={(e) => handleFileChange(e, 2)}
-                    className="file-input"
-                  />
-                  <div className="file-input-area">
-                    <div className="upload-icon">📄</div>
-                    <div className="upload-text">
-                      {file2 ? (
-                        <div className="file-selected">
-                          <div className="file-name">✅ {file2.name}</div>
-                          <div className="file-size">{(file2.size / 1024).toFixed(1)} KB</div>
-                        </div>
-                      ) : (
-                        <div className="file-placeholder">
-                          <div className="placeholder-main">Click to select CSV file</div>
-                          <div className="placeholder-sub">or drag and drop here</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </label>
-              </div>
             </div>
           ) : (
             <div className="standard-file-inputs">
@@ -1240,7 +703,7 @@ export default function Home() {
           <button 
             onClick={handleLoadFiles} 
             disabled={loading || !file1 || !file2}
-            className={`load-files-button ${loading ? 'loading' : ''} ${!file1 || !file2 ? 'disabled' : 'ready'}`}
+            className={`load-files-button ${loading ? 'loading' : ''} ${!file1 || !file2 ? 'disabled' : ''}`}
           >
             {loading ? (
               <>
@@ -1432,98 +895,342 @@ export default function Home() {
           max-width: 1200px;
           margin: 0 auto;
           padding: 20px;
-          font-family: Arial, sans-serif;
-        }
-        
-        .title {
-          text-align: center;
-          color: #333;
-          margin-bottom: 10px;
-        }
-        
-        .file-type-selector {
-          margin: 20px 0;
-          padding: 15px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          background-color: #f9f9f9;
-        }
-        
-        .file-type-selector label {
-          margin-right: 15px;
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-        }
-        
-        input[type="file"] {
-          margin: 10px 0;
-          padding: 5px;
-          display: block;
-          width: 300px;
-        }
-        
-        button {
-          background-color: #007bff;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          margin: 10px 5px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-        
-        button:hover:not(:disabled) {
-          background-color: #0056b3;
-        }
-        
-        button:disabled {
-          background-color: #ccc;
-          cursor: not-allowed;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #f8fafc;
+          min-height: 100vh;
         }
 
-        /* File Order Guidance Styles */
-        .file-order-guidance {
+        /* Hero Section */
+        .hero-section {
+          text-align: center;
+          padding: 60px 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 20px;
+          margin-bottom: 50px;
+          color: white;
+          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .hero-content {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 0 20px;
+        }
+
+        .hero-title {
+          margin: 0 0 20px 0;
+          font-size: 3.5em;
+          font-weight: 700;
+          line-height: 1.1;
+        }
+
+        .gradient-text {
+          background: linear-gradient(45deg, #ffffff, #e3f2fd);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          display: block;
+        }
+
+        .hero-subtitle {
+          display: block;
+          font-size: 0.6em;
+          opacity: 0.9;
+          font-weight: 400;
+          margin-top: 10px;
+        }
+
+        .hero-description {
+          font-size: 1.3em;
+          opacity: 0.9;
+          line-height: 1.6;
+          margin: 0 0 30px 0;
+        }
+
+        .hero-badges {
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+          flex-wrap: wrap;
+        }
+
+        .badge {
+          background: rgba(255,255,255,0.2);
+          padding: 8px 16px;
+          border-radius: 25px;
+          font-size: 0.9em;
+          font-weight: 500;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Section Styling */
+        .comparison-section, .upload-section {
+          background: white;
+          border-radius: 16px;
+          padding: 40px;
+          margin-bottom: 30px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          border: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+          font-size: 2.2em;
+          color: #1f2937;
+          margin: 0 0 15px 0;
+          text-align: center;
+          font-weight: 700;
+        }
+
+        .section-subtitle {
+          font-size: 1.1em;
+          color: #6b7280;
+          text-align: center;
+          margin: 0 0 40px 0;
+          line-height: 1.5;
+        }
+
+        /* File Type Grid */
+        .file-type-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 20px;
+          margin-bottom: 40px;
+        }
+
+        .file-type-card {
+          background: white;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 25px 20px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+          display: block;
+        }
+
+        .file-type-card input[type="radio"] {
+          display: none;
+        }
+
+        .file-type-card:hover {
+          border-color: #667eea;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .file-type-card.selected {
+          border-color: #667eea;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .file-type-card.featured {
+          border-color: #f59e0b;
+          background: linear-gradient(135deg, #f59e0b, #f97316);
+          color: white;
+        }
+
+        .file-type-card.featured.selected {
+          background: linear-gradient(135deg, #d97706, #ea580c);
+        }
+
+        .card-icon {
+          font-size: 2.5em;
+          margin-bottom: 15px;
+          display: block;
+        }
+
+        .card-title {
+          font-size: 1.2em;
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+
+        .card-description {
+          font-size: 0.9em;
+          opacity: 0.8;
+          line-height: 1.4;
+        }
+
+        .featured-badge {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: #ef4444;
+          color: white;
+          font-size: 0.7em;
+          padding: 4px 8px;
+          border-radius: 10px;
+          font-weight: 600;
+        }
+
+        /* Enhanced File Order Guidance */
+        .file-order-guidance.enhanced {
           background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
           border: 2px solid #2196f3;
-          border-radius: 12px;
-          padding: 20px;
-          margin: 20px 0;
-          text-align: center;
+          border-radius: 16px;
+          padding: 30px;
+          margin: 30px 0;
         }
 
-        .file-order-guidance h3 {
+        .guidance-header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+
+        .guidance-header h3 {
           color: #1976d2;
-          margin: 0 0 15px 0;
-          font-size: 1.1em;
+          margin: 0 0 10px 0;
+          font-size: 1.4em;
+          font-weight: 700;
+        }
+
+        .guidance-header p {
+          color: #1565c0;
+          margin: 0;
+          font-size: 1em;
         }
 
         .order-instruction {
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 20px;
-          margin: 15px 0;
+          gap: 30px;
+          margin: 30px 0;
           flex-wrap: wrap;
         }
 
         .file-slot {
+          background: white;
+          padding: 25px;
+          border-radius: 12px;
+          border: 2px solid #2196f3;
+          min-width: 220px;
+          box-shadow: 0 4px 15px rgba(33, 150, 243, 0.1);
+        }
+
+        .excel-slot {
+          border-color: #4caf50;
+        }
+
+        .csv-slot {
+          border-color: #ff9800;
+        }
+
+        .slot-header {
           display: flex;
           align-items: center;
-          gap: 12px;
-          background: white;
-          padding: 15px 20px;
-          border-radius: 8px;
-          border: 2px solid #2196f3;
-          min-width: 180px;
+          gap: 15px;
+          margin-bottom: 15px;
         }
 
         .slot-number {
           background: #2196f3;
           color: white;
-          width: 30px;
-          height: 30px;
+          width: 35px;
+          height: 35px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 1.2em;
+        }
+
+        .excel-slot .slot-number {
+          background: #4caf50;
+        }
+
+        .csv-slot .slot-number {
+          background: #ff9800;
+        }
+
+        .slot-info {
+          flex: 1;
+        }
+
+        .slot-title {
+          font-weight: 600;
+          color: #1976d2;
+          font-size: 1.1em;
+        }
+
+        .slot-formats {
+          font-size: 0.85em;
+          color: #666;
+          margin-top: 2px;
+        }
+
+        .slot-icon {
+          font-size: 2em;
+          text-align: center;
+        }
+
+        .arrow-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .arrow {
+          font-size: 2em;
+          color: #2196f3;
+          font-weight: bold;
+        }
+
+        .then-text {
+          font-size: 0.8em;
+          color: #666;
+          font-weight: 500;
+        }
+
+        .guidance-note {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          background: #fff3cd;
+          border: 1px solid #ffc107;
+          border-radius: 8px;
+          padding: 15px;
+          margin-top: 25px;
+        }
+
+        .note-icon {
+          font-size: 1.2em;
+          flex-shrink: 0;
+        }
+
+        .note-text {
+          color: #856404;
+          font-size: 0.95em;
+          line-height: 1.4;
+        }
+
+        /* Enhanced File Inputs */
+        .excel-csv-file-inputs.enhanced {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 30px;
+          margin: 30px 0;
+        }
+
+        .file-input-header {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+
+        .input-number {
+          background: #667eea;
+          color: white;
+          width: 35px;
+          height: 35px;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -1532,33 +1239,182 @@ export default function Home() {
           font-size: 1.1em;
         }
 
-        .slot-description {
-          text-align: left;
-          line-height: 1.4;
+        .input-info {
+          flex: 1;
         }
 
-        .slot-description strong {
-          color: #1976d2;
-          font-size: 1em;
+        .input-title {
+          font-size: 1.2em;
+          font-weight: 600;
+          color: #1f2937;
         }
 
-        .arrow {
-          font-size: 1.5em;
-          color: #2196f3;
-          font-weight: bold;
-        }
-
-        .order-note {
-          background: #fff3cd;
-          border: 1px solid #ffc107;
-          border-radius: 6px;
-          padding: 10px;
-          margin: 15px 0 0 0;
-          color: #856404;
+        .input-subtitle {
           font-size: 0.9em;
+          color: #6b7280;
+        }
+
+        .file-input-label.enhanced {
+          display: block;
+          cursor: pointer;
+        }
+
+        .file-input-area {
+          border: 2px dashed #d1d5db;
+          border-radius: 12px;
+          padding: 30px 20px;
+          text-align: center;
+          transition: all 0.3s ease;
+          background: #fafafa;
+        }
+
+        .file-input-area:hover {
+          border-color: #667eea;
+          background: #f0f4ff;
+        }
+
+        .upload-icon {
+          font-size: 2.5em;
+          margin-bottom: 15px;
+          display: block;
+        }
+
+        .file-selected {
+          color: #059669;
+        }
+
+        .file-name {
+          font-weight: 600;
+          font-size: 1em;
+          margin-bottom: 5px;
+        }
+
+        .file-size {
+          font-size: 0.85em;
+          opacity: 0.7;
+        }
+
+        .file-placeholder {
+          color: #6b7280;
+        }
+
+        .placeholder-main {
+          font-weight: 500;
+          font-size: 1em;
+          margin-bottom: 5px;
+        }
+
+        .placeholder-sub {
+          font-size: 0.85em;
+          opacity: 0.7;
+        }
+
+        .file-input {
+          display: none;
+        }
+
+        /* Standard File Inputs */
+        .standard-file-inputs {
+          display: flex;
+          gap: 20px;
+          justify-content: center;
+          flex-wrap: wrap;
+          margin: 30px 0;
+        }
+
+        .file-input-group.standard {
+          flex: 1;
+          min-width: 250px;
+          max-width: 400px;
+        }
+
+        .file-input-label.standard {
+          display: block;
+          cursor: pointer;
+        }
+
+        .file-input-area.standard {
+          border: 2px solid #d1d5db;
+          border-radius: 8px;
+          padding: 20px;
+          text-align: center;
+          transition: all 0.3s ease;
+          background: white;
+        }
+
+        .file-input-area.standard:hover {
+          border-color: #667eea;
+          background: #f0f4ff;
+        }
+
+        /* Load Files Button */
+        .load-files-button {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          padding: 18px 40px;
+          border-radius: 50px;
+          font-size: 1.2em;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin: 30px auto 0;
+          min-width: 280px;
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .load-files-button:hover:not(.disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .load-files-button.disabled {
+          background: #d1d5db;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
+
+        .load-files-button.loading {
+          background: #6b7280;
+          cursor: wait;
+        }
+
+        .button-icon {
+          font-size: 1.1em;
+        }
+
+        .loading-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-top: 2px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
+          .hero-title {
+            font-size: 2.5em;
+          }
+          
+          .section-title {
+            font-size: 1.8em;
+          }
+          
+          .file-type-grid {
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          }
+          
           .order-instruction {
             flex-direction: column;
           }
@@ -1566,88 +1422,42 @@ export default function Home() {
           .arrow {
             transform: rotate(90deg);
           }
-          
-          .excel-csv-file-inputs {
-            flex-direction: column;
-          }
-        }
-
-        /* Excel-CSV File Input Styles */
-        .excel-csv-file-inputs {
-          display: flex;
-          gap: 20px;
-          margin: 20px 0;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-
-        .file-input-group {
-          flex: 1;
-          min-width: 280px;
-          max-width: 400px;
-        }
-
-        .file-input-label {
-          display: block;
-          background: white;
-          border: 2px solid #2196f3;
-          border-radius: 12px;
-          padding: 20px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          text-align: center;
-        }
-
-        .file-input-label:hover {
-          border-color: #1976d2;
-          box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
-          transform: translateY(-2px);
-        }
-
-        .input-number {
-          display: inline-block;
-          background: #2196f3;
-          color: white;
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          line-height: 30px;
-          font-weight: bold;
-          margin-bottom: 10px;
-        }
-
-        .input-title {
-          display: block;
-          font-size: 1.1em;
-          font-weight: bold;
-          color: #1976d2;
-          margin-bottom: 15px;
-        }
-
-        .file-input {
-          width: 100%;
-          padding: 12px;
-          border: 1px solid #ddd;
-          border-radius: 6px;
-          font-size: 0.9em;
-          margin-bottom: 10px;
-        }
-
-        .file-name-display {
-          min-height: 24px;
-          padding: 8px;
-          background: #f5f5f5;
-          border-radius: 4px;
-          font-size: 0.9em;
-          color: #666;
-          border: 1px solid #e0e0e0;
-        }
-
-        .file-input-label:hover .file-name-display {
-          background: #e3f2fd;
-          border-color: #2196f3;
         }
       `}</style>
     </div>
   );
-}
+}>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </label>
+              </div>
+              
+              <div className="file-input-group">
+                <div className="file-input-header">
+                  <span className="input-number">2</span>
+                  <div className="input-info">
+                    <div className="input-title">CSV File</div>
+                    <div className="input-subtitle">Upload your .csv file</div>
+                  </div>
+                </div>
+                <label className="file-input-label enhanced">
+                  <input 
+                    type="file" 
+                    accept=".csv"
+                    onChange={(e) => handleFileChange(e, 2)}
+                    className="file-input"
+                  />
+                  <div className="file-input-area">
+                    <div className="upload-icon">📄</div>
+                    <div className="upload-text">
+                      {file2 ? (
+                        <div className="file-selected">
+                          <div className="file-name">✅ {file2.name}</div>
+                          <div className="file-size">{(file2.size / 1024).toFixed(1)} KB</div>
+                        </div>
+                      ) : (
+                        <div className="file-placeholder">
+                          <div className="placeholder-main">Click to select CSV file</div>
+                          <div className="placeholder-sub">or drag and drop here</div
