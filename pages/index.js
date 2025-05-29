@@ -27,7 +27,6 @@ export default function Home() {
     alert('Enterprise contact form coming soon! Email us at hello@veridiff.com');
   };
 
-  // Scroll to section function
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -44,7 +43,6 @@ export default function Home() {
       </Head>
 
       <div style={{ minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', margin: 0, padding: 0, color: '#1f2937' }}>
-        {/* Header */}
         <header style={{
           background: 'white',
           borderBottom: '1px solid #e5e7eb',
@@ -175,7 +173,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Hero Section */}
         <section style={{
           background: 'linear-gradient(135deg, #eff6ff, #f3e8ff)',
           padding: '5rem 0',
@@ -288,7 +285,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Demo Section */}
         <section id="features" style={{ padding: '5rem 0', background: 'white' }}>
           <div style={{
             maxWidth: '1200px',
@@ -458,7 +454,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Pricing Section */}
         <section id="pricing" style={{ padding: '5rem 0', background: '#f9fafb' }}>
           <div style={{
             maxWidth: '1200px',
@@ -471,7 +466,6 @@ export default function Home() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', maxWidth: '80rem', margin: '0 auto' }}>
-              {/* Starter Plan */}
               <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '2px solid #e5e7eb' }}>
                 <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem', color: '#1f2937' }}>Starter</h3>
                 <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>Perfect for trying VeriDiff</p>
@@ -479,20 +473,20 @@ export default function Home() {
                   <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>Free</span>
                   <span style={{ color: '#6b7280' }}>/month</span>
                 </div>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <div style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Everything in Pro</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Unlimited file size</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Team collaboration</span>
-                  </li>
-                </ul>
+                  </div>
+                </div>
                 <button onClick={handleContactSales} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#111827', color: 'white' }}>
                   Contact Sales
                 </button>
@@ -501,7 +495,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA Section */}
         <section style={{ padding: '5rem 0', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: 'white', textAlign: 'center' }}>
           <div style={{
             maxWidth: '1200px',
@@ -528,7 +521,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Footer */}
         <footer style={{ background: '#111827', color: 'white', padding: '3rem 0' }}>
           <div style={{
             maxWidth: '1200px',
@@ -547,8 +539,8 @@ export default function Home() {
               
               <div>
                 <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Product</h4>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                  <li style={{ marginBottom: '0.5rem' }}>
+                <div style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     <button 
                       onClick={() => scrollToSection('features')}
                       style={{
@@ -566,8 +558,8 @@ export default function Home() {
                     >
                       Features
                     </button>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem' }}>
+                  </div>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     <button 
                       onClick={() => scrollToSection('pricing')}
                       style={{
@@ -585,14 +577,14 @@ export default function Home() {
                     >
                       Pricing
                     </button>
-                  </li>
-                </ul>
+                  </div>
+                </div>
               </div>
               
               <div>
                 <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                  <li style={{ marginBottom: '0.5rem' }}>
+                <div style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     <Link 
                       href="/faq"
                       style={{
@@ -608,8 +600,8 @@ export default function Home() {
                     >
                       FAQ
                     </Link>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem' }}>
+                  </div>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     <a 
                       href="mailto:sales@veridiff.com"
                       style={{
@@ -625,14 +617,14 @@ export default function Home() {
                     >
                       Contact Us
                     </a>
-                  </li>
-                </ul>
+                  </div>
+                </div>
               </div>
               
               <div>
                 <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Legal</h4>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                  <li style={{ marginBottom: '0.5rem' }}>
+                <div style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     <Link 
                       href="/privacy"
                       style={{
@@ -648,8 +640,8 @@ export default function Home() {
                     >
                       Privacy Policy
                     </Link>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem' }}>
+                  </div>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     <Link 
                       href="/terms"
                       style={{
@@ -665,8 +657,8 @@ export default function Home() {
                     >
                       Terms of Service
                     </Link>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem' }}>
+                  </div>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     <Link 
                       href="/cookies"
                       style={{
@@ -682,8 +674,8 @@ export default function Home() {
                     >
                       Cookie Policy
                     </Link>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem' }}>
+                  </div>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     <Link 
                       href="/gdpr"
                       style={{
@@ -699,8 +691,8 @@ export default function Home() {
                     >
                       GDPR Rights
                     </Link>
-                  </li>
-                </ul>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -712,26 +704,25 @@ export default function Home() {
       </div>
     </>
   );
-} listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+} marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>5 comparisons per month</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Files up to 5MB</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>All comparison formats</span>
-                  </li>
-                </ul>
+                  </div>
+                </div>
                 <button onClick={handleTryDemo} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#f3f4f6', color: '#111827' }}>
                   Start Free
                 </button>
               </div>
 
-              {/* Professional Plan */}
               <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '2px solid #2563eb', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: '-0.5rem', left: '50%', transform: 'translateX(-50%)', background: '#2563eb', color: 'white', padding: '0.25rem 1rem', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '500' }}>
                   Most Popular
@@ -742,26 +733,25 @@ export default function Home() {
                   <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>£19</span>
                   <span style={{ color: '#6b7280' }}>/month</span>
                 </div>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <div style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Unlimited comparisons</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Files up to 50MB</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Advanced tolerance settings</span>
-                  </li>
-                </ul>
+                  </div>
+                </div>
                 <button onClick={handleProTrial} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#2563eb', color: 'white' }}>
                   Start Pro Trial
                 </button>
               </div>
 
-              {/* Business Plan */}
               <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '2px solid #e5e7eb' }}>
                 <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem', color: '#1f2937' }}>Business</h3>
                 <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>For teams and organizations</p>
@@ -769,4 +759,4 @@ export default function Home() {
                   <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>£79</span>
                   <span style={{ color: '#6b7280' }}>/month</span>
                 </div>
-                <ul style={{
+                <div style={{ listStyle: 'none', margin: 0, padding: 0,
