@@ -342,7 +342,7 @@ export default function Home() {
                           <span>Client Company Name</span><span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
                         </div>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#ecfdf5', color: '#065f46', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Invoice Total Amount</span><span style={{ color: '#6b7280', fontSize: '0.75rem' }}>£ CURRENCY</span>
+                          <span>Invoice Total Amount</span><span style={{ color: '#6b7280', fontSize: '0.75rem' }}>GBP CURRENCY</span>
                         </div>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#ecfdf5', color: '#065f46', display: 'flex', justifyContent: 'space-between' }}>
                           <span>Payment Due Date</span><span style={{ color: '#6b7280', fontSize: '0.75rem' }}>DATE</span>
@@ -405,13 +405,13 @@ export default function Home() {
                       <h4 style={{ fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>💰 Budget_2024.xlsx</h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#fef3c7', color: '#92400e', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Marketing Budget</span><span style={{ fontWeight: 'bold' }}>£85,000</span>
+                          <span>Marketing Budget</span><span style={{ fontWeight: 'bold' }}>GBP 85,000</span>
                         </div>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#fef3c7', color: '#92400e', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Operations Budget</span><span style={{ fontWeight: 'bold' }}>£120,000</span>
+                          <span>Operations Budget</span><span style={{ fontWeight: 'bold' }}>GBP 120,000</span>
                         </div>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#fef3c7', color: '#92400e', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Software Licenses</span><span style={{ fontWeight: 'bold' }}>£45,000</span>
+                          <span>Software Licenses</span><span style={{ fontWeight: 'bold' }}>GBP 45,000</span>
                         </div>
                       </div>
                     </div>
@@ -420,13 +420,13 @@ export default function Home() {
                       <h4 style={{ fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>📈 Actual_Spend_Q1.csv</h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#f0f9ff', color: '#0369a1', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Marketing Actual</span><span style={{ fontWeight: 'bold' }}>£87,230</span>
+                          <span>Marketing Actual</span><span style={{ fontWeight: 'bold' }}>GBP 87,230</span>
                         </div>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#f0f9ff', color: '#0369a1', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Operations Actual</span><span style={{ fontWeight: 'bold' }}>£118,450</span>
+                          <span>Operations Actual</span><span style={{ fontWeight: 'bold' }}>GBP 118,450</span>
                         </div>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#f0f9ff', color: '#0369a1', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Software Actual</span><span style={{ fontWeight: 'bold' }}>£46,180</span>
+                          <span>Software Actual</span><span style={{ fontWeight: 'bold' }}>GBP 46,180</span>
                         </div>
                       </div>
                     </div>
@@ -475,6 +475,63 @@ export default function Home() {
               <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '2px solid #e5e7eb' }}>
                 <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem', color: '#1f2937' }}>Starter</h3>
                 <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>Perfect for trying VeriDiff</p>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>Free</span>
+                  <span style={{ color: '#6b7280' }}>/month</span>
+                </div>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                    <span>5 comparisons per month</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                    <span>Files up to 5MB</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                    <span>All comparison formats</span>
+                  </li>
+                </ul>
+                <button onClick={handleTryDemo} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#f3f4f6', color: '#111827' }}>
+                  Start Free
+                </button>
+              </div>
+
+              {/* Professional Plan */}
+              <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '2px solid #2563eb', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '-0.5rem', left: '50%', transform: 'translateX(-50%)', background: '#2563eb', color: 'white', padding: '0.25rem 1rem', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '500' }}>
+                  Most Popular
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem', color: '#1f2937' }}>Professional</h3>
+                <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>For growing businesses</p>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>£19</span>
+                  <span style={{ color: '#6b7280' }}>/month</span>
+                </div>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                    <span>Unlimited comparisons</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                    <span>Files up to 50MB</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                    <span>Advanced tolerance settings</span>
+                  </li>
+                </ul>
+                <button onClick={handleProTrial} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#2563eb', color: 'white' }}>
+                  Start Pro Trial
+                </button>
+              </div>
+
+              {/* Business Plan */}
+              <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '2px solid #e5e7eb' }}>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem', color: '#1f2937' }}>Business</h3>
+                <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>For teams and organizations</p>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>£79</span>
                   <span style={{ color: '#6b7280' }}>/month</span>
@@ -713,60 +770,3 @@ export default function Home() {
     </>
   );
 }
-                  <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>£0</span>
-                  <span style={{ color: '#6b7280' }}>/month</span>
-                </div>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>5 comparisons per month</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Files up to 5MB</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>All comparison formats</span>
-                  </li>
-                </ul>
-                <button onClick={handleTryDemo} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#f3f4f6', color: '#111827' }}>
-                  Start Free
-                </button>
-              </div>
-
-              {/* Professional Plan */}
-              <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '2px solid #2563eb', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '-0.5rem', left: '50%', transform: 'translateX(-50%)', background: '#2563eb', color: 'white', padding: '0.25rem 1rem', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '500' }}>
-                  Most Popular
-                </div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem', color: '#1f2937' }}>Professional</h3>
-                <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>For growing businesses</p>
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>£19</span>
-                  <span style={{ color: '#6b7280' }}>/month</span>
-                </div>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Unlimited comparisons</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Files up to 50MB</span>
-                  </li>
-                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Advanced tolerance settings</span>
-                  </li>
-                </ul>
-                <button onClick={handleProTrial} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#2563eb', color: 'white' }}>
-                  Start Pro Trial
-                </button>
-              </div>
-
-              {/* Business Plan */}
-              <div style={{ background: 'white', padding: '2rem', borderRadius: '1rem', border: '2px solid #e5e7eb' }}>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '0.5rem', color: '#1f2937' }}>Business</h3>
-                <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>For teams and organizations</p>
-                <div style={{ marginBottom: '1.5rem' }}>
