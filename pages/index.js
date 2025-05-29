@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 export default function Home() {
@@ -26,7 +27,15 @@ export default function Home() {
     alert('Enterprise contact form coming soon! Email us at hello@veridiff.com');
   };
 
-  // Inline styles
+  // Scroll to section function
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Inline styles (keeping all your existing styles)
   const containerStyle = {
     maxWidth: '1200px',
     margin: '0 auto',
@@ -66,7 +75,9 @@ export default function Home() {
   const navLinkStyle = {
     textDecoration: 'none',
     color: '#374151',
-    fontWeight: '500'
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'color 0.2s ease'
   };
 
   const btnStyle = {
@@ -96,6 +107,14 @@ export default function Home() {
     textAlign: 'center'
   };
 
+  const footerLinkStyle = {
+    color: '#d1d5db',
+    textDecoration: 'none',
+    fontSize: '0.875rem',
+    cursor: 'pointer',
+    transition: 'color 0.2s ease'
+  };
+
   return (
     <>
       <Head>
@@ -111,9 +130,40 @@ export default function Home() {
             <div style={navContainerStyle}>
               <div style={logoStyle}>VeriDiff</div>
               <nav style={navLinksStyle}>
-                <a href="#features" style={navLinkStyle}>Features</a>
-                <a href="#pricing" style={navLinkStyle}>Pricing</a>
-                <a href="/faq" style={navLinkStyle}>FAQ</a>
+                <button 
+                  onClick={() => scrollToSection('features')}
+                  style={{
+                    ...navLinkStyle,
+                    background: 'none',
+                    border: 'none',
+                    fontSize: 'inherit'
+                  }}
+                  onMouseEnter={(e) => e.target.style.color = '#2563eb'}
+                  onMouseLeave={(e) => e.target.style.color = '#374151'}
+                >
+                  Features
+                </button>
+                <button 
+                  onClick={() => scrollToSection('pricing')}
+                  style={{
+                    ...navLinkStyle,
+                    background: 'none',
+                    border: 'none',
+                    fontSize: 'inherit'
+                  }}
+                  onMouseEnter={(e) => e.target.style.color = '#2563eb'}
+                  onMouseLeave={(e) => e.target.style.color = '#374151'}
+                >
+                  Pricing
+                </button>
+                <Link href="/faq" style={navLinkStyle}>
+                  <span
+                    onMouseEnter={(e) => e.target.style.color = '#2563eb'}
+                    onMouseLeave={(e) => e.target.style.color = '#374151'}
+                  >
+                    FAQ
+                  </span>
+                </Link>
                 <button onClick={handleSignIn} style={btnSecondaryStyle}>Sign In</button>
                 <button onClick={handleTryDemo} style={btnPrimaryStyle}>Try Free Demo</button>
               </nav>
@@ -430,10 +480,36 @@ export default function Home() {
                 <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Product</h4>
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="#features" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.875rem' }}>Features</a>
+                    <button 
+                      onClick={() => scrollToSection('features')}
+                      style={{
+                        ...footerLinkStyle,
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        textAlign: 'left'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = 'white'}
+                      onMouseLeave={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      Features
+                    </button>
                   </li>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="#pricing" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.875rem' }}>Pricing</a>
+                    <button 
+                      onClick={() => scrollToSection('pricing')}
+                      style={{
+                        ...footerLinkStyle,
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        textAlign: 'left'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = 'white'}
+                      onMouseLeave={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      Pricing
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -442,10 +518,24 @@ export default function Home() {
                 <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/faq" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.875rem' }}>Help Center</a>
+                    <Link href="/faq" style={footerLinkStyle}>
+                      <span
+                        onMouseEnter={(e) => e.target.style.color = 'white'}
+                        onMouseLeave={(e) => e.target.style.color = '#d1d5db'}
+                      >
+                        Help Center
+                      </span>
+                    </Link>
                   </li>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="mailto:support@veridiff.com" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.875rem' }}>Contact Us</a>
+                    <a 
+                      href="mailto:support@veridiff.com" 
+                      style={footerLinkStyle}
+                      onMouseEnter={(e) => e.target.style.color = 'white'}
+                      onMouseLeave={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      Contact Us
+                    </a>
                   </li>
                 </ul>
               </div>
@@ -454,16 +544,44 @@ export default function Home() {
                 <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Legal</h4>
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/privacy" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.875rem' }}>Privacy Policy</a>
+                    <Link href="/privacy" style={footerLinkStyle}>
+                      <span
+                        onMouseEnter={(e) => e.target.style.color = 'white'}
+                        onMouseLeave={(e) => e.target.style.color = '#d1d5db'}
+                      >
+                        Privacy Policy
+                      </span>
+                    </Link>
                   </li>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/terms" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.875rem' }}>Terms of Service</a>
+                    <Link href="/terms" style={footerLinkStyle}>
+                      <span
+                        onMouseEnter={(e) => e.target.style.color = 'white'}
+                        onMouseLeave={(e) => e.target.style.color = '#d1d5db'}
+                      >
+                        Terms of Service
+                      </span>
+                    </Link>
                   </li>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/cookies" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.875rem' }}>Cookie Policy</a>
+                    <Link href="/cookies" style={footerLinkStyle}>
+                      <span
+                        onMouseEnter={(e) => e.target.style.color = 'white'}
+                        onMouseLeave={(e) => e.target.style.color = '#d1d5db'}
+                      >
+                        Cookie Policy
+                      </span>
+                    </Link>
                   </li>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/gdpr" style={{ color: '#d1d5db', textDecoration: 'none', fontSize: '0.875rem' }}>GDPR Rights</a>
+                    <Link href="/gdpr" style={footerLinkStyle}>
+                      <span
+                        onMouseEnter={(e) => e.target.style.color = 'white'}
+                        onMouseLeave={(e) => e.target.style.color = '#d1d5db'}
+                      >
+                        GDPR Rights
+                      </span>
+                    </Link>
                   </li>
                 </ul>
               </div>
