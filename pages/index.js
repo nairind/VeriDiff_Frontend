@@ -1,1363 +1,676 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
-import { parseCSVFile } from '../utils/simpleCSVComparison';
-import { parseExcelFile, compareExcelFiles, getExcelFileInfo } from '../utils/excelFileComparison';
-import { parseJSONFile, compareJSONFiles } from '../utils/jsonFileComparison';
-import { parseXMLFile, compareXMLFiles } from '../utils/xmlFileComparison';
-import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
-import { compareTextFiles_main } from '../utils/textFileComparison';
-import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
-import HeaderMapper from '../components/HeaderMapper';
-import SheetSelector from '../components/SheetSelector';
-import { mapHeaders } from '../utils/mapHeaders';
-import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
+import { useRouter } from 'next/router';
+import { Check, X, ArrowRight, Play, Shield, Clock, Zap, Users, Star, ChevronDown, FileText, BarChart3, Calculator } from 'lucide-react';
 
-// FEATURE FLAGS - easily disable problematic features
-const FEATURES = {
-  SHEET_SELECTION: true,         // ENABLED: SheetSelector is ready to test
-  AUTO_DETECTION: true,          // Auto-detection of amount fields
-  AUTO_RERUN: true,             // Auto-rerun functionality
-  ENHANCED_EXCEL_PARSING: true,  // Use enhanced Excel parsing with data extraction
-  FLEXIBLE_CROSS_FORMAT: true   // NEW: Use flexible cross-format comparison
-};
+const VeriDiffLandingPage = () => {
+  const router = useRouter();
+  const [selectedDemo, setSelectedDemo] = useState('excel-csv');
+  const [faqOpen, setFaqOpen] = useState(null);
 
-export default function Home() {
-  const [file1, setFile1] = useState(null);
-  const [file2, setFile2] = useState(null);
-  const [fileType, setFileType] = useState('csv');
-
-  // Core states (always present)
-  const [showMapper, setShowMapper] = useState(false);
-  const [headers1, setHeaders1] = useState([]);
-  const [headers2, setHeaders2] = useState([]);
-  const [suggestedMappings, setSuggestedMappings] = useState([]);
-  const [finalMappings, setFinalMappings] = useState([]);
-  const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [sampleData1, setSampleData1] = useState(null);
-  const [sampleData2, setSampleData2] = useState(null);
-
-  // Optional states (only used if features enabled)
-  const [file1Info, setFile1Info] = useState(null);
-  const [file2Info, setFile2Info] = useState(null);
-  const [selectedSheet1, setSelectedSheet1] = useState(null);
-  const [selectedSheet2, setSelectedSheet2] = useState(null);
-  const [showSheetSelector, setShowSheetSelector] = useState(false);
-
-  // INLINE FILE DETECTION (inside component)
-  const detectFileTypeInline = (file) => {
-    const fileName = file.name.toLowerCase();
-    
-    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.xlsm')) {
-      return { type: 'excel', label: 'Excel' };
-    }
-    if (fileName.endsWith('.csv')) {
-      return { type: 'csv', label: 'CSV' };
-    }
-    if (fileName.endsWith('.json')) {
-      return { type: 'json', label: 'JSON' };
-    }
-    if (fileName.endsWith('.txt')) {
-      return { type: 'text', label: 'Text' };
-    }
-    
-    return { type: 'unknown', label: 'Unknown' };
-  };
-
-  // ENFORCED FILE ORDER VALIDATION - Simple and Clear
-  const validateExcelCSVOrder = (file1, file2) => {
-    const file1Type = detectFileTypeInline(file1);
-    const file2Type = detectFileTypeInline(file2);
-    
-    console.log(`🔍 File 1 (${file1.name}) detected as: ${file1Type.type}`);
-    console.log(`🔍 File 2 (${file2.name}) detected as: ${file2Type.type}`);
-    
-    // STRICT: File 1 must be Excel, File 2 must be CSV
-    if (file1Type.type !== 'excel') {
-      return {
-        valid: false,
-        error: `❌ File Order Error!\n\nFile 1 must be an Excel file (.xlsx, .xls)\nYou uploaded: ${file1Type.label}\n\nPlease upload Excel file first, then CSV file.`
-      };
-    }
-    
-    if (file2Type.type !== 'csv') {
-      return {
-        valid: false,
-        error: `❌ File Order Error!\n\nFile 2 must be a CSV file (.csv)\nYou uploaded: ${file2Type.label}\n\nPlease upload Excel file first, then CSV file.`
-      };
-    }
-    
-    console.log("✅ Correct file order: Excel → CSV");
-    return {
-      valid: true,
-      excelFile: file1,
-      csvFile: file2
-    };
-  };
-
-  const handleFileChange = (e, fileNum) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (fileNum === 1) setFile1(file);
-    else setFile2(file);
-  };
-
-  const handleFileTypeChange = (e) => {
-    setFileType(e.target.value);
-    setFile1(null);
-    setFile2(null);
-    setResults(null);
-    setError(null);
-    setShowMapper(false);
-    
-    // Reset optional states
-    if (FEATURES.SHEET_SELECTION) {
-      setShowSheetSelector(false);
-      setFile1Info(null);
-      setFile2Info(null);
+  const demoData = {
+    'excel-csv': {
+      title: 'Excel to CSV Comparison',
+      description: 'Smart mapping handles mismatched column names automatically',
+      before: { file: 'client_data.xlsx', columns: ['Customer Name', 'Total Amount', 'Invoice Date'] },
+      after: { file: 'export_data.csv', columns: ['customer', 'amount', 'date'] },
+      result: '3 matches found with smart mapping + 2 tolerance matches'
+    },
+    'tolerance': {
+      title: 'Financial Data with Tolerances',
+      description: 'Set percentage tolerances for numerical comparisons',
+      before: { file: 'budget_v1.xlsx', values: ['$1,000.00', '$2,500.50', '$999.99'] },
+      after: { file: 'budget_v2.csv', values: ['$1000', '$2500.5', '$1000.01'] },
+      result: 'All matches within 0.1% tolerance'
     }
   };
 
-  // LEGACY EXCEL-CSV PARSING FUNCTION (fallback)
-  const legacyExcelCSVParsing = async () => {
-    console.log("Using legacy Excel-CSV parsing...");
-    let data1 = [], data2 = [];
-    
-    try {
-      if (FEATURES.SHEET_SELECTION) {
-        const excelInfo = await getExcelFileInfo(file1);
-        setFile1Info(excelInfo);
-        
-        if (excelInfo.sheets.length > 1) {
-          setShowSheetSelector(true);
-          setLoading(false);
-          return { data1: [], data2: [] };
-        }
-        
-        const result1 = await parseExcelFile(file1, excelInfo.defaultSheet);
-        data1 = safeExtractExcelData(result1);
-      } else {
-        const result1 = await parseExcelFile(file1);
-        data1 = safeExtractExcelData(result1);
-      }
-    } catch (excelError) {
-      console.warn('Enhanced Excel parsing failed, using fallback:', excelError);
-      const result1 = await parseExcelFile(file1);
-      data1 = Array.isArray(result1) ? result1 : (result1.data || []);
+  const testimonials = [
+    {
+      text: "VeriDiff caught a $50K error in client data that would have cost us our biggest account. The smart mapping feature is incredible.",
+      author: "Sarah Chen",
+      role: "Senior Consultant, Acme Consulting",
+      savings: "10 hours/week"
+    },
+    {
+      text: "Finally, a comparison tool that understands business data isn't perfect. Tolerance settings are a game-changer for financial reconciliation.",
+      author: "Michael Rodriguez",
+      role: "Finance Manager, GrowthCorp",
+      savings: "6 hours/week"
+    },
+    {
+      text: "I can compare Excel files with CSV exports directly. No more manual conversion - this saves me hours every month.",
+      author: "Jennifer Liu",
+      role: "Data Analyst, TechFlow",
+      savings: "8 hours/week"
     }
-    
-    data2 = await parseCSVFile(file2);
-    return { data1, data2 };
+  ];
+
+  const faqs = [
+    {
+      q: "How is VeriDiff different from free comparison tools?",
+      a: "Free tools require exact column matches and identical formats. VeriDiff uses smart mapping to match 'Total Amount' with 'amount', handles cross-format comparison (Excel-to-CSV), and includes tolerance settings for numerical data - perfect for real business scenarios."
+    },
+    {
+      q: "What makes VeriDiff better than Diffchecker?",
+      a: "While Diffchecker does basic file comparison, VeriDiff is built specifically for business data reconciliation. We offer smart header mapping, tolerance settings for financial data, and AI-like suggestions - features Diffchecker doesn't have."
+    },
+    {
+      q: "Can I really compare Excel files directly with CSV files?",
+      a: "Yes! This is our specialty. VeriDiff handles cross-format comparison seamlessly, including smart mapping between different column naming conventions. Most tools require you to convert files first."
+    },
+    {
+      q: "What file formats do you support?",
+      a: "Excel (.xlsx, .xls), CSV, PDF (with enhanced parsing), JSON, XML, and TXT. Our unique advantage is cross-format comparison - especially Excel-to-CSV direct comparison."
+    },
+    {
+      q: "How does the smart mapping work?",
+      a: "Our AI-like engine recognizes that 'Customer Name' and 'customer' refer to the same data, 'Total Amount' matches 'amount', etc. You can review and adjust mappings before comparison."
+    },
+    {
+      q: "What are tolerance settings?",
+      a: "For financial data, you can set percentage (±2%) or flat-rate (±$0.01) tolerances. This means $100.00 and $99.99 can be considered a match - crucial for real-world business data comparison."
+    }
+  ];
+
+  const handleTryDemo = () => {
+    router.push('/compare');
   };
 
-  // MODULAR: Safe Excel data extraction
-  const safeExtractExcelData = (result) => {
-    if (FEATURES.ENHANCED_EXCEL_PARSING && result && typeof result === 'object' && result.data) {
-      return result.data;
-    }
-    return Array.isArray(result) ? result : [];
+  const handleSignIn = () => {
+    alert('Sign in functionality coming soon!');
   };
 
-  // MODULAR: Safe data validation
-  const validateDataFormat = (data1, data2) => {
-    if (!FEATURES.ENHANCED_EXCEL_PARSING) return;
-    
-    if (!Array.isArray(data1) || data1.length === 0) {
-      throw new Error('File 1 contains no valid data rows');
-    }
-    if (!Array.isArray(data2) || data2.length === 0) {
-      throw new Error('File 2 contains no valid data rows');
-    }
-    
-    if (typeof data1[0] !== 'object' || Array.isArray(data1[0])) {
-      throw new Error('File 1 data format is not supported - expected object rows');
-    }
-    if (typeof data2[0] !== 'object' || Array.isArray(data2[0])) {
-      throw new Error('File 2 data format is not supported - expected object rows');
-    }
+  const handleWatchVideo = () => {
+    alert('Demo video coming soon! Click "Try Live Demo" above to test VeriDiff now.');
   };
 
-  // MODULAR: Sheet selection handler
-  const handleSheetSelect = (sheet1, sheet2) => {
-    if (!FEATURES.SHEET_SELECTION) return;
-    setSelectedSheet1(sheet1);
-    setSelectedSheet2(sheet2);
+  const handleProTrial = () => {
+    alert('Pro trial signup coming soon! Click "Try Free Demo" to test VeriDiff now.');
   };
 
-  const handleLoadFiles = async () => {
-    console.log("🚀 handleLoadFiles started");
-    console.log("📁 File 1:", file1?.name);
-    console.log("📁 File 2:", file2?.name);
-    console.log("🎯 File type:", fileType);
-    
-    if (!file1 || !file2) {
-      setError('Please select two files.');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    
-    try {
-      let data1 = [], data2 = [];
-      
-      if (fileType === 'excel_csv') {
-        console.log("📊 Processing Excel-CSV combination");
-        console.log("🔧 FLEXIBLE_CROSS_FORMAT feature:", FEATURES.FLEXIBLE_CROSS_FORMAT);
-        
-        if (FEATURES.FLEXIBLE_CROSS_FORMAT) {
-          console.log("✅ Using flexible cross-format system");
-          
-          try {
-            console.log("🔍 Starting file validation...");
-            
-            const validation = validateExcelCSVOrder(file1, file2);
-            console.log("🔍 Validation result:", validation);
-            
-            if (!validation.valid) {
-              throw new Error(validation.error);
-            }
-            
-            console.log("✅ File validation passed");
-            
-            console.log("📊 Parsing Excel file (File 1):", validation.excelFile.name);
-            const excelResult = await parseExcelFile(validation.excelFile, selectedSheet1);
-            data1 = safeExtractExcelData(excelResult);
-            
-            console.log("📊 Parsing CSV file (File 2):", validation.csvFile.name);
-            data2 = await parseCSVFile(validation.csvFile);
-            
-            console.log("📊 Final data1 length:", data1?.length);
-            console.log("📊 Final data2 length:", data2?.length);
-            
-          } catch (flexibleError) {
-            console.warn("❌ Flexible cross-format failed:", flexibleError);
-            console.log("🔄 Falling back to legacy approach");
-            
-            const legacyResult = await legacyExcelCSVParsing();
-            data1 = legacyResult.data1;
-            data2 = legacyResult.data2;
-          }
-        } else {
-          console.log("🔄 Using legacy approach (feature disabled)");
-          const legacyResult = await legacyExcelCSVParsing();
-          data1 = legacyResult.data1;
-          data2 = legacyResult.data2;
-        }
-        
-      } else if (fileType === 'csv') {
-        data1 = await parseCSVFile(file1);
-        data2 = await parseCSVFile(file2);
-        
-      } else if (fileType === 'excel') {
-        try {
-          if (FEATURES.SHEET_SELECTION) {
-            const [excelInfo1, excelInfo2] = await Promise.all([
-              getExcelFileInfo(file1),
-              getExcelFileInfo(file2)
-            ]);
-            setFile1Info(excelInfo1);
-            setFile2Info(excelInfo2);
-            
-            if (excelInfo1.sheets.length > 1 || excelInfo2.sheets.length > 1) {
-              setShowSheetSelector(true);
-              setLoading(false);
-              return;
-            }
-            
-            const [result1, result2] = await Promise.all([
-              parseExcelFile(file1, excelInfo1.defaultSheet),
-              parseExcelFile(file2, excelInfo2.defaultSheet)
-            ]);
-            data1 = safeExtractExcelData(result1);
-            data2 = safeExtractExcelData(result2);
-          } else {
-            const [result1, result2] = await Promise.all([
-              parseExcelFile(file1),
-              parseExcelFile(file2)
-            ]);
-            data1 = safeExtractExcelData(result1);
-            data2 = safeExtractExcelData(result2);
-          }
-        } catch (excelError) {
-          console.warn('Enhanced Excel parsing failed, using fallback:', excelError);
-          const [result1, result2] = await Promise.all([
-            parseExcelFile(file1),
-            parseExcelFile(file2)
-          ]);
-          data1 = Array.isArray(result1) ? result1 : (result1.data || []);
-          data2 = Array.isArray(result2) ? result2 : (result2.data || []);
-        }
-        
-      } else if (fileType === 'json') {
-        data1 = await parseJSONFile(file1);
-        data2 = await parseJSONFile(file2);
-      } else if (fileType === 'xml') {
-        data1 = await parseXMLFile(file1);
-        data2 = await parseXMLFile(file2);
-      } else if (fileType === 'pdf') {
-        data1 = await parsePDFFile(file1);
-        data2 = await parsePDFFile(file2);
-      } else if (fileType === 'text') {
-        const result = await compareTextFiles_main(file1, file2);
-        setResults(result);
-        setLoading(false);
-        return;
-      } else {
-        throw new Error('Unsupported file type.');
-      }
-      
-      try {
-        validateDataFormat(data1, data2);
-      } catch (validationError) {
-        console.warn('Data validation warning:', validationError.message);
-      }
-      
-      const h1 = Object.keys(data1[0] || {});
-      const h2 = Object.keys(data2[0] || {});
-      const suggested = mapHeaders(h1, h2);
-      
-      setHeaders1(h1);
-      setHeaders2(h2);
-      setSuggestedMappings(suggested);
-      setSampleData1(data1.slice(0, 10));
-      setSampleData2(data2.slice(0, 10));
-      setShowMapper(true);
-      
-    } catch (err) {
-      console.error('File loading error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleProceedWithSheets = async () => {
-    if (!FEATURES.SHEET_SELECTION) return;
-    
-    if (!selectedSheet1 || (fileType === 'excel' && !selectedSheet2)) {
-      setError('Please select sheets for both files.');
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      let data1 = [], data2 = [];
-      
-      if (fileType === 'excel_csv') {
-        const result1 = await parseExcelFile(file1, selectedSheet1);
-        data1 = safeExtractExcelData(result1);
-        data2 = await parseCSVFile(file2);
-      } else if (fileType === 'excel') {
-        const [result1, result2] = await Promise.all([
-          parseExcelFile(file1, selectedSheet1),
-          parseExcelFile(file2, selectedSheet2)
-        ]);
-        data1 = safeExtractExcelData(result1);
-        data2 = safeExtractExcelData(result2);
-      }
-      
-      const h1 = Object.keys(data1[0] || {});
-      const h2 = Object.keys(data2[0] || {});
-      const suggested = mapHeaders(h1, h2);
-      
-      setHeaders1(h1);
-      setHeaders2(h2);
-      setSuggestedMappings(suggested);
-      setSampleData1(data1.slice(0, 10));
-      setSampleData2(data2.slice(0, 10));
-      setShowMapper(true);
-      setShowSheetSelector(false);
-      
-    } catch (err) {
-      console.error('Sheet processing error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMappingConfirmed = (mappings) => {
-    setFinalMappings(mappings);
-  };
-
-  const handleDownloadExcel = () => {
-    try {
-      const timestamp = new Date().toISOString().slice(0,10);
-      const filename = `comparison_results_${timestamp}.xlsx`;
-      downloadResultsAsExcel(results, filename);
-    } catch (error) {
-      setError(error.message);
-    }
-  };
-
-  const handleDownloadCSV = () => {
-    try {
-      const timestamp = new Date().toISOString().slice(0,10);
-      const filename = `comparison_results_${timestamp}.csv`;
-      downloadResultsAsCSV(results, filename);
-    } catch (error) {
-      setError(error.message);
-    }
-  };
-
-  const handleRunComparison = async () => {
-    if (!file1 || !file2 || finalMappings.length === 0) {
-      setError('Missing files or mappings.');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    
-    try {
-      let result;
-      
-      const options = {};
-      if (FEATURES.SHEET_SELECTION) {
-        options.sheet1 = selectedSheet1;
-        options.sheet2 = selectedSheet2;
-      }
-      if (FEATURES.AUTO_DETECTION) {
-        options.autoDetectAmounts = true;
-      }
-      
-      if (fileType === 'excel_csv') {
-        result = await compareExcelCSVFiles(file1, file2, finalMappings);
-      } else if (fileType === 'excel') {
-        result = await compareExcelFiles(file1, file2, finalMappings, options);
-      } else if (fileType === 'json') {
-        result = await compareJSONFiles(file1, file2, finalMappings);
-      } else if (fileType === 'xml') {
-        result = await compareXMLFiles(file1, file2, finalMappings);
-      } else if (fileType === 'pdf') {
-        result = await comparePDFFiles(file1, file2, finalMappings);
-      } else if (fileType === 'text') {
-        result = await compareTextFiles_main(file1, file2);
-      } else if (fileType === 'csv') {
-        result = await compareExcelCSVFiles(file1, file2, finalMappings);
-      } else {
-        result = await compareExcelCSVFiles(file1, file2, finalMappings);
-      }
-      
-      setResults(result);
-    } catch (err) {
-      console.error('Comparison error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleContactSales = () => {
+    alert('Enterprise contact form coming soon! Email us at hello@veridiff.com');
   };
 
   return (
-    <div className="container">
+    <>
       <Head>
-        <title>VeriDiff - File Comparison Tool</title>
+        <title>VeriDiff - Smart File Comparison Tool</title>
+        <meta name="description" content="Compare Excel, CSV, PDF, JSON, XML files with smart mapping and tolerance settings. Built for business professionals." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      {/* Simple Navigation */}
-      <nav className="nav">
-        <div className="nav-content">
-          <span className="nav-brand">VeriDiff</span>
-          <div className="nav-links">
-            <Link href="/about">
-              <span className="nav-about">📖 MUST READ - About</span>
-            </Link>
-            <span className="nav-current">Compare Files</span>
-          </div>
-        </div>
-      </nav>
-
-      <main>
-        {/* Simple Hero */}
-        <div className="hero">
-          <h1 className="hero-title">VeriDiff</h1>
-          <h2 className="hero-subtitle">Smart File Comparison</h2>
-          <p className="hero-description">
-            Compare documents with precision and confidence. From Excel to PDFs, 
-            VeriDiff handles your most critical file comparisons with professional-grade accuracy.
-          </p>
-        </div>
-
-        {/* File Type Selection */}
-        <div className="section">
-          <h2 className="section-title">Choose Your Comparison Type</h2>
-          <p className="section-subtitle">Select the file formats you want to compare</p>
-          
-          <div className="file-type-selector">
-            <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel–Excel</label>
-            <label className="featured"><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
-            <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV–CSV</label>
-            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF–PDF <span className="version-flag">v1</span></label>
-            <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TXT–TXT</label>
-            <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON–JSON</label>
-            <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML–XML</label>
-            <label className="coming-soon"><input type="radio" name="fileType" value="pdf_ocr" disabled /> PDF–PDF <span className="ocr-flag">OCR checks coming</span></label>
-          </div>
-        </div>
-
-        {/* File Order Guidance for Excel-CSV */}
-        {fileType === 'excel_csv' && (
-          <div className="guidance">
-            <h3>📋 File Upload Instructions</h3>
-            <p>Please upload your files in the correct order:</p>
-            <div className="order-guide">
-              <span className="step">1. Excel File First (.xlsx, .xls, .xlsm)</span>
-              <span className="arrow">→</span>
-              <span className="step">2. CSV File Second (.csv)</span>
+      <div className="min-h-screen bg-white">
+        {/* Header */}
+        <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  VeriDiff
+                </span>
+              </div>
+              <nav className="hidden md:flex space-x-8">
+                <a href="#features" className="text-gray-700 hover:text-blue-600">Features</a>
+                <a href="#pricing" className="text-gray-700 hover:text-blue-600">Pricing</a>
+                <a href="#faq" className="text-gray-700 hover:text-blue-600">FAQ</a>
+              </nav>
+              <div className="flex items-center space-x-4">
+                <button 
+                  onClick={handleSignIn}
+                  className="text-gray-700 hover:text-blue-600 cursor-pointer"
+                >
+                  Sign In
+                </button>
+                <button 
+                  onClick={handleTryDemo}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer"
+                >
+                  Try Free Demo
+                </button>
+              </div>
             </div>
-            <p className="note">⚠️ File order matters for accurate data mapping and comparison results.</p>
           </div>
-        )}
+        </header>
 
-        {/* File Upload */}
-        <div className="section">
-          <h2 className="section-title">Upload Your Files</h2>
-          <p className="section-subtitle">Select files to compare</p>
+        {/* Hero Section */}
+        <section className="bg-gradient-to-br from-blue-50 to-purple-50 py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <div className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-6">
+                <Zap className="h-4 w-4 mr-2" />
+                Precision-Engineered in London for Global Professionals
+              </div>
+              
+              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+                What Excel Comparison
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent block">
+                  Should Have Been
+                </span>
+              </h1>
+              
+              <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                British-engineered smart mapping + tolerance settings for business data that's never perfect. 
+                Built in London's fintech district for consultants, analysts, and finance teams worldwide.
+              </p>
 
-          <div className="file-inputs">
-            <div className="file-input-group">
-              <label>File 1:</label>
-              <input type="file" onChange={(e) => handleFileChange(e, 1)} />
-              {file1 && <div className="file-name">✅ {file1.name}</div>}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <button 
+                  onClick={handleTryDemo}
+                  className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-blue-700 flex items-center justify-center cursor-pointer"
+                >
+                  <Play className="h-5 w-5 mr-2" />
+                  Try Live Demo - Free
+                </button>
+                <button 
+                  onClick={handleWatchVideo}
+                  className="bg-white text-gray-700 px-8 py-4 rounded-lg text-lg font-medium border border-gray-300 hover:bg-gray-50 cursor-pointer"
+                >
+                  Watch 2-Min Video
+                </button>
+              </div>
+
+              {/* Value Props */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div className="flex items-center justify-center space-x-2 text-gray-700">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Smart mapping when columns don't match</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2 text-gray-700">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Tolerance settings for financial data</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2 text-gray-700">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span>Built for business users, not developers</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Live Demo Section */}
+        <section className="py-20 bg-white" id="features">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">See the Difference in Action</h2>
+              <p className="text-xl text-gray-600">Compare real business data scenarios that other tools can't handle</p>
+            </div>
+
+            <div className="bg-gray-50 rounded-2xl p-8">
+              <div className="flex justify-center space-x-4 mb-8">
+                <button
+                  onClick={() => setSelectedDemo('excel-csv')}
+                  className={`px-6 py-3 rounded-lg font-medium ${
+                    selectedDemo === 'excel-csv'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Excel ↔ CSV
+                </button>
+                <button
+                  onClick={() => setSelectedDemo('tolerance')}
+                  className={`px-6 py-3 rounded-lg font-medium ${
+                    selectedDemo === 'tolerance'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Tolerance Matching
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white p-6 rounded-lg border">
+                  <h4 className="font-semibold text-gray-900 mb-4">File 1: {demoData[selectedDemo].before.file}</h4>
+                  <div className="space-y-2">
+                    {selectedDemo === 'excel-csv' && demoData[selectedDemo].before.columns.map((col, i) => (
+                      <div key={i} className="bg-green-50 p-2 rounded text-sm">{col}</div>
+                    ))}
+                    {selectedDemo === 'tolerance' && demoData[selectedDemo].before.values.map((val, i) => (
+                      <div key={i} className="bg-green-50 p-2 rounded text-sm">{val}</div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg border">
+                  <h4 className="font-semibold text-gray-900 mb-4">File 2: {demoData[selectedDemo].after.file}</h4>
+                  <div className="space-y-2">
+                    {selectedDemo === 'excel-csv' && demoData[selectedDemo].after.columns.map((col, i) => (
+                      <div key={i} className="bg-blue-50 p-2 rounded text-sm">{col}</div>
+                    ))}
+                    {selectedDemo === 'tolerance' && demoData[selectedDemo].after.values.map((val, i) => (
+                      <div key={i} className="bg-blue-50 p-2 rounded text-sm">{val}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-green-100 rounded-lg text-center">
+                <p className="text-green-800 font-medium">✨ VeriDiff Result: {demoData[selectedDemo].result}</p>
+                <p className="text-green-700 text-sm mt-1">{demoData[selectedDemo].description}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Comparison Section */}
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">VeriDiff vs Basic Comparison Tools</h2>
+              <p className="text-xl text-gray-600">Why business users choose VeriDiff over generic file comparison tools</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full bg-white rounded-lg shadow-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Feature</th>
+                    <th className="px-6 py-4 text-center text-sm font-medium text-gray-900">Basic Tools</th>
+                    <th className="px-6 py-4 text-center text-sm font-medium text-blue-600">VeriDiff</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 text-sm text-gray-900">Excel to CSV Direct Comparison</td>
+                    <td className="px-6 py-4 text-center"><X className="h-5 w-5 text-red-500 mx-auto" /></td>
+                    <td className="px-6 py-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                  </tr>
+                  <tr className="bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">Smart Header Mapping</td>
+                    <td className="px-6 py-4 text-center"><X className="h-5 w-5 text-red-500 mx-auto" /></td>
+                    <td className="px-6 py-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm text-gray-900">Tolerance Settings for Financial Data</td>
+                    <td className="px-6 py-4 text-center"><X className="h-5 w-5 text-red-500 mx-auto" /></td>
+                    <td className="px-6 py-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                  </tr>
+                  <tr className="bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">User-Controlled Mapping Validation</td>
+                    <td className="px-6 py-4 text-center"><X className="h-5 w-5 text-red-500 mx-auto" /></td>
+                    <td className="px-6 py-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 text-sm text-gray-900">Built for Business Users</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-500">Technical Focus</td>
+                    <td className="px-6 py-4 text-center text-sm text-blue-600">Business Focus</td>
+                  </tr>
+                  <tr className="bg-gray-50">
+                    <td className="px-6 py-4 text-sm text-gray-900">Pricing</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-900">$15+/month</td>
+                    <td className="px-6 py-4 text-center text-sm text-blue-600">£19/month</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        {/* Use Cases Section */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Built for Real Business Scenarios</h2>
+              <p className="text-xl text-gray-600">See how professionals use VeriDiff to solve data challenges</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-blue-50 p-8 rounded-2xl">
+                <Calculator className="h-12 w-12 text-blue-600 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">For Consultants</h3>
+                <p className="text-gray-600 mb-6">
+                  "Verify client data accuracy before delivering reports. Smart mapping handles mismatched column names from different client systems."
+                </p>
+                <div className="text-sm text-blue-600 font-medium">
+                  ✓ Catch errors before client delivery<br/>
+                  ✓ Handle inconsistent data formats<br/>
+                  ✓ Save 10+ hours per project
+                </div>
+              </div>
+
+              <div className="bg-green-50 p-8 rounded-2xl">
+                <BarChart3 className="h-12 w-12 text-green-600 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">For Accountants</h3>
+                <p className="text-gray-600 mb-6">
+                  "Reconcile financial data from different systems with tolerance settings. Perfect for month-end close processes."
+                </p>
+                <div className="text-sm text-green-600 font-medium">
+                  ✓ Set tolerances for rounding differences<br/>
+                  ✓ Compare different data sources<br/>
+                  ✓ Ensure audit compliance
+                </div>
+              </div>
+
+              <div className="bg-purple-50 p-8 rounded-2xl">
+                <FileText className="h-12 w-12 text-purple-600 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">For Analysts</h3>
+                <p className="text-gray-600 mb-6">
+                  "Compare datasets with slight format differences. Excel to CSV direct comparison without manual conversion."
+                </p>
+                <div className="text-sm text-purple-600 font-medium">
+                  ✓ Cross-format comparison<br/>
+                  ✓ No manual file conversion<br/>
+                  ✓ Automated data validation
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Social Proof */}
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Trusted by Forward-Thinking Business Professionals</h2>
+              <p className="text-xl text-gray-600">Join innovative teams using next-generation comparison tools for mission-critical data reconciliation</p>
+              <div className="flex justify-center items-center space-x-2 text-yellow-500 mt-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-6 w-6 fill-current" />
+                ))}
+                <span className="text-gray-600 ml-2">Built with industry feedback</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map((testimonial, index) => (
+                <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
+                  <div className="flex text-yellow-500 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-700 mb-4">"{testimonial.text}"</p>
+                  <div className="border-t pt-4">
+                    <p className="font-semibold text-gray-900">{testimonial.author}</p>
+                    <p className="text-sm text-gray-600">{testimonial.role}</p>
+                    <p className="text-sm text-blue-600 font-medium mt-1">Saves {testimonial.savings}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Trust Indicators */}
+        <section className="py-12 bg-white border-y">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+              <div className="flex flex-col items-center">
+                <Shield className="h-8 w-8 text-green-500 mb-2" />
+                <h4 className="font-semibold text-gray-900">Bank-Level Security</h4>
+                <p className="text-sm text-gray-600">256-bit encryption</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <Clock className="h-8 w-8 text-blue-500 mb-2" />
+                <h4 className="font-semibold text-gray-900">30-Day Guarantee</h4>
+                <p className="text-sm text-gray-600">Full money back</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <Users className="h-8 w-8 text-purple-500 mb-2" />
+                <h4 className="font-semibold text-gray-900">Industry Experts</h4>
+                <p className="text-sm text-gray-600">Built with professional feedback</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <Zap className="h-8 w-8 text-yellow-500 mb-2" />
+                <h4 className="font-semibold text-gray-900">Instant Setup</h4>
+                <p className="text-sm text-gray-600">Ready in 2 minutes</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
+              <p className="text-xl text-gray-600">Start free, upgrade when you need more</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {/* Free Tier */}
+              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
+                <p className="text-gray-600 mb-6">Perfect for trying VeriDiff</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-gray-900">£79</span>
+                  <span className="text-gray-600">/month</span>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Includes all local taxes<br/>
+                    Approx $99 USD / €92 EUR
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Everything in Pro</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Unlimited file size</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Team collaboration</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">API access</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Phone support</span>
+                  </li>
+                </ul>
+                <button 
+                  onClick={handleContactSales}
+                  className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 cursor-pointer"
+                >
+                  Contact Sales
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section id="faq" className="py-20 bg-white">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+              <p className="text-xl text-gray-600">Everything you need to know about VeriDiff</p>
+            </div>
+
+            <div className="space-y-4">
+              {faqs.map((faq, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => setFaqOpen(faqOpen === index ? null : index)}
+                    className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50"
+                  >
+                    <span className="font-medium text-gray-900">{faq.q}</span>
+                    <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${
+                      faqOpen === index ? 'rotate-180' : ''
+                    }`} />
+                  </button>
+                  {faqOpen === index && (
+                    <div className="px-6 pb-4">
+                      <p className="text-gray-600">{faq.a}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA Section */}
+        <section className="py-20 bg-gradient-to-br from-blue-600 to-purple-600">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">Ready to Stop Wrestling with Data?</h2>
+            <p className="text-xl text-blue-100 mb-8">
+              Join forward-thinking professionals using business-intelligent data reconciliation
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+              <button 
+                onClick={handleTryDemo}
+                className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-medium hover:bg-gray-50 flex items-center justify-center cursor-pointer"
+              >
+                <Play className="h-5 w-5 mr-2" />
+                Start Free Demo
+              </button>
+              <button 
+                onClick={handleProTrial}
+                className="bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-blue-800 border border-blue-500 cursor-pointer"
+              >
+                Start Pro Trial - £19/month
+              </button>
             </div>
             
-            <div className="file-input-group">
-              <label>File 2:</label>
-              <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-              {file2 && <div className="file-name">✅ {file2.name}</div>}
-            </div>
+            <p className="text-blue-200 text-sm">
+              ✓ No credit card required for demo • ✓ 30-day money-back guarantee • ✓ Cancel anytime
+            </p>
           </div>
+        </section>
 
-          <button 
-            onClick={handleLoadFiles} 
-            disabled={loading || !file1 || !file2}
-            className="load-button"
-          >
-            {loading ? 'Processing Files...' : '🚀 Load Files & Start Comparison'}
-          </button>
-        </div>
-
-        {/* Sheet Selector */}
-        {FEATURES.SHEET_SELECTION && showSheetSelector && (
-          <div className="section">
-            <SheetSelector
-              file1Info={file1Info}
-              file2Info={file2Info}
-              onSheetSelect={handleSheetSelect}
-              fileType={fileType}
-            />
-            <button 
-              onClick={handleProceedWithSheets} 
-              disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
-              className="load-button"
-            >
-              {loading ? 'Processing...' : 'Proceed with Selected Sheets'}
-            </button>
-          </div>
-        )}
-
-        {/* Header Mapper */}
-        {showMapper && (
-          <HeaderMapper
-            file1Headers={headers1}
-            file2Headers={headers2}
-            suggestedMappings={suggestedMappings}
-            sampleData1={sampleData1}
-            sampleData2={sampleData2}
-            onConfirm={handleMappingConfirmed}
-            showRunButton={true}
-            onRun={handleRunComparison}
-          />
-        )}
-
-        {/* Error Display */}
-        {error && (
-          <div className="error">
-            <strong>Error:</strong> {error}
-          </div>
-        )}
-
-        {/* Loading */}
-        {loading && (
-          <div className="loading">
-            <strong>Loading...</strong> Processing files...
-          </div>
-        )}
-
-        {/* Results */}
-        {results && (
-          <div className="results">
-            <h2>Comparison Results</h2>
-            <div className="summary">
-              <p><strong>Total Records:</strong> {results.total_records}</p>
-              <p><strong>Differences Found:</strong> {results.differences_found}</p>
-              <p><strong>Matches Found:</strong> {results.matches_found}</p>
+        {/* Footer */}
+        <footer className="bg-gray-900 text-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  VeriDiff
+                </span>
+                <p className="text-gray-300 mt-4 text-sm">
+                  Precision-engineered in London for global business professionals. Smart file comparison for real-world data reconciliation.
+                </p>
+              </div>
               
-              {FEATURES.AUTO_DETECTION && results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
-                <p><strong>🤖 Auto-detected Amount Fields:</strong> {results.autoDetectedFields.join(', ')}</p>
-              )}
+              <div>
+                <h4 className="font-medium mb-4">Product</h4>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li><a href="#features" className="hover:text-white">Features</a></li>
+                  <li><a href="#pricing" className="hover:text-white">Pricing</a></li>
+                  <li><a href="#" className="hover:text-white">API Docs</a></li>
+                  <li><a href="#" className="hover:text-white">Changelog</a></li>
+                </ul>
+              </div>
               
-              <div className="download-buttons">
-                <button onClick={handleDownloadExcel} className="download-btn excel">📊 Download Excel</button>
-                <button onClick={handleDownloadCSV} className="download-btn csv">📄 Download CSV</button>
+              <div>
+                <h4 className="font-medium mb-4">Support</h4>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li><a href="#faq" className="hover:text-white">FAQ</a></li>
+                  <li><a href="#" className="hover:text-white">Help Center</a></li>
+                  <li><a href="#" className="hover:text-white">Contact Us</a></li>
+                  <li><a href="#" className="hover:text-white">Status</a></li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-4">Legal</h4>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
+                  <li><a href="#" className="hover:text-white">Terms of Service</a></li>
+                  <li><a href="#" className="hover:text-white">Cookie Policy</a></li>
+                  <li><a href="#" className="hover:text-white">GDPR</a></li>
+                </ul>
               </div>
             </div>
             
-            {results.results && results.results.length > 0 && (
-              <table className="results-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    {Object.keys(results.results[0].fields).map((field, idx) => (
-                      <th key={idx}>{field}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.results.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      <td data-label="ID">{row.ID}</td>
-                      {Object.entries(row.fields).map(([key, value], idx) => (
-                        <td
-                          key={idx}
-                          data-label={key}
-                          className={`cell-${value.status}`}
-                        >
-                          <div>
-                            <strong>{value.val1} / {value.val2}</strong>
-                            {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
-                              <span className="auto-detected">🤖</span>
-                            )}
-                          </div>
-                          <small>
-                            {value.status}
-                            {value.difference && ` (Δ ${value.difference})`}
-                          </small>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
+              <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
+            </div>
           </div>
-        )}
-      </main>
-
-      <style jsx>{`
-        .container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: #f8fafc;
-          min-height: 100vh;
-        }
-
-        .nav {
-          background: white;
-          border-bottom: 1px solid #e5e7eb;
-          padding: 1rem 0;
-          margin-bottom: 20px;
-          border-radius: 8px;
-        }
-
-        .nav-content {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 20px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .nav-brand {
-          font-size: 1.5rem;
-          font-weight: bold;
-          color: #667eea;
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 2rem;
-        }
-
-        .nav-about {
-          color: #FF6B35;
-          cursor: pointer;
-          text-decoration: none;
-          font-size: 1.1rem;
-          font-weight: 700;
-        }
-
-        .nav-current {
-          color: #667eea;
-          font-weight: 500;
-        }
-
-        .hero {
-          text-align: center;
-          padding: 40px 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 16px;
-          margin-bottom: 30px;
-          color: white;
-        }
-
-        .hero-title {
-          font-size: 3rem;
-          font-weight: 700;
-          margin: 0 0 10px 0;
-        }
-
-        .hero-subtitle {
-          font-size: 1.5rem;
-          font-weight: 400;
-          margin: 0 0 20px 0;
-          opacity: 0.9;
-        }
-
-        .hero-description {
-          font-size: 1.1rem;
-          opacity: 0.9;
-          line-height: 1.6;
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        .section {
-          background: white;
-          border-radius: 12px;
-          padding: 30px;
-          margin-bottom: 20px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
-
-        .section-title {
-          font-size: 1.8rem;
-          color: #1f2937;
-          margin: 0 0 10px 0;
-          text-align: center;
-          font-weight: 600;
-        }
-
-        .section-subtitle {
-          font-size: 1rem;
-          color: #6b7280;
-          text-align: center;
-          margin: 0 0 30px 0;
-        }
-
-        .file-type-selector {
-          margin: 20px 0;
-          padding: 20px;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          background: #f9fafb;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .file-type-selector label {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 16px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          background: white;
-          border: 2px solid #e5e7eb;
-          font-weight: 500;
-          text-align: left;
-          min-height: 48px;
-          width: 100%;
-          max-width: 300px;
-        }
-
-        .file-type-selector label:hover {
-          border-color: #667eea;
-          background: #f0f4ff;
-          transform: translateX(4px);
-        }
-
-        .file-type-selector label.featured {
-          background: linear-gradient(135deg, #fef3c7, #fde68a);
-          border: 2px solid #f59e0b;
-          font-weight: 600;
-        }
-
-        .file-type-selector label.featured:hover {
-          background: linear-gradient(135deg, #fde68a, #fcd34d);
-          border-color: #d97706;
-        }
-
-        .file-type-selector label.coming-soon {
-          background: #f9fafb;
-          border: 2px dashed #9ca3af;
-          color: #6b7280;
-          cursor: not-allowed;
-          opacity: 0.7;
-        }
-
-        .file-type-selector label.coming-soon:hover {
-          background: #f9fafb;
-          border-color: #9ca3af;
-          transform: none;
-        }
-
-        .file-type-selector label.coming-soon input[type="radio"] {
-          cursor: not-allowed;
-        }
-
-        .version-flag {
-          font-size: 0.75em;
-          background: #dbeafe;
-          color: #1e40af;
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-weight: 600;
-          margin-left: 8px;
-        }
-
-        .ocr-flag {
-          font-size: 0.75em;
-          background: #fef3c7;
-          color: #92400e;
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-weight: 500;
-          margin-left: 8px;
-        }
-
-        .popular-badge {
-          font-size: 0.8em;
-          color: #92400e;
-          font-weight: 600;
-        }
-
-        /* Responsive adjustments */
-        @media (min-width: 768px) {
-          .file-type-selector {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            align-items: start;
-          }
-
-          .file-type-selector label {
-            max-width: none;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .file-type-selector {
-            grid-template-columns: repeat(2, 1fr);
-            max-width: 800px;
-            margin: 20px auto;
-          }
-        }
-
-        .guidance {
-          background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-          border: 2px solid #2196f3;
-          border-radius: 12px;
-          padding: 20px;
-          margin: 20px 0;
-        }
-
-        .guidance h3 {
-          color: #1976d2;
-          margin: 0 0 10px 0;
-          font-size: 1.2rem;
-        }
-
-        .order-guide {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          margin: 15px 0;
-          flex-wrap: wrap;
-          justify-content: center;
-        }
-
-        .step {
-          background: white;
-          padding: 10px 15px;
-          border-radius: 8px;
-          border: 2px solid #2196f3;
-          font-weight: 600;
-        }
-
-        .arrow {
-          font-size: 1.5rem;
-          color: #2196f3;
-          font-weight: bold;
-        }
-
-        .note {
-          background: #fff3cd;
-          border: 1px solid #ffc107;
-          border-radius: 6px;
-          padding: 10px;
-          margin: 10px 0 0 0;
-          color: #856404;
-          font-size: 0.9rem;
-        }
-
-        .file-inputs {
-          display: flex;
-          gap: 20px;
-          margin: 20px 0;
-          flex-wrap: wrap;
-        }
-
-        .file-input-group {
-          flex: 1;
-          min-width: 250px;
-        }
-
-        .file-input-group label {
-          display: block;
-          font-weight: 600;
-          margin-bottom: 8px;
-          color: #374151;
-        }
-
-        .file-input-group input[type="file"] {
-          width: 100%;
-          padding: 10px;
-          border: 2px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 0.9rem;
-        }
-
-        .file-name {
-          margin-top: 8px;
-          padding: 8px;
-          background: #f0f9ff;
-          border: 1px solid #0ea5e9;
-          border-radius: 4px;
-          font-size: 0.9rem;
-          color: #0c4a6e;
-        }
-
-        .load-button {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          border: none;
-          padding: 15px 30px;
-          border-radius: 25px;
-          font-size: 1.1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: block;
-          margin: 20px auto 0;
-          min-width: 250px;
-        }
-
-        .load-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .load-button:disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .error {
-          color: #dc2626;
-          margin: 10px 0;
-          padding: 15px;
-          border: 1px solid #dc2626;
-          border-radius: 6px;
-          background: #fef2f2;
-        }
-
-        .loading {
-          margin: 10px 0;
-          padding: 15px;
-          background: #f0f8ff;
-          border: 1px solid #3b82f6;
-          border-radius: 6px;
-          color: #1e40af;
-        }
-
-        .results {
-          background: white;
-          border-radius: 12px;
-          padding: 30px;
-          margin: 20px 0;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
-
-        .summary {
-          margin: 20px 0;
-          padding: 20px;
-          background: #f9fafb;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-        }
-
-        .download-buttons {
-          margin-top: 15px;
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-
-        .download-btn {
-          border: none;
-          padding: 10px 20px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-weight: 600;
-          transition: background-color 0.2s;
-        }
-
-        .download-btn.excel {
-          background: #10b981;
-          color: white;
-        }
-
-        .download-btn.excel:hover {
-          background: #059669;
-        }
-
-        .download-btn.csv {
-          background: #0ea5e9;
-          color: white;
-        }
-
-        .download-btn.csv:hover {
-          background: #0284c7;
-        }
-
-        .results-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 20px 0;
-          font-size: 0.9rem;
-        }
-
-        .results-table th {
-          border: 1px solid #d1d5db;
-          padding: 10px 8px;
-          text-align: left;
-          background: #f9fafb;
-          font-weight: 600;
-        }
-
-        .results-table td {
-          border: 1px solid #d1d5db;
-          padding: 10px 8px;
-          vertical-align: top;
-        }
-
-        .cell-difference {
-          background: #fef2f2;
-        }
-
-        .cell-acceptable {
-          background: #fefce8;
-        }
-
-        .cell-match {
-          background: #f0fdf4;
-        }
-
-        .auto-detected {
-          margin-left: 5px;
-          font-size: 0.8em;
-        }
-
-        .results-table small {
-          color: #6b7280;
-          display: block;
-          margin-top: 4px;
-        }
-
-        /* Mobile-First Responsive Design */
-        @media (max-width: 768px) {
-          .container {
-            padding: 10px;
-          }
-
-          .nav-content {
-            flex-direction: column;
-            gap: 1rem;
-            text-align: center;
-          }
-
-          .nav-links {
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          .hero {
-            padding: 30px 15px;
-            margin-bottom: 20px;
-          }
-
-          .hero-title {
-            font-size: 2.2rem;
-          }
-
-          .hero-subtitle {
-            font-size: 1.2rem;
-          }
-
-          .hero-description {
-            font-size: 1rem;
-            padding: 0 10px;
-          }
-
-          .section {
-            padding: 20px 15px;
-            margin-bottom: 15px;
-          }
-          
-          .section-title {
-            font-size: 1.4rem;
-          }
-
-          .section-subtitle {
-            font-size: 0.9rem;
-          }
-
-          /* Mobile-friendly file type selector - simplified */
-          .file-type-selector {
-            padding: 15px;
-            gap: 10px;
-          }
-
-          .file-type-selector label {
-            padding: 14px 16px;
-            font-size: 0.95rem;
-            min-height: 52px; /* Larger touch target on mobile */
-          }
-
-          .file-type-selector label:hover {
-            transform: none; /* Remove slide animation on mobile */
-          }
-
-          /* Mobile guidance section */
-          .guidance {
-            padding: 15px;
-            margin: 15px 0;
-          }
-
-          .guidance h3 {
-            font-size: 1.1rem;
-            text-align: center;
-          }
-
-          .order-guide {
-            flex-direction: column;
-            gap: 10px;
-          }
-
-          .step {
-            padding: 12px;
-            text-align: center;
-            font-size: 0.9rem;
-          }
-
-          .arrow {
-            transform: rotate(90deg);
-            font-size: 1.2rem;
-          }
-
-          /* Mobile file inputs */
-          .file-inputs {
-            flex-direction: column;
-            gap: 15px;
-          }
-
-          .file-input-group {
-            min-width: auto;
-          }
-
-          .file-input-group input[type="file"] {
-            padding: 12px;
-            font-size: 1rem;
-            min-height: 48px; /* Touch-friendly */
-          }
-
-          .file-name {
-            padding: 10px;
-            font-size: 0.9rem;
-          }
-
-          /* Mobile-friendly buttons */
-          .load-button {
-            min-width: auto;
-            width: 100%;
-            padding: 16px 20px;
-            font-size: 1rem;
-            margin: 15px 0;
-          }
-
-          /* Mobile results */
-          .results {
-            padding: 15px;
-            margin: 15px 0;
-          }
-
-          .summary {
-            padding: 15px;
-            font-size: 0.9rem;
-          }
-
-          .download-buttons {
-            flex-direction: column;
-            gap: 8px;
-          }
-
-          .download-btn {
-            width: 100%;
-            padding: 12px;
-            font-size: 0.95rem;
-          }
-
-          /* Mobile table - make it scrollable */
-          .results-table {
-            font-size: 0.8rem;
-            display: block;
-            overflow-x: auto;
-            white-space: nowrap;
-            border: 1px solid #d1d5db;
-          }
-
-          .results-table thead,
-          .results-table tbody,
-          .results-table th,
-          .results-table td,
-          .results-table tr {
-            display: block;
-          }
-
-          .results-table thead tr {
-            position: absolute;
-            top: -9999px;
-            left: -9999px;
-          }
-
-          .results-table tr {
-            border: 1px solid #d1d5db;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-          }
-
-          .results-table td {
-            border: none;
-            border-bottom: 1px solid #e5e7eb;
-            position: relative;
-            padding: 8px 8px 8px 35%;
-            white-space: normal;
-            text-align: left;
-          }
-
-          .results-table td:before {
-            content: attr(data-label) ": ";
-            position: absolute;
-            left: 6px;
-            width: 30%;
-            padding-right: 10px;
-            white-space: nowrap;
-            font-weight: 600;
-            color: #374151;
-          }
-
-          /* Error and loading mobile styles */
-          .error, .loading {
-            padding: 12px;
-            font-size: 0.9rem;
-            margin: 10px 0;
-          }
-        }
-
-        /* Small mobile devices */
-        @media (max-width: 480px) {
-          .hero-title {
-            font-size: 1.8rem;
-          }
-
-          .hero-subtitle {
-            font-size: 1rem;
-          }
-
-          .section-title {
-            font-size: 1.2rem;
-          }
-
-          .file-type-selector label {
-            padding: 10px;
-            font-size: 0.9rem;
-          }
-
-          .step {
-            padding: 10px;
-            font-size: 0.85rem;
-          }
-
-          .load-button {
-            padding: 14px 16px;
-            font-size: 0.95rem;
-          }
-        }
-
-        /* Landscape orientation adjustments */
-        @media (max-width: 768px) and (orientation: landscape) {
-          .hero {
-            padding: 20px 15px;
-          }
-
-          .hero-title {
-            font-size: 2rem;
-          }
-
-          .section {
-            padding: 20px;
-          }
-        }
-
-        /* Touch-friendly improvements for all devices */
-        @media (pointer: coarse) {
-          .file-type-selector label {
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-          }
-
-          .load-button {
-            min-height: 48px;
-          }
-
-          .download-btn {
-            min-height: 44px;
-          }
-
-          input[type="file"] {
-            min-height: 44px;
-          }
-
-          input[type="radio"] {
-            width: 18px;
-            height: 18px;
-            margin-right: 8px;
-          }
-        }
-      `}</style>
-    </div>
+        </footer>
+      </div>
+    </>
   );
-}
+};
+
+export default VeriDiffLandingPage;d text-gray-900">£0</span>
+                  <span className="text-gray-600">/month</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">5 comparisons per month</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Files up to 5MB</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">All comparison formats</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Smart mapping</span>
+                  </li>
+                </ul>
+                <button 
+                  onClick={handleTryDemo}
+                  className="w-full bg-gray-100 text-gray-900 py-3 rounded-lg font-medium hover:bg-gray-200 cursor-pointer"
+                >
+                  Start Free
+                </button>
+              </div>
+
+              {/* Pro Tier */}
+              <div className="bg-white p-8 rounded-2xl border-2 border-blue-500 relative">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                    Most Popular
+                  </span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
+                <p className="text-gray-600 mb-6">For growing businesses</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-gray-900">£19</span>
+                  <span className="text-gray-600">/month</span>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Includes all local taxes<br/>
+                    Approx $24 USD / €22 EUR
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Unlimited comparisons</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Files up to 50MB</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Advanced tolerance settings</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">12-month history</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Priority support</span>
+                  </li>
+                </ul>
+                <button 
+                  onClick={handleProTrial}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 cursor-pointer"
+                >
+                  Start Pro Trial
+                </button>
+              </div>
+
+              {/* Enterprise Tier */}
+              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Business</h3>
+                <p className="text-gray-600 mb-6">For teams and organizations</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bol
