@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Check, X, ArrowRight, Play, Shield, Clock, Zap, Users, Star, ChevronDown, FileText, BarChart3, Calculator } from 'lucide-react';
+import { Check, X, Play, Shield, Clock, Zap, Users, Star, ChevronDown, FileText, BarChart3, Calculator } from 'lucide-react';
 
-const VeriDiffLandingPage = () => {
+export default function Home() {
   const router = useRouter();
   const [selectedDemo, setSelectedDemo] = useState('excel-csv');
   const [faqOpen, setFaqOpen] = useState(null);
@@ -151,8 +151,8 @@ const VeriDiffLandingPage = () => {
               </h1>
               
               <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                British-engineered smart mapping + tolerance settings for business data that's never perfect. 
-                Built in London's fintech district for consultants, analysts, and finance teams worldwide.
+                British-engineered smart mapping + tolerance settings for business data that is never perfect. 
+                Built in London fintech district for consultants, analysts, and finance teams worldwide.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -195,7 +195,7 @@ const VeriDiffLandingPage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">See the Difference in Action</h2>
-              <p className="text-xl text-gray-600">Compare real business data scenarios that other tools can't handle</p>
+              <p className="text-xl text-gray-600">Compare real business data scenarios that other tools cannot handle</p>
             </div>
 
             <div className="bg-gray-50 rounded-2xl p-8">
@@ -290,7 +290,7 @@ const VeriDiffLandingPage = () => {
                     <td className="px-6 py-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
                   <tr className="bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">User-Controlled Mapping Validation</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-900">User-Controlled Mapping Validation</td>
                     <td className="px-6 py-4 text-center"><X className="h-5 w-5 text-red-500 mx-auto" /></td>
                     <td className="px-6 py-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
@@ -323,7 +323,7 @@ const VeriDiffLandingPage = () => {
                 <Calculator className="h-12 w-12 text-blue-600 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">For Consultants</h3>
                 <p className="text-gray-600 mb-6">
-                  "Verify client data accuracy before delivering reports. Smart mapping handles mismatched column names from different client systems."
+                  Verify client data accuracy before delivering reports. Smart mapping handles mismatched column names from different client systems.
                 </p>
                 <div className="text-sm text-blue-600 font-medium">
                   ✓ Catch errors before client delivery<br/>
@@ -336,7 +336,7 @@ const VeriDiffLandingPage = () => {
                 <BarChart3 className="h-12 w-12 text-green-600 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">For Accountants</h3>
                 <p className="text-gray-600 mb-6">
-                  "Reconcile financial data from different systems with tolerance settings. Perfect for month-end close processes."
+                  Reconcile financial data from different systems with tolerance settings. Perfect for month-end close processes.
                 </p>
                 <div className="text-sm text-green-600 font-medium">
                   ✓ Set tolerances for rounding differences<br/>
@@ -349,7 +349,7 @@ const VeriDiffLandingPage = () => {
                 <FileText className="h-12 w-12 text-purple-600 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">For Analysts</h3>
                 <p className="text-gray-600 mb-6">
-                  "Compare datasets with slight format differences. Excel to CSV direct comparison without manual conversion."
+                  Compare datasets with slight format differences. Excel to CSV direct comparison without manual conversion.
                 </p>
                 <div className="text-sm text-purple-600 font-medium">
                   ✓ Cross-format comparison<br/>
@@ -383,7 +383,7 @@ const VeriDiffLandingPage = () => {
                       <Star key={i} className="h-4 w-4 fill-current" />
                     ))}
                   </div>
-                  <p className="text-gray-700 mb-4">"{testimonial.text}"</p>
+                  <p className="text-gray-700 mb-4">{testimonial.text}</p>
                   <div className="border-t pt-4">
                     <p className="font-semibold text-gray-900">{testimonial.author}</p>
                     <p className="text-sm text-gray-600">{testimonial.role}</p>
@@ -436,6 +436,86 @@ const VeriDiffLandingPage = () => {
               <div className="bg-white p-8 rounded-2xl border-2 border-gray-200">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
                 <p className="text-gray-600 mb-6">Perfect for trying VeriDiff</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-gray-900">£0</span>
+                  <span className="text-gray-600">/month</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">5 comparisons per month</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Files up to 5MB</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">All comparison formats</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Smart mapping</span>
+                  </li>
+                </ul>
+                <button 
+                  onClick={handleTryDemo}
+                  className="w-full bg-gray-100 text-gray-900 py-3 rounded-lg font-medium hover:bg-gray-200 cursor-pointer"
+                >
+                  Start Free
+                </button>
+              </div>
+
+              {/* Pro Tier */}
+              <div className="bg-white p-8 rounded-2xl border-2 border-blue-500 relative">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                    Most Popular
+                  </span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
+                <p className="text-gray-600 mb-6">For growing businesses</p>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-gray-900">£19</span>
+                  <span className="text-gray-600">/month</span>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Includes all local taxes<br/>
+                    Approx $24 USD / €22 EUR
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Unlimited comparisons</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Files up to 50MB</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Advanced tolerance settings</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">12-month history</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="h-5 w-5 text-green-500 mr-3" />
+                    <span className="text-gray-700">Priority support</span>
+                  </li>
+                </ul>
+                <button 
+                  onClick={handleProTrial}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 cursor-pointer"
+                >
+                  Start Pro Trial
+                </button>
+              </div>
+
+              {/* Enterprise Tier */}
+              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Business</h3>
                 <div className="mb-6">
                   <span className="text-4xl font-bold text-gray-900">£79</span>
                   <span className="text-gray-600">/month</span>
@@ -590,87 +670,4 @@ const VeriDiffLandingPage = () => {
       </div>
     </>
   );
-};
-
-export default VeriDiffLandingPage;d text-gray-900">£0</span>
-                  <span className="text-gray-600">/month</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">5 comparisons per month</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Files up to 5MB</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">All comparison formats</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Smart mapping</span>
-                  </li>
-                </ul>
-                <button 
-                  onClick={handleTryDemo}
-                  className="w-full bg-gray-100 text-gray-900 py-3 rounded-lg font-medium hover:bg-gray-200 cursor-pointer"
-                >
-                  Start Free
-                </button>
-              </div>
-
-              {/* Pro Tier */}
-              <div className="bg-white p-8 rounded-2xl border-2 border-blue-500 relative">
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                    Most Popular
-                  </span>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
-                <p className="text-gray-600 mb-6">For growing businesses</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900">£19</span>
-                  <span className="text-gray-600">/month</span>
-                  <div className="text-sm text-gray-500 mt-1">
-                    Includes all local taxes<br/>
-                    Approx $24 USD / €22 EUR
-                  </div>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Unlimited comparisons</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Files up to 50MB</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Advanced tolerance settings</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">12-month history</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Priority support</span>
-                  </li>
-                </ul>
-                <button 
-                  onClick={handleProTrial}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 cursor-pointer"
-                >
-                  Start Pro Trial
-                </button>
-              </div>
-
-              {/* Enterprise Tier */}
-              <div className="bg-white p-8 rounded-2xl border-2 border-gray-200">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Business</h3>
-                <p className="text-gray-600 mb-6">For teams and organizations</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bol
+}
