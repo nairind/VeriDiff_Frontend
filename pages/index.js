@@ -102,7 +102,6 @@ export default function Home() {
       </Head>
 
       <div className="min-h-screen bg-white">
-        {/* Header */}
         <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -134,7 +133,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Hero Section */}
         <section className="bg-gradient-to-br from-blue-50 to-purple-50 py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
@@ -171,7 +169,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Value Props */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 <div className="flex items-center justify-center space-x-2 text-gray-700">
                   <Check className="h-5 w-5 text-green-500" />
@@ -190,7 +187,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Live Demo Section */}
         <section className="py-20 bg-white" id="features">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -256,7 +252,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Comparison Section */}
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -290,7 +285,7 @@ export default function Home() {
                     <td className="px-6 py-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
                   <tr className="bg-gray-50">
-                    <td className="px-6 py-4 text-center text-sm text-gray-900">User-Controlled Mapping Validation</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">User-Controlled Mapping Validation</td>
                     <td className="px-6 py-4 text-center"><X className="h-5 w-5 text-red-500 mx-auto" /></td>
                     <td className="px-6 py-4 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
@@ -310,7 +305,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Use Cases Section */}
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -361,7 +355,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Social Proof */}
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -395,7 +388,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Trust Indicators */}
         <section className="py-12 bg-white border-y">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
@@ -423,7 +415,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Pricing Section */}
         <section id="pricing" className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -432,7 +423,6 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {/* Free Tier */}
               <div className="bg-white p-8 rounded-2xl border-2 border-gray-200">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
                 <p className="text-gray-600 mb-6">Perfect for trying VeriDiff</p>
@@ -466,7 +456,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Pro Tier */}
               <div className="bg-white p-8 rounded-2xl border-2 border-blue-500 relative">
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                   <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
@@ -513,9 +502,9 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Enterprise Tier */}
               <div className="bg-white p-8 rounded-2xl border-2 border-gray-200">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Business</h3>
+                <p className="text-gray-600 mb-6">For teams and organizations</p>
                 <div className="mb-6">
                   <span className="text-4xl font-bold text-gray-900">£79</span>
                   <span className="text-gray-600">/month</span>
@@ -524,150 +513,3 @@ export default function Home() {
                     Approx $99 USD / €92 EUR
                   </div>
                 </div>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Everything in Pro</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Unlimited file size</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Team collaboration</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">API access</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Phone support</span>
-                  </li>
-                </ul>
-                <button 
-                  onClick={handleContactSales}
-                  className="w-full bg-gray-900 text-white py-3 rounded-lg font-medium hover:bg-gray-800 cursor-pointer"
-                >
-                  Contact Sales
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ Section */}
-        <section id="faq" className="py-20 bg-white">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-              <p className="text-xl text-gray-600">Everything you need to know about VeriDiff</p>
-            </div>
-
-            <div className="space-y-4">
-              {faqs.map((faq, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => setFaqOpen(faqOpen === index ? null : index)}
-                    className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50"
-                  >
-                    <span className="font-medium text-gray-900">{faq.q}</span>
-                    <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${
-                      faqOpen === index ? 'rotate-180' : ''
-                    }`} />
-                  </button>
-                  {faqOpen === index && (
-                    <div className="px-6 pb-4">
-                      <p className="text-gray-600">{faq.a}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA Section */}
-        <section className="py-20 bg-gradient-to-br from-blue-600 to-purple-600">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Ready to Stop Wrestling with Data?</h2>
-            <p className="text-xl text-blue-100 mb-8">
-              Join forward-thinking professionals using business-intelligent data reconciliation
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <button 
-                onClick={handleTryDemo}
-                className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-medium hover:bg-gray-50 flex items-center justify-center cursor-pointer"
-              >
-                <Play className="h-5 w-5 mr-2" />
-                Start Free Demo
-              </button>
-              <button 
-                onClick={handleProTrial}
-                className="bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-blue-800 border border-blue-500 cursor-pointer"
-              >
-                Start Pro Trial - £19/month
-              </button>
-            </div>
-            
-            <p className="text-blue-200 text-sm">
-              ✓ No credit card required for demo • ✓ 30-day money-back guarantee • ✓ Cancel anytime
-            </p>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="bg-gray-900 text-white py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  VeriDiff
-                </span>
-                <p className="text-gray-300 mt-4 text-sm">
-                  Precision-engineered in London for global business professionals. Smart file comparison for real-world data reconciliation.
-                </p>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-4">Product</h4>
-                <ul className="space-y-2 text-sm text-gray-300">
-                  <li><a href="#features" className="hover:text-white">Features</a></li>
-                  <li><a href="#pricing" className="hover:text-white">Pricing</a></li>
-                  <li><a href="#" className="hover:text-white">API Docs</a></li>
-                  <li><a href="#" className="hover:text-white">Changelog</a></li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-4">Support</h4>
-                <ul className="space-y-2 text-sm text-gray-300">
-                  <li><a href="#faq" className="hover:text-white">FAQ</a></li>
-                  <li><a href="#" className="hover:text-white">Help Center</a></li>
-                  <li><a href="#" className="hover:text-white">Contact Us</a></li>
-                  <li><a href="#" className="hover:text-white">Status</a></li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-4">Legal</h4>
-                <ul className="space-y-2 text-sm text-gray-300">
-                  <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-                  <li><a href="#" className="hover:text-white">Terms of Service</a></li>
-                  <li><a href="#" className="hover:text-white">Cookie Policy</a></li>
-                  <li><a href="#" className="hover:text-white">GDPR</a></li>
-                </ul>
-              </div>
-            </div>
-            
-            <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-              <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </>
-  );
-}
