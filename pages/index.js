@@ -335,235 +335,7 @@ export default function Home() {
                       <h4 style={{ fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>📊 Accounting_Export_Q4.xlsx</h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#ecfdf5', color: '#065f46', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Everything in Pro</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Unlimited file size</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Team collaboration</span>
-                  </div>
-                </div>
-                <button onClick={handleContactSales} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#111827', color: 'white' }}>
-                  Contact Sales
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section style={{ padding: '5rem 0', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: 'white', textAlign: 'center' }}>
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: '0 20px'
-          }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '1rem' }}>Ready to Stop Wrestling with Data?</h2>
-            <p style={{ fontSize: '1.25rem', color: '#bfdbfe', marginBottom: '2rem' }}>
-              Join forward-thinking professionals using business-intelligent data reconciliation
-            </p>
-            
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', marginBottom: '2rem' }}>
-              <button onClick={handleTryDemo} style={{ background: 'white', color: '#2563eb', padding: '1rem 2rem', borderRadius: '0.5rem', fontWeight: '500', border: 'none', cursor: 'pointer' }}>
-                ▶ Start Free Demo
-              </button>
-              <button onClick={handleProTrial} style={{ background: '#1e40af', color: 'white', padding: '1rem 2rem', borderRadius: '0.5rem', fontWeight: '500', border: '1px solid #3b82f6', cursor: 'pointer' }}>
-                Start Pro Trial - £19/month
-              </button>
-            </div>
-            
-            <p style={{ color: '#bfdbfe', fontSize: '0.875rem' }}>
-              ✓ No credit card required for demo • ✓ 30-day money-back guarantee • ✓ Cancel anytime
-            </p>
-          </div>
-        </section>
-
-        <footer style={{ background: '#111827', color: 'white', padding: '3rem 0' }}>
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: '0 20px'
-          }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
-              <div>
-                <span style={{ fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '1rem', display: 'block' }}>
-                  VeriDiff
-                </span>
-                <p style={{ color: '#d1d5db', fontSize: '0.875rem' }}>
-                  Precision-engineered in London for global business professionals.
-                </p>
-              </div>
-              
-              <div>
-                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Product</h4>
-                <div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <button 
-                      onClick={() => scrollToSection('features')}
-                      style={{
-                        color: '#d1d5db',
-                        textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        background: 'none',
-                        border: 'none',
-                        padding: '0.25rem 0',
-                        textAlign: 'left'
-                      }}
-                      onMouseOver={(e) => e.target.style.color = 'white'}
-                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
-                    >
-                      Features
-                    </button>
-                  </div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <button 
-                      onClick={() => scrollToSection('pricing')}
-                      style={{
-                        color: '#d1d5db',
-                        textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        background: 'none',
-                        border: 'none',
-                        padding: '0.25rem 0',
-                        textAlign: 'left'
-                      }}
-                      onMouseOver={(e) => e.target.style.color = 'white'}
-                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
-                    >
-                      Pricing
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
-                <div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <Link 
-                      href="/faq"
-                      style={{
-                        color: '#d1d5db',
-                        textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        display: 'block',
-                        padding: '0.25rem 0'
-                      }}
-                      onMouseOver={(e) => e.target.style.color = 'white'}
-                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
-                    >
-                      FAQ
-                    </Link>
-                  </div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <a 
-                      href="mailto:sales@veridiff.com"
-                      style={{
-                        color: '#d1d5db',
-                        textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        display: 'block',
-                        padding: '0.25rem 0'
-                      }}
-                      onMouseOver={(e) => e.target.style.color = 'white'}
-                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
-                    >
-                      Contact Us
-                    </a>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Legal</h4>
-                <div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <Link 
-                      href="/privacy"
-                      style={{
-                        color: '#d1d5db',
-                        textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        display: 'block',
-                        padding: '0.25rem 0'
-                      }}
-                      onMouseOver={(e) => e.target.style.color = 'white'}
-                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
-                    >
-                      Privacy Policy
-                    </Link>
-                  </div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <Link 
-                      href="/terms"
-                      style={{
-                        color: '#d1d5db',
-                        textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        display: 'block',
-                        padding: '0.25rem 0'
-                      }}
-                      onMouseOver={(e) => e.target.style.color = 'white'}
-                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
-                    >
-                      Terms of Service
-                    </Link>
-                  </div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <Link 
-                      href="/cookies"
-                      style={{
-                        color: '#d1d5db',
-                        textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        display: 'block',
-                        padding: '0.25rem 0'
-                      }}
-                      onMouseOver={(e) => e.target.style.color = 'white'}
-                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
-                    >
-                      Cookie Policy
-                    </Link>
-                  </div>
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <Link 
-                      href="/gdpr"
-                      style={{
-                        color: '#d1d5db',
-                        textDecoration: 'none',
-                        fontSize: '0.875rem',
-                        cursor: 'pointer',
-                        display: 'block',
-                        padding: '0.25rem 0'
-                      }}
-                      onMouseOver={(e) => e.target.style.color = 'white'}
-                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
-                    >
-                      GDPR Rights
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div style={{ borderTop: '1px solid #374151', paddingTop: '2rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.875rem' }}>
-              <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </>
-  );
-}>Client Company Name</span><span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                          <span>Client Company Name</span><span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
                         </div>
                         <div style={{ padding: '0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', background: '#ecfdf5', color: '#065f46', display: 'flex', justifyContent: 'space-between' }}>
                           <span>Invoice Total Amount</span><span style={{ color: '#6b7280', fontSize: '0.75rem' }}>GBP CURRENCY</span>
@@ -702,20 +474,251 @@ export default function Home() {
                   <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>Free</span>
                   <span style={{ color: '#6b7280' }}>/month</span>
                 </div>
-                <div style={{ marginBottom: '2rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                    <span>Everything in Pro</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                    <span>Unlimited file size</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                    <span>Team collaboration</span>
+                  </li>
+                </ul>
+                <button onClick={handleContactSales} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#111827', color: 'white' }}>
+                  Contact Sales
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section style={{ padding: '5rem 0', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: 'white', textAlign: 'center' }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }}>
+            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '1rem' }}>Ready to Stop Wrestling with Data?</h2>
+            <p style={{ fontSize: '1.25rem', color: '#bfdbfe', marginBottom: '2rem' }}>
+              Join forward-thinking professionals using business-intelligent data reconciliation
+            </p>
+            
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', marginBottom: '2rem' }}>
+              <button onClick={handleTryDemo} style={{ background: 'white', color: '#2563eb', padding: '1rem 2rem', borderRadius: '0.5rem', fontWeight: '500', border: 'none', cursor: 'pointer' }}>
+                ▶ Start Free Demo
+              </button>
+              <button onClick={handleProTrial} style={{ background: '#1e40af', color: 'white', padding: '1rem 2rem', borderRadius: '0.5rem', fontWeight: '500', border: '1px solid #3b82f6', cursor: 'pointer' }}>
+                Start Pro Trial - £19/month
+              </button>
+            </div>
+            
+            <p style={{ color: '#bfdbfe', fontSize: '0.875rem' }}>
+              ✓ No credit card required for demo • ✓ 30-day money-back guarantee • ✓ Cancel anytime
+            </p>
+          </div>
+        </section>
+
+        <footer style={{ background: '#111827', color: 'white', padding: '3rem 0' }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+              <div>
+                <span style={{ fontSize: '1.5rem', fontWeight: '700', background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '1rem', display: 'block' }}>
+                  VeriDiff
+                </span>
+                <p style={{ color: '#d1d5db', fontSize: '0.875rem' }}>
+                  Precision-engineered in London for global business professionals.
+                </p>
+              </div>
+              
+              <div>
+                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Product</h4>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <button 
+                      onClick={() => scrollToSection('features')}
+                      style={{
+                        color: '#d1d5db',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        background: 'none',
+                        border: 'none',
+                        padding: '0.25rem 0',
+                        textAlign: 'left'
+                      }}
+                      onMouseOver={(e) => e.target.style.color = 'white'}
+                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      Features
+                    </button>
+                  </li>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <button 
+                      onClick={() => scrollToSection('pricing')}
+                      style={{
+                        color: '#d1d5db',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        background: 'none',
+                        border: 'none',
+                        padding: '0.25rem 0',
+                        textAlign: 'left'
+                      }}
+                      onMouseOver={(e) => e.target.style.color = 'white'}
+                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      Pricing
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <Link 
+                      href="/faq"
+                      style={{
+                        color: '#d1d5db',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        display: 'block',
+                        padding: '0.25rem 0'
+                      }}
+                      onMouseOver={(e) => e.target.style.color = 'white'}
+                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      FAQ
+                    </Link>
+                  </li>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <a 
+                      href="mailto:sales@veridiff.com"
+                      style={{
+                        color: '#d1d5db',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        display: 'block',
+                        padding: '0.25rem 0'
+                      }}
+                      onMouseOver={(e) => e.target.style.color = 'white'}
+                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      Contact Us
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Legal</h4>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <Link 
+                      href="/privacy"
+                      style={{
+                        color: '#d1d5db',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        display: 'block',
+                        padding: '0.25rem 0'
+                      }}
+                      onMouseOver={(e) => e.target.style.color = 'white'}
+                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      Privacy Policy
+                    </Link>
+                  </li>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <Link 
+                      href="/terms"
+                      style={{
+                        color: '#d1d5db',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        display: 'block',
+                        padding: '0.25rem 0'
+                      }}
+                      onMouseOver={(e) => e.target.style.color = 'white'}
+                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      Terms of Service
+                    </Link>
+                  </li>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <Link 
+                      href="/cookies"
+                      style={{
+                        color: '#d1d5db',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        display: 'block',
+                        padding: '0.25rem 0'
+                      }}
+                      onMouseOver={(e) => e.target.style.color = 'white'}
+                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      Cookie Policy
+                    </Link>
+                  </li>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <Link 
+                      href="/gdpr"
+                      style={{
+                        color: '#d1d5db',
+                        textDecoration: 'none',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        display: 'block',
+                        padding: '0.25rem 0'
+                      }}
+                      onMouseOver={(e) => e.target.style.color = 'white'}
+                      onMouseOut={(e) => e.target.style.color = '#d1d5db'}
+                    >
+                      GDPR Rights
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <div style={{ borderTop: '1px solid #374151', paddingTop: '2rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.875rem' }}>
+              <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </>
+  );
+}={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>5 comparisons per month</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Files up to 5MB</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>All comparison formats</span>
-                  </div>
-                </div>
+                  </li>
+                </ul>
                 <button onClick={handleTryDemo} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#f3f4f6', color: '#111827' }}>
                   Start Free
                 </button>
@@ -731,20 +734,20 @@ export default function Home() {
                   <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>£19</span>
                   <span style={{ color: '#6b7280' }}>/month</span>
                 </div>
-                <div style={{ marginBottom: '2rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0, marginBottom: '2rem' }}>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Unlimited comparisons</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Files up to 50MB</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Advanced tolerance settings</span>
-                  </div>
-                </div>
+                  </li>
+                </ul>
                 <button onClick={handleProTrial} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', cursor: 'pointer', border: 'none', background: '#2563eb', color: 'white' }}>
                   Start Pro Trial
                 </button>
@@ -757,7 +760,4 @@ export default function Home() {
                   <span style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>£79</span>
                   <span style={{ color: '#6b7280' }}>/month</span>
                 </div>
-                <div style={{ marginBottom: '2rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span
+                <ul style
