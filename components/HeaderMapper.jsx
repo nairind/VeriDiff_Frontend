@@ -1,4 +1,4 @@
-// File: components/HeaderMapper.jsx - Enhanced Version
+// File: components/HeaderMapper.jsx - Updated to match landing page aesthetic
 
 import React, { useState, useEffect, useCallback } from 'react';
 
@@ -42,9 +42,9 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
         file1Header: m.file1Header,
         file2Header: m.file2Header || '',
         similarity: m.similarity,
-        isAmountField: isAutoDetectedAmount, // Auto-detect instead of false
+        isAmountField: isAutoDetectedAmount,
         toleranceType: 'flat',
-        toleranceValue: isAutoDetectedAmount ? '0.01' : '', // Auto-set small tolerance
+        toleranceValue: isAutoDetectedAmount ? '0.01' : '',
         isAutoDetected: isAutoDetectedAmount
       };
     });
@@ -109,92 +109,253 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
   const autoDetectedCount = mappings.filter(m => m.isAutoDetected).length;
 
   return (
-    <div className="header-mapper">
-      <div className="mapper-header">
-        <h2>Confirm Header Mappings</h2>
+    <div style={{
+      background: 'white',
+      borderRadius: '16px',
+      padding: '30px',
+      margin: '30px 0',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+      border: '1px solid #e5e7eb'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '25px',
+        flexWrap: 'wrap',
+        gap: '15px'
+      }}>
+        <h2 style={{
+          margin: '0',
+          background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          fontSize: '1.8rem',
+          fontWeight: '700'
+        }}>
+          Confirm Header Mappings
+        </h2>
+        
         {autoDetectedCount > 0 && (
-          <div className="auto-detect-info">
-            <span className="auto-detect-badge">
-              🤖 {autoDetectedCount} amount field{autoDetectedCount !== 1 ? 's' : ''} auto-detected
-            </span>
+          <div style={{
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '25px',
+            fontSize: '0.9rem',
+            fontWeight: '600',
+            boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)'
+          }}>
+            🤖 {autoDetectedCount} amount field{autoDetectedCount !== 1 ? 's' : ''} auto-detected
           </div>
         )}
       </div>
 
-      <div className="auto-rerun-toggle">
-        <label className="toggle-label">
+      <div style={{
+        background: 'linear-gradient(135deg, #eff6ff, #f3e8ff)',
+        border: '2px solid #2563eb',
+        borderRadius: '12px',
+        padding: '16px',
+        marginBottom: '25px'
+      }}>
+        <label style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          cursor: 'pointer',
+          fontSize: '1rem',
+          fontWeight: '500',
+          color: '#1f2937'
+        }}>
           <input
             type="checkbox"
             checked={autoRerunEnabled}
             onChange={(e) => setAutoRerunEnabled(e.target.checked)}
+            style={{
+              width: '18px',
+              height: '18px',
+              accentColor: '#2563eb'
+            }}
           />
-          <span className="toggle-text">
+          <span>
             ⚡ Auto-rerun comparison when settings change
-            {autoRerunEnabled && <small> (saves time!)</small>}
+            {autoRerunEnabled && <small style={{ color: '#6b7280', marginLeft: '8px' }}>(saves time!)</small>}
           </span>
         </label>
       </div>
 
       <form onSubmit={handleConfirm}>
-        <div className="table-container">
-          <table>
+        <div style={{
+          overflowX: 'auto',
+          margin: '25px 0',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            minWidth: '800px',
+            background: 'white'
+          }}>
             <thead>
-              <tr>
-                <th>File 1 Header</th>
-                <th>File 2 Header</th>
-                <th>Amount Field?</th>
-                <th>Tolerance Type</th>
-                <th>Tolerance Value</th>
-                <th>Actions</th>
+              <tr style={{
+                background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)'
+              }}>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '16px 12px',
+                  textAlign: 'left',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  fontSize: '0.95rem'
+                }}>File 1 Header</th>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '16px 12px',
+                  textAlign: 'left',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  fontSize: '0.95rem'
+                }}>File 2 Header</th>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '16px 12px',
+                  textAlign: 'left',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  fontSize: '0.95rem'
+                }}>Amount Field?</th>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '16px 12px',
+                  textAlign: 'left',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  fontSize: '0.95rem'
+                }}>Tolerance Type</th>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '16px 12px',
+                  textAlign: 'left',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  fontSize: '0.95rem'
+                }}>Tolerance Value</th>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '16px 12px',
+                  textAlign: 'left',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  fontSize: '0.95rem'
+                }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {mappings.map((m, i) => (
-                <tr key={i} className={m.isAutoDetected ? 'auto-detected-row' : ''}>
-                  <td>
+                <tr key={i} style={{
+                  background: m.isAutoDetected ? 'linear-gradient(135deg, #f0fdf4, #ecfdf5)' : 'white',
+                  borderLeft: m.isAutoDetected ? '4px solid #22c55e' : 'none'
+                }}>
+                  <td style={{
+                    border: '1px solid #e5e7eb',
+                    padding: '12px'
+                  }}>
                     <select
                       value={m.file1Header}
                       onChange={(e) => updateMapping(i, 'file1Header', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '2px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        background: 'white',
+                        color: '#374151'
+                      }}
                     >
                       <option value="">-- None --</option>
                       {file1Headers.map(h => <option key={h} value={h}>{h}</option>)}
                     </select>
                   </td>
-                  <td>
+                  <td style={{
+                    border: '1px solid #e5e7eb',
+                    padding: '12px'
+                  }}>
                     <select
                       value={m.file2Header}
                       onChange={(e) => updateMapping(i, 'file2Header', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '2px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        background: 'white',
+                        color: '#374151'
+                      }}
                     >
                       <option value="">-- None --</option>
                       {file2Headers.map(h => <option key={h} value={h}>{h}</option>)}
                     </select>
                   </td>
-                  <td>
-                    <div className="amount-field-cell">
+                  <td style={{
+                    border: '1px solid #e5e7eb',
+                    padding: '12px'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
                       <input
                         type="checkbox"
                         checked={m.isAmountField}
                         onChange={(e) => updateMapping(i, 'isAmountField', e.target.checked)}
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#2563eb'
+                        }}
                       />
                       {m.isAutoDetected && (
-                        <span className="auto-detected-indicator" title="Auto-detected as amount field">
+                        <span style={{
+                          fontSize: '0.9rem',
+                          opacity: '0.8'
+                        }} title="Auto-detected as amount field">
                           🤖
                         </span>
                       )}
                     </div>
                   </td>
-                  <td>
+                  <td style={{
+                    border: '1px solid #e5e7eb',
+                    padding: '12px'
+                  }}>
                     <select
                       value={m.toleranceType}
                       onChange={(e) => updateMapping(i, 'toleranceType', e.target.value)}
                       disabled={!m.isAmountField}
-                      className={!m.isAmountField ? 'disabled-input' : ''}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '2px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        background: m.isAmountField ? 'white' : '#f9fafb',
+                        color: m.isAmountField ? '#374151' : '#9ca3af',
+                        opacity: m.isAmountField ? 1 : 0.7
+                      }}
                     >
                       <option value="flat">Flat</option>
                       <option value="%">%</option>
                     </select>
                   </td>
-                  <td>
+                  <td style={{
+                    border: '1px solid #e5e7eb',
+                    padding: '12px'
+                  }}>
                     <input
                       type="number"
                       value={m.toleranceValue}
@@ -202,11 +363,41 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                       step="any"
                       placeholder={m.isAmountField ? "0.01" : ""}
                       disabled={!m.isAmountField}
-                      className={!m.isAmountField ? 'disabled-input' : ''}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '2px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        background: m.isAmountField ? 'white' : '#f9fafb',
+                        color: m.isAmountField ? '#374151' : '#9ca3af',
+                        opacity: m.isAmountField ? 1 : 0.7
+                      }}
                     />
                   </td>
-                  <td>
-                    <button type="button" onClick={() => removeMapping(i)}>Remove</button>
+                  <td style={{
+                    border: '1px solid #e5e7eb',
+                    padding: '12px'
+                  }}>
+                    <button 
+                      type="button" 
+                      onClick={() => removeMapping(i)}
+                      style={{
+                        background: '#ef4444',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        fontWeight: '500',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseOver={(e) => e.target.style.background = '#dc2626'}
+                      onMouseOut={(e) => e.target.style.background = '#ef4444'}
+                    >
+                      Remove
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -214,190 +405,105 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
           </table>
         </div>
 
-        <div className="button-group">
-          <button type="button" onClick={addMapping}>Add Mapping</button>
-          <button type="submit">Confirm Mapping</button>
-          <button type="button" onClick={handleManualRun} className="manual-run-btn">
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <button 
+            type="button" 
+            onClick={addMapping}
+            style={{
+              background: 'linear-gradient(135deg, #6b7280, #4b5563)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: '500',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 4px 15px rgba(107, 114, 128, 0.3)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = 'none';
+              e.target.style.boxShadow = 'none';
+            }}
+          >
+            Add Mapping
+          </button>
+          
+          <button 
+            type="submit"
+            style={{
+              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: '500',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 4px 15px rgba(37, 99, 235, 0.3)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = 'none';
+              e.target.style.boxShadow = 'none';
+            }}
+          >
+            Confirm Mapping
+          </button>
+          
+          <button 
+            type="button" 
+            onClick={handleManualRun}
+            style={{
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: '500',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = 'none';
+              e.target.style.boxShadow = 'none';
+            }}
+          >
             🔄 Run Comparison
           </button>
         </div>
 
         {autoRerunEnabled && (
-          <div className="auto-rerun-note">
-            <small>💡 Comparison will auto-run when you change settings. Disable auto-rerun above if you prefer manual control.</small>
+          <div style={{
+            marginTop: '20px',
+            padding: '12px',
+            background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+            border: '1px solid #f59e0b',
+            borderRadius: '8px',
+            color: '#92400e',
+            fontSize: '0.9rem',
+            textAlign: 'center'
+          }}>
+            💡 Comparison will auto-run when you change settings. Disable auto-rerun above if you prefer manual control.
           </div>
         )}
       </form>
-
-      <style jsx>{`
-        .header-mapper {
-          background: white;
-          border-radius: 8px;
-          padding: 20px;
-          margin: 20px 0;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .mapper-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-
-        .mapper-header h2 {
-          margin: 0;
-          color: #1f2937;
-        }
-
-        .auto-detect-info {
-          display: flex;
-          align-items: center;
-        }
-
-        .auto-detect-badge {
-          background: linear-gradient(135deg, #10b981, #059669);
-          color: white;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 0.85em;
-          font-weight: 500;
-        }
-
-        .auto-rerun-toggle {
-          background: #f0f9ff;
-          border: 1px solid #0ea5e9;
-          border-radius: 6px;
-          padding: 12px;
-          margin-bottom: 20px;
-        }
-
-        .toggle-label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          font-size: 0.95em;
-        }
-
-        .toggle-text {
-          color: #0369a1;
-          font-weight: 500;
-        }
-
-        .toggle-text small {
-          color: #0284c7;
-          font-weight: normal;
-        }
-
-        .table-container {
-          overflow-x: auto;
-          margin: 20px 0;
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          min-width: 800px;
-        }
-
-        th, td {
-          border: 1px solid #e5e7eb;
-          padding: 10px;
-          text-align: left;
-        }
-
-        th {
-          background: #f9fafb;
-          font-weight: 600;
-          color: #374151;
-        }
-
-        .auto-detected-row {
-          background: #f0fdf4;
-          border-left: 3px solid #22c55e;
-        }
-
-        .amount-field-cell {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .auto-detected-indicator {
-          font-size: 0.9em;
-          opacity: 0.8;
-        }
-
-        select, input[type="number"] {
-          width: 100%;
-          padding: 6px 8px;
-          border: 1px solid #d1d5db;
-          border-radius: 4px;
-          font-size: 0.9em;
-        }
-
-        .disabled-input {
-          background: #f9fafb;
-          color: #9ca3af;
-          opacity: 0.7;
-        }
-
-        .button-group {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-
-        button {
-          background: #3b82f6;
-          color: white;
-          border: none;
-          padding: 10px 16px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 0.9em;
-          font-weight: 500;
-        }
-
-        button:hover {
-          background: #2563eb;
-        }
-
-        .manual-run-btn {
-          background: #059669;
-        }
-
-        .manual-run-btn:hover {
-          background: #047857;
-        }
-
-        .auto-rerun-note {
-          margin-top: 15px;
-          padding: 10px;
-          background: #fffbeb;
-          border: 1px solid #fbbf24;
-          border-radius: 4px;
-          color: #92400e;
-        }
-
-        @media (max-width: 768px) {
-          .mapper-header {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          
-          .button-group {
-            flex-direction: column;
-          }
-          
-          button {
-            width: 100%;
-          }
-        }
-      `}</style>
     </div>
   );
 };
