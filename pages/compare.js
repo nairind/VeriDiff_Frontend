@@ -899,57 +899,136 @@ export default function Compare() {
           </div>
 
           {/* Enhanced Load Button */}
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center', position: 'relative' }}>
             <button 
               onClick={handleLoadFiles} 
               disabled={loading || !file1 || !file2}
               style={{
                 background: loading || !file1 || !file2 
-                  ? 'linear-gradient(135deg, #9ca3af, #6b7280)' 
-                  : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                  ? 'linear-gradient(135deg, #94a3b8, #64748b)' 
+                  : 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)',
                 color: 'white',
                 border: 'none',
-                padding: '18px 45px',
+                padding: '20px 50px',
                 borderRadius: '60px',
-                fontSize: '1.3rem',
+                fontSize: '1.4rem',
                 fontWeight: '700',
                 cursor: loading || !file1 || !file2 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.4s ease',
-                minWidth: '320px',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                minWidth: '360px',
                 boxShadow: loading || !file1 || !file2 
-                  ? '0 4px 15px rgba(0,0,0,0.1)' 
-                  : '0 8px 25px rgba(37, 99, 235, 0.4)',
+                  ? '0 4px 15px rgba(100, 116, 139, 0.2)' 
+                  : '0 10px 30px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                backgroundSize: '200% 100%',
+                animation: loading || !file1 || !file2 ? 'none' : 'gradient-shift 3s ease infinite'
               }}
               onMouseOver={(e) => {
                 if (!loading && file1 && file2) {
-                  e.target.style.transform = 'translateY(-3px) scale(1.02)';
-                  e.target.style.boxShadow = '0 12px 35px rgba(37, 99, 235, 0.5)';
-                  e.target.style.background = 'linear-gradient(135deg, #1d4ed8, #6d28d9)';
+                  e.target.style.transform = 'translateY(-4px) scale(1.03)';
+                  e.target.style.boxShadow = '0 15px 40px rgba(37, 99, 235, 0.6), 0 5px 15px rgba(124, 58, 237, 0.4)';
+                  e.target.style.background = 'linear-gradient(135deg, #1d4ed8, #6d28d9, #db2777)';
                 }
               }}
               onMouseOut={(e) => {
                 if (!loading && file1 && file2) {
                   e.target.style.transform = 'none';
-                  e.target.style.boxShadow = '0 8px 25px rgba(37, 99, 235, 0.4)';
-                  e.target.style.background = 'linear-gradient(135deg, #2563eb, #7c3aed)';
+                  e.target.style.boxShadow = '0 10px 30px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                  e.target.style.background = 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)';
                 }
               }}
             >
+              {/* Animated shimmer effect */}
+              {!loading && file1 && file2 && (
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '-100%',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                  animation: 'shimmer 2s infinite'
+                }} />
+              )}
+              
               {loading ? (
                 <>
-                  <span style={{ marginRight: '12px' }}>⏳</span>
+                  <span style={{ 
+                    marginRight: '12px',
+                    display: 'inline-block',
+                    animation: 'spin 1s linear infinite'
+                  }}>⏳</span>
                   Processing Files...
                 </>
               ) : (
                 <>
-                  <span style={{ marginRight: '12px' }}>🚀</span>
-                  Load Files & Start Comparison
+                  <span style={{ 
+                    marginRight: '12px',
+                    fontSize: '1.6rem',
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                  }}>🚀</span>
+                  <span style={{
+                    background: 'linear-gradient(45deg, #ffffff, #f0f9ff)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}>
+                    Load Files & Start Comparison
+                  </span>
                 </>
               )}
             </button>
+            
+            {/* Pulse ring effect when enabled */}
+            {!loading && file1 && file2 && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '380px',
+                height: '80px',
+                borderRadius: '60px',
+                border: '2px solid rgba(37, 99, 235, 0.3)',
+                animation: 'pulse-ring 2s infinite',
+                pointerEvents: 'none'
+              }} />
+            )}
           </div>
+          
+          <style jsx>{`
+            @keyframes gradient-shift {
+              0%, 100% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+            }
+            
+            @keyframes shimmer {
+              0% { left: -100%; }
+              100% { left: 100%; }
+            }
+            
+            @keyframes spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+            
+            @keyframes pulse-ring {
+              0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.7;
+              }
+              50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.3;
+              }
+              100% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0;
+              }
+            }
+          `}</style>
         </div>
 
         {/* Sheet Selector */}
