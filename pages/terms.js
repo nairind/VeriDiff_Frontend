@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 export default function Terms() {
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleHome = () => {
     router.push('/');
+  };
+
+  const scrollToSection = (sectionId) => {
+    router.push(`/#${sectionId}`);
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -22,6 +29,8 @@ export default function Terms() {
           .header { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 1000; }
           .nav-container { display: flex; justify-content: space-between; align-items: center; height: 64px; }
           .logo { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #2563eb, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; cursor: pointer; }
+          .desktop-nav { display: flex; gap: 2rem; align-items: center; }
+          .mobile-nav-button { display: none; background: none; border: none; cursor: pointer; padding: 8px; color: #374151; }
           .content { padding: 3rem 0; }
           .content h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: #1f2937; }
           .content h2 { font-size: 1.5rem; font-weight: 600; margin: 2rem 0 1rem 0; color: #1f2937; }
@@ -29,6 +38,11 @@ export default function Terms() {
           .content ul { margin: 1rem 0; padding-left: 2rem; }
           .content li { margin-bottom: 0.5rem; color: #4b5563; }
           .last-updated { background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin-bottom: 2rem; }
+          
+          @media (max-width: 768px) {
+            .desktop-nav { display: none !important; }
+            .mobile-nav-button { display: block !important; }
+          }
         `}</style>
       </Head>
 
@@ -37,12 +51,67 @@ export default function Terms() {
           <div className="container">
             <div className="nav-container">
               <div className="logo" onClick={handleHome}>VeriDiff</div>
-              <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-                <a href="/#features" style={{ textDecoration: 'none', color: '#374151', fontWeight: '500' }}>Features</a>
-                <a href="/#pricing" style={{ textDecoration: 'none', color: '#374151', fontWeight: '500' }}>Pricing</a>
-                <a href="/faq" style={{ textDecoration: 'none', color: '#374151', fontWeight: '500' }}>FAQ</a>
+              
+              <nav className="desktop-nav">
+                <button onClick={() => scrollToSection('features')} style={{ 
+                  background: 'none', border: 'none', color: '#374151', fontWeight: '500', 
+                  cursor: 'pointer', padding: '0.5rem', textDecoration: 'none' 
+                }}>
+                  Features
+                </button>
+                <button onClick={() => scrollToSection('pricing')} style={{ 
+                  background: 'none', border: 'none', color: '#374151', fontWeight: '500', 
+                  cursor: 'pointer', padding: '0.5rem', textDecoration: 'none' 
+                }}>
+                  Pricing
+                </button>
+                <Link href="/faq" style={{ 
+                  textDecoration: 'none', color: '#374151', fontWeight: '500', padding: '0.5rem' 
+                }}>
+                  FAQ
+                </Link>
               </nav>
+
+              <button 
+                className="mobile-nav-button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                </svg>
+              </button>
             </div>
+
+            {/* Mobile Navigation Menu */}
+            {mobileMenuOpen && (
+              <div style={{
+                borderTop: '1px solid #e5e7eb',
+                padding: '1rem 0',
+                background: 'white'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <button onClick={() => scrollToSection('features')} style={{ 
+                    background: 'none', border: 'none', color: '#374151', fontWeight: '500', 
+                    cursor: 'pointer', padding: '0.5rem', textAlign: 'left' 
+                  }}>
+                    Features
+                  </button>
+                  <button onClick={() => scrollToSection('pricing')} style={{ 
+                    background: 'none', border: 'none', color: '#374151', fontWeight: '500', 
+                    cursor: 'pointer', padding: '0.5rem', textAlign: 'left' 
+                  }}>
+                    Pricing
+                  </button>
+                  <Link href="/faq" style={{ 
+                    textDecoration: 'none', color: '#374151', fontWeight: '500', 
+                    padding: '0.5rem', textAlign: 'left' 
+                  }}>
+                    FAQ
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </header>
 
