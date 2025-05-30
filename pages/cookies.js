@@ -22,355 +22,423 @@ export default function Cookies() {
         <title>Cookie Policy - VeriDiff</title>
         <meta name="description" content="VeriDiff Cookie Policy - How we use cookies and tracking technologies." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>{`
-          * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-          }
-          
-          body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            line-height: 1.6; 
-            color: #1f2937; 
-            background: #f9fafb;
-          }
-          
-          .container { 
-            max-width: 1000px; 
-            margin: 0 auto; 
-            padding: 0 20px; 
-          }
-          
-          .header { 
-            background: white; 
-            border-bottom: 1px solid #e5e7eb; 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          }
-          
-          .nav-container { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            height: 64px; 
-          }
-          
-          .logo { 
-            font-size: 1.5rem; 
-            font-weight: 700; 
-            background: linear-gradient(135deg, #2563eb, #7c3aed); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            background-clip: text; 
-            cursor: pointer; 
-          }
-          
-          .desktop-nav { 
-            display: flex; 
-            gap: 2rem; 
-            align-items: center; 
-          }
-          
-          .mobile-nav-button { 
-            display: none; 
-            background: none; 
-            border: none; 
-            cursor: pointer; 
-            padding: 8px; 
-            color: #374151; 
-          }
-          
-          .nav-button {
-            background: none;
-            border: none;
-            color: #374151;
-            font-weight: 500;
-            cursor: pointer;
-            padding: 0.5rem;
-            text-decoration: none;
-          }
-
-          .nav-button:hover {
-            color: #2563eb;
-          }
-
-          .nav-link {
-            text-decoration: none;
-            color: #374151;
-            font-weight: 500;
-            padding: 0.5rem;
-          }
-
-          .nav-link:hover {
-            color: #2563eb;
-          }
-          
-          .main-content { 
-            background: white;
-            margin: 2rem auto;
-            padding: 3rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            max-width: 800px;
-          }
-          
-          .last-updated { 
-            background: #f3f4f6; 
-            padding: 1rem; 
-            border-radius: 0.5rem; 
-            margin-bottom: 2rem; 
-            text-align: center;
-          }
-          
-          .content h1 { 
-            font-size: 2.5rem; 
-            font-weight: 700; 
-            margin-bottom: 1.5rem; 
-            color: #1f2937; 
-            text-align: center;
-          }
-          
-          .content h2 { 
-            font-size: 1.5rem; 
-            font-weight: 600; 
-            margin: 2rem 0 1rem 0; 
-            color: #1f2937; 
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 0.5rem;
-          }
-          
-          .content p { 
-            margin-bottom: 1rem; 
-            color: #4b5563; 
-            text-align: justify;
-          }
-          
-          .content ul { 
-            margin: 1rem 0; 
-            padding-left: 2rem; 
-          }
-          
-          .content li { 
-            margin-bottom: 0.5rem; 
-            color: #4b5563; 
-          }
-
-          .content strong {
-            color: #1f2937;
-          }
-
-          .cookie-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 1rem 0; 
-            background: white;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          }
-          
-          .cookie-table th, .cookie-table td { 
-            border: 1px solid #e5e7eb; 
-            padding: 0.75rem; 
-            text-align: left; 
-          }
-          
-          .cookie-table th { 
-            background: #f8fafc; 
-            font-weight: 600; 
-            color: #1f2937;
-          }
-          
-          @media (max-width: 768px) {
-            .desktop-nav { 
-              display: none !important; 
-            }
-            .mobile-nav-button { 
-              display: block !important; 
-            }
-            .main-content {
-              margin: 1rem;
-              padding: 2rem 1.5rem;
-            }
-            .content h1 {
-              font-size: 2rem;
-            }
-            .content h2 {
-              font-size: 1.25rem;
-            }
-            .cookie-table th, .cookie-table td {
-              padding: 0.5rem;
-              font-size: 0.875rem;
-            }
-          }
-        `}</style>
       </Head>
 
-      <div style={{ minHeight: '100vh' }}>
-        <header className="header">
-          <div className="container">
-            <div className="nav-container">
-              <div className="logo" onClick={handleHome}>VeriDiff</div>
+      <div style={{ 
+        minHeight: '100vh', 
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        margin: 0,
+        padding: 0,
+        background: '#f9fafb'
+      }}>
+        {/* Header */}
+        <header style={{
+          background: 'white',
+          borderBottom: '1px solid #e5e7eb',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{
+            maxWidth: '1000px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              height: '64px'
+            }}>
+              <div 
+                onClick={handleHome}
+                style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  cursor: 'pointer'
+                }}
+              >
+                VeriDiff
+              </div>
               
-              <nav className="desktop-nav">
-                <button onClick={() => scrollToSection('features')} className="nav-button">
+              <nav style={{
+                display: 'flex',
+                gap: '2rem',
+                alignItems: 'center'
+              }}>
+                <button 
+                  onClick={() => scrollToSection('features')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#374151',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                    textDecoration: 'none'
+                  }}
+                >
                   Features
                 </button>
-                <button onClick={() => scrollToSection('pricing')} className="nav-button">
+                <button 
+                  onClick={() => scrollToSection('pricing')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#374151',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                    textDecoration: 'none'
+                  }}
+                >
                   Pricing
                 </button>
-                <Link href="/faq" className="nav-link">
+                <Link 
+                  href="/faq"
+                  style={{
+                    textDecoration: 'none',
+                    color: '#374151',
+                    fontWeight: '500',
+                    padding: '0.5rem'
+                  }}
+                >
                   FAQ
                 </Link>
               </nav>
-
-              <button 
-                className="mobile-nav-button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                </svg>
-              </button>
             </div>
-
-            {/* Mobile Navigation Menu */}
-            {mobileMenuOpen && (
-              <div style={{
-                borderTop: '1px solid #e5e7eb',
-                padding: '1rem 0',
-                background: 'white'
-              }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <button onClick={() => scrollToSection('features')} className="nav-button" style={{ textAlign: 'left' }}>
-                    Features
-                  </button>
-                  <button onClick={() => scrollToSection('pricing')} className="nav-button" style={{ textAlign: 'left' }}>
-                    Pricing
-                  </button>
-                  <Link href="/faq" className="nav-link" style={{ textAlign: 'left' }}>
-                    FAQ
-                  </Link>
-                </div>
-              </div>
-            )}
           </div>
         </header>
 
-        <div className="main-content">
-          <div className="content">
-            <div className="last-updated">
-              <strong>Last updated:</strong> January 2025
-            </div>
-
-            <h1>Cookie Policy</h1>
-
-            <h2>1. What Are Cookies</h2>
-            <p>Cookies are small text files stored on your device when you visit websites. They help websites remember your preferences and improve your experience.</p>
-
-            <h2>2. How We Use Cookies</h2>
-            <p>VeriDiff uses cookies for essential functionality and optional analytics. We respect your privacy and provide opt-out options for non-essential cookies.</p>
-
-            <h2>3. Types of Cookies We Use</h2>
-
-            <table className="cookie-table">
-              <thead>
-                <tr>
-                  <th>Cookie Type</th>
-                  <th>Purpose</th>
-                  <th>Required</th>
-                  <th>Duration</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Essential</td>
-                  <td>Authentication, security, preferences</td>
-                  <td>Yes</td>
-                  <td>Session/1 year</td>
-                </tr>
-                <tr>
-                  <td>Analytics</td>
-                  <td>Usage tracking (Google Analytics)</td>
-                  <td>No</td>
-                  <td>2 years</td>
-                </tr>
-                <tr>
-                  <td>Marketing</td>
-                  <td>Conversion tracking (Google Ads)</td>
-                  <td>No</td>
-                  <td>90 days</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <h2>4. Essential Cookies</h2>
-            <p>These cookies are necessary for the website to function:</p>
-            <ul>
-              <li><strong>Authentication:</strong> Keep you logged in</li>
-              <li><strong>Security:</strong> Prevent cross-site request forgery</li>
-              <li><strong>Preferences:</strong> Remember your settings</li>
-              <li><strong>Session:</strong> Maintain your session state</li>
-            </ul>
-
-            <h2>5. Analytics Cookies (Optional)</h2>
-            <p>We use Google Analytics to understand how users interact with VeriDiff:</p>
-            <ul>
-              <li>Page views and user journeys</li>
-              <li>Feature usage and performance</li>
-              <li>Error tracking and debugging</li>
-              <li>Demographic insights (anonymized)</li>
-            </ul>
-            <p><strong>Opt-out:</strong> You can disable analytics cookies in your browser settings or through our cookie consent banner.</p>
-
-            <h2>6. Marketing Cookies (Optional)</h2>
-            <p>If you arrived via Google Ads, we may use conversion tracking cookies to:</p>
-            <ul>
-              <li>Measure ad campaign effectiveness</li>
-              <li>Optimize marketing spend</li>
-              <li>Provide relevant advertisements</li>
-            </ul>
-            <p><strong>Opt-out:</strong> You can disable marketing cookies through our consent banner or browser settings.</p>
-
-            <h2>7. Third-Party Cookies</h2>
-            <p>We may use third-party services that set their own cookies:</p>
-            <ul>
-              <li><strong>Stripe:</strong> Payment processing</li>
-              <li><strong>Google Analytics:</strong> Usage analytics</li>
-              <li><strong>Google Ads:</strong> Conversion tracking</li>
-            </ul>
-
-            <h2>8. Managing Your Cookie Preferences</h2>
-            <p>You can control cookies through:</p>
-            <ul>
-              <li><strong>Cookie Consent Banner:</strong> Appears on first visit</li>
-              <li><strong>Browser Settings:</strong> Disable cookies entirely</li>
-              <li><strong>Opt-out Links:</strong> Google Analytics opt-out</li>
-              <li><strong>Account Settings:</strong> Manage preferences when logged in</li>
-            </ul>
-
-            <h2>9. Browser Settings</h2>
-            <p>Most browsers allow you to:</p>
-            <ul>
-              <li>View and delete existing cookies</li>
-              <li>Block cookies from specific sites</li>
-              <li>Block third-party cookies</li>
-              <li>Be notified when cookies are set</li>
-            </ul>
-            <p><strong>Note:</strong> Disabling essential cookies may affect website functionality.</p>
-
-            <h2>10. Contact Information</h2>
-            <p>For questions about our cookie usage:</p>
-            <p><strong>Email:</strong> privacy@veridiff.com</p>
-            <p><strong>Data Protection:</strong> dpo@veridiff.com</p>
-
-            <h2>11. Changes to This Policy</h2>
-            <p>We may update this Cookie Policy to reflect changes in technology or regulations. We will notify users of significant changes.</p>
+        {/* Main Content */}
+        <div style={{
+          background: 'white',
+          margin: '2rem auto',
+          padding: '3rem',
+          borderRadius: '1rem',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+          maxWidth: '800px'
+        }}>
+          <div style={{
+            background: '#f3f4f6',
+            padding: '1rem',
+            borderRadius: '0.5rem',
+            marginBottom: '2rem',
+            textAlign: 'center'
+          }}>
+            <strong>Last updated:</strong> January 2025
           </div>
+
+          <h1 style={{
+            fontSize: '2.5rem',
+            fontWeight: '700',
+            marginBottom: '1.5rem',
+            color: '#1f2937',
+            textAlign: 'center'
+          }}>
+            Cookie Policy
+          </h1>
+
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            margin: '2rem 0 1rem 0',
+            color: '#1f2937',
+            borderBottom: '2px solid #e5e7eb',
+            paddingBottom: '0.5rem'
+          }}>
+            1. What Are Cookies
+          </h2>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            Cookies are small text files stored on your device when you visit websites. They help websites remember your preferences and improve your experience.
+          </p>
+
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            margin: '2rem 0 1rem 0',
+            color: '#1f2937',
+            borderBottom: '2px solid #e5e7eb',
+            paddingBottom: '0.5rem'
+          }}>
+            2. How We Use Cookies
+          </h2>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            VeriDiff uses cookies for essential functionality and optional analytics. We respect your privacy and provide opt-out options for non-essential cookies.
+          </p>
+
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            margin: '2rem 0 1rem 0',
+            color: '#1f2937',
+            borderBottom: '2px solid #e5e7eb',
+            paddingBottom: '0.5rem'
+          }}>
+            3. Types of Cookies We Use
+          </h2>
+
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            margin: '1rem 0',
+            background: 'white',
+            borderRadius: '0.5rem',
+            overflow: 'hidden',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}>
+            <thead>
+              <tr>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  textAlign: 'left',
+                  background: '#f8fafc',
+                  fontWeight: '600',
+                  color: '#1f2937'
+                }}>Cookie Type</th>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  textAlign: 'left',
+                  background: '#f8fafc',
+                  fontWeight: '600',
+                  color: '#1f2937'
+                }}>Purpose</th>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  textAlign: 'left',
+                  background: '#f8fafc',
+                  fontWeight: '600',
+                  color: '#1f2937'
+                }}>Required</th>
+                <th style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  textAlign: 'left',
+                  background: '#f8fafc',
+                  fontWeight: '600',
+                  color: '#1f2937'
+                }}>Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>Essential</td>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>Authentication, security, preferences</td>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>Yes</td>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>Session/1 year</td>
+              </tr>
+              <tr>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>Analytics</td>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>Usage tracking (Google Analytics)</td>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>No</td>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>2 years</td>
+              </tr>
+              <tr>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>Marketing</td>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>Conversion tracking (Google Ads)</td>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>No</td>
+                <td style={{
+                  border: '1px solid #e5e7eb',
+                  padding: '0.75rem',
+                  color: '#4b5563'
+                }}>90 days</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            margin: '2rem 0 1rem 0',
+            color: '#1f2937',
+            borderBottom: '2px solid #e5e7eb',
+            paddingBottom: '0.5rem'
+          }}>
+            4. Essential Cookies
+          </h2>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            These cookies are necessary for the website to function:
+          </p>
+          <ul style={{
+            margin: '1rem 0',
+            paddingLeft: '2rem'
+          }}>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>
+              <strong style={{ color: '#1f2937' }}>Authentication:</strong> Keep you logged in
+            </li>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>
+              <strong style={{ color: '#1f2937' }}>Security:</strong> Prevent cross-site request forgery
+            </li>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>
+              <strong style={{ color: '#1f2937' }}>Preferences:</strong> Remember your settings
+            </li>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>
+              <strong style={{ color: '#1f2937' }}>Session:</strong> Maintain your session state
+            </li>
+          </ul>
+
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            margin: '2rem 0 1rem 0',
+            color: '#1f2937',
+            borderBottom: '2px solid #e5e7eb',
+            paddingBottom: '0.5rem'
+          }}>
+            5. Analytics Cookies (Optional)
+          </h2>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            We use Google Analytics to understand how users interact with VeriDiff:
+          </p>
+          <ul style={{
+            margin: '1rem 0',
+            paddingLeft: '2rem'
+          }}>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>Page views and user journeys</li>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>Feature usage and performance</li>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>Error tracking and debugging</li>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>Demographic insights (anonymized)</li>
+          </ul>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            <strong style={{ color: '#1f2937' }}>Opt-out:</strong> You can disable analytics cookies in your browser settings or through our cookie consent banner.
+          </p>
+
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            margin: '2rem 0 1rem 0',
+            color: '#1f2937',
+            borderBottom: '2px solid #e5e7eb',
+            paddingBottom: '0.5rem'
+          }}>
+            6. Marketing Cookies (Optional)
+          </h2>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            If you arrived via Google Ads, we may use conversion tracking cookies to:
+          </p>
+          <ul style={{
+            margin: '1rem 0',
+            paddingLeft: '2rem'
+          }}>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>Measure ad campaign effectiveness</li>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>Optimize marketing spend</li>
+            <li style={{ marginBottom: '0.5rem', color: '#4b5563' }}>Provide relevant advertisements</li>
+          </ul>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            <strong style={{ color: '#1f2937' }}>Opt-out:</strong> You can disable marketing cookies through our consent banner or browser settings.
+          </p>
+
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            margin: '2rem 0 1rem 0',
+            color: '#1f2937',
+            borderBottom: '2px solid #e5e7eb',
+            paddingBottom: '0.5rem'
+          }}>
+            7. Contact Information
+          </h2>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            For questions about our cookie usage:
+          </p>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            <strong style={{ color: '#1f2937' }}>Email:</strong> privacy@veridiff.com
+          </p>
+          <p style={{
+            marginBottom: '1rem',
+            color: '#4b5563',
+            lineHeight: '1.6'
+          }}>
+            <strong style={{ color: '#1f2937' }}>Data Protection:</strong> dpo@veridiff.com
+          </p>
         </div>
       </div>
     </>
