@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { parseCSVFile } from '../utils/simpleCSVComparison';
@@ -12,6 +12,8 @@ import HeaderMapper from '../components/HeaderMapper';
 import SheetSelector from '../components/SheetSelector';
 import { mapHeaders } from '../utils/mapHeaders';
 import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
+// AUTH INTEGRATION: Import the auth modals from the components we created
+import { RegistrationModal, FeedbackModal } from '../components/auth';
 
 // FEATURE FLAGS - easily disable problematic features
 const FEATURES = {
@@ -46,6 +48,34 @@ export default function Compare() {
   const [selectedSheet2, setSelectedSheet2] = useState(null);
   const [showSheetSelector, setShowSheetSelector] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // AUTH INTEGRATION: Add auth-related state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [hasShownRegistrationModal, setHasShownRegistrationModal] = useState(false);
+
+  // AUTH INTEGRATION: Check login status on component mount
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('veridiff_token');
+      setIsLoggedIn(!!token);
+    };
+    checkAuthStatus();
+  }, []);
+
+  // AUTH INTEGRATION: Exit intent detection for feedback modal
+  useEffect(() => {
+    const handleMouseLeave = (e) => {
+      // Only show feedback modal if user is not logged in, hasn't seen registration modal, and cursor leaves top of page
+      if (e.clientY <= 0 && !isLoggedIn && !hasShownRegistrationModal && !showRegistrationModal) {
+        setShowFeedbackModal(true);
+      }
+    };
+
+    document.addEventListener('mouseleave', handleMouseLeave);
+    return () => document.removeEventListener('mouseleave', handleMouseLeave);
+  }, [isLoggedIn, hasShownRegistrationModal, showRegistrationModal]);
 
   // INLINE FILE DETECTION (inside component)
   const detectFileTypeInline = (file) => {
@@ -444,12 +474,27 @@ export default function Compare() {
       }
       
       setResults(result);
+
+      // AUTH INTEGRATION: Show registration modal after successful comparison for non-logged-in users
+      if (!isLoggedIn && !hasShownRegistrationModal) {
+        setTimeout(() => {
+          setShowRegistrationModal(true);
+          setHasShownRegistrationModal(true);
+        }, 3000); // Show after 3 seconds
+      }
+      
     } catch (err) {
       console.error('Comparison error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  // AUTH INTEGRATION: Handle registration modal success
+  const handleRegistrationSuccess = () => {
+    setIsLoggedIn(true);
+    console.log('Registration successful! User is now logged in.');
   };
 
   // Responsive styles
@@ -1338,6 +1383,19 @@ export default function Compare() {
           </div>
         )}
       </main>
+
+      {/* AUTH INTEGRATION: Registration Modal */}
+      <RegistrationModal 
+        isOpen={showRegistrationModal}
+        onClose={() => setShowRegistrationModal(false)}
+        onSuccess={handleRegistrationSuccess}
+      />
+
+      {/* AUTH INTEGRATION: Feedback Modal */}
+      <FeedbackModal 
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
 
       <style jsx>{`
         @keyframes spin {
