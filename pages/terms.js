@@ -23,51 +23,180 @@ export default function Terms() {
         <meta name="description" content="VeriDiff Terms of Service - Terms and conditions for using our file comparison platform." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>{`
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; }
-          .container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
-          .header { background: white; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 1000; }
-          .nav-container { display: flex; justify-content: space-between; align-items: center; height: 64px; }
-          .logo { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #2563eb, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; cursor: pointer; }
-          .desktop-nav { display: flex; gap: 2rem; align-items: center; }
-          .mobile-nav-button { display: none; background: none; border: none; cursor: pointer; padding: 8px; color: #374151; }
-          .content { padding: 3rem 0; }
-          .content h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: #1f2937; }
-          .content h2 { font-size: 1.5rem; font-weight: 600; margin: 2rem 0 1rem 0; color: #1f2937; }
-          .content p { margin-bottom: 1rem; color: #4b5563; }
-          .content ul { margin: 1rem 0; padding-left: 2rem; }
-          .content li { margin-bottom: 0.5rem; color: #4b5563; }
-          .last-updated { background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin-bottom: 2rem; }
+          * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+          }
+          
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            line-height: 1.6; 
+            color: #1f2937; 
+            background: #f9fafb;
+          }
+          
+          .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+          }
+          
+          .header { 
+            background: white; 
+            border-bottom: 1px solid #e5e7eb; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
+          
+          .nav-container { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            height: 64px; 
+          }
+          
+          .logo { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, #2563eb, #7c3aed); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text; 
+            cursor: pointer; 
+          }
+          
+          .desktop-nav { 
+            display: flex; 
+            gap: 2rem; 
+            align-items: center; 
+          }
+          
+          .mobile-nav-button { 
+            display: none; 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            padding: 8px; 
+            color: #374151; 
+          }
+          
+          .nav-button {
+            background: none;
+            border: none;
+            color: #374151;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0.5rem;
+            text-decoration: none;
+          }
+
+          .nav-button:hover {
+            color: #2563eb;
+          }
+
+          .nav-link {
+            text-decoration: none;
+            color: #374151;
+            font-weight: 500;
+            padding: 0.5rem;
+          }
+
+          .nav-link:hover {
+            color: #2563eb;
+          }
+          
+          .main-content { 
+            background: white;
+            margin: 2rem auto;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            max-width: 800px;
+          }
+          
+          .last-updated { 
+            background: #f3f4f6; 
+            padding: 1rem; 
+            border-radius: 0.5rem; 
+            margin-bottom: 2rem; 
+            text-align: center;
+          }
+          
+          .content h1 { 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            margin-bottom: 1.5rem; 
+            color: #1f2937; 
+            text-align: center;
+          }
+          
+          .content h2 { 
+            font-size: 1.5rem; 
+            font-weight: 600; 
+            margin: 2rem 0 1rem 0; 
+            color: #1f2937; 
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+          }
+          
+          .content p { 
+            margin-bottom: 1rem; 
+            color: #4b5563; 
+            text-align: justify;
+          }
+          
+          .content ul { 
+            margin: 1rem 0; 
+            padding-left: 2rem; 
+          }
+          
+          .content li { 
+            margin-bottom: 0.5rem; 
+            color: #4b5563; 
+          }
+
+          .content strong {
+            color: #1f2937;
+          }
           
           @media (max-width: 768px) {
-            .desktop-nav { display: none !important; }
-            .mobile-nav-button { display: block !important; }
+            .desktop-nav { 
+              display: none !important; 
+            }
+            .mobile-nav-button { 
+              display: block !important; 
+            }
+            .main-content {
+              margin: 1rem;
+              padding: 2rem 1.5rem;
+            }
+            .content h1 {
+              font-size: 2rem;
+            }
+            .content h2 {
+              font-size: 1.25rem;
+            }
           }
         `}</style>
       </Head>
 
-      <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
+      <div style={{ minHeight: '100vh' }}>
         <header className="header">
           <div className="container">
             <div className="nav-container">
               <div className="logo" onClick={handleHome}>VeriDiff</div>
               
               <nav className="desktop-nav">
-                <button onClick={() => scrollToSection('features')} style={{ 
-                  background: 'none', border: 'none', color: '#374151', fontWeight: '500', 
-                  cursor: 'pointer', padding: '0.5rem', textDecoration: 'none' 
-                }}>
+                <button onClick={() => scrollToSection('features')} className="nav-button">
                   Features
                 </button>
-                <button onClick={() => scrollToSection('pricing')} style={{ 
-                  background: 'none', border: 'none', color: '#374151', fontWeight: '500', 
-                  cursor: 'pointer', padding: '0.5rem', textDecoration: 'none' 
-                }}>
+                <button onClick={() => scrollToSection('pricing')} className="nav-button">
                   Pricing
                 </button>
-                <Link href="/faq" style={{ 
-                  textDecoration: 'none', color: '#374151', fontWeight: '500', padding: '0.5rem' 
-                }}>
+                <Link href="/faq" className="nav-link">
                   FAQ
                 </Link>
               </nav>
@@ -91,22 +220,13 @@ export default function Terms() {
                 background: 'white'
               }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <button onClick={() => scrollToSection('features')} style={{ 
-                    background: 'none', border: 'none', color: '#374151', fontWeight: '500', 
-                    cursor: 'pointer', padding: '0.5rem', textAlign: 'left' 
-                  }}>
+                  <button onClick={() => scrollToSection('features')} className="nav-button" style={{ textAlign: 'left' }}>
                     Features
                   </button>
-                  <button onClick={() => scrollToSection('pricing')} style={{ 
-                    background: 'none', border: 'none', color: '#374151', fontWeight: '500', 
-                    cursor: 'pointer', padding: '0.5rem', textAlign: 'left' 
-                  }}>
+                  <button onClick={() => scrollToSection('pricing')} className="nav-button" style={{ textAlign: 'left' }}>
                     Pricing
                   </button>
-                  <Link href="/faq" style={{ 
-                    textDecoration: 'none', color: '#374151', fontWeight: '500', 
-                    padding: '0.5rem', textAlign: 'left' 
-                  }}>
+                  <Link href="/faq" className="nav-link" style={{ textAlign: 'left' }}>
                     FAQ
                   </Link>
                 </div>
@@ -115,8 +235,8 @@ export default function Terms() {
           </div>
         </header>
 
-        <div className="content">
-          <div className="container">
+        <div className="main-content">
+          <div className="content">
             <div className="last-updated">
               <strong>Last updated:</strong> January 2025
             </div>
