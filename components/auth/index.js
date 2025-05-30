@@ -34,7 +34,7 @@ export const RegistrationModal = ({ isOpen, onClose, onSuccess }) => {
     setMessage('');
 
     try {
-      const response = await fetch('/api/auth/send-magic-link', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
