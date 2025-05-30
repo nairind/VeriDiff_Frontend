@@ -452,112 +452,622 @@ export default function Compare() {
   };
 
   return (
-    <div className="container">
+    <div style={{
+      minHeight: '100vh',
+      background: '#f8fafc',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
       <Head>
         <title>VeriDiff - File Comparison Tool</title>
       </Head>
 
-      {/* Simple Navigation */}
-      <nav className="nav">
-        <div className="nav-content">
-          <Link href="/">
-            <span className="nav-brand">VeriDiff</span>
+      {/* Navigation */}
+      <nav style={{
+        background: 'white',
+        borderBottom: '1px solid #e5e7eb',
+        padding: '1rem 0',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Link href="/" style={{ textDecoration: 'none' }}>
+            <span style={{
+              fontSize: '1.5rem',
+              fontWeight: '700',
+              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              cursor: 'pointer'
+            }}>
+              VeriDiff
+            </span>
           </Link>
-          <div className="nav-links">
-            <Link href="/about">
-              <span className="nav-about">📖 MUST READ - About</span>
+          <div style={{
+            display: 'flex',
+            gap: '2rem',
+            alignItems: 'center'
+          }}>
+            <Link href="/about" style={{ textDecoration: 'none' }}>
+              <span style={{
+                color: '#FF6B35',
+                cursor: 'pointer',
+                fontSize: '1.1rem',
+                fontWeight: '600'
+              }}>
+                📖 About
+              </span>
             </Link>
-            <span className="nav-current">Compare Files</span>
+            <span style={{
+              color: '#2563eb',
+              fontWeight: '500',
+              fontSize: '1rem'
+            }}>
+              Compare Files
+            </span>
           </div>
         </div>
       </nav>
 
-      <main>
-        {/* Simple Hero */}
-        <div className="hero">
-          <h1 className="hero-title">VeriDiff</h1>
-          <h2 className="hero-subtitle">Smart File Comparison</h2>
-          <p className="hero-description">
+      <main style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '30px 20px'
+      }}>
+        {/* Hero Section */}
+        <div style={{
+          textAlign: 'center',
+          padding: '50px 30px',
+          background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+          borderRadius: '20px',
+          marginBottom: '40px',
+          color: 'white',
+          boxShadow: '0 10px 30px rgba(37, 99, 235, 0.3)'
+        }}>
+          <h1 style={{
+            fontSize: '3rem',
+            fontWeight: '700',
+            margin: '0 0 15px 0',
+            lineHeight: '1.2'
+          }}>
+            VeriDiff
+          </h1>
+          <h2 style={{
+            fontSize: '1.5rem',
+            fontWeight: '400',
+            margin: '0 0 20px 0',
+            opacity: '0.9'
+          }}>
+            Smart File Comparison
+          </h2>
+          <p style={{
+            fontSize: '1.1rem',
+            opacity: '0.9',
+            lineHeight: '1.6',
+            maxWidth: '600px',
+            margin: '0 auto'
+          }}>
             Compare documents with precision and confidence. From Excel to PDFs, 
             VeriDiff handles your most critical file comparisons with professional-grade accuracy.
           </p>
         </div>
 
         {/* File Type Selection */}
-        <div className="section">
-          <h2 className="section-title">Choose Your Comparison Type</h2>
-          <p className="section-subtitle">Select the file formats you want to compare</p>
+        <div style={{
+          background: 'white',
+          borderRadius: '16px',
+          padding: '40px',
+          marginBottom: '30px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '1px solid #e5e7eb'
+        }}>
+          <h2 style={{
+            fontSize: '1.8rem',
+            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            margin: '0 0 15px 0',
+            textAlign: 'center',
+            fontWeight: '700'
+          }}>
+            Choose Your Comparison Type
+          </h2>
+          <p style={{
+            fontSize: '1.1rem',
+            color: '#6b7280',
+            textAlign: 'center',
+            margin: '0 0 35px 0'
+          }}>
+            Select the file formats you want to compare
+          </p>
           
-          <div className="file-type-selector">
-            <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel–Excel</label>
-            <label className="featured"><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
-            <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV–CSV</label>
-            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF–PDF <span className="version-flag">v1</span></label>
-            <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TXT–TXT</label>
-            <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON–JSON</label>
-            <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML–XML</label>
-            <label className="coming-soon"><input type="radio" name="fileType" value="pdf_ocr" disabled /> PDF–PDF <span className="ocr-flag">OCR checks coming</span></label>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '20px',
+            maxWidth: '900px',
+            margin: '0 auto'
+          }}>
+            {[
+              { value: 'excel', label: 'Excel–Excel', featured: false },
+              { value: 'excel_csv', label: 'Excel–CSV', featured: true },
+              { value: 'csv', label: 'CSV–CSV', featured: false },
+              { value: 'pdf', label: 'PDF–PDF', featured: false, badge: 'v1' },
+              { value: 'text', label: 'TXT–TXT', featured: false },
+              { value: 'json', label: 'JSON–JSON', featured: false },
+              { value: 'xml', label: 'XML–XML', featured: false },
+              { value: 'pdf_ocr', label: 'PDF–PDF', disabled: true, badge: 'OCR coming' }
+            ].map((option) => (
+              <label
+                key={option.value}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '15px',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  cursor: option.disabled ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  background: option.featured 
+                    ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+                    : option.disabled 
+                      ? '#f9fafb' 
+                      : 'white',
+                  border: option.featured 
+                    ? '2px solid #f59e0b' 
+                    : option.disabled 
+                      ? '2px dashed #9ca3af' 
+                      : fileType === option.value 
+                        ? '2px solid #2563eb' 
+                        : '2px solid #e5e7eb',
+                  opacity: option.disabled ? 0.7 : 1,
+                  fontWeight: option.featured ? '600' : '500',
+                  fontSize: '1rem',
+                  minHeight: '60px'
+                }}
+                onMouseOver={(e) => {
+                  if (!option.disabled && fileType !== option.value) {
+                    e.target.style.borderColor = '#2563eb';
+                    e.target.style.background = option.featured ? 'linear-gradient(135deg, #fde68a, #fcd34d)' : '#f0f4ff';
+                    e.target.style.transform = 'translateY(-2px)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!option.disabled && fileType !== option.value) {
+                    e.target.style.borderColor = option.featured ? '#f59e0b' : '#e5e7eb';
+                    e.target.style.background = option.featured ? 'linear-gradient(135deg, #fef3c7, #fde68a)' : 'white';
+                    e.target.style.transform = 'none';
+                  }
+                }}
+              >
+                <input
+                  type="radio"
+                  name="fileType"
+                  value={option.value}
+                  checked={fileType === option.value}
+                  onChange={handleFileTypeChange}
+                  disabled={option.disabled}
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    accentColor: '#2563eb'
+                  }}
+                />
+                <span style={{ flex: 1 }}>
+                  {option.label}
+                  {option.badge && (
+                    <span style={{
+                      marginLeft: '8px',
+                      fontSize: '0.75em',
+                      background: option.badge === 'v1' ? '#dbeafe' : '#fef3c7',
+                      color: option.badge === 'v1' ? '#1e40af' : '#92400e',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      fontWeight: '600'
+                    }}>
+                      {option.badge}
+                    </span>
+                  )}
+                </span>
+              </label>
+            ))}
           </div>
         </div>
 
-        {/* File Order Guidance for Excel-CSV */}
-        {fileType === 'excel_csv' && (
-          <div className="guidance">
-            <h3>📋 File Upload Instructions</h3>
-            <p>Please upload your files in the correct order:</p>
-            <div className="order-guide">
-              <span className="step">1. Excel File First (.xlsx, .xls, .xlsm)</span>
-              <span className="arrow">→</span>
-              <span className="step">2. CSV File Second (.csv)</span>
-            </div>
-            <p className="note">⚠️ File order matters for accurate data mapping and comparison results.</p>
-          </div>
-        )}
+        {/* Enhanced File Upload Section */}
+        <div style={{
+          background: 'white',
+          borderRadius: '16px',
+          padding: '40px',
+          marginBottom: '30px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '1px solid #e5e7eb'
+        }}>
+          <h2 style={{
+            fontSize: '1.8rem',
+            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            margin: '0 0 15px 0',
+            textAlign: 'center',
+            fontWeight: '700'
+          }}>
+            Upload Your Files
+          </h2>
+          <p style={{
+            fontSize: '1.1rem',
+            color: '#6b7280',
+            textAlign: 'center',
+            margin: '0 0 35px 0'
+          }}>
+            Select files to compare
+          </p>
 
-        {/* File Upload */}
-        <div className="section">
-          <h2 className="section-title">Upload Your Files</h2>
-          <p className="section-subtitle">Select files to compare</p>
-
-          <div className="file-inputs">
-            <div className="file-input-group">
-              <label>File 1:</label>
-              <input type="file" onChange={(e) => handleFileChange(e, 1)} />
-              {file1 && <div className="file-name">✅ {file1.name}</div>}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '25px',
+            marginBottom: '35px'
+          }}>
+            {/* File 1 Upload */}
+            <div style={{
+              background: fileType === 'excel_csv' 
+                ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+                : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+              padding: '25px',
+              borderRadius: '16px',
+              border: fileType === 'excel_csv' 
+                ? '2px solid #f59e0b' 
+                : '2px solid #0ea5e9',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '15px'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: fileType === 'excel_csv' 
+                    ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
+                    : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem'
+                }}>
+                  1
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontWeight: '700',
+                    color: '#1f2937',
+                    fontSize: '1.1rem',
+                    margin: '0'
+                  }}>
+                    {fileType === 'excel_csv' 
+                      ? 'Excel File (.xlsx, .xls, .xlsm)' 
+                      : 'File 1'}
+                  </label>
+                  {fileType === 'excel_csv' && (
+                    <small style={{
+                      color: '#92400e',
+                      fontSize: '0.85rem',
+                      fontWeight: '500'
+                    }}>
+                      📊 Upload your Excel spreadsheet first
+                    </small>
+                  )}
+                </div>
+              </div>
+              
+              <input
+                type="file"
+                onChange={(e) => handleFileChange(e, 1)}
+                accept={fileType === 'excel_csv' ? '.xlsx,.xls,.xlsm' : undefined}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  border: '2px solid rgba(255,255,255,0.8)',
+                  borderRadius: '10px',
+                  fontSize: '1rem',
+                  background: 'rgba(255,255,255,0.9)',
+                  fontWeight: '500'
+                }}
+              />
+              {file1 && (
+                <div style={{
+                  marginTop: '15px',
+                  padding: '12px',
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '2px solid #22c55e',
+                  borderRadius: '8px',
+                  fontSize: '0.95rem',
+                  color: '#166534',
+                  fontWeight: '600'
+                }}>
+                  ✅ {file1.name}
+                </div>
+              )}
             </div>
             
-            <div className="file-input-group">
-              <label>File 2:</label>
-              <input type="file" onChange={(e) => handleFileChange(e, 2)} />
-              {file2 && <div className="file-name">✅ {file2.name}</div>}
+            {/* File 2 Upload */}
+            <div style={{
+              background: fileType === 'excel_csv' 
+                ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' 
+                : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+              padding: '25px',
+              borderRadius: '16px',
+              border: fileType === 'excel_csv' 
+                ? '2px solid #22c55e' 
+                : '2px solid #0ea5e9',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '15px'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: fileType === 'excel_csv' 
+                    ? 'linear-gradient(135deg, #22c55e, #16a34a)' 
+                    : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem'
+                }}>
+                  2
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontWeight: '700',
+                    color: '#1f2937',
+                    fontSize: '1.1rem',
+                    margin: '0'
+                  }}>
+                    {fileType === 'excel_csv' 
+                      ? 'CSV File (.csv)' 
+                      : 'File 2'}
+                  </label>
+                  {fileType === 'excel_csv' && (
+                    <small style={{
+                      color: '#166534',
+                      fontSize: '0.85rem',
+                      fontWeight: '500'
+                    }}>
+                      📄 Upload your CSV data file second
+                    </small>
+                  )}
+                </div>
+              </div>
+              
+              <input
+                type="file"
+                onChange={(e) => handleFileChange(e, 2)}
+                accept={fileType === 'excel_csv' ? '.csv' : undefined}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  border: '2px solid rgba(255,255,255,0.8)',
+                  borderRadius: '10px',
+                  fontSize: '1rem',
+                  background: 'rgba(255,255,255,0.9)',
+                  fontWeight: '500'
+                }}
+              />
+              {file2 && (
+                <div style={{
+                  marginTop: '15px',
+                  padding: '12px',
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '2px solid #22c55e',
+                  borderRadius: '8px',
+                  fontSize: '0.95rem',
+                  color: '#166534',
+                  fontWeight: '600'
+                }}>
+                  ✅ {file2.name}
+                </div>
+              )}
             </div>
           </div>
 
-          <button 
-            onClick={handleLoadFiles} 
-            disabled={loading || !file1 || !file2}
-            className="load-button"
-          >
-            {loading ? 'Processing Files...' : '🚀 Load Files & Start Comparison'}
-          </button>
+          {/* Enhanced Load Button */}
+          <div style={{ textAlign: 'center', position: 'relative' }}>
+            <button 
+              onClick={handleLoadFiles} 
+              disabled={loading || !file1 || !file2}
+              style={{
+                background: loading || !file1 || !file2 
+                  ? 'linear-gradient(135deg, #94a3b8, #64748b)' 
+                  : 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)',
+                color: 'white',
+                border: 'none',
+                padding: '20px 50px',
+                borderRadius: '60px',
+                fontSize: '1.4rem',
+                fontWeight: '700',
+                cursor: loading || !file1 || !file2 ? 'not-allowed' : 'pointer',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                minWidth: '360px',
+                boxShadow: loading || !file1 || !file2 
+                  ? '0 4px 15px rgba(100, 116, 139, 0.2)' 
+                  : '0 10px 30px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                position: 'relative',
+                overflow: 'hidden',
+                backgroundSize: '200% 100%',
+                animation: loading || !file1 || !file2 ? 'none' : 'gradient-shift 3s ease infinite'
+              }}
+              onMouseOver={(e) => {
+                if (!loading && file1 && file2) {
+                  e.target.style.transform = 'translateY(-4px) scale(1.03)';
+                  e.target.style.boxShadow = '0 15px 40px rgba(37, 99, 235, 0.6), 0 5px 15px rgba(124, 58, 237, 0.4)';
+                  e.target.style.background = 'linear-gradient(135deg, #1d4ed8, #6d28d9, #db2777)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!loading && file1 && file2) {
+                  e.target.style.transform = 'none';
+                  e.target.style.boxShadow = '0 10px 30px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset';
+                  e.target.style.background = 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)';
+                }
+              }}
+            >
+              {/* Animated shimmer effect */}
+              {!loading && file1 && file2 && (
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '-100%',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                  animation: 'shimmer 2s infinite'
+                }} />
+              )}
+              
+              {loading ? (
+                <>
+                  <span style={{ 
+                    marginRight: '12px',
+                    display: 'inline-block',
+                    animation: 'spin 1s linear infinite'
+                  }}>⏳</span>
+                  Processing Files...
+                </>
+              ) : (
+                <>
+                  <span style={{ 
+                    marginRight: '12px',
+                    fontSize: '1.6rem',
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                  }}>🚀</span>
+                  <span style={{
+                    background: 'linear-gradient(45deg, #ffffff, #f0f9ff)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}>
+                    Load Files & Start Comparison
+                  </span>
+                </>
+              )}
+            </button>
+            
+            {/* Pulse ring effect when enabled */}
+            {!loading && file1 && file2 && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '380px',
+                height: '80px',
+                borderRadius: '60px',
+                border: '2px solid rgba(37, 99, 235, 0.3)',
+                animation: 'pulse-ring 2s infinite',
+                pointerEvents: 'none'
+              }} />
+            )}
+          </div>
+          
+          <style jsx>{`
+            @keyframes gradient-shift {
+              0%, 100% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+            }
+            
+            @keyframes shimmer {
+              0% { left: -100%; }
+              100% { left: 100%; }
+            }
+            
+            @keyframes spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+            
+            @keyframes pulse-ring {
+              0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.7;
+              }
+              50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.3;
+              }
+              100% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0;
+              }
+            }
+          `}</style>
         </div>
 
         {/* Sheet Selector */}
         {FEATURES.SHEET_SELECTION && showSheetSelector && (
-          <div className="section">
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '30px',
+            marginBottom: '30px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb'
+          }}>
             <SheetSelector
               file1Info={file1Info}
               file2Info={file2Info}
               onSheetSelect={handleSheetSelect}
               fileType={fileType}
             />
-            <button 
-              onClick={handleProceedWithSheets} 
-              disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
-              className="load-button"
-            >
-              {loading ? 'Processing...' : 'Proceed with Selected Sheets'}
-            </button>
+            <div style={{ textAlign: 'center', marginTop: '25px' }}>
+              <button 
+                onClick={handleProceedWithSheets} 
+                disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
+                style={{
+                  background: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)
+                    ? '#9ca3af' 
+                    : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '14px 30px',
+                  borderRadius: '8px',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  cursor: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {loading ? 'Processing...' : 'Proceed with Selected Sheets'}
+              </button>
+            </div>
           </div>
         )}
 
@@ -577,775 +1087,257 @@ export default function Compare() {
 
         {/* Error Display */}
         {error && (
-          <div className="error">
+          <div style={{
+            color: '#dc2626',
+            margin: '20px 0',
+            padding: '20px',
+            border: '2px solid #dc2626',
+            borderRadius: '12px',
+            background: '#fef2f2',
+            fontSize: '1rem',
+            fontWeight: '500'
+          }}>
             <strong>Error:</strong> {error}
           </div>
         )}
 
         {/* Loading */}
         {loading && (
-          <div className="loading">
-            <strong>Loading...</strong> Processing files...
+          <div style={{
+            margin: '20px 0',
+            padding: '20px',
+            background: '#eff6ff',
+            border: '2px solid #2563eb',
+            borderRadius: '12px',
+            color: '#1e40af',
+            fontSize: '1rem',
+            fontWeight: '500',
+            textAlign: 'center'
+          }}>
+            <strong>Processing...</strong> Please wait while we compare your files...
           </div>
         )}
 
         {/* Results */}
         {results && (
-          <div className="results">
-            <h2>Comparison Results</h2>
-            <div className="summary">
-              <p><strong>Total Records:</strong> {results.total_records}</p>
-              <p><strong>Differences Found:</strong> {results.differences_found}</p>
-              <p><strong>Matches Found:</strong> {results.matches_found}</p>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '40px',
+            margin: '30px 0',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb'
+          }}>
+            <h2 style={{
+              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              fontSize: '2rem',
+              fontWeight: '700',
+              margin: '0 0 25px 0',
+              textAlign: 'center'
+            }}>
+              Comparison Results
+            </h2>
+            <div style={{
+              margin: '25px 0',
+              padding: '25px',
+              background: '#f8fafc',
+              border: '1px solid #e5e7eb',
+              borderRadius: '12px'
+            }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '20px',
+                marginBottom: '25px'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                    {results.total_records}
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Total Records</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626' }}>
+                    {results.differences_found}
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Differences Found</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#16a34a' }}>
+                    {results.matches_found}
+                  </div>
+                  <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Matches Found</div>
+                </div>
+              </div>
               
               {FEATURES.AUTO_DETECTION && results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
-                <p><strong>🤖 Auto-detected Amount Fields:</strong> {results.autoDetectedFields.join(', ')}</p>
+                <div style={{
+                  background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+                  border: '1px solid #22c55e',
+                  borderRadius: '8px',
+                  padding: '15px',
+                  marginBottom: '20px',
+                  textAlign: 'center'
+                }}>
+                  <strong style={{ color: '#166534' }}>🤖 Auto-detected Amount Fields:</strong>
+                  <span style={{ color: '#16a34a', marginLeft: '8px' }}>
+                    {results.autoDetectedFields.join(', ')}
+                  </span>
+                </div>
               )}
               
-              <div className="download-buttons">
-                <button onClick={handleDownloadExcel} className="download-btn excel">📊 Download Excel</button>
-                <button onClick={handleDownloadCSV} className="download-btn csv">📄 Download CSV</button>
+              <div style={{
+                display: 'flex',
+                gap: '15px',
+                justifyContent: 'center',
+                flexWrap: 'wrap'
+              }}>
+                <button
+                  onClick={handleDownloadExcel}
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '1rem',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.transform = 'none';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  📊 Download Excel
+                </button>
+                <button
+                  onClick={handleDownloadCSV}
+                  style={{
+                    background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '1rem',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 15px rgba(14, 165, 233, 0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.transform = 'none';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                >
+                  📄 Download CSV
+                </button>
               </div>
             </div>
             
             {results.results && results.results.length > 0 && (
-              <table className="results-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    {Object.keys(results.results[0].fields).map((field, idx) => (
-                      <th key={idx}>{field}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.results.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      <td data-label="ID">{row.ID}</td>
-                      {Object.entries(row.fields).map(([key, value], idx) => (
-                        <td
-                          key={idx}
-                          data-label={key}
-                          className={`cell-${value.status}`}
-                        >
-                          <div>
-                            <strong>{value.val1} / {value.val2}</strong>
-                            {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
-                              <span className="auto-detected">🤖</span>
-                            )}
-                          </div>
-                          <small>
-                            {value.status}
-                            {value.difference && ` (Δ ${value.difference})`}
-                          </small>
-                        </td>
+              <div style={{
+                overflowX: 'auto',
+                marginTop: '30px',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb'
+              }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '0.9rem',
+                  minWidth: '600px'
+                }}>
+                  <thead>
+                    <tr style={{
+                      background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)'
+                    }}>
+                      <th style={{
+                        border: '1px solid #e5e7eb',
+                        padding: '16px 12px',
+                        textAlign: 'left',
+                        fontWeight: '600',
+                        color: '#1f2937'
+                      }}>
+                        ID
+                      </th>
+                      {Object.keys(results.results[0].fields).map((field, idx) => (
+                        <th key={idx} style={{
+                          border: '1px solid #e5e7eb',
+                          padding: '16px 12px',
+                          textAlign: 'left',
+                          fontWeight: '600',
+                          color: '#1f2937'
+                        }}>
+                          {field}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {results.results.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        <td style={{
+                          border: '1px solid #e5e7eb',
+                          padding: '12px',
+                          verticalAlign: 'top',
+                          background: 'white'
+                        }}>
+                          {row.ID}
+                        </td>
+                        {Object.entries(row.fields).map(([key, value], idx) => (
+                          <td
+                            key={idx}
+                            style={{
+                              border: '1px solid #e5e7eb',
+                              padding: '12px',
+                              verticalAlign: 'top',
+                              background: value.status === 'difference' ? '#fef2f2' 
+                                        : value.status === 'acceptable' ? '#fefce8' 
+                                        : '#f0fdf4'
+                            }}
+                          >
+                            <div>
+                              <strong>{value.val1} / {value.val2}</strong>
+                              {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
+                                <span style={{
+                                  marginLeft: '5px',
+                                  fontSize: '0.8em'
+                                }}>
+                                  🤖
+                                </span>
+                              )}
+                            </div>
+                            <small style={{
+                              color: '#6b7280',
+                              display: 'block',
+                              marginTop: '4px'
+                            }}>
+                              {value.status}
+                              {value.difference && ` (Δ ${value.difference})`}
+                            </small>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}
       </main>
-
-      <style jsx>{`
-        .container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: #f8fafc;
-          min-height: 100vh;
-        }
-
-        .nav {
-          background: white;
-          border-bottom: 1px solid #e5e7eb;
-          padding: 1rem 0;
-          margin-bottom: 20px;
-          border-radius: 8px;
-        }
-
-        .nav-content {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 20px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .nav-brand {
-          font-size: 1.5rem;
-          font-weight: bold;
-          color: #667eea;
-          cursor: pointer;
-          text-decoration: none;
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 2rem;
-        }
-
-        .nav-about {
-          color: #FF6B35;
-          cursor: pointer;
-          text-decoration: none;
-          font-size: 1.1rem;
-          font-weight: 700;
-        }
-
-        .nav-current {
-          color: #667eea;
-          font-weight: 500;
-        }
-
-        .hero {
-          text-align: center;
-          padding: 40px 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 16px;
-          margin-bottom: 30px;
-          color: white;
-        }
-
-        .hero-title {
-          font-size: 3rem;
-          font-weight: 700;
-          margin: 0 0 10px 0;
-        }
-
-        .hero-subtitle {
-          font-size: 1.5rem;
-          font-weight: 400;
-          margin: 0 0 20px 0;
-          opacity: 0.9;
-        }
-
-        .hero-description {
-          font-size: 1.1rem;
-          opacity: 0.9;
-          line-height: 1.6;
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        .section {
-          background: white;
-          border-radius: 12px;
-          padding: 30px;
-          margin-bottom: 20px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
-
-        .section-title {
-          font-size: 1.8rem;
-          color: #1f2937;
-          margin: 0 0 10px 0;
-          text-align: center;
-          font-weight: 600;
-        }
-
-        .section-subtitle {
-          font-size: 1rem;
-          color: #6b7280;
-          text-align: center;
-          margin: 0 0 30px 0;
-        }
-
-        .file-type-selector {
-          margin: 20px 0;
-          padding: 20px;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          background: #f9fafb;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .file-type-selector label {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 16px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          background: white;
-          border: 2px solid #e5e7eb;
-          font-weight: 500;
-          text-align: left;
-          min-height: 48px;
-          width: 100%;
-          max-width: 300px;
-        }
-
-        .file-type-selector label:hover {
-          border-color: #667eea;
-          background: #f0f4ff;
-          transform: translateX(4px);
-        }
-
-        .file-type-selector label.featured {
-          background: linear-gradient(135deg, #fef3c7, #fde68a);
-          border: 2px solid #f59e0b;
-          font-weight: 600;
-        }
-
-        .file-type-selector label.featured:hover {
-          background: linear-gradient(135deg, #fde68a, #fcd34d);
-          border-color: #d97706;
-        }
-
-        .file-type-selector label.coming-soon {
-          background: #f9fafb;
-          border: 2px dashed #9ca3af;
-          color: #6b7280;
-          cursor: not-allowed;
-          opacity: 0.7;
-        }
-
-        .file-type-selector label.coming-soon:hover {
-          background: #f9fafb;
-          border-color: #9ca3af;
-          transform: none;
-        }
-
-        .file-type-selector label.coming-soon input[type="radio"] {
-          cursor: not-allowed;
-        }
-
-        .version-flag {
-          font-size: 0.75em;
-          background: #dbeafe;
-          color: #1e40af;
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-weight: 600;
-          margin-left: 8px;
-        }
-
-        .ocr-flag {
-          font-size: 0.75em;
-          background: #fef3c7;
-          color: #92400e;
-          padding: 2px 6px;
-          border-radius: 4px;
-          font-weight: 500;
-          margin-left: 8px;
-        }
-
-        /* Responsive adjustments */
-        @media (min-width: 768px) {
-          .file-type-selector {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            align-items: start;
-          }
-
-          .file-type-selector label {
-            max-width: none;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .file-type-selector {
-            grid-template-columns: repeat(2, 1fr);
-            max-width: 800px;
-            margin: 20px auto;
-          }
-        }
-
-        .guidance {
-          background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-          border: 2px solid #2196f3;
-          border-radius: 12px;
-          padding: 20px;
-          margin: 20px 0;
-        }
-
-        .guidance h3 {
-          color: #1976d2;
-          margin: 0 0 10px 0;
-          font-size: 1.2rem;
-        }
-
-        .order-guide {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          margin: 15px 0;
-          flex-wrap: wrap;
-          justify-content: center;
-        }
-
-        .step {
-          background: white;
-          padding: 10px 15px;
-          border-radius: 8px;
-          border: 2px solid #2196f3;
-          font-weight: 600;
-        }
-
-        .arrow {
-          font-size: 1.5rem;
-          color: #2196f3;
-          font-weight: bold;
-        }
-
-        .note {
-          background: #fff3cd;
-          border: 1px solid #ffc107;
-          border-radius: 6px;
-          padding: 10px;
-          margin: 10px 0 0 0;
-          color: #856404;
-          font-size: 0.9rem;
-        }
-
-        .file-inputs {
-          display: flex;
-          gap: 20px;
-          margin: 20px 0;
-          flex-wrap: wrap;
-        }
-
-        .file-input-group {
-          flex: 1;
-          min-width: 250px;
-        }
-
-        .file-input-group label {
-          display: block;
-          font-weight: 600;
-          margin-bottom: 8px;
-          color: #374151;
-        }
-
-        .file-input-group input[type="file"] {
-          width: 100%;
-          padding: 10px;
-          border: 2px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 0.9rem;
-        }
-
-        .file-name {
-          margin-top: 8px;
-          padding: 8px;
-          background: #f0f9ff;
-          border: 1px solid #0ea5e9;
-          border-radius: 4px;
-          font-size: 0.9rem;
-          color: #0c4a6e;
-        }
-
-        .load-button {
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          color: white;
-          border: none;
-          padding: 15px 30px;
-          border-radius: 25px;
-          font-size: 1.1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: block;
-          margin: 20px auto 0;
-          min-width: 250px;
-        }
-
-        .load-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .load-button:disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .error {
-          color: #dc2626;
-          margin: 10px 0;
-          padding: 15px;
-          border: 1px solid #dc2626;
-          border-radius: 6px;
-          background: #fef2f2;
-        }
-
-        .loading {
-          margin: 10px 0;
-          padding: 15px;
-          background: #f0f8ff;
-          border: 1px solid #3b82f6;
-          border-radius: 6px;
-          color: #1e40af;
-        }
-
-        .results {
-          background: white;
-          border-radius: 12px;
-          padding: 30px;
-          margin: 20px 0;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
-
-        .summary {
-          margin: 20px 0;
-          padding: 20px;
-          background: #f9fafb;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-        }
-
-        .download-buttons {
-          margin-top: 15px;
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-
-        .download-btn {
-          border: none;
-          padding: 10px 20px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-weight: 600;
-          transition: background-color 0.2s;
-        }
-
-        .download-btn.excel {
-          background: #10b981;
-          color: white;
-        }
-
-        .download-btn.excel:hover {
-          background: #059669;
-        }
-
-        .download-btn.csv {
-          background: #0ea5e9;
-          color: white;
-        }
-
-        .download-btn.csv:hover {
-          background: #0284c7;
-        }
-
-        .results-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 20px 0;
-          font-size: 0.9rem;
-        }
-
-        .results-table th {
-          border: 1px solid #d1d5db;
-          padding: 10px 8px;
-          text-align: left;
-          background: #f9fafb;
-          font-weight: 600;
-        }
-
-        .results-table td {
-          border: 1px solid #d1d5db;
-          padding: 10px 8px;
-          vertical-align: top;
-        }
-
-        .cell-difference {
-          background: #fef2f2;
-        }
-
-        .cell-acceptable {
-          background: #fefce8;
-        }
-
-        .cell-match {
-          background: #f0fdf4;
-        }
-
-        .auto-detected {
-          margin-left: 5px;
-          font-size: 0.8em;
-        }
-
-        .results-table small {
-          color: #6b7280;
-          display: block;
-          margin-top: 4px;
-        }
-
-        /* Mobile-First Responsive Design */
-        @media (max-width: 768px) {
-          .container {
-            padding: 10px;
-          }
-
-          .nav-content {
-            flex-direction: column;
-            gap: 1rem;
-            text-align: center;
-          }
-
-          .nav-links {
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          .hero {
-            padding: 30px 15px;
-            margin-bottom: 20px;
-          }
-
-          .hero-title {
-            font-size: 2.2rem;
-          }
-
-          .hero-subtitle {
-            font-size: 1.2rem;
-          }
-
-          .hero-description {
-            font-size: 1rem;
-            padding: 0 10px;
-          }
-
-          .section {
-            padding: 20px 15px;
-            margin-bottom: 15px;
-          }
-          
-          .section-title {
-            font-size: 1.4rem;
-          }
-
-          .section-subtitle {
-            font-size: 0.9rem;
-          }
-
-          .file-type-selector {
-            padding: 15px;
-            gap: 10px;
-          }
-
-          .file-type-selector label {
-            padding: 14px 16px;
-            font-size: 0.95rem;
-            min-height: 52px;
-          }
-
-          .file-type-selector label:hover {
-            transform: none;
-          }
-
-          .guidance {
-            padding: 15px;
-            margin: 15px 0;
-          }
-
-          .guidance h3 {
-            font-size: 1.1rem;
-            text-align: center;
-          }
-
-          .order-guide {
-            flex-direction: column;
-            gap: 10px;
-          }
-
-          .step {
-            padding: 12px;
-            text-align: center;
-            font-size: 0.9rem;
-          }
-
-          .arrow {
-            transform: rotate(90deg);
-            font-size: 1.2rem;
-          }
-
-          .file-inputs {
-            flex-direction: column;
-            gap: 15px;
-          }
-
-          .file-input-group {
-            min-width: auto;
-          }
-
-          .file-input-group input[type="file"] {
-            padding: 12px;
-            font-size: 1rem;
-            min-height: 48px;
-          }
-
-          .file-name {
-            padding: 10px;
-            font-size: 0.9rem;
-          }
-
-          .load-button {
-            min-width: auto;
-            width: 100%;
-            padding: 16px 20px;
-            font-size: 1rem;
-            margin: 15px 0;
-          }
-
-          .results {
-            padding: 15px;
-            margin: 15px 0;
-          }
-
-          .summary {
-            padding: 15px;
-            font-size: 0.9rem;
-          }
-
-          .download-buttons {
-            flex-direction: column;
-            gap: 8px;
-          }
-
-          .download-btn {
-            width: 100%;
-            padding: 12px;
-            font-size: 0.95rem;
-          }
-
-          .results-table {
-            font-size: 0.8rem;
-            display: block;
-            overflow-x: auto;
-            white-space: nowrap;
-            border: 1px solid #d1d5db;
-          }
-
-          .results-table thead,
-          .results-table tbody,
-          .results-table th,
-          .results-table td,
-          .results-table tr {
-            display: block;
-          }
-
-          .results-table thead tr {
-            position: absolute;
-            top: -9999px;
-            left: -9999px;
-          }
-
-          .results-table tr {
-            border: 1px solid #d1d5db;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-          }
-
-          .results-table td {
-            border: none;
-            border-bottom: 1px solid #e5e7eb;
-            position: relative;
-            padding: 8px 8px 8px 35%;
-            white-space: normal;
-            text-align: left;
-          }
-
-          .results-table td:before {
-            content: attr(data-label) ": ";
-            position: absolute;
-            left: 6px;
-            width: 30%;
-            padding-right: 10px;
-            white-space: nowrap;
-            font-weight: 600;
-            color: #374151;
-          }
-
-          .error, .loading {
-            padding: 12px;
-            font-size: 0.9rem;
-            margin: 10px 0;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .hero-title {
-            font-size: 1.8rem;
-          }
-
-          .hero-subtitle {
-            font-size: 1rem;
-          }
-
-          .section-title {
-            font-size: 1.2rem;
-          }
-
-          .file-type-selector label {
-            padding: 10px;
-            font-size: 0.9rem;
-          }
-
-          .step {
-            padding: 10px;
-            font-size: 0.85rem;
-          }
-
-          .load-button {
-            padding: 14px 16px;
-            font-size: 0.95rem;
-          }
-        }
-
-        @media (max-width: 768px) and (orientation: landscape) {
-          .hero {
-            padding: 20px 15px;
-          }
-
-          .hero-title {
-            font-size: 2rem;
-          }
-
-          .section {
-            padding: 20px;
-          }
-        }
-
-        @media (pointer: coarse) {
-          .file-type-selector label {
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-          }
-
-          .load-button {
-            min-height: 48px;
-          }
-
-          .download-btn {
-            min-height: 44px;
-          }
-
-          input[type="file"] {
-            min-height: 44px;
-          }
-
-          input[type="radio"] {
-            width: 18px;
-            height: 18px;
-            margin-right: 8px;
-          }
-        }
-      `}</style>
     </div>
   );
 }
