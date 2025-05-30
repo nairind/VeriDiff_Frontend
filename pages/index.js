@@ -34,12 +34,12 @@ export default function Home() {
 
   const handleTryDemo = () => {
     // In a real Next.js app, this would be: router.push('/compare');
-    alert('This would redirect to the comparison tool. Demo functionality preserved!');
+    window.location.href = '/compare';
   };
 
   const handleSignIn = () => {
-    // In a real Next.js app, this would be: router.push('/login');
-    alert('This would redirect to the login page. Magic link authentication coming soon!');
+    // UPDATED: Now redirects to actual login page instead of showing alert
+    window.location.href = '/login';
   };
 
   const handleSignOut = () => {
