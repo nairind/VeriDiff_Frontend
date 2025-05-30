@@ -45,6 +45,7 @@ export default function Compare() {
   const [selectedSheet1, setSelectedSheet1] = useState(null);
   const [selectedSheet2, setSelectedSheet2] = useState(null);
   const [showSheetSelector, setShowSheetSelector] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // INLINE FILE DETECTION (inside component)
   const detectFileTypeInline = (file) => {
@@ -452,151 +453,91 @@ export default function Compare() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f8fafc',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
+    <div className="min-h-screen bg-gray-50 font-sans">
       <Head>
         <title>VeriDiff - File Comparison Tool</title>
       </Head>
 
       {/* Navigation */}
-      <nav style={{
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '1rem 0',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <Link href="/" style={{ textDecoration: 'none' }}>
-            <span style={{
-              fontSize: '1.5rem',
-              fontWeight: '700',
-              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              cursor: 'pointer'
-            }}>
-              VeriDiff
-            </span>
-          </Link>
-          <div style={{
-            display: 'flex',
-            gap: '2rem',
-            alignItems: 'center'
-          }}>
-            <Link href="/about" style={{ textDecoration: 'none' }}>
-              <span style={{
-                color: '#FF6B35',
-                cursor: 'pointer',
-                fontSize: '1.1rem',
-                fontWeight: '600'
-              }}>
-                📖 About
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link href="/" className="text-decoration-none">
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer">
+                VeriDiff
               </span>
             </Link>
-            <span style={{
-              color: '#2563eb',
-              fontWeight: '500',
-              fontSize: '1rem'
-            }}>
-              Compare Files
-            </span>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link href="/about" className="text-decoration-none">
+                <span className="text-orange-500 cursor-pointer text-lg font-semibold hover:text-orange-600 transition-colors">
+                  📖 About
+                </span>
+              </Link>
+              <span className="text-blue-600 font-medium">
+                Compare Files
+              </span>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 p-2"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                </svg>
+              </button>
+            </div>
           </div>
+
+          {/* Mobile Navigation Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200 py-4 bg-white">
+              <div className="flex flex-col space-y-4">
+                <Link href="/about" className="text-decoration-none">
+                  <span className="text-orange-500 cursor-pointer text-lg font-semibold px-4">
+                    📖 About
+                  </span>
+                </Link>
+                <span className="text-blue-600 font-medium px-4">
+                  Compare Files
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
-      <main style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '30px 20px'
-      }}>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Hero Section */}
-        <div style={{
-          textAlign: 'center',
-          padding: '50px 30px',
-          background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-          borderRadius: '20px',
-          marginBottom: '40px',
-          color: 'white',
-          boxShadow: '0 10px 30px rgba(37, 99, 235, 0.3)'
-        }}>
-          <h1 style={{
-            fontSize: '3rem',
-            fontWeight: '700',
-            margin: '0 0 15px 0',
-            lineHeight: '1.2'
-          }}>
+        <div className="text-center p-6 sm:p-8 lg:p-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl mb-8 text-white shadow-xl">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
             VeriDiff
           </h1>
-          <h2 style={{
-            fontSize: '1.5rem',
-            fontWeight: '400',
-            margin: '0 0 20px 0',
-            opacity: '0.9'
-          }}>
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-light mb-4 opacity-90">
             Smart File Comparison
           </h2>
-          <p style={{
-            fontSize: '1.1rem',
-            opacity: '0.9',
-            lineHeight: '1.6',
-            maxWidth: '600px',
-            margin: '0 auto'
-          }}>
+          <p className="text-sm sm:text-base lg:text-lg opacity-90 leading-relaxed max-w-2xl mx-auto">
             Compare documents with precision and confidence. From Excel to PDFs, 
             VeriDiff handles your most critical file comparisons with professional-grade accuracy.
           </p>
         </div>
 
         {/* File Type Selection */}
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '40px',
-          marginBottom: '30px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <h2 style={{
-            fontSize: '1.8rem',
-            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            margin: '0 0 15px 0',
-            textAlign: 'center',
-            fontWeight: '700'
-          }}>
+        <div className="bg-white rounded-2xl p-6 sm:p-8 mb-8 shadow-lg border border-gray-200">
+          <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3 text-center">
             Choose Your Comparison Type
           </h2>
-          <p style={{
-            fontSize: '1.1rem',
-            color: '#6b7280',
-            textAlign: 'center',
-            margin: '0 0 35px 0'
-          }}>
+          <p className="text-gray-600 text-center mb-8 text-sm sm:text-base">
             Select the file formats you want to compare
           </p>
           
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '20px',
-            maxWidth: '900px',
-            margin: '0 auto'
-          }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[
               { value: 'excel', label: 'Excel–Excel', featured: false },
               { value: 'excel_csv', label: 'Excel–CSV', featured: true },
@@ -609,45 +550,13 @@ export default function Compare() {
             ].map((option) => (
               <label
                 key={option.value}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '15px',
-                  padding: '20px',
-                  borderRadius: '12px',
-                  cursor: option.disabled ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.3s ease',
-                  background: option.featured 
-                    ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                    : option.disabled 
-                      ? '#f9fafb' 
-                      : 'white',
-                  border: option.featured 
-                    ? '2px solid #f59e0b' 
-                    : option.disabled 
-                      ? '2px dashed #9ca3af' 
-                      : fileType === option.value 
-                        ? '2px solid #2563eb' 
-                        : '2px solid #e5e7eb',
-                  opacity: option.disabled ? 0.7 : 1,
-                  fontWeight: option.featured ? '600' : '500',
-                  fontSize: '1rem',
-                  minHeight: '60px'
-                }}
-                onMouseOver={(e) => {
-                  if (!option.disabled && fileType !== option.value) {
-                    e.target.style.borderColor = '#2563eb';
-                    e.target.style.background = option.featured ? 'linear-gradient(135deg, #fde68a, #fcd34d)' : '#f0f4ff';
-                    e.target.style.transform = 'translateY(-2px)';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (!option.disabled && fileType !== option.value) {
-                    e.target.style.borderColor = option.featured ? '#f59e0b' : '#e5e7eb';
-                    e.target.style.background = option.featured ? 'linear-gradient(135deg, #fef3c7, #fde68a)' : 'white';
-                    e.target.style.transform = 'none';
-                  }
-                }}
+                className={`
+                  flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all duration-300 min-h-[60px]
+                  ${option.disabled ? 'cursor-not-allowed opacity-70 bg-gray-50 border-2 border-dashed border-gray-300' :
+                    option.featured ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-400 font-semibold hover:from-yellow-100 hover:to-yellow-200 hover:-translate-y-1' :
+                    fileType === option.value ? 'bg-blue-50 border-2 border-blue-500' :
+                    'bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 hover:-translate-y-1'}
+                `}
               >
                 <input
                   type="radio"
@@ -656,24 +565,15 @@ export default function Compare() {
                   checked={fileType === option.value}
                   onChange={handleFileTypeChange}
                   disabled={option.disabled}
-                  style={{
-                    width: '20px',
-                    height: '20px',
-                    accentColor: '#2563eb'
-                  }}
+                  className="w-5 h-5 text-blue-600"
                 />
-                <span style={{ flex: 1 }}>
+                <span className="flex-1 text-sm sm:text-base">
                   {option.label}
                   {option.badge && (
-                    <span style={{
-                      marginLeft: '8px',
-                      fontSize: '0.75em',
-                      background: option.badge === 'v1' ? '#dbeafe' : '#fef3c7',
-                      color: option.badge === 'v1' ? '#1e40af' : '#92400e',
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      fontWeight: '600'
-                    }}>
+                    <span className={`
+                      ml-2 text-xs px-2 py-1 rounded-md font-semibold
+                      ${option.badge === 'v1' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}
+                    `}>
                       {option.badge}
                     </span>
                   )}
@@ -683,95 +583,38 @@ export default function Compare() {
           </div>
         </div>
 
-        {/* Enhanced File Upload Section */}
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '40px',
-          marginBottom: '30px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <h2 style={{
-            fontSize: '1.8rem',
-            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            margin: '0 0 15px 0',
-            textAlign: 'center',
-            fontWeight: '700'
-          }}>
+        {/* File Upload Section */}
+        <div className="bg-white rounded-2xl p-6 sm:p-8 mb-8 shadow-lg border border-gray-200">
+          <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3 text-center">
             Upload Your Files
           </h2>
-          <p style={{
-            fontSize: '1.1rem',
-            color: '#6b7280',
-            textAlign: 'center',
-            margin: '0 0 35px 0'
-          }}>
+          <p className="text-gray-600 text-center mb-8 text-sm sm:text-base">
             Select files to compare
           </p>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '25px',
-            marginBottom: '35px'
-          }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* File 1 Upload */}
-            <div style={{
-              background: fileType === 'excel_csv' 
-                ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
-              padding: '25px',
-              borderRadius: '16px',
-              border: fileType === 'excel_csv' 
-                ? '2px solid #f59e0b' 
-                : '2px solid #0ea5e9',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s ease'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '15px'
-              }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  background: fileType === 'excel_csv' 
-                    ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
-                    : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '1.2rem'
-                }}>
+            <div className={`
+              p-6 rounded-2xl border-2 shadow-md transition-all duration-300
+              ${fileType === 'excel_csv' 
+                ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-400' 
+                : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-400'}
+            `}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`
+                  w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg
+                  ${fileType === 'excel_csv' 
+                    ? 'bg-gradient-to-br from-yellow-500 to-yellow-600' 
+                    : 'bg-gradient-to-br from-blue-500 to-blue-600'}
+                `}>
                   1
                 </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontWeight: '700',
-                    color: '#1f2937',
-                    fontSize: '1.1rem',
-                    margin: '0'
-                  }}>
-                    {fileType === 'excel_csv' 
-                      ? 'Excel File (.xlsx, .xls, .xlsm)' 
-                      : 'File 1'}
+                <div className="flex-1">
+                  <label className="block font-bold text-gray-900 text-base sm:text-lg">
+                    {fileType === 'excel_csv' ? 'Excel File (.xlsx, .xls, .xlsm)' : 'File 1'}
                   </label>
                   {fileType === 'excel_csv' && (
-                    <small style={{
-                      color: '#92400e',
-                      fontSize: '0.85rem',
-                      fontWeight: '500'
-                    }}>
+                    <small className="text-yellow-700 text-xs sm:text-sm font-medium">
                       📊 Upload your Excel spreadsheet first
                     </small>
                   )}
@@ -782,85 +625,37 @@ export default function Compare() {
                 type="file"
                 onChange={(e) => handleFileChange(e, 1)}
                 accept={fileType === 'excel_csv' ? '.xlsx,.xls,.xlsm' : undefined}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  border: '2px solid rgba(255,255,255,0.8)',
-                  borderRadius: '10px',
-                  fontSize: '1rem',
-                  background: 'rgba(255,255,255,0.9)',
-                  fontWeight: '500'
-                }}
+                className="w-full p-3 border-2 border-white/80 rounded-lg text-sm sm:text-base bg-white/90 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {file1 && (
-                <div style={{
-                  marginTop: '15px',
-                  padding: '12px',
-                  background: 'rgba(34, 197, 94, 0.1)',
-                  border: '2px solid #22c55e',
-                  borderRadius: '8px',
-                  fontSize: '0.95rem',
-                  color: '#166534',
-                  fontWeight: '600'
-                }}>
+                <div className="mt-4 p-3 bg-green-50 border-2 border-green-500 rounded-lg text-xs sm:text-sm text-green-700 font-semibold">
                   ✅ {file1.name}
                 </div>
               )}
             </div>
             
             {/* File 2 Upload */}
-            <div style={{
-              background: fileType === 'excel_csv' 
-                ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' 
-                : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
-              padding: '25px',
-              borderRadius: '16px',
-              border: fileType === 'excel_csv' 
-                ? '2px solid #22c55e' 
-                : '2px solid #0ea5e9',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s ease'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '15px'
-              }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  background: fileType === 'excel_csv' 
-                    ? 'linear-gradient(135deg, #22c55e, #16a34a)' 
-                    : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '1.2rem'
-                }}>
+            <div className={`
+              p-6 rounded-2xl border-2 shadow-md transition-all duration-300
+              ${fileType === 'excel_csv' 
+                ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-400' 
+                : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-400'}
+            `}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`
+                  w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg
+                  ${fileType === 'excel_csv' 
+                    ? 'bg-gradient-to-br from-green-500 to-green-600' 
+                    : 'bg-gradient-to-br from-blue-500 to-blue-600'}
+                `}>
                   2
                 </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontWeight: '700',
-                    color: '#1f2937',
-                    fontSize: '1.1rem',
-                    margin: '0'
-                  }}>
-                    {fileType === 'excel_csv' 
-                      ? 'CSV File (.csv)' 
-                      : 'File 2'}
+                <div className="flex-1">
+                  <label className="block font-bold text-gray-900 text-base sm:text-lg">
+                    {fileType === 'excel_csv' ? 'CSV File (.csv)' : 'File 2'}
                   </label>
                   {fileType === 'excel_csv' && (
-                    <small style={{
-                      color: '#166534',
-                      fontSize: '0.85rem',
-                      fontWeight: '500'
-                    }}>
+                    <small className="text-green-700 text-xs sm:text-sm font-medium">
                       📄 Upload your CSV data file second
                     </small>
                   )}
@@ -871,199 +666,64 @@ export default function Compare() {
                 type="file"
                 onChange={(e) => handleFileChange(e, 2)}
                 accept={fileType === 'excel_csv' ? '.csv' : undefined}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  border: '2px solid rgba(255,255,255,0.8)',
-                  borderRadius: '10px',
-                  fontSize: '1rem',
-                  background: 'rgba(255,255,255,0.9)',
-                  fontWeight: '500'
-                }}
+                className="w-full p-3 border-2 border-white/80 rounded-lg text-sm sm:text-base bg-white/90 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {file2 && (
-                <div style={{
-                  marginTop: '15px',
-                  padding: '12px',
-                  background: 'rgba(34, 197, 94, 0.1)',
-                  border: '2px solid #22c55e',
-                  borderRadius: '8px',
-                  fontSize: '0.95rem',
-                  color: '#166534',
-                  fontWeight: '600'
-                }}>
+                <div className="mt-4 p-3 bg-green-50 border-2 border-green-500 rounded-lg text-xs sm:text-sm text-green-700 font-semibold">
                   ✅ {file2.name}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Enhanced Load Button */}
-          <div style={{ textAlign: 'center', position: 'relative' }}>
+          {/* Load Button */}
+          <div className="text-center relative">
             <button 
               onClick={handleLoadFiles} 
               disabled={loading || !file1 || !file2}
-              style={{
-                background: loading || !file1 || !file2 
-                  ? 'linear-gradient(135deg, #94a3b8, #64748b)' 
-                  : 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)',
-                color: 'white',
-                border: 'none',
-                padding: '20px 50px',
-                borderRadius: '60px',
-                fontSize: '1.4rem',
-                fontWeight: '700',
-                cursor: loading || !file1 || !file2 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                minWidth: '360px',
-                boxShadow: loading || !file1 || !file2 
-                  ? '0 4px 15px rgba(100, 116, 139, 0.2)' 
-                  : '0 10px 30px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset',
-                position: 'relative',
-                overflow: 'hidden',
-                backgroundSize: '200% 100%',
-                animation: loading || !file1 || !file2 ? 'none' : 'gradient-shift 3s ease infinite'
-              }}
-              onMouseOver={(e) => {
-                if (!loading && file1 && file2) {
-                  e.target.style.transform = 'translateY(-4px) scale(1.03)';
-                  e.target.style.boxShadow = '0 15px 40px rgba(37, 99, 235, 0.6), 0 5px 15px rgba(124, 58, 237, 0.4)';
-                  e.target.style.background = 'linear-gradient(135deg, #1d4ed8, #6d28d9, #db2777)';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!loading && file1 && file2) {
-                  e.target.style.transform = 'none';
-                  e.target.style.boxShadow = '0 10px 30px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset';
-                  e.target.style.background = 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)';
-                }
-              }}
+              className={`
+                px-8 sm:px-12 py-4 sm:py-5 rounded-full text-base sm:text-lg lg:text-xl font-bold transition-all duration-300 shadow-lg relative overflow-hidden min-w-[300px] sm:min-w-[360px]
+                ${loading || !file1 || !file2 
+                  ? 'bg-gray-400 cursor-not-allowed text-white' 
+                  : 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white hover:shadow-xl hover:-translate-y-1 active:scale-95'}
+              `}
             >
-              {/* Animated shimmer effect */}
-              {!loading && file1 && file2 && (
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: '-100%',
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-                  animation: 'shimmer 2s infinite'
-                }} />
-              )}
-              
               {loading ? (
                 <>
-                  <span style={{ 
-                    marginRight: '12px',
-                    display: 'inline-block',
-                    animation: 'spin 1s linear infinite'
-                  }}>⏳</span>
+                  <span className="inline-block animate-spin mr-3">⏳</span>
                   Processing Files...
                 </>
               ) : (
                 <>
-                  <span style={{ 
-                    marginRight: '12px',
-                    fontSize: '1.6rem',
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-                  }}>🚀</span>
-                  <span style={{
-                    background: 'linear-gradient(45deg, #ffffff, #f0f9ff)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                  }}>
+                  <span className="mr-3 text-lg sm:text-xl filter drop-shadow-sm">🚀</span>
+                  <span className="bg-gradient-to-r from-white to-blue-50 bg-clip-text text-transparent drop-shadow-sm">
                     Load Files & Start Comparison
                   </span>
                 </>
               )}
             </button>
-            
-            {/* Pulse ring effect when enabled */}
-            {!loading && file1 && file2 && (
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '380px',
-                height: '80px',
-                borderRadius: '60px',
-                border: '2px solid rgba(37, 99, 235, 0.3)',
-                animation: 'pulse-ring 2s infinite',
-                pointerEvents: 'none'
-              }} />
-            )}
           </div>
-          
-          <style jsx>{`
-            @keyframes gradient-shift {
-              0%, 100% { background-position: 0% 50%; }
-              50% { background-position: 100% 50%; }
-            }
-            
-            @keyframes shimmer {
-              0% { left: -100%; }
-              100% { left: 100%; }
-            }
-            
-            @keyframes spin {
-              from { transform: rotate(0deg); }
-              to { transform: rotate(360deg); }
-            }
-            
-            @keyframes pulse-ring {
-              0% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 0.7;
-              }
-              50% {
-                transform: translate(-50%, -50%) scale(1.1);
-                opacity: 0.3;
-              }
-              100% {
-                transform: translate(-50%, -50%) scale(1.2);
-                opacity: 0;
-              }
-            }
-          `}</style>
         </div>
 
         {/* Sheet Selector */}
         {FEATURES.SHEET_SELECTION && showSheetSelector && (
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '30px',
-            marginBottom: '30px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            border: '1px solid #e5e7eb'
-          }}>
+          <div className="bg-white rounded-2xl p-6 sm:p-8 mb-8 shadow-lg border border-gray-200">
             <SheetSelector
               file1Info={file1Info}
               file2Info={file2Info}
               onSheetSelect={handleSheetSelect}
               fileType={fileType}
             />
-            <div style={{ textAlign: 'center', marginTop: '25px' }}>
+            <div className="text-center mt-6">
               <button 
                 onClick={handleProceedWithSheets} 
                 disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
-                style={{
-                  background: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)
-                    ? '#9ca3af' 
-                    : 'linear-gradient(135deg, #2563eb, #7c3aed)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '14px 30px',
-                  borderRadius: '8px',
-                  fontSize: '1.1rem',
-                  fontWeight: '600',
-                  cursor: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
+                className={`
+                  px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-300
+                  ${loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)
+                    ? 'bg-gray-400 cursor-not-allowed text-white' 
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:-translate-y-1'}
+                `}
               >
                 {loading ? 'Processing...' : 'Proceed with Selected Sheets'}
               </button>
@@ -1073,173 +733,86 @@ export default function Compare() {
 
         {/* Header Mapper */}
         {showMapper && (
-          <HeaderMapper
-            file1Headers={headers1}
-            file2Headers={headers2}
-            suggestedMappings={suggestedMappings}
-            sampleData1={sampleData1}
-            sampleData2={sampleData2}
-            onConfirm={handleMappingConfirmed}
-            showRunButton={true}
-            onRun={handleRunComparison}
-          />
+          <div className="mb-8">
+            <HeaderMapper
+              file1Headers={headers1}
+              file2Headers={headers2}
+              suggestedMappings={suggestedMappings}
+              sampleData1={sampleData1}
+              sampleData2={sampleData2}
+              onConfirm={handleMappingConfirmed}
+              showRunButton={true}
+              onRun={handleRunComparison}
+            />
+          </div>
         )}
 
         {/* Error Display */}
         {error && (
-          <div style={{
-            color: '#dc2626',
-            margin: '20px 0',
-            padding: '20px',
-            border: '2px solid #dc2626',
-            borderRadius: '12px',
-            background: '#fef2f2',
-            fontSize: '1rem',
-            fontWeight: '500'
-          }}>
-            <strong>Error:</strong> {error}
+          <div className="mb-8 p-4 sm:p-6 border-2 border-red-500 rounded-xl bg-red-50 text-red-700">
+            <strong className="block text-base sm:text-lg mb-2">Error:</strong>
+            <span className="text-sm sm:text-base whitespace-pre-line">{error}</span>
           </div>
         )}
 
         {/* Loading */}
         {loading && (
-          <div style={{
-            margin: '20px 0',
-            padding: '20px',
-            background: '#eff6ff',
-            border: '2px solid #2563eb',
-            borderRadius: '12px',
-            color: '#1e40af',
-            fontSize: '1rem',
-            fontWeight: '500',
-            textAlign: 'center'
-          }}>
-            <strong>Processing...</strong> Please wait while we compare your files...
+          <div className="mb-8 p-4 sm:p-6 bg-blue-50 border-2 border-blue-500 rounded-xl text-blue-700 text-center">
+            <div className="flex items-center justify-center gap-3">
+              <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+              <span className="font-semibold text-sm sm:text-base">Processing... Please wait while we compare your files</span>
+            </div>
           </div>
         )}
 
         {/* Results */}
         {results && (
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '40px',
-            margin: '30px 0',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h2 style={{
-              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              fontSize: '2rem',
-              fontWeight: '700',
-              margin: '0 0 25px 0',
-              textAlign: 'center'
-            }}>
+          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-200">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 text-center">
               Comparison Results
             </h2>
-            <div style={{
-              margin: '25px 0',
-              padding: '25px',
-              background: '#f8fafc',
-              border: '1px solid #e5e7eb',
-              borderRadius: '12px'
-            }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '20px',
-                marginBottom: '25px'
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+            
+            <div className="mb-8 p-6 bg-gray-50 border border-gray-200 rounded-xl">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
                     {results.total_records}
                   </div>
-                  <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Total Records</div>
+                  <div className="text-gray-600 text-xs sm:text-sm">Total Records</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626' }}>
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-red-600 mb-1">
                     {results.differences_found}
                   </div>
-                  <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Differences Found</div>
+                  <div className="text-gray-600 text-xs sm:text-sm">Differences Found</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#16a34a' }}>
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-1">
                     {results.matches_found}
                   </div>
-                  <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Matches Found</div>
+                  <div className="text-gray-600 text-xs sm:text-sm">Matches Found</div>
                 </div>
               </div>
               
               {FEATURES.AUTO_DETECTION && results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
-                <div style={{
-                  background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
-                  border: '1px solid #22c55e',
-                  borderRadius: '8px',
-                  padding: '15px',
-                  marginBottom: '20px',
-                  textAlign: 'center'
-                }}>
-                  <strong style={{ color: '#166534' }}>🤖 Auto-detected Amount Fields:</strong>
-                  <span style={{ color: '#16a34a', marginLeft: '8px' }}>
+                <div className="bg-green-50 border border-green-500 rounded-lg p-4 mb-6 text-center">
+                  <strong className="text-green-800 text-sm sm:text-base">🤖 Auto-detected Amount Fields:</strong>
+                  <span className="text-green-700 ml-2 text-sm sm:text-base">
                     {results.autoDetectedFields.join(', ')}
                   </span>
                 </div>
               )}
               
-              <div style={{
-                display: 'flex',
-                gap: '15px',
-                justifyContent: 'center',
-                flexWrap: 'wrap'
-              }}>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={handleDownloadExcel}
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseOver={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.target.style.transform = 'none';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-sm sm:text-base"
                 >
                   📊 Download Excel
                 </button>
                 <button
                   onClick={handleDownloadCSV}
-                  style={{
-                    background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '1rem',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseOver={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 4px 15px rgba(14, 165, 233, 0.3)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.target.style.transform = 'none';
-                    e.target.style.boxShadow = 'none';
-                  }}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 hover:-translate-y-1 text-sm sm:text-base"
                 >
                   📄 Download CSV
                 </button>
@@ -1247,39 +820,15 @@ export default function Compare() {
             </div>
             
             {results.results && results.results.length > 0 && (
-              <div style={{
-                overflowX: 'auto',
-                marginTop: '30px',
-                borderRadius: '12px',
-                border: '1px solid #e5e7eb'
-              }}>
-                <table style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '0.9rem',
-                  minWidth: '600px'
-                }}>
+              <div className="overflow-x-auto rounded-xl border border-gray-200">
+                <table className="w-full border-collapse text-xs sm:text-sm min-w-[600px]">
                   <thead>
-                    <tr style={{
-                      background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)'
-                    }}>
-                      <th style={{
-                        border: '1px solid #e5e7eb',
-                        padding: '16px 12px',
-                        textAlign: 'left',
-                        fontWeight: '600',
-                        color: '#1f2937'
-                      }}>
+                    <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
+                      <th className="border border-gray-200 p-3 sm:p-4 text-left font-semibold text-gray-900">
                         ID
                       </th>
                       {Object.keys(results.results[0].fields).map((field, idx) => (
-                        <th key={idx} style={{
-                          border: '1px solid #e5e7eb',
-                          padding: '16px 12px',
-                          textAlign: 'left',
-                          fontWeight: '600',
-                          color: '#1f2937'
-                        }}>
+                        <th key={idx} className="border border-gray-200 p-3 sm:p-4 text-left font-semibold text-gray-900">
                           {field}
                         </th>
                       ))}
@@ -1288,42 +837,26 @@ export default function Compare() {
                   <tbody>
                     {results.results.map((row, rowIndex) => (
                       <tr key={rowIndex}>
-                        <td style={{
-                          border: '1px solid #e5e7eb',
-                          padding: '12px',
-                          verticalAlign: 'top',
-                          background: 'white'
-                        }}>
+                        <td className="border border-gray-200 p-3 sm:p-4 bg-white">
                           {row.ID}
                         </td>
                         {Object.entries(row.fields).map(([key, value], idx) => (
                           <td
                             key={idx}
-                            style={{
-                              border: '1px solid #e5e7eb',
-                              padding: '12px',
-                              verticalAlign: 'top',
-                              background: value.status === 'difference' ? '#fef2f2' 
-                                        : value.status === 'acceptable' ? '#fefce8' 
-                                        : '#f0fdf4'
-                            }}
+                            className={`
+                              border border-gray-200 p-3 sm:p-4
+                              ${value.status === 'difference' ? 'bg-red-50' 
+                                : value.status === 'acceptable' ? 'bg-yellow-50' 
+                                : 'bg-green-50'}
+                            `}
                           >
-                            <div>
-                              <strong>{value.val1} / {value.val2}</strong>
+                            <div className="font-semibold text-xs sm:text-sm">
+                              {value.val1} / {value.val2}
                               {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
-                                <span style={{
-                                  marginLeft: '5px',
-                                  fontSize: '0.8em'
-                                }}>
-                                  🤖
-                                </span>
+                                <span className="ml-1 text-xs">🤖</span>
                               )}
                             </div>
-                            <small style={{
-                              color: '#6b7280',
-                              display: 'block',
-                              marginTop: '4px'
-                            }}>
+                            <small className="text-gray-600 block mt-1 text-xs">
                               {value.status}
                               {value.difference && ` (Δ ${value.difference})`}
                             </small>
