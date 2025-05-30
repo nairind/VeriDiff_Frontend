@@ -45,6 +45,7 @@ export default function Compare() {
   const [selectedSheet1, setSelectedSheet1] = useState(null);
   const [selectedSheet2, setSelectedSheet2] = useState(null);
   const [showSheetSelector, setShowSheetSelector] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // INLINE FILE DETECTION (inside component)
   const detectFileTypeInline = (file) => {
@@ -451,51 +452,171 @@ export default function Compare() {
     }
   };
 
+  // Responsive styles
+  const containerStyle = {
+    minHeight: '100vh',
+    background: '#f8fafc',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  };
+
+  const navStyle = {
+    background: 'white',
+    borderBottom: '1px solid #e5e7eb',
+    padding: '1rem 0',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+  };
+
+  const navContainerStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 20px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  };
+
+  const logoStyle = {
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    cursor: 'pointer',
+    textDecoration: 'none'
+  };
+
+  const desktopNavStyle = {
+    display: 'flex',
+    gap: '2rem',
+    alignItems: 'center'
+  };
+
+  const mobileNavButtonStyle = {
+    display: 'none',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '8px'
+  };
+
+  const mainStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '30px 20px'
+  };
+
+  const heroStyle = {
+    textAlign: 'center',
+    padding: '50px 30px',
+    background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+    borderRadius: '20px',
+    marginBottom: '40px',
+    color: 'white',
+    boxShadow: '0 10px 30px rgba(37, 99, 235, 0.3)'
+  };
+
+  const sectionStyle = {
+    background: 'white',
+    borderRadius: '16px',
+    padding: '40px',
+    marginBottom: '30px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+    border: '1px solid #e5e7eb'
+  };
+
+  const sectionTitleStyle = {
+    fontSize: '1.8rem',
+    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    margin: '0 0 15px 0',
+    textAlign: 'center',
+    fontWeight: '700'
+  };
+
+  const fileTypeGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '20px',
+    maxWidth: '900px',
+    margin: '0 auto'
+  };
+
+  const fileUploadGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '25px',
+    marginBottom: '35px'
+  };
+
+  const loadButtonStyle = {
+    background: loading || !file1 || !file2 
+      ? 'linear-gradient(135deg, #94a3b8, #64748b)' 
+      : 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)',
+    color: 'white',
+    border: 'none',
+    padding: '20px 50px',
+    borderRadius: '60px',
+    fontSize: '1.4rem',
+    fontWeight: '700',
+    cursor: loading || !file1 || !file2 ? 'not-allowed' : 'pointer',
+    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+    minWidth: '360px',
+    boxShadow: loading || !file1 || !file2 
+      ? '0 4px 15px rgba(100, 116, 139, 0.2)' 
+      : '0 10px 30px rgba(37, 99, 235, 0.4)',
+    position: 'relative',
+    overflow: 'hidden'
+  };
+
+  // Media query styles
+  const mediaQueries = `
+    @media (max-width: 768px) {
+      .desktop-nav { display: none !important; }
+      .mobile-nav-button { display: block !important; }
+      .file-type-grid { grid-template-columns: 1fr !important; }
+      .file-upload-grid { grid-template-columns: 1fr !important; }
+      .load-button { 
+        min-width: 300px !important; 
+        font-size: 1.2rem !important;
+        padding: 16px 40px !important;
+      }
+      .hero-title { font-size: 2.5rem !important; }
+      .section-title { font-size: 1.5rem !important; }
+      .section-padding { padding: 25px !important; }
+    }
+    
+    @media (max-width: 480px) {
+      .main-container { padding: 15px !important; }
+      .hero-section { padding: 30px 20px !important; }
+      .load-button { 
+        min-width: 280px !important; 
+        font-size: 1.1rem !important;
+        padding: 14px 30px !important;
+      }
+    }
+  `;
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f8fafc',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
+    <div style={containerStyle}>
       <Head>
         <title>VeriDiff - File Comparison Tool</title>
+        <style>{mediaQueries}</style>
       </Head>
 
       {/* Navigation */}
-      <nav style={{
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '1rem 0',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
+      <nav style={navStyle}>
+        <div style={navContainerStyle}>
           <Link href="/" style={{ textDecoration: 'none' }}>
-            <span style={{
-              fontSize: '1.5rem',
-              fontWeight: '700',
-              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              cursor: 'pointer'
-            }}>
-              VeriDiff
-            </span>
+            <span style={logoStyle}>VeriDiff</span>
           </Link>
-          <div style={{
-            display: 'flex',
-            gap: '2rem',
-            alignItems: 'center'
-          }}>
+          
+          <div style={desktopNavStyle} className="desktop-nav">
             <Link href="/about" style={{ textDecoration: 'none' }}>
               <span style={{
                 color: '#FF6B35',
@@ -514,30 +635,48 @@ export default function Compare() {
               Compare Files
             </span>
           </div>
+
+          <button 
+            style={mobileNavButtonStyle}
+            className="mobile-nav-button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+            </svg>
+          </button>
         </div>
+
+        {mobileMenuOpen && (
+          <div style={{
+            borderTop: '1px solid #e5e7eb',
+            padding: '1rem 0',
+            background: 'white'
+          }}>
+            <div style={{ padding: '0 20px' }}>
+              <Link href="/about" style={{ textDecoration: 'none', display: 'block', marginBottom: '1rem' }}>
+                <span style={{ color: '#FF6B35', fontSize: '1.1rem', fontWeight: '600' }}>
+                  📖 About
+                </span>
+              </Link>
+              <span style={{ color: '#2563eb', fontWeight: '500' }}>
+                Compare Files
+              </span>
+            </div>
+          </div>
+        )}
       </nav>
 
-      <main style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '30px 20px'
-      }}>
+      <main style={mainStyle} className="main-container">
         {/* Hero Section */}
-        <div style={{
-          textAlign: 'center',
-          padding: '50px 30px',
-          background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-          borderRadius: '20px',
-          marginBottom: '40px',
-          color: 'white',
-          boxShadow: '0 10px 30px rgba(37, 99, 235, 0.3)'
-        }}>
+        <div style={heroStyle} className="hero-section">
           <h1 style={{
             fontSize: '3rem',
             fontWeight: '700',
             margin: '0 0 15px 0',
             lineHeight: '1.2'
-          }}>
+          }} className="hero-title">
             VeriDiff
           </h1>
           <h2 style={{
@@ -561,24 +700,8 @@ export default function Compare() {
         </div>
 
         {/* File Type Selection */}
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '40px',
-          marginBottom: '30px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <h2 style={{
-            fontSize: '1.8rem',
-            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            margin: '0 0 15px 0',
-            textAlign: 'center',
-            fontWeight: '700'
-          }}>
+        <div style={sectionStyle} className="section-padding">
+          <h2 style={sectionTitleStyle} className="section-title">
             Choose Your Comparison Type
           </h2>
           <p style={{
@@ -590,13 +713,7 @@ export default function Compare() {
             Select the file formats you want to compare
           </p>
           
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '20px',
-            maxWidth: '900px',
-            margin: '0 auto'
-          }}>
+          <div style={fileTypeGridStyle} className="file-type-grid">
             {[
               { value: 'excel', label: 'Excel–Excel', featured: false },
               { value: 'excel_csv', label: 'Excel–CSV', featured: true },
@@ -683,25 +800,9 @@ export default function Compare() {
           </div>
         </div>
 
-        {/* Enhanced File Upload Section */}
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '40px',
-          marginBottom: '30px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <h2 style={{
-            fontSize: '1.8rem',
-            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            margin: '0 0 15px 0',
-            textAlign: 'center',
-            fontWeight: '700'
-          }}>
+        {/* File Upload Section */}
+        <div style={sectionStyle} className="section-padding">
+          <h2 style={sectionTitleStyle} className="section-title">
             Upload Your Files
           </h2>
           <p style={{
@@ -713,12 +814,7 @@ export default function Compare() {
             Select files to compare
           </p>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '25px',
-            marginBottom: '35px'
-          }}>
+          <div style={fileUploadGridStyle} className="file-upload-grid">
             {/* File 1 Upload */}
             <div style={{
               background: fileType === 'excel_csv' 
@@ -898,60 +994,26 @@ export default function Compare() {
             </div>
           </div>
 
-          {/* Enhanced Load Button */}
+          {/* Load Button */}
           <div style={{ textAlign: 'center', position: 'relative' }}>
             <button 
               onClick={handleLoadFiles} 
               disabled={loading || !file1 || !file2}
-              style={{
-                background: loading || !file1 || !file2 
-                  ? 'linear-gradient(135deg, #94a3b8, #64748b)' 
-                  : 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)',
-                color: 'white',
-                border: 'none',
-                padding: '20px 50px',
-                borderRadius: '60px',
-                fontSize: '1.4rem',
-                fontWeight: '700',
-                cursor: loading || !file1 || !file2 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                minWidth: '360px',
-                boxShadow: loading || !file1 || !file2 
-                  ? '0 4px 15px rgba(100, 116, 139, 0.2)' 
-                  : '0 10px 30px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset',
-                position: 'relative',
-                overflow: 'hidden',
-                backgroundSize: '200% 100%',
-                animation: loading || !file1 || !file2 ? 'none' : 'gradient-shift 3s ease infinite'
-              }}
+              style={loadButtonStyle}
+              className="load-button"
               onMouseOver={(e) => {
                 if (!loading && file1 && file2) {
                   e.target.style.transform = 'translateY(-4px) scale(1.03)';
-                  e.target.style.boxShadow = '0 15px 40px rgba(37, 99, 235, 0.6), 0 5px 15px rgba(124, 58, 237, 0.4)';
-                  e.target.style.background = 'linear-gradient(135deg, #1d4ed8, #6d28d9, #db2777)';
+                  e.target.style.boxShadow = '0 15px 40px rgba(37, 99, 235, 0.6)';
                 }
               }}
               onMouseOut={(e) => {
                 if (!loading && file1 && file2) {
                   e.target.style.transform = 'none';
-                  e.target.style.boxShadow = '0 10px 30px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset';
-                  e.target.style.background = 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)';
+                  e.target.style.boxShadow = '0 10px 30px rgba(37, 99, 235, 0.4)';
                 }
               }}
             >
-              {/* Animated shimmer effect */}
-              {!loading && file1 && file2 && (
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: '-100%',
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-                  animation: 'shimmer 2s infinite'
-                }} />
-              )}
-              
               {loading ? (
                 <>
                   <span style={{ 
@@ -980,67 +1042,12 @@ export default function Compare() {
                 </>
               )}
             </button>
-            
-            {/* Pulse ring effect when enabled */}
-            {!loading && file1 && file2 && (
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '380px',
-                height: '80px',
-                borderRadius: '60px',
-                border: '2px solid rgba(37, 99, 235, 0.3)',
-                animation: 'pulse-ring 2s infinite',
-                pointerEvents: 'none'
-              }} />
-            )}
           </div>
-          
-          <style jsx>{`
-            @keyframes gradient-shift {
-              0%, 100% { background-position: 0% 50%; }
-              50% { background-position: 100% 50%; }
-            }
-            
-            @keyframes shimmer {
-              0% { left: -100%; }
-              100% { left: 100%; }
-            }
-            
-            @keyframes spin {
-              from { transform: rotate(0deg); }
-              to { transform: rotate(360deg); }
-            }
-            
-            @keyframes pulse-ring {
-              0% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 0.7;
-              }
-              50% {
-                transform: translate(-50%, -50%) scale(1.1);
-                opacity: 0.3;
-              }
-              100% {
-                transform: translate(-50%, -50%) scale(1.2);
-                opacity: 0;
-              }
-            }
-          `}</style>
         </div>
 
         {/* Sheet Selector */}
         {FEATURES.SHEET_SELECTION && showSheetSelector && (
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '30px',
-            marginBottom: '30px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            border: '1px solid #e5e7eb'
-          }}>
+          <div style={sectionStyle}>
             <SheetSelector
               file1Info={file1Info}
               file2Info={file2Info}
@@ -1120,14 +1127,7 @@ export default function Compare() {
 
         {/* Results */}
         {results && (
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '40px',
-            margin: '30px 0',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            border: '1px solid #e5e7eb'
-          }}>
+          <div style={sectionStyle}>
             <h2 style={{
               background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
               WebkitBackgroundClip: 'text',
@@ -1338,6 +1338,13 @@ export default function Compare() {
           </div>
         )}
       </main>
+
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
