@@ -683,84 +683,7 @@ export default function Compare() {
           </div>
         </div>
 
-        {/* File Order Guidance for Excel-CSV */}
-        {fileType === 'excel_csv' && (
-          <div style={{
-            background: 'linear-gradient(135deg, #eff6ff, #f3e8ff)',
-            border: '2px solid #2563eb',
-            borderRadius: '16px',
-            padding: '25px',
-            margin: '30px 0',
-            textAlign: 'center'
-          }}>
-            <h3 style={{
-              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              margin: '0 0 15px 0',
-              fontSize: '1.3rem',
-              fontWeight: '600'
-            }}>
-              📋 File Upload Instructions
-            </h3>
-            <p style={{
-              color: '#1f2937',
-              margin: '0 0 20px 0',
-              fontSize: '1.1rem'
-            }}>
-              Please upload your files in the correct order:
-            </p>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '20px',
-              justifyContent: 'center',
-              flexWrap: 'wrap'
-            }}>
-              <span style={{
-                background: 'white',
-                padding: '12px 20px',
-                borderRadius: '10px',
-                border: '2px solid #2563eb',
-                fontWeight: '600',
-                color: '#1f2937'
-              }}>
-                1. Excel File First (.xlsx, .xls, .xlsm)
-              </span>
-              <span style={{
-                fontSize: '1.5rem',
-                color: '#2563eb',
-                fontWeight: 'bold'
-              }}>
-                →
-              </span>
-              <span style={{
-                background: 'white',
-                padding: '12px 20px',
-                borderRadius: '10px',
-                border: '2px solid #2563eb',
-                fontWeight: '600',
-                color: '#1f2937'
-              }}>
-                2. CSV File Second (.csv)
-              </span>
-            </div>
-            <p style={{
-              background: 'rgba(255, 255, 255, 0.8)',
-              border: '1px solid #f59e0b',
-              borderRadius: '8px',
-              padding: '12px',
-              margin: '15px 0 0 0',
-              color: '#92400e',
-              fontSize: '0.95rem'
-            }}>
-              ⚠️ File order matters for accurate data mapping and comparison results.
-            </p>
-          </div>
-        )}
-
-        {/* File Upload */}
+        {/* Enhanced File Upload Section */}
         <div style={{
           background: 'white',
           borderRadius: '16px',
@@ -793,87 +716,181 @@ export default function Compare() {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '30px',
-            marginBottom: '30px'
+            gap: '25px',
+            marginBottom: '35px'
           }}>
+            {/* File 1 Upload */}
             <div style={{
-              background: '#f8fafc',
+              background: fileType === 'excel_csv' 
+                ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+                : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
               padding: '25px',
-              borderRadius: '12px',
-              border: '2px dashed #d1d5db'
+              borderRadius: '16px',
+              border: fileType === 'excel_csv' 
+                ? '2px solid #f59e0b' 
+                : '2px solid #0ea5e9',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease'
             }}>
-              <label style={{
-                display: 'block',
-                fontWeight: '600',
-                marginBottom: '12px',
-                color: '#1f2937',
-                fontSize: '1.1rem'
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '15px'
               }}>
-                File 1:
-              </label>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: fileType === 'excel_csv' 
+                    ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
+                    : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem'
+                }}>
+                  1
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontWeight: '700',
+                    color: '#1f2937',
+                    fontSize: '1.1rem',
+                    margin: '0'
+                  }}>
+                    {fileType === 'excel_csv' 
+                      ? 'Excel File (.xlsx, .xls, .xlsm)' 
+                      : 'File 1'}
+                  </label>
+                  {fileType === 'excel_csv' && (
+                    <small style={{
+                      color: '#92400e',
+                      fontSize: '0.85rem',
+                      fontWeight: '500'
+                    }}>
+                      📊 Upload your Excel spreadsheet first
+                    </small>
+                  )}
+                </div>
+              </div>
+              
               <input
                 type="file"
                 onChange={(e) => handleFileChange(e, 1)}
+                accept={fileType === 'excel_csv' ? '.xlsx,.xls,.xlsm' : undefined}
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  border: '2px solid #d1d5db',
-                  borderRadius: '8px',
+                  padding: '14px',
+                  border: '2px solid rgba(255,255,255,0.8)',
+                  borderRadius: '10px',
                   fontSize: '1rem',
-                  background: 'white'
+                  background: 'rgba(255,255,255,0.9)',
+                  fontWeight: '500'
                 }}
               />
               {file1 && (
                 <div style={{
-                  marginTop: '12px',
-                  padding: '10px',
-                  background: '#f0fdf4',
-                  border: '1px solid #22c55e',
-                  borderRadius: '6px',
+                  marginTop: '15px',
+                  padding: '12px',
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '2px solid #22c55e',
+                  borderRadius: '8px',
                   fontSize: '0.95rem',
-                  color: '#166534'
+                  color: '#166534',
+                  fontWeight: '600'
                 }}>
                   ✅ {file1.name}
                 </div>
               )}
             </div>
             
+            {/* File 2 Upload */}
             <div style={{
-              background: '#f8fafc',
+              background: fileType === 'excel_csv' 
+                ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' 
+                : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
               padding: '25px',
-              borderRadius: '12px',
-              border: '2px dashed #d1d5db'
+              borderRadius: '16px',
+              border: fileType === 'excel_csv' 
+                ? '2px solid #22c55e' 
+                : '2px solid #0ea5e9',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease'
             }}>
-              <label style={{
-                display: 'block',
-                fontWeight: '600',
-                marginBottom: '12px',
-                color: '#1f2937',
-                fontSize: '1.1rem'
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '15px'
               }}>
-                File 2:
-              </label>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: fileType === 'excel_csv' 
+                    ? 'linear-gradient(135deg, #22c55e, #16a34a)' 
+                    : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem'
+                }}>
+                  2
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontWeight: '700',
+                    color: '#1f2937',
+                    fontSize: '1.1rem',
+                    margin: '0'
+                  }}>
+                    {fileType === 'excel_csv' 
+                      ? 'CSV File (.csv)' 
+                      : 'File 2'}
+                  </label>
+                  {fileType === 'excel_csv' && (
+                    <small style={{
+                      color: '#166534',
+                      fontSize: '0.85rem',
+                      fontWeight: '500'
+                    }}>
+                      📄 Upload your CSV data file second
+                    </small>
+                  )}
+                </div>
+              </div>
+              
               <input
                 type="file"
                 onChange={(e) => handleFileChange(e, 2)}
+                accept={fileType === 'excel_csv' ? '.csv' : undefined}
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  border: '2px solid #d1d5db',
-                  borderRadius: '8px',
+                  padding: '14px',
+                  border: '2px solid rgba(255,255,255,0.8)',
+                  borderRadius: '10px',
                   fontSize: '1rem',
-                  background: 'white'
+                  background: 'rgba(255,255,255,0.9)',
+                  fontWeight: '500'
                 }}
               />
               {file2 && (
                 <div style={{
-                  marginTop: '12px',
-                  padding: '10px',
-                  background: '#f0fdf4',
-                  border: '1px solid #22c55e',
-                  borderRadius: '6px',
+                  marginTop: '15px',
+                  padding: '12px',
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  border: '2px solid #22c55e',
+                  borderRadius: '8px',
                   fontSize: '0.95rem',
-                  color: '#166534'
+                  color: '#166534',
+                  fontWeight: '600'
                 }}>
                   ✅ {file2.name}
                 </div>
@@ -881,41 +898,56 @@ export default function Compare() {
             </div>
           </div>
 
+          {/* Enhanced Load Button */}
           <div style={{ textAlign: 'center' }}>
             <button 
               onClick={handleLoadFiles} 
               disabled={loading || !file1 || !file2}
               style={{
                 background: loading || !file1 || !file2 
-                  ? '#9ca3af' 
+                  ? 'linear-gradient(135deg, #9ca3af, #6b7280)' 
                   : 'linear-gradient(135deg, #2563eb, #7c3aed)',
                 color: 'white',
                 border: 'none',
-                padding: '16px 40px',
-                borderRadius: '50px',
-                fontSize: '1.2rem',
-                fontWeight: '600',
+                padding: '18px 45px',
+                borderRadius: '60px',
+                fontSize: '1.3rem',
+                fontWeight: '700',
                 cursor: loading || !file1 || !file2 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease',
-                minWidth: '280px',
+                transition: 'all 0.4s ease',
+                minWidth: '320px',
                 boxShadow: loading || !file1 || !file2 
-                  ? 'none' 
-                  : '0 4px 15px rgba(37, 99, 235, 0.3)'
+                  ? '0 4px 15px rgba(0,0,0,0.1)' 
+                  : '0 8px 25px rgba(37, 99, 235, 0.4)',
+                position: 'relative',
+                overflow: 'hidden'
               }}
               onMouseOver={(e) => {
                 if (!loading && file1 && file2) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 8px 25px rgba(37, 99, 235, 0.4)';
+                  e.target.style.transform = 'translateY(-3px) scale(1.02)';
+                  e.target.style.boxShadow = '0 12px 35px rgba(37, 99, 235, 0.5)';
+                  e.target.style.background = 'linear-gradient(135deg, #1d4ed8, #6d28d9)';
                 }
               }}
               onMouseOut={(e) => {
                 if (!loading && file1 && file2) {
                   e.target.style.transform = 'none';
-                  e.target.style.boxShadow = '0 4px 15px rgba(37, 99, 235, 0.3)';
+                  e.target.style.boxShadow = '0 8px 25px rgba(37, 99, 235, 0.4)';
+                  e.target.style.background = 'linear-gradient(135deg, #2563eb, #7c3aed)';
                 }
               }}
             >
-              {loading ? 'Processing Files...' : '🚀 Load Files & Start Comparison'}
+              {loading ? (
+                <>
+                  <span style={{ marginRight: '12px' }}>⏳</span>
+                  Processing Files...
+                </>
+              ) : (
+                <>
+                  <span style={{ marginRight: '12px' }}>🚀</span>
+                  Load Files & Start Comparison
+                </>
+              )}
             </button>
           </div>
         </div>
