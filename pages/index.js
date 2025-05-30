@@ -73,7 +73,8 @@ export default function Home() {
     background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
+    backgroundClip: 'text',
+    cursor: 'pointer'
   };
 
   const desktopNavStyle = {
@@ -92,6 +93,16 @@ export default function Home() {
     padding: '0.5rem',
     borderRadius: '0.25rem',
     transition: 'color 0.2s'
+  };
+
+  const navLinkStyle = {
+    textDecoration: 'none',
+    color: '#374151',
+    fontWeight: '500',
+    padding: '0.5rem',
+    borderRadius: '0.25rem',
+    transition: 'color 0.2s',
+    display: 'block'
   };
 
   const mobileNavButtonStyle = {
@@ -182,7 +193,7 @@ export default function Home() {
                 <button onClick={() => scrollToSection('pricing')} style={navButtonStyle}>
                   Pricing
                 </button>
-                <Link href="/faq" style={{ ...navButtonStyle, textDecoration: 'none', display: 'block' }}>
+                <Link href="/faq" style={navLinkStyle}>
                   FAQ
                 </Link>
                 <button onClick={handleSignIn} style={{ ...navButtonStyle, background: 'transparent' }}>
@@ -228,7 +239,7 @@ export default function Home() {
                   <button onClick={() => scrollToSection('pricing')} style={{ ...navButtonStyle, textAlign: 'left' }}>
                     Pricing
                   </button>
-                  <Link href="/faq" style={{ ...navButtonStyle, textDecoration: 'none', textAlign: 'left' }}>
+                  <Link href="/faq" style={{ ...navLinkStyle, textAlign: 'left' }}>
                     FAQ
                   </Link>
                   <button onClick={handleSignIn} style={{ ...navButtonStyle, textAlign: 'left' }}>
@@ -1227,16 +1238,6 @@ export default function Home() {
               <div>
                 <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
                 <div>
-                  <Link href="/faq" style={{ 
-                    color: '#d1d5db', 
-                    textDecoration: 'none', 
-                    fontSize: '0.875rem', 
-                    display: 'block', 
-                    padding: '0.25rem 0', 
-                    marginBottom: '0.5rem' 
-                  }}>
-                    FAQ
-                  </Link>
                   <a href="mailto:sales@veridiff.com" style={{ 
                     color: '#d1d5db', 
                     textDecoration: 'none', 
