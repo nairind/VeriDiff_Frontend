@@ -78,7 +78,7 @@ export default async function handler(req, res) {
     // Send email
     try {
       await resend.emails.send({
-        from: 'VeriDiff <onboarding@resend.dev>',
+        from: 'VeriDiff <sales@veridiff.com>',
         to: email,
         subject: isNewUser ? '🎉 Welcome to VeriDiff - Your Magic Link' : '🔗 Your VeriDiff Sign In Link',
         html: `
