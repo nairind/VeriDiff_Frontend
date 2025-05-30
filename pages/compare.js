@@ -1,4 +1,95 @@
-console.log("✅ Correct file order: Excel → CSV");
+import { useState } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { parseCSVFile } from '../utils/simpleCSVComparison';
+import { parseExcelFile, compareExcelFiles, getExcelFileInfo } from '../utils/excelFileComparison';
+import { parseJSONFile, compareJSONFiles } from '../utils/jsonFileComparison';
+import { parseXMLFile, compareXMLFiles } from '../utils/xmlFileComparison';
+import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
+import { compareTextFiles_main } from '../utils/textFileComparison';
+import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
+import HeaderMapper from '../components/HeaderMapper';
+import SheetSelector from '../components/SheetSelector';
+import { mapHeaders } from '../utils/mapHeaders';
+import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
+
+// FEATURE FLAGS - easily disable problematic features
+const FEATURES = {
+  SHEET_SELECTION: true,         // ENABLED: SheetSelector is ready to test
+  AUTO_DETECTION: true,          // Auto-detection of amount fields
+  AUTO_RERUN: true,             // Auto-rerun functionality
+  ENHANCED_EXCEL_PARSING: true,  // Use enhanced Excel parsing with data extraction
+  FLEXIBLE_CROSS_FORMAT: true   // NEW: Use flexible cross-format comparison
+};
+
+export default function Compare() {
+  const [file1, setFile1] = useState(null);
+  const [file2, setFile2] = useState(null);
+  const [fileType, setFileType] = useState('csv');
+
+  // Core states (always present)
+  const [showMapper, setShowMapper] = useState(false);
+  const [headers1, setHeaders1] = useState([]);
+  const [headers2, setHeaders2] = useState([]);
+  const [suggestedMappings, setSuggestedMappings] = useState([]);
+  const [finalMappings, setFinalMappings] = useState([]);
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [sampleData1, setSampleData1] = useState(null);
+  const [sampleData2, setSampleData2] = useState(null);
+
+  // Optional states (only used if features enabled)
+  const [file1Info, setFile1Info] = useState(null);
+  const [file2Info, setFile2Info] = useState(null);
+  const [selectedSheet1, setSelectedSheet1] = useState(null);
+  const [selectedSheet2, setSelectedSheet2] = useState(null);
+  const [showSheetSelector, setShowSheetSelector] = useState(false);
+
+  // INLINE FILE DETECTION (inside component)
+  const detectFileTypeInline = (file) => {
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.xlsm')) {
+      return { type: 'excel', label: 'Excel' };
+    }
+    if (fileName.endsWith('.csv')) {
+      return { type: 'csv', label: 'CSV' };
+    }
+    if (fileName.endsWith('.json')) {
+      return { type: 'json', label: 'JSON' };
+    }
+    if (fileName.endsWith('.txt')) {
+      return { type: 'text', label: 'Text' };
+    }
+    
+    return { type: 'unknown', label: 'Unknown' };
+  };
+
+  // ENFORCED FILE ORDER VALIDATION - Simple and Clear
+  const validateExcelCSVOrder = (file1, file2) => {
+    const file1Type = detectFileTypeInline(file1);
+    const file2Type = detectFileTypeInline(file2);
+    
+    console.log(`🔍 File 1 (${file1.name}) detected as: ${file1Type.type}`);
+    console.log(`🔍 File 2 (${file2.name}) detected as: ${file2Type.type}`);
+    
+    // STRICT: File 1 must be Excel, File 2 must be CSV
+    if (file1Type.type !== 'excel') {
+      return {
+        valid: false,
+        error: `❌ File Order Error!\n\nFile 1 must be an Excel file (.xlsx, .xls)\nYou uploaded: ${file1Type.label}\n\nPlease upload Excel file first, then CSV file.`
+      };
+    }
+    
+    if (file2Type.type !== 'csv') {
+      return {
+        valid: false,
+        error: `❌ File Order Error!\n\nFile 2 must be a CSV file (.csv)\nYou uploaded: ${file2Type.label}\n\nPlease upload Excel file first, then CSV file.`
+      };
+    }
+    
+    console.log("✅ Correct file order: Excel → CSV");
     return {
       valid: true,
       excelFile: file1,
@@ -360,1743 +451,901 @@ console.log("✅ Correct file order: Excel → CSV");
     }
   };
 
-  // File type mapping for icons and labels
-  const fileTypeConfig = {
-    excel: { icon: '📊', label: 'Excel–Excel', description: 'Compare Excel workbooks' },
-    excel_csv: { icon: '📈', label: 'Excel–CSV', description: 'Smart cross-format comparison', featured: true },
-    csv: { icon: '📋', label: 'CSV–CSV', description: 'Compare CSV files' },
-    pdf: { icon: '📄', label: 'PDF–PDF', description: 'Compare PDF documents', badge: 'v1' },
-    text: { icon: '📝', label: 'TXT–TXT', description: 'Compare text files' },
-    json: { icon: '⚙️', label: 'JSON–JSON', description: 'Compare JSON data' },
-    xml: { icon: '📋', label: 'XML–XML', description: 'Compare XML data' },
-    pdf_ocr: { icon: '📄', label: 'PDF–PDF', description: 'OCR checks coming', disabled: true }
-  };
-
-  const getFileTypeLabel = (type, position) => {
-    const config = fileTypeConfig[type];
-    if (!config) return 'File';
-    const parts = config.label.split('–');
-    return position === 1 ? parts[0] : parts[1];
-  };
-
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(to bottom right, #f9fafb, #eff6ff)'
-    }}>
+    <div className="container">
       <Head>
         <title>VeriDiff - File Comparison Tool</title>
-        <meta name="description" content="Compare Excel, CSV, PDF, JSON, XML files with smart mapping and tolerance settings. Built for business professionals." />
       </Head>
 
-      {/* Navigation */}
-      <header style={{
-        borderBottom: '1px solid #e5e7eb',
-        backgroundColor: 'white',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50
-      }}>
-        <div style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '0 16px'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            height: '64px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Link href="/">
-                <span style={{
-                  fontSize: '24px',
-                  fontWeight: 'bold',
-                  background: 'linear-gradient(to right, #2563eb, #9333ea)',
-                  WebkitBackgroundClip: 'text',
-                  backgroundClip: 'text',
-                  color: 'transparent',
-                  cursor: 'pointer'
-                }}>
-                  VeriDiff
-                </span>
-              </Link>
-            </div>
-            <nav style={{ display: 'flex', gap: '32px' }}>
-              <Link href="/about">
-                <span style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: '#f97316',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}>
-                  📖 MUST READ - About
-                </span>
-              </Link>
-              <span style={{
-                color: '#2563eb',
-                fontWeight: '500'
-              }}>Compare Files</span>
-            </nav>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <Link href="/">
-                <button style={{
-                  color: '#374151',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}>
-                  ← Back to Landing
-                </button>
-              </Link>
-            </div>
+      {/* Simple Navigation */}
+      <nav className="nav">
+        <div className="nav-content">
+          <Link href="/">
+            <span className="nav-brand">VeriDiff</span>
+          </Link>
+          <div className="nav-links">
+            <Link href="/about">
+              <span className="nav-about">📖 MUST READ - About</span>
+            </Link>
+            <span className="nav-current">Compare Files</span>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <main style={{
-        maxWidth: '1280px',
-        margin: '0 auto',
-        padding: '32px 16px'
-      }}>
-        {/* Hero Section */}
-        <section style={{
-          background: 'linear-gradient(to bottom right, #2563eb, #9333ea)',
-          borderRadius: '16px',
-          color: 'white',
-          padding: '32px',
-          marginBottom: '32px'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              backgroundColor: 'rgba(59, 130, 246, 0.2)',
-              color: '#bfdbfe',
-              padding: '6px 12px',
-              borderRadius: '9999px',
-              fontSize: '14px',
-              fontWeight: '500',
-              marginBottom: '16px'
-            }}>
-              ⚡ Smart File Comparison
-            </div>
-            
-            <h1 style={{
-              fontSize: '48px',
-              fontWeight: 'bold',
-              marginBottom: '16px'
-            }}>
-              VeriDiff
-            </h1>
-            <h2 style={{
-              fontSize: '24px',
-              fontWeight: '300',
-              marginBottom: '24px',
-              opacity: 0.9
-            }}>
-              Compare documents with precision and confidence
-            </h2>
-            <p style={{
-              fontSize: '18px',
-              opacity: 0.8,
-              maxWidth: '512px',
-              margin: '0 auto'
-            }}>
-              From Excel to PDFs, VeriDiff handles your most critical file comparisons with professional-grade accuracy.
-            </p>
-          </div>
-        </section>
+      <main>
+        {/* Simple Hero */}
+        <div className="hero">
+          <h1 className="hero-title">VeriDiff</h1>
+          <h2 className="hero-subtitle">Smart File Comparison</h2>
+          <p className="hero-description">
+            Compare documents with precision and confidence. From Excel to PDFs, 
+            VeriDiff handles your most critical file comparisons with professional-grade accuracy.
+          </p>
+        </div>
 
         {/* File Type Selection */}
-        <section style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          padding: '32px',
-          marginBottom: '32px'
-        }}>
-          <div style={{
-            textAlign: 'center',
-            marginBottom: '32px'
-          }}>
-            <h2 style={{
-              fontSize: '24px',
-              fontWeight: 'bold',
-              color: '#111827',
-              marginBottom: '8px'
-            }}>Choose Your Comparison Type</h2>
-            <p style={{
-              color: '#6b7280'
-            }}>Select the file formats you want to compare</p>
-          </div>
+        <div className="section">
+          <h2 className="section-title">Choose Your Comparison Type</h2>
+          <p className="section-subtitle">Select the file formats you want to compare</p>
           
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '16px',
-            maxWidth: '1024px',
-            margin: '0 auto'
-          }}>
-            {Object.entries(fileTypeConfig).map(([key, config]) => {
-              const isSelected = fileType === key;
-              const isDisabled = config.disabled;
-              
-              return (
-                <label
-                  key={key}
-                  style={{
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '16px',
-                    border: `2px solid ${isSelected ? '#2563eb' : '#e5e7eb'}`,
-                    borderRadius: '12px',
-                    cursor: isDisabled ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s',
-                    backgroundColor: isSelected ? '#eff6ff' : 
-                                   config.featured ? 'linear-gradient(to bottom right, #fefce8, #fed7aa)' : 'white',
-                    opacity: isDisabled ? 0.5 : 1
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="fileType"
-                    value={key}
-                    checked={isSelected}
-                    onChange={handleFileTypeChange}
-                    disabled={isDisabled}
-                    style={{ display: 'none' }}
-                  />
-                  
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    width: '100%'
-                  }}>
-                    <div style={{
-                      flexShrink: 0,
-                      padding: '8px',
-                      borderRadius: '8px',
-                      fontSize: '24px',
-                      backgroundColor: config.featured ? '#fed7aa' : '#dbeafe'
-                    }}>
-                      {config.icon}
-                    </div>
-                    
-                    <div style={{
-                      marginLeft: '12px',
-                      flex: 1
-                    }}>
-                      <div style={{
-                        fontWeight: '500',
-                        color: '#111827',
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}>
-                        {config.label}
-                        {config.badge && (
-                          <span style={{
-                            marginLeft: '8px',
-                            padding: '2px 8px',
-                            fontSize: '12px',
-                            backgroundColor: '#dbeafe',
-                            color: '#1e40af',
-                            borderRadius: '4px'
-                          }}>
-                            {config.badge}
-                          </span>
-                        )}
-                        {config.featured && (
-                          <span style={{
-                            marginLeft: '8px',
-                            padding: '2px 8px',
-                            fontSize: '12px',
-                            backgroundColor: '#fed7aa',
-                            color: '#92400e',
-                            borderRadius: '4px',
-                            fontWeight: '600'
-                          }}>
-                            Featured
-                          </span>
-                        )}
-                      </div>
-                      <div style={{
-                        fontSize: '14px',
-                        color: '#6b7280'
-                      }}>{config.description}</div>
-                    </div>
-                  </div>
-                  
-                  {isSelected && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '8px',
-                      right: '8px'
-                    }}>
-                      ✅
-                    </div>
-                  )}
-                </label>
-              );
-            })}
+          <div className="file-type-selector">
+            <label><input type="radio" name="fileType" value="excel" checked={fileType === 'excel'} onChange={handleFileTypeChange} /> Excel–Excel</label>
+            <label className="featured"><input type="radio" name="fileType" value="excel_csv" checked={fileType === 'excel_csv'} onChange={handleFileTypeChange} /> Excel–CSV</label>
+            <label><input type="radio" name="fileType" value="csv" checked={fileType === 'csv'} onChange={handleFileTypeChange} /> CSV–CSV</label>
+            <label><input type="radio" name="fileType" value="pdf" checked={fileType === 'pdf'} onChange={handleFileTypeChange} /> PDF–PDF <span className="version-flag">v1</span></label>
+            <label><input type="radio" name="fileType" value="text" checked={fileType === 'text'} onChange={handleFileTypeChange} /> TXT–TXT</label>
+            <label><input type="radio" name="fileType" value="json" checked={fileType === 'json'} onChange={handleFileTypeChange} /> JSON–JSON</label>
+            <label><input type="radio" name="fileType" value="xml" checked={fileType === 'xml'} onChange={handleFileTypeChange} /> XML–XML</label>
+            <label className="coming-soon"><input type="radio" name="fileType" value="pdf_ocr" disabled /> PDF–PDF <span className="ocr-flag">OCR checks coming</span></label>
           </div>
-        </section>
+        </div>
 
         {/* File Order Guidance for Excel-CSV */}
         {fileType === 'excel_csv' && (
-          <section style={{
-            background: 'linear-gradient(to right, #eff6ff, #e0e7ff)',
-            border: '2px solid #c7d2fe',
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '32px'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: '16px'
-              }}>
-                <div style={{
-                  padding: '12px',
-                  backgroundColor: '#dbeafe',
-                  borderRadius: '50%',
-                  fontSize: '32px'
-                }}>
-                  📊
-                </div>
-              </div>
-              
-              <h3 style={{
-                fontSize: '20px',
-                fontWeight: '600',
-                color: '#1e3a8a',
-                marginBottom: '12px'
-              }}>📋 File Upload Instructions</h3>
-              <p style={{
-                color: '#1d4ed8',
-                marginBottom: '16px'
-              }}>Please upload your files in the correct order:</p>
-              
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '16px',
-                marginBottom: '16px',
-                flexWrap: 'wrap'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  backgroundColor: 'white',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '2px solid #2563eb',
-                  margin: '8px'
-                }}>
-                  <span style={{ fontSize: '24px', marginRight: '8px' }}>📊</span>
-                  <span style={{ fontWeight: '600', color: '#111827' }}>1. Excel File First</span>
-                  <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '8px' }}>(.xlsx, .xls, .xlsm)</span>
-                </div>
-                
-                <span style={{ color: '#2563eb', fontSize: '24px' }}>→</span>
-                
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  backgroundColor: 'white',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '2px solid #2563eb',
-                  margin: '8px'
-                }}>
-                  <span style={{ fontSize: '24px', marginRight: '8px' }}>📋</span>
-                  <span style={{ fontWeight: '600', color: '#111827' }}>2. CSV File Second</span>
-                  <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '8px' }}>(.csv)</span>
-                </div>
-              </div>
-              
-              <div style={{
-                backgroundColor: '#fefce8',
-                border: '1px solid #fde047',
-                borderRadius: '8px',
-                padding: '12px'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <span style={{ color: '#f59e0b', marginRight: '8px' }}>⚠️</span>
-                  <span style={{ fontSize: '14px', color: '#92400e' }}>File order matters for accurate data mapping and comparison results.</span>
-                </div>
-              </div>
+          <div className="guidance">
+            <h3>📋 File Upload Instructions</h3>
+            <p>Please upload your files in the correct order:</p>
+            <div className="order-guide">
+              <span className="step">1. Excel File First (.xlsx, .xls, .xlsm)</span>
+              <span className="arrow">→</span>
+              <span className="step">2. CSV File Second (.csv)</span>
             </div>
-          </section>
+            <p className="note">⚠️ File order matters for accurate data mapping and comparison results.</p>
+          </div>
         )}
 
         {/* File Upload */}
-        <section style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          padding: '32px',
-          marginBottom: '32px'
-        }}>
-          <div style={{
-            textAlign: 'center',
-            marginBottom: '32px'
-          }}>
-            <h2 style={{
-              fontSize: '24px',
-              fontWeight: 'bold',
-              color: '#111827',
-              marginBottom: '8px'
-            }}>📁 Upload Your Files</h2>
-            <p style={{
-              color: '#6b7280'
-            }}>Select files to compare</p>
-          </div>
+        <div className="section">
+          <h2 className="section-title">Upload Your Files</h2>
+          <p className="section-subtitle">Select files to compare</p>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '24px',
-            marginBottom: '32px'
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#374151'
-              }}>
-                File 1: {getFileTypeLabel(fileType, 1)}
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="file"
-                  onChange={(e) => handleFileChange(e, 2)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    fontSize: '14px',
-                    color: '#6b7280',
-                    border: '2px dashed #d1d5db',
-                    borderRadius: '8px',
-                    padding: '16px'
-                  }}
-                />
-                {file2 && (
-                  <div style={{
-                    marginTop: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '12px',
-                    backgroundColor: '#f0fdf4',
-                    border: '1px solid #bbf7d0',
-                    borderRadius: '8px'
-                  }}>
-                    <span style={{ color: '#22c55e', marginRight: '8px' }}>✅</span>
-                    <span style={{ fontSize: '14px', color: '#166534', fontWeight: '500' }}>{file2.name}</span>
-                  </div>
-                )}
-              </div>
+          <div className="file-inputs">
+            <div className="file-input-group">
+              <label>File 1:</label>
+              <input type="file" onChange={(e) => handleFileChange(e, 1)} />
+              {file1 && <div className="file-name">✅ {file1.name}</div>}
+            </div>
+            
+            <div className="file-input-group">
+              <label>File 2:</label>
+              <input type="file" onChange={(e) => handleFileChange(e, 2)} />
+              {file2 && <div className="file-name">✅ {file2.name}</div>}
             </div>
           </div>
 
-          <div style={{ textAlign: 'center' }}>
-            <button 
-              onClick={handleLoadFiles} 
-              disabled={loading || !file1 || !file2}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                background: loading || !file1 || !file2 ? 
-                  'linear-gradient(to right, #9ca3af, #6b7280)' :
-                  'linear-gradient(to right, #2563eb, #9333ea)',
-                color: 'white',
-                padding: '16px 32px',
-                borderRadius: '12px',
-                fontSize: '18px',
-                fontWeight: '500',
-                border: 'none',
-                cursor: loading || !file1 || !file2 ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              {loading ? (
-                <>
-                  <span style={{ marginRight: '12px' }}>⏳</span>
-                  Processing Files...
-                </>
-              ) : (
-                <>
-                  <span style={{ marginRight: '12px' }}>▶️</span>
-                  Load Files & Start Comparison
-                </>
-              )}
-            </button>
-          </div>
-        </section>
+          <button 
+            onClick={handleLoadFiles} 
+            disabled={loading || !file1 || !file2}
+            className="load-button"
+          >
+            {loading ? 'Processing Files...' : '🚀 Load Files & Start Comparison'}
+          </button>
+        </div>
 
         {/* Sheet Selector */}
         {FEATURES.SHEET_SELECTION && showSheetSelector && (
-          <section style={{ marginBottom: '32px' }}>
+          <div className="section">
             <SheetSelector
               file1Info={file1Info}
               file2Info={file2Info}
               onSheetSelect={handleSheetSelect}
               fileType={fileType}
             />
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              <button 
-                onClick={handleProceedWithSheets} 
-                disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  background: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) ?
-                    'linear-gradient(to right, #9ca3af, #6b7280)' :
-                    'linear-gradient(to right, #2563eb, #9333ea)',
-                  color: 'white',
-                  padding: '12px 24px',
-                  borderRadius: '12px',
-                  fontWeight: '500',
-                  border: 'none',
-                  cursor: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {loading ? (
-                  <>
-                    <span style={{ marginRight: '8px' }}>⏳</span>
-                    Processing...
-                  </>
-                ) : (
-                  'Proceed with Selected Sheets'
-                )}
-              </button>
-            </div>
-          </section>
+            <button 
+              onClick={handleProceedWithSheets} 
+              disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
+              className="load-button"
+            >
+              {loading ? 'Processing...' : 'Proceed with Selected Sheets'}
+            </button>
+          </div>
         )}
 
         {/* Header Mapper */}
         {showMapper && (
-          <section style={{ marginBottom: '32px' }}>
-            <HeaderMapper
-              file1Headers={headers1}
-              file2Headers={headers2}
-              suggestedMappings={suggestedMappings}
-              sampleData1={sampleData1}
-              sampleData2={sampleData2}
-              onConfirm={handleMappingConfirmed}
-              showRunButton={true}
-              onRun={handleRunComparison}
-            />
-          </section>
+          <HeaderMapper
+            file1Headers={headers1}
+            file2Headers={headers2}
+            suggestedMappings={suggestedMappings}
+            sampleData1={sampleData1}
+            sampleData2={sampleData2}
+            onConfirm={handleMappingConfirmed}
+            showRunButton={true}
+            onRun={handleRunComparison}
+          />
         )}
 
         {/* Error Display */}
         {error && (
-          <section style={{ marginBottom: '32px' }}>
-            <div style={{
-              backgroundColor: '#fef2f2',
-              borderLeft: '4px solid #f87171',
-              padding: '24px',
-              borderRadius: '8px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ color: '#f87171', marginRight: '12px', fontSize: '20px' }}>⚠️</span>
-                <div>
-                  <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#991b1b' }}>Error</h3>
-                  <div style={{
-                    marginTop: '8px',
-                    fontSize: '14px',
-                    color: '#b91c1c',
-                    whiteSpace: 'pre-line'
-                  }}>
-                    {error}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+          <div className="error">
+            <strong>Error:</strong> {error}
+          </div>
         )}
 
         {/* Loading */}
         {loading && (
-          <section style={{ marginBottom: '32px' }}>
-            <div style={{
-              backgroundColor: '#eff6ff',
-              borderLeft: '4px solid #60a5fa',
-              padding: '24px',
-              borderRadius: '8px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ marginRight: '12px', fontSize: '20px' }}>⏳</span>
-                <div>
-                  <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#1e40af' }}>Processing</h3>
-                  <div style={{
-                    marginTop: '8px',
-                    fontSize: '14px',
-                    color: '#1d4ed8'
-                  }}>
-                    Loading and processing your files...
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+          <div className="loading">
+            <strong>Loading...</strong> Processing files...
+          </div>
         )}
 
         {/* Results */}
         {results && (
-          <section style={{
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb',
-            padding: '32px'
-          }}>
-            <div style={{
-              textAlign: 'center',
-              marginBottom: '32px'
-            }}>
-              <h2 style={{
-                fontSize: '24px',
-                fontWeight: 'bold',
-                color: '#111827',
-                marginBottom: '8px'
-              }}>📊 Comparison Results</h2>
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                backgroundColor: '#dcfce7',
-                color: '#166534',
-                padding: '6px 12px',
-                borderRadius: '9999px',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}>
-                <span style={{ marginRight: '8px' }}>✅</span>
-                Analysis Complete
-              </div>
-            </div>
-            
-            {/* Summary Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '24px',
-              marginBottom: '32px'
-            }}>
-              <div style={{
-                background: 'linear-gradient(to bottom right, #eff6ff, #dbeafe)',
-                borderRadius: '12px',
-                padding: '24px',
-                border: '1px solid #c7d2fe'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div>
-                    <p style={{ color: '#2563eb', fontSize: '14px', fontWeight: '500' }}>Total Records</p>
-                    <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e3a8a' }}>{results.total_records}</p>
-                  </div>
-                  <span style={{ fontSize: '32px' }}>📋</span>
-                </div>
-              </div>
+          <div className="results">
+            <h2>Comparison Results</h2>
+            <div className="summary">
+              <p><strong>Total Records:</strong> {results.total_records}</p>
+              <p><strong>Differences Found:</strong> {results.differences_found}</p>
+              <p><strong>Matches Found:</strong> {results.matches_found}</p>
               
-              <div style={{
-                background: 'linear-gradient(to bottom right, #f0fdf4, #dcfce7)',
-                borderRadius: '12px',
-                padding: '24px',
-                border: '1px solid #bbf7d0'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div>
-                    <p style={{ color: '#16a34a', fontSize: '14px', fontWeight: '500' }}>Matches Found</p>
-                    <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#15803d' }}>{results.matches_found}</p>
-                  </div>
-                  <span style={{ fontSize: '32px' }}>✅</span>
-                </div>
-              </div>
+              {FEATURES.AUTO_DETECTION && results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
+                <p><strong>🤖 Auto-detected Amount Fields:</strong> {results.autoDetectedFields.join(', ')}</p>
+              )}
               
-              <div style={{
-                background: 'linear-gradient(to bottom right, #fff7ed, #fed7aa)',
-                borderRadius: '12px',
-                padding: '24px',
-                border: '1px solid #fdba74'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div>
-                    <p style={{ color: '#ea580c', fontSize: '14px', fontWeight: '500' }}>Differences Found</p>
-                    <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#c2410c' }}>{results.differences_found}</p>
-                  </div>
-                  <span style={{ fontSize: '32px' }}>⚠️</span>
-                </div>
+              <div className="download-buttons">
+                <button onClick={handleDownloadExcel} className="download-btn excel">📊 Download Excel</button>
+                <button onClick={handleDownloadCSV} className="download-btn csv">📄 Download CSV</button>
               </div>
             </div>
-
-            {/* Auto-detected Fields */}
-            {FEATURES.AUTO_DETECTION && results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
-              <div style={{
-                background: 'linear-gradient(to right, #f0fdf4, #dcfce7)',
-                border: '1px solid #bbf7d0',
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '24px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ color: '#16a34a', marginRight: '8px' }}>🤖</span>
-                  <span style={{ fontWeight: '500', color: '#166534' }}>Auto-detected Amount Fields:</span>
-                  <span style={{ color: '#15803d', marginLeft: '8px' }}>{results.autoDetectedFields.join(', ')}</span>
-                </div>
-              </div>
-            )}
             
-            {/* Download Buttons */}
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '16px',
-              justifyContent: 'center',
-              marginBottom: '32px'
-            }}>
-              <button 
-                onClick={handleDownloadExcel} 
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  backgroundColor: '#16a34a',
-                  color: 'white',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  fontWeight: '500',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <span style={{ marginRight: '8px' }}>📊</span>
-                Download Excel
-              </button>
-              <button 
-                onClick={handleDownloadCSV} 
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  backgroundColor: '#2563eb',
-                  color: 'white',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  fontWeight: '500',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <span style={{ marginRight: '8px' }}>📄</span>
-                Download CSV
-              </button>
-            </div>
-            
-            {/* Results Table */}
             {results.results && results.results.length > 0 && (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{
-                  minWidth: '100%',
-                  borderCollapse: 'collapse',
-                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-                  borderRadius: '8px',
-                  overflow: 'hidden'
-                }}>
-                  <thead style={{ backgroundColor: '#f9fafb' }}>
-                    <tr>
-                      <th style={{
-                        padding: '12px 24px',
-                        textAlign: 'left',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        color: '#6b7280',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}>
-                        ID
-                      </th>
-                      {Object.keys(results.results[0].fields).map((field, idx) => (
-                        <th key={idx} style={{
-                          padding: '12px 24px',
-                          textAlign: 'left',
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          color: '#6b7280',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em'
-                        }}>
-                          {field}
-                        </th>
+              <table className="results-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    {Object.keys(results.results[0].fields).map((field, idx) => (
+                      <th key={idx}>{field}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.results.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      <td data-label="ID">{row.ID}</td>
+                      {Object.entries(row.fields).map(([key, value], idx) => (
+                        <td
+                          key={idx}
+                          data-label={key}
+                          className={`cell-${value.status}`}
+                        >
+                          <div>
+                            <strong>{value.val1} / {value.val2}</strong>
+                            {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
+                              <span className="auto-detected">🤖</span>
+                            )}
+                          </div>
+                          <small>
+                            {value.status}
+                            {value.difference && ` (Δ ${value.difference})`}
+                          </small>
+                        </td>
                       ))}
                     </tr>
-                  </thead>
-                  <tbody style={{ backgroundColor: 'white' }}>
-                    {results.results.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        <td style={{
-                          padding: '12px 24px',
-                          fontSize: '14px',
-                          fontWeight: '500',
-                          color: '#111827',
-                          borderTop: '1px solid #e5e7eb'
-                        }}>
-                          {row.ID}
-                        </td>
-                        {Object.entries(row.fields).map(([key, value], idx) => (
-                          <td
-                            key={idx}
-                            style={{
-                              padding: '12px 24px',
-                              fontSize: '14px',
-                              borderTop: '1px solid #e5e7eb',
-                              backgroundColor: 
-                                value.status === 'difference' ? '#fef2f2' :
-                                value.status === 'acceptable' ? '#fefce8' :
-                                value.status === 'match' ? '#f0fdf4' : 'white'
-                            }}
-                          >
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <span style={{ fontWeight: '500', color: '#111827' }}>
-                                  {value.val1} / {value.val2}
-                                </span>
-                                {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
-                                  <span style={{
-                                    marginLeft: '8px',
-                                    color: '#22c55e'
-                                  }} title="Auto-detected amount field">🤖</span>
-                                )}
-                              </div>
-                              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                                <span style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '2px 8px',
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
-                                  fontWeight: '500',
-                                  backgroundColor: 
-                                    value.status === 'difference' ? '#fecaca' :
-                                    value.status === 'acceptable' ? '#fde68a' :
-                                    value.status === 'match' ? '#bbf7d0' : '#e5e7eb',
-                                  color:
-                                    value.status === 'difference' ? '#991b1b' :
-                                    value.status === 'acceptable' ? '#92400e' :
-                                    value.status === 'match' ? '#166534' : '#374151'
-                                }}>
-                                  {value.status}
-                                  {value.difference && ` (Δ ${value.difference})`}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             )}
-          </section>
+          </div>
         )}
       </main>
 
-      {/* Security Banner */}
-      <section style={{
-        background: 'linear-gradient(to right, #16a34a, #059669)',
-        color: 'white',
-        padding: '48px 0'
-      }}>
-        <div style={{
-          maxWidth: '1024px',
-          margin: '0 auto',
-          padding: '0 16px',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: '16px'
-          }}>
-            <span style={{ fontSize: '48px' }}>🛡️</span>
-          </div>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            marginBottom: '16px'
-          }}>Your Data Never Leaves Your Device</h2>
-          <p style={{
-            fontSize: '18px',
-            color: '#bbf7d0',
-            maxWidth: '512px',
-            margin: '0 auto'
-          }}>
-            VeriDiff processes everything locally in your browser using advanced client-side technology. 
-            No uploads, no cloud storage, no data collection.
-          </p>
-        </div>
-      </section>
-    </div>
-  );
-} 'relative' }}>
-                <input
-                  type="file"
-                  onChange={(e) => handleFileChange(e, 1)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    fontSize: '14px',
-                    color: '#6b7280',
-                    border: '2px dashed #d1d5db',
-                    borderRadius: '8px',
-                    padding: '16px'
-                  }}
-                />
-                {file1 && (
-                  <div style={{
-                    marginTop: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '12px',
-                    backgroundColor: '#f0fdf4',
-                    border: '1px solid #bbf7d0',
-                    borderRadius: '8px'
-                  }}>
-                    <span style={{ color: '#22c55e', marginRight: '8px' }}>✅</span>
-                    <span style={{ fontSize: '14px', color: '#166534', fontWeight: '500' }}>{file1.name}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#374151'
-              }}>
-                File 2: {getFileTypeLabel(fileType, 2)}
-              </label>
-              <div style={{ position:// pages/compare.js - Fixed Syntax Version
+      <style jsx>{`
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #f8fafc;
+          min-height: 100vh;
+        }
 
-import { useState, useEffect, useCallback } from 'react';
-import Head from 'next/head';
-import Link from 'next/link';
-import { parseCSVFile } from '../utils/simpleCSVComparison';
-import { parseExcelFile, compareExcelFiles, getExcelFileInfo } from '../utils/excelFileComparison';
-import { parseJSONFile, compareJSONFiles } from '../utils/jsonFileComparison';
-import { parseXMLFile, compareXMLFiles } from '../utils/xmlFileComparison';
-import { parsePDFFile, comparePDFFiles } from '../utils/pdfFileComparison';
-import { compareTextFiles_main } from '../utils/textFileComparison';
-import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
-import { mapHeaders } from '../utils/mapHeaders';
-import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
+        .nav {
+          background: white;
+          border-bottom: 1px solid #e5e7eb;
+          padding: 1rem 0;
+          margin-bottom: 20px;
+          border-radius: 8px;
+        }
 
-// FEATURE FLAGS - easily disable problematic features
-const FEATURES = {
-  SHEET_SELECTION: true,         // ENABLED: SheetSelector is ready to test
-  AUTO_DETECTION: true,          // Auto-detection of amount fields
-  AUTO_RERUN: true,             // Auto-rerun functionality
-  ENHANCED_EXCEL_PARSING: true,  // Use enhanced Excel parsing with data extraction
-  FLEXIBLE_CROSS_FORMAT: true   // NEW: Use flexible cross-format comparison
-};
+        .nav-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
 
-// Enhanced HeaderMapper Component (Inline)
-const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm, onRun, sampleData1, sampleData2 }) => {
-  const [mappings, setMappings] = useState([]);
-  const [autoRerunEnabled, setAutoRerunEnabled] = useState(true);
+        .nav-brand {
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: #667eea;
+          cursor: pointer;
+          text-decoration: none;
+        }
 
-  // Auto-detect amount fields based on name and sample data
-  const isLikelyAmountField = useCallback((fieldName, sampleValues = []) => {
-    const numericFieldNames = /amount|price|cost|total|sum|value|balance|fee|qty|quantity|rate|charge|payment|invoice|bill|salary|wage|revenue|profit|expense|budget/i;
-    const hasNumericName = numericFieldNames.test(fieldName);
-    
-    const cleanNumericValues = sampleValues.filter(val => {
-      if (!val && val !== 0) return false;
-      const cleaned = String(val).replace(/[$,\s€£¥]/g, '');
-      return !isNaN(parseFloat(cleaned)) && isFinite(cleaned);
-    });
-    
-    const percentNumeric = cleanNumericValues.length / Math.max(sampleValues.length, 1);
-    return hasNumericName || percentNumeric > 0.7;
-  }, []);
+        .nav-links {
+          display: flex;
+          gap: 2rem;
+        }
 
-  const getSampleValues = useCallback((fieldName, file2FieldName) => {
-    const samples1 = sampleData1 ? sampleData1.slice(0, 10).map(row => row[fieldName]).filter(v => v != null) : [];
-    const samples2 = sampleData2 ? sampleData2.slice(0, 10).map(row => row[file2FieldName]).filter(v => v != null) : [];
-    return [...samples1, ...samples2];
-  }, [sampleData1, sampleData2]);
+        .nav-about {
+          color: #FF6B35;
+          cursor: pointer;
+          text-decoration: none;
+          font-size: 1.1rem;
+          font-weight: 700;
+        }
 
-  useEffect(() => {
-    const enriched = suggestedMappings.map(m => {
-      const sampleValues = getSampleValues(m.file1Header, m.file2Header || m.file1Header);
-      const isAutoDetectedAmount = isLikelyAmountField(m.file1Header, sampleValues);
-      
-      return {
-        file1Header: m.file1Header,
-        file2Header: m.file2Header || '',
-        similarity: m.similarity,
-        isAmountField: isAutoDetectedAmount,
-        toleranceType: 'flat',
-        toleranceValue: isAutoDetectedAmount ? '0.01' : '',
-        isAutoDetected: isAutoDetectedAmount
-      };
-    });
-    setMappings(enriched);
-  }, [suggestedMappings, isLikelyAmountField, getSampleValues]);
+        .nav-current {
+          color: #667eea;
+          font-weight: 500;
+        }
 
-  useEffect(() => {
-    if (autoRerunEnabled && mappings.length > 0) {
-      const timer = setTimeout(() => {
-        onConfirm(mappings);
-        setTimeout(() => {
-          onRun();
-        }, 100);
-      }, 1000);
+        .hero {
+          text-align: center;
+          padding: 40px 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 16px;
+          margin-bottom: 30px;
+          color: white;
+        }
 
-      return () => clearTimeout(timer);
-    }
-  }, [mappings, autoRerunEnabled, onConfirm, onRun]);
+        .hero-title {
+          font-size: 3rem;
+          font-weight: 700;
+          margin: 0 0 10px 0;
+        }
 
-  const updateMapping = (index, key, value) => {
-    const updated = [...mappings];
-    updated[index][key] = value;
-    
-    if (key === 'isAmountField') {
-      updated[index].isAutoDetected = false;
-    }
-    
-    if (key === 'isAmountField' && value && !updated[index].toleranceValue) {
-      updated[index].toleranceValue = '0.01';
-    }
-    
-    setMappings(updated);
-  };
+        .hero-subtitle {
+          font-size: 1.5rem;
+          font-weight: 400;
+          margin: 0 0 20px 0;
+          opacity: 0.9;
+        }
 
-  const addMapping = () => {
-    setMappings([
-      ...mappings,
-      { file1Header: '', file2Header: '', similarity: 0, isAmountField: false, toleranceType: 'flat', toleranceValue: '', isAutoDetected: false }
-    ]);
-  };
+        .hero-description {
+          font-size: 1.1rem;
+          opacity: 0.9;
+          line-height: 1.6;
+          max-width: 600px;
+          margin: 0 auto;
+        }
 
-  const removeMapping = (index) => {
-    const updated = mappings.filter((_, i) => i !== index);
-    setMappings(updated);
-  };
+        .section {
+          background: white;
+          border-radius: 12px;
+          padding: 30px;
+          margin-bottom: 20px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
 
-  const handleConfirm = (e) => {
-    e.preventDefault();
-    onConfirm(mappings);
-  };
+        .section-title {
+          font-size: 1.8rem;
+          color: #1f2937;
+          margin: 0 0 10px 0;
+          text-align: center;
+          font-weight: 600;
+        }
 
-  const handleManualRun = () => {
-    setAutoRerunEnabled(false);
-    onRun();
-    setTimeout(() => setAutoRerunEnabled(true), 2000);
-  };
+        .section-subtitle {
+          font-size: 1rem;
+          color: #6b7280;
+          text-align: center;
+          margin: 0 0 30px 0;
+        }
 
-  const autoDetectedCount = mappings.filter(m => m.isAutoDetected).length;
+        .file-type-selector {
+          margin: 20px 0;
+          padding: 20px;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          background: #f9fafb;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
 
-  return (
-    <div style={{
-      background: 'white',
-      borderRadius: '16px',
-      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-      border: '1px solid #e5e7eb',
-      padding: '32px'
-    }}>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        marginBottom: '32px'
-      }}>
-        <div>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#111827',
-            marginBottom: '8px'
-          }}>🔗 Confirm Header Mappings</h2>
-          <p style={{
-            color: '#6b7280'
-          }}>Review and adjust how your file columns are matched</p>
-        </div>
-        
-        {autoDetectedCount > 0 && (
-          <div style={{
-            marginTop: '16px'
-          }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: 'linear-gradient(to right, #dcfce7, #d1fae5)',
-              color: '#166534',
-              padding: '8px 16px',
-              borderRadius: '9999px',
-              fontSize: '14px',
-              fontWeight: '500',
-              border: '1px solid #bbf7d0'
-            }}>
-              🤖 {autoDetectedCount} amount field{autoDetectedCount !== 1 ? 's' : ''} auto-detected
-            </div>
-          </div>
-        )}
-      </div>
+        .file-type-selector label {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          background: white;
+          border: 2px solid #e5e7eb;
+          font-weight: 500;
+          text-align: left;
+          min-height: 48px;
+          width: 100%;
+          max-width: 300px;
+        }
 
-      <div style={{
-        background: 'linear-gradient(to right, #eff6ff, #e0e7ff)',
-        border: '1px solid #c7d2fe',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '32px'
-      }}>
-        <label style={{
-          display: 'flex',
-          alignItems: 'center',
-          cursor: 'pointer'
-        }}>
-          <div style={{ position: 'relative' }}>
-            <input
-              type="checkbox"
-              checked={autoRerunEnabled}
-              onChange={(e) => setAutoRerunEnabled(e.target.checked)}
-              style={{ display: 'none' }}
-            />
-            <div style={{
-              display: 'block',
-              width: '56px',
-              height: '32px',
-              borderRadius: '9999px',
-              transition: 'background-color 0.2s',
-              backgroundColor: autoRerunEnabled ? '#2563eb' : '#d1d5db'
-            }}>
-              <div style={{
-                position: 'absolute',
-                left: '4px',
-                top: '4px',
-                backgroundColor: 'white',
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                transition: 'transform 0.2s',
-                transform: autoRerunEnabled ? 'translateX(24px)' : 'translateX(0)'
-              }}></div>
-            </div>
-          </div>
-          <div style={{ marginLeft: '16px' }}>
-            <span style={{
-              color: '#1e3a8a',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
-              ⚡ Auto-rerun comparison when settings change
-            </span>
-            {autoRerunEnabled && (
-              <span style={{
-                color: '#1d4ed8',
-                fontSize: '14px'
-              }}>Saves time by automatically running comparisons!</span>
-            )}
-          </div>
-        </label>
-      </div>
+        .file-type-selector label:hover {
+          border-color: #667eea;
+          background: #f0f4ff;
+          transform: translateX(4px);
+        }
 
-      <form onSubmit={handleConfirm}>
-        <div style={{ marginBottom: '32px' }}>
-          {mappings.map((m, i) => (
-            <div key={i} style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: '12px',
-              padding: '24px',
-              marginBottom: '24px',
-              backgroundColor: m.isAutoDetected ? '#f0fdf4' : 'white',
-              borderColor: m.isAutoDetected ? '#bbf7d0' : '#e5e7eb'
-            }}>
-              {m.isAutoDetected && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginBottom: '16px',
-                  color: '#166534'
-                }}>
-                  🤖 <span style={{ marginLeft: '8px', fontSize: '14px', fontWeight: '500' }}>Auto-detected amount field</span>
-                </div>
-              )}
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#374151',
-                    marginBottom: '8px'
-                  }}>File 1 Header</label>
-                  <select
-                    value={m.file1Header}
-                    onChange={(e) => updateMapping(i, 'file1Header', e.target.value)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      borderRadius: '8px',
-                      border: '1px solid #d1d5db',
-                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                      padding: '12px'
-                    }}
-                  >
-                    <option value="">-- Select Header --</option>
-                    {file1Headers.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-                
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#374151',
-                    marginBottom: '8px'
-                  }}>File 2 Header</label>
-                  <select
-                    value={m.file2Header}
-                    onChange={(e) => updateMapping(i, 'file2Header', e.target.value)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      borderRadius: '8px',
-                      border: '1px solid #d1d5db',
-                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                      padding: '12px'
-                    }}
-                  >
-                    <option value="">-- Select Header --</option>
-                    {file2Headers.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-                <input
-                  type="checkbox"
-                  checked={m.isAmountField}
-                  onChange={(e) => updateMapping(i, 'isAmountField', e.target.checked)}
-                  style={{
-                    height: '16px',
-                    width: '16px',
-                    color: '#2563eb',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '4px'
-                  }}
-                />
-                <label style={{ marginLeft: '8px', fontSize: '14px', color: '#374151' }}>Amount Field</label>
-              </div>
-              
-              {m.isAmountField && (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '16px',
-                  marginBottom: '16px'
-                }}>
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: '8px'
-                    }}>Tolerance Type</label>
-                    <select
-                      value={m.toleranceType}
-                      onChange={(e) => updateMapping(i, 'toleranceType', e.target.value)}
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        borderRadius: '8px',
-                        border: '1px solid #d1d5db',
-                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                        padding: '12px'
-                      }}
-                    >
-                      <option value="flat">Flat</option>
-                      <option value="%">%</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: '8px'
-                    }}>Tolerance Value</label>
-                    <input
-                      type="number"
-                      value={m.toleranceValue}
-                      onChange={(e) => updateMapping(i, 'toleranceValue', e.target.value)}
-                      step="any"
-                      placeholder="0.01"
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        borderRadius: '8px',
-                        border: '1px solid #d1d5db',
-                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                        padding: '12px'
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-              
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button 
-                  type="button" 
-                  onClick={() => removeMapping(i)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '8px 12px',
-                    color: '#dc2626',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  🗑️ Remove
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        .file-type-selector label.featured {
+          background: linear-gradient(135deg, #fef3c7, #fde68a);
+          border: 2px solid #f59e0b;
+          font-weight: 600;
+        }
 
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '16px',
-          justifyContent: 'center'
-        }}>
-          <button 
-            type="button" 
-            onClick={addMapping}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              backgroundColor: '#f3f4f6',
-              color: '#374151',
-              padding: '12px 24px',
-              borderRadius: '12px',
-              fontWeight: '500',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            ➕ Add Mapping
-          </button>
+        .file-type-selector label.featured:hover {
+          background: linear-gradient(135deg, #fde68a, #fcd34d);
+          border-color: #d97706;
+        }
+
+        .file-type-selector label.coming-soon {
+          background: #f9fafb;
+          border: 2px dashed #9ca3af;
+          color: #6b7280;
+          cursor: not-allowed;
+          opacity: 0.7;
+        }
+
+        .file-type-selector label.coming-soon:hover {
+          background: #f9fafb;
+          border-color: #9ca3af;
+          transform: none;
+        }
+
+        .file-type-selector label.coming-soon input[type="radio"] {
+          cursor: not-allowed;
+        }
+
+        .version-flag {
+          font-size: 0.75em;
+          background: #dbeafe;
+          color: #1e40af;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 600;
+          margin-left: 8px;
+        }
+
+        .ocr-flag {
+          font-size: 0.75em;
+          background: #fef3c7;
+          color: #92400e;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-weight: 500;
+          margin-left: 8px;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+          .file-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            align-items: start;
+          }
+
+          .file-type-selector label {
+            max-width: none;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .file-type-selector {
+            grid-template-columns: repeat(2, 1fr);
+            max-width: 800px;
+            margin: 20px auto;
+          }
+        }
+
+        .guidance {
+          background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+          border: 2px solid #2196f3;
+          border-radius: 12px;
+          padding: 20px;
+          margin: 20px 0;
+        }
+
+        .guidance h3 {
+          color: #1976d2;
+          margin: 0 0 10px 0;
+          font-size: 1.2rem;
+        }
+
+        .order-guide {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin: 15px 0;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .step {
+          background: white;
+          padding: 10px 15px;
+          border-radius: 8px;
+          border: 2px solid #2196f3;
+          font-weight: 600;
+        }
+
+        .arrow {
+          font-size: 1.5rem;
+          color: #2196f3;
+          font-weight: bold;
+        }
+
+        .note {
+          background: #fff3cd;
+          border: 1px solid #ffc107;
+          border-radius: 6px;
+          padding: 10px;
+          margin: 10px 0 0 0;
+          color: #856404;
+          font-size: 0.9rem;
+        }
+
+        .file-inputs {
+          display: flex;
+          gap: 20px;
+          margin: 20px 0;
+          flex-wrap: wrap;
+        }
+
+        .file-input-group {
+          flex: 1;
+          min-width: 250px;
+        }
+
+        .file-input-group label {
+          display: block;
+          font-weight: 600;
+          margin-bottom: 8px;
+          color: #374151;
+        }
+
+        .file-input-group input[type="file"] {
+          width: 100%;
+          padding: 10px;
+          border: 2px solid #d1d5db;
+          border-radius: 6px;
+          font-size: 0.9rem;
+        }
+
+        .file-name {
+          margin-top: 8px;
+          padding: 8px;
+          background: #f0f9ff;
+          border: 1px solid #0ea5e9;
+          border-radius: 4px;
+          font-size: 0.9rem;
+          color: #0c4a6e;
+        }
+
+        .load-button {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: white;
+          border: none;
+          padding: 15px 30px;
+          border-radius: 25px;
+          font-size: 1.1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: block;
+          margin: 20px auto 0;
+          min-width: 250px;
+        }
+
+        .load-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .load-button:disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .error {
+          color: #dc2626;
+          margin: 10px 0;
+          padding: 15px;
+          border: 1px solid #dc2626;
+          border-radius: 6px;
+          background: #fef2f2;
+        }
+
+        .loading {
+          margin: 10px 0;
+          padding: 15px;
+          background: #f0f8ff;
+          border: 1px solid #3b82f6;
+          border-radius: 6px;
+          color: #1e40af;
+        }
+
+        .results {
+          background: white;
+          border-radius: 12px;
+          padding: 30px;
+          margin: 20px 0;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .summary {
+          margin: 20px 0;
+          padding: 20px;
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+        }
+
+        .download-buttons {
+          margin-top: 15px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .download-btn {
+          border: none;
+          padding: 10px 20px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: background-color 0.2s;
+        }
+
+        .download-btn.excel {
+          background: #10b981;
+          color: white;
+        }
+
+        .download-btn.excel:hover {
+          background: #059669;
+        }
+
+        .download-btn.csv {
+          background: #0ea5e9;
+          color: white;
+        }
+
+        .download-btn.csv:hover {
+          background: #0284c7;
+        }
+
+        .results-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 20px 0;
+          font-size: 0.9rem;
+        }
+
+        .results-table th {
+          border: 1px solid #d1d5db;
+          padding: 10px 8px;
+          text-align: left;
+          background: #f9fafb;
+          font-weight: 600;
+        }
+
+        .results-table td {
+          border: 1px solid #d1d5db;
+          padding: 10px 8px;
+          vertical-align: top;
+        }
+
+        .cell-difference {
+          background: #fef2f2;
+        }
+
+        .cell-acceptable {
+          background: #fefce8;
+        }
+
+        .cell-match {
+          background: #f0fdf4;
+        }
+
+        .auto-detected {
+          margin-left: 5px;
+          font-size: 0.8em;
+        }
+
+        .results-table small {
+          color: #6b7280;
+          display: block;
+          margin-top: 4px;
+        }
+
+        /* Mobile-First Responsive Design */
+        @media (max-width: 768px) {
+          .container {
+            padding: 10px;
+          }
+
+          .nav-content {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+          }
+
+          .nav-links {
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          .hero {
+            padding: 30px 15px;
+            margin-bottom: 20px;
+          }
+
+          .hero-title {
+            font-size: 2.2rem;
+          }
+
+          .hero-subtitle {
+            font-size: 1.2rem;
+          }
+
+          .hero-description {
+            font-size: 1rem;
+            padding: 0 10px;
+          }
+
+          .section {
+            padding: 20px 15px;
+            margin-bottom: 15px;
+          }
           
-          <button 
-            type="submit"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '12px',
-              fontWeight: '500',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            ⚙️ Confirm Mapping
-          </button>
-          
-          <button 
-            type="button" 
-            onClick={handleManualRun}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: 'linear-gradient(to right, #059669, #047857)',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '12px',
-              fontWeight: '500',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            ▶️ Run Comparison
-          </button>
-        </div>
+          .section-title {
+            font-size: 1.4rem;
+          }
 
-        {autoRerunEnabled && (
-          <div style={{
-            marginTop: '24px',
-            backgroundColor: '#fefce8',
-            border: '1px solid #fde047',
-            borderRadius: '8px',
-            padding: '16px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              ⚠️ <span style={{
-                marginLeft: '8px',
-                fontSize: '14px',
-                color: '#92400e'
-              }}>
-                Comparison will auto-run when you change settings. Disable auto-rerun above if you prefer manual control.
-              </span>
-            </div>
-          </div>
-        )}
-      </form>
+          .section-subtitle {
+            font-size: 0.9rem;
+          }
+
+          .file-type-selector {
+            padding: 15px;
+            gap: 10px;
+          }
+
+          .file-type-selector label {
+            padding: 14px 16px;
+            font-size: 0.95rem;
+            min-height: 52px;
+          }
+
+          .file-type-selector label:hover {
+            transform: none;
+          }
+
+          .guidance {
+            padding: 15px;
+            margin: 15px 0;
+          }
+
+          .guidance h3 {
+            font-size: 1.1rem;
+            text-align: center;
+          }
+
+          .order-guide {
+            flex-direction: column;
+            gap: 10px;
+          }
+
+          .step {
+            padding: 12px;
+            text-align: center;
+            font-size: 0.9rem;
+          }
+
+          .arrow {
+            transform: rotate(90deg);
+            font-size: 1.2rem;
+          }
+
+          .file-inputs {
+            flex-direction: column;
+            gap: 15px;
+          }
+
+          .file-input-group {
+            min-width: auto;
+          }
+
+          .file-input-group input[type="file"] {
+            padding: 12px;
+            font-size: 1rem;
+            min-height: 48px;
+          }
+
+          .file-name {
+            padding: 10px;
+            font-size: 0.9rem;
+          }
+
+          .load-button {
+            min-width: auto;
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1rem;
+            margin: 15px 0;
+          }
+
+          .results {
+            padding: 15px;
+            margin: 15px 0;
+          }
+
+          .summary {
+            padding: 15px;
+            font-size: 0.9rem;
+          }
+
+          .download-buttons {
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .download-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 0.95rem;
+          }
+
+          .results-table {
+            font-size: 0.8rem;
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+            border: 1px solid #d1d5db;
+          }
+
+          .results-table thead,
+          .results-table tbody,
+          .results-table th,
+          .results-table td,
+          .results-table tr {
+            display: block;
+          }
+
+          .results-table thead tr {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+          }
+
+          .results-table tr {
+            border: 1px solid #d1d5db;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+          }
+
+          .results-table td {
+            border: none;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+            padding: 8px 8px 8px 35%;
+            white-space: normal;
+            text-align: left;
+          }
+
+          .results-table td:before {
+            content: attr(data-label) ": ";
+            position: absolute;
+            left: 6px;
+            width: 30%;
+            padding-right: 10px;
+            white-space: nowrap;
+            font-weight: 600;
+            color: #374151;
+          }
+
+          .error, .loading {
+            padding: 12px;
+            font-size: 0.9rem;
+            margin: 10px 0;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .hero-title {
+            font-size: 1.8rem;
+          }
+
+          .hero-subtitle {
+            font-size: 1rem;
+          }
+
+          .section-title {
+            font-size: 1.2rem;
+          }
+
+          .file-type-selector label {
+            padding: 10px;
+            font-size: 0.9rem;
+          }
+
+          .step {
+            padding: 10px;
+            font-size: 0.85rem;
+          }
+
+          .load-button {
+            padding: 14px 16px;
+            font-size: 0.95rem;
+          }
+        }
+
+        @media (max-width: 768px) and (orientation: landscape) {
+          .hero {
+            padding: 20px 15px;
+          }
+
+          .hero-title {
+            font-size: 2rem;
+          }
+
+          .section {
+            padding: 20px;
+          }
+        }
+
+        @media (pointer: coarse) {
+          .file-type-selector label {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+          }
+
+          .load-button {
+            min-height: 48px;
+          }
+
+          .download-btn {
+            min-height: 44px;
+          }
+
+          input[type="file"] {
+            min-height: 44px;
+          }
+
+          input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+          }
+        }
+      `}</style>
     </div>
   );
-};
-
-// Enhanced SheetSelector Component (Inline)
-const SheetSelector = ({ file1Info, file2Info, onSheetSelect, fileType }) => {
-  const [selectedSheet1, setSelectedSheet1] = useState('');
-  const [selectedSheet2, setSelectedSheet2] = useState('');
-
-  useEffect(() => {
-    if (file1Info?.defaultSheet) {
-      setSelectedSheet1(file1Info.defaultSheet);
-    }
-    if (file2Info?.defaultSheet) {
-      setSelectedSheet2(file2Info.defaultSheet);
-    }
-  }, [file1Info, file2Info]);
-
-  useEffect(() => {
-    if (selectedSheet1 && selectedSheet2) {
-      onSheetSelect(selectedSheet1, selectedSheet2);
-    }
-  }, [selectedSheet1, selectedSheet2, onSheetSelect]);
-
-  if (fileType !== 'excel' && fileType !== 'excel_csv') {
-    return null;
-  }
-
-  const showFile1Selector = file1Info?.sheets?.length > 1;
-  const showFile2Selector = file2Info?.sheets?.length > 1 && fileType === 'excel';
-
-  if (!showFile1Selector && !showFile2Selector) {
-    return null;
-  }
-
-  const SheetCard = ({ fileInfo, selectedSheet, onSheetChange, title }) => {
-    const selectedSheetInfo = fileInfo.sheets.find(s => s.name === selectedSheet);
-    
-    return (
-      <div style={{
-        backgroundColor: 'white',
-        border: '1px solid #e5e7eb',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          marginBottom: '16px'
-        }}>
-          <div style={{
-            padding: '8px',
-            backgroundColor: '#dbeafe',
-            borderRadius: '8px',
-            marginRight: '12px',
-            fontSize: '20px'
-          }}>
-            📊
-          </div>
-          <div>
-            <h3 style={{
-              fontWeight: '600',
-              color: '#111827'
-            }}>{title}</h3>
-            <p style={{
-              fontSize: '14px',
-              color: '#6b7280'
-            }}>{fileInfo.fileName}</p>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: '500',
-            color: '#374151',
-            marginBottom: '8px'
-          }}>
-            Select Sheet to Compare
-          </label>
-          <select
-            value={selectedSheet}
-            onChange={(e) => onSheetChange(e.target.value)}
-            style={{
-              display: 'block',
-              width: '100%',
-              borderRadius: '8px',
-              border: '1px solid #d1d5db',
-              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-              padding: '12px',
-              fontSize: '14px',
-              backgroundColor: 'white'
-            }}
-          >
-            {fileInfo.sheets.map(sheet => (
-              <option key={sheet.name} value={sheet.name}>
-                {sheet.name}
-                {sheet.isHidden ? ' (Hidden)' : ''}
-                {sheet.hasData ? ` • ${sheet.rowCount} rows` : ' • No data'}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {selectedSheetInfo && (
-          <div style={{
-            backgroundColor: '#f9fafb',
-            borderRadius: '8px',
-            padding: '16px',
-            border: '1px solid #e5e7eb'
-          }}>
-            <h4 style={{
-              fontWeight: '500',
-              color: '#111827',
-              marginBottom: '12px'
-            }}>
-              📈 Sheet Preview
-            </h4>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '16px',
-              marginBottom: '12px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ color: '#9ca3af', marginRight: '8px' }}>#</span>
-                <span style={{ fontSize: '14px', color: '#6b7280' }}>
-                  <span style={{ fontWeight: '500' }}>{selectedSheetInfo.rowCount}</span> rows
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {selectedSheetInfo.hasData ? (
-                  <span style={{ color: '#22c55e', marginRight: '8px' }}>✅</span>
-                ) : (
-                  <span style={{ color: '#f59e0b', marginRight: '8px' }}>⚠️</span>
-                )}
-                <span style={{ fontSize: '14px', color: '#6b7280' }}>
-                  {selectedSheetInfo.hasData ? 'Has data' : 'No data'}
-                </span>
-              </div>
-            </div>
-
-            {selectedSheetInfo.headers && selectedSheetInfo.headers.length > 0 && (
-              <div>
-                <p style={{
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '8px'
-                }}>Column Headers:</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {selectedSheetInfo.headers.slice(0, 6).map((header, index) => (
-                    <span 
-                      key={index}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        backgroundColor: '#dbeafe',
-                        color: '#1e40af'
-                      }}
-                    >
-                      {header}
-                    </span>
-                  ))}
-                  {selectedSheetInfo.headers.length > 6 && (
-                    <span style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      backgroundColor: '#f3f4f6',
-                      color: '#6b7280'
-                    }}>
-                      +{selectedSheetInfo.headers.length - 6} more
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <div style={{
-      background: 'linear-gradient(to right, #eff6ff, #e0e7ff)',
-      border: '2px solid #c7d2fe',
-      borderRadius: '16px',
-      padding: '32px'
-    }}>
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          backgroundColor: '#dbeafe',
-          color: '#1e40af',
-          padding: '8px 16px',
-          borderRadius: '9999px',
-          fontSize: '14px',
-          fontWeight: '500',
-          marginBottom: '16px'
-        }}>
-          📊 Excel Sheet Selection
-        </div>
-        <h2 style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
-          color: '#1e3a8a',
-          marginBottom: '8px'
-        }}>Multiple Sheets Detected</h2>
-        <p style={{
-          color: '#1d4ed8'
-        }}>
-          Your Excel files contain multiple sheets. Please select which sheets to compare:
-        </p>
-      </div>
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '32px'
-      }}>
-        {showFile1Selector && (
-          <SheetCard
-            fileInfo={file1Info}
-            selectedSheet={selectedSheet1}
-            onSheetChange={setSelectedSheet1}
-            title="File 1"
-          />
-        )}
-
-        {showFile2Selector && (
-          <SheetCard
-            fileInfo={file2Info}
-            selectedSheet={selectedSheet2}
-            onSheetChange={setSelectedSheet2}
-            title="File 2"
-          />
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default function Compare() {
-  const [file1, setFile1] = useState(null);
-  const [file2, setFile2] = useState(null);
-  const [fileType, setFileType] = useState('csv');
-
-  // Core states (always present)
-  const [showMapper, setShowMapper] = useState(false);
-  const [headers1, setHeaders1] = useState([]);
-  const [headers2, setHeaders2] = useState([]);
-  const [suggestedMappings, setSuggestedMappings] = useState([]);
-  const [finalMappings, setFinalMappings] = useState([]);
-  const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [sampleData1, setSampleData1] = useState(null);
-  const [sampleData2, setSampleData2] = useState(null);
-
-  // Optional states (only used if features enabled)
-  const [file1Info, setFile1Info] = useState(null);
-  const [file2Info, setFile2Info] = useState(null);
-  const [selectedSheet1, setSelectedSheet1] = useState(null);
-  const [selectedSheet2, setSelectedSheet2] = useState(null);
-  const [showSheetSelector, setShowSheetSelector] = useState(false);
-
-  // INLINE FILE DETECTION (inside component)
-  const detectFileTypeInline = (file) => {
-    const fileName = file.name.toLowerCase();
-    
-    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.xlsm')) {
-      return { type: 'excel', label: 'Excel' };
-    }
-    if (fileName.endsWith('.csv')) {
-      return { type: 'csv', label: 'CSV' };
-    }
-    if (fileName.endsWith('.json')) {
-      return { type: 'json', label: 'JSON' };
-    }
-    if (fileName.endsWith('.txt')) {
-      return { type: 'text', label: 'Text' };
-    }
-    
-    return { type: 'unknown', label: 'Unknown' };
-  };
-
-  // ENFORCED FILE ORDER VALIDATION - Simple and Clear
-  const validateExcelCSVOrder = (file1, file2) => {
-    const file1Type = detectFileTypeInline(file1);
-    const file2Type = detectFileTypeInline(file2);
-    
-    console.log(`🔍 File 1 (${file1.name}) detected as: ${file1Type.type}`);
-    console.log(`🔍 File 2 (${file2.name}) detected as: ${file2Type.type}`);
-    
-    // STRICT: File 1 must be Excel, File 2 must be CSV
-    if (file1Type.type !== 'excel') {
-      return {
-        valid: false,
-        error: `❌ File Order Error!\n\nFile 1 must be an Excel file (.xlsx, .xls)\nYou uploaded: ${file1Type.label}\n\nPlease upload Excel file first, then CSV file.`
-      };
-    }
-    
-    if (file2Type.type !== 'csv') {
-      return {
-        valid: false,
-        error: `❌ File Order Error!\n\nFile 2 must be a CSV file (.csv)\nYou uploaded: ${file2Type.label}\n\nPlease upload Excel file first, then CSV file.`
-      };
-    }
+}
