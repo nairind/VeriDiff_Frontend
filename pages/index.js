@@ -38,14 +38,38 @@ export default function Home() {
   };
 
   const handleSignIn = () => {
-    // UPDATED: Now redirects to actual login page instead of showing alert
-    window.location.href = '/login';
+    // ✅ FIXED: Now redirects to NextAuth signin page
+    window.location.href = '/api/auth/signin';
   };
 
   const handleSignOut = () => {
     localStorage.removeItem('veridiff_token');
     setUser(null);
     setUserMenuOpen(false);
+  };
+
+  // ✅ NEW: Handle dashboard navigation
+  const handleDashboard = () => {
+    // TODO: Create /dashboard page
+    window.location.href = '/dashboard';
+  };
+
+  // ✅ NEW: Handle account settings navigation
+  const handleAccountSettings = () => {
+    // TODO: Create /account page
+    window.location.href = '/account';
+  };
+
+  // ✅ NEW: Handle FAQ navigation
+  const handleFAQ = () => {
+    // TODO: Create /faq page
+    window.location.href = '/faq';
+  };
+
+  // ✅ NEW: Handle legal page navigation
+  const handleLegalPage = (page) => {
+    // TODO: Create legal pages
+    window.location.href = `/${page}`;
   };
 
   const handleWatchVideo = () => {
@@ -277,26 +301,36 @@ export default function Home() {
                           <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>{user.email}</div>
                         </div>
                         <div style={{ padding: '0.5rem' }}>
-                          <a href="/dashboard" style={{ 
+                          {/* ✅ UPDATED: Now uses handleDashboard function */}
+                          <button onClick={handleDashboard} style={{ 
+                            width: '100%',
+                            textAlign: 'left',
                             display: 'block',
                             padding: '0.5rem',
                             color: '#374151',
-                            textDecoration: 'none',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
                             borderRadius: '0.25rem',
                             transition: 'background 0.2s'
                           }}>
                             Dashboard
-                          </a>
-                          <a href="/account" style={{ 
+                          </button>
+                          {/* ✅ UPDATED: Now uses handleAccountSettings function */}
+                          <button onClick={handleAccountSettings} style={{ 
+                            width: '100%',
+                            textAlign: 'left',
                             display: 'block',
                             padding: '0.5rem',
                             color: '#374151',
-                            textDecoration: 'none',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
                             borderRadius: '0.25rem',
                             transition: 'background 0.2s'
                           }}>
                             Account Settings
-                          </a>
+                          </button>
                           <button onClick={handleSignOut} style={{ 
                             width: '100%',
                             textAlign: 'left',
@@ -366,9 +400,10 @@ export default function Home() {
                   </a>
                   {user ? (
                     <>
-                      <a href="/dashboard" style={{ ...navLinkStyle, textAlign: 'left' }}>
+                      {/* ✅ UPDATED: Mobile dashboard uses handleDashboard function */}
+                      <button onClick={handleDashboard} style={{ ...navButtonStyle, textAlign: 'left' }}>
                         Dashboard
-                      </a>
+                      </button>
                       <button onClick={handleSignOut} style={{ ...navButtonStyle, textAlign: 'left', color: '#dc2626' }}>
                         Sign Out
                       </button>
@@ -1403,7 +1438,7 @@ export default function Home() {
                   }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
                     <span>Team collaboration</span>
-                  </div>
+                    </div>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
