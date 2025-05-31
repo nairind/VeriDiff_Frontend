@@ -11,8 +11,8 @@ export default async function handler(req, res) {
   
   // Check if user is admin (same emails as in the admin page)
   const adminEmails = [
-    'your-email@gmail.com',  // ← CHANGE THIS TO YOUR EMAIL
-    'admin@yourdomain.com'   // ← ADD MORE ADMIN EMAILS HERE
+    'sales@veridiff.com',  // ← CHANGE THIS TO YOUR EMAIL
+    'contact@qubithcm.com'   // ← ADD MORE ADMIN EMAILS HERE
   ];
   
   if (!session || !adminEmails.includes(session.user.email)) {
