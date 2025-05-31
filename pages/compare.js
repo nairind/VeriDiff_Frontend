@@ -55,7 +55,7 @@ function ComparePage() {
   // ✅ Processing protection state
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // ✅ NEW: Premium upgrade handler
+  // ✅ Premium upgrade handler
   const handlePremiumUpgrade = () => {
     alert(`🔒 Premium Subscription Required
 
@@ -94,7 +94,7 @@ Would you like to upgrade to unlock all formats?`);
     }
   };
 
-  // ✅ NEW: Analytics tracking function (separate from usage limits)
+  // ✅ ENHANCED: Analytics tracking function with detailed user information
   const trackAnalytics = async (comparisonType, tier) => {
     if (!session) return;
 
@@ -103,11 +103,32 @@ Would you like to upgrade to unlock all formats?`);
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // User identification
+          user_id: session.user.id,
+          user_email: session.user.email,
+          user_name: session.user.name,
+          
+          // Comparison details
           comparison_type: comparisonType,
           tier: tier,
-          timestamp: new Date().toISOString()
+          
+          // Timing and metadata
+          timestamp: new Date().toISOString(),
+          
+          // Optional: File information
+          file1_name: file1?.name || null,
+          file2_name: file2?.name || null,
+          file1_size: file1?.size || null,
+          file2_size: file2?.size || null,
+          
+          // Browser/device info
+          user_agent: navigator.userAgent,
+          page_url: window.location.href
         })
       });
+      
+      console.log(`📊 Analytics tracked: ${comparisonType} (${tier}) for ${session.user.email}`);
+      
     } catch (error) {
       console.error('Analytics tracking failed:', error);
       // Don't block the comparison if analytics fails
@@ -157,6 +178,7 @@ Would you like to upgrade to unlock all formats?`);
       } else {
         // Premium formats: Should never reach here due to upfront blocking
         console.log('🚀 Premium comparison proceeding...');
+        await trackAnalytics(fileType, 'premium');
         await handleRunComparison();
         console.log('✅ Premium comparison completed');
       }
@@ -337,7 +359,7 @@ Would you like to upgrade to unlock all formats?`);
     setSelectedSheet2(sheet2);
   };
 
-  // ✅ UPDATED: handleLoadFiles with upfront premium check
+  // ✅ UPDATED: handleLoadFiles with upfront premium check and authentication
   const handleLoadFiles = async () => {
     console.log("🚀 handleLoadFiles started");
     console.log("📁 File 1:", file1?.name);
@@ -349,15 +371,15 @@ Would you like to upgrade to unlock all formats?`);
       return;
     }
 
-    // ✅ UPFRONT PREMIUM CHECK - Block before any processing
+    // ✅ AUTHENTICATION CHECK - All users must be signed in
+    if (!session) {
+      alert('Please sign in to use VeriDiff. Excel comparisons are free forever, but we need to know who\'s using our service!');
+      return;
+    }
+
+    // ✅ UPFRONT PREMIUM CHECK - Block before any processing for premium formats
     if (fileType !== 'excel') {
       console.log('🚫 Premium format detected, checking subscription...');
-      
-      // Check user tier
-      if (!session) {
-        handlePremiumUpgrade();
-        return;
-      }
       
       try {
         const response = await fetch('/api/usage/current');
