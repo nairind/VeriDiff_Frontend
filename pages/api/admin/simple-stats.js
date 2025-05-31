@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   
   // Check if user is admin (same emails as in the admin page)
   const adminEmails = [
-    'sales@veridiff.com',  // ← CHANGE THIS TO YOUR EMAIL
+    'SALES@VERIDIFF.COM',  // ← CHANGE THIS TO YOUR EMAIL
     'contact@qubithcm.com'   // ← ADD MORE ADMIN EMAILS HERE
   ];
   
