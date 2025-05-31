@@ -1,3 +1,72 @@
+import AuthGuard, { useUsageTracking } from '../components/auth/AuthGuard'
+import { useSession, signOut } from 'next-auth/react'
+
+function ComparePage() {
+  const { data: session } = useSession()
+  const { usage, trackUsage, fetchUsage } = useUsageTracking()
+
+  // Add this function to handle file comparison
+  const handleCompareFiles = async () => {
+    try {
+      // Track usage BEFORE processing
+      const usageData = await trackUsage()
+      
+      // Your existing file comparison logic here
+      // ...
+      
+      console.log(`Comparison completed. ${usageData.remaining} comparisons remaining.`)
+      
+    } catch (error) {
+      if (error.message.includes('Usage limit exceeded')) {
+        alert('You've reached your monthly limit. Please upgrade to continue comparing files.')
+        // Optionally redirect to pricing page
+      } else {
+        console.error('Comparison failed:', error)
+      }
+    }
+  }
+
+  // Show usage status
+  const showUsageStatus = () => {
+    if (!usage) return null
+    
+    return (
+      <div style={{ 
+        background: usage.remaining > 0 ? '#f0fdf4' : '#fef2f2',
+        padding: '1rem',
+        borderRadius: '0.5rem',
+        margin: '1rem 0'
+      }}>
+        <p style={{ margin: 0, color: usage.remaining > 0 ? '#166534' : '#dc2626' }}>
+          {usage.tier === 'free' 
+            ? `${usage.used}/${usage.limit} free comparisons used this month`
+            : 'Unlimited comparisons'
+          }
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <AuthGuard>
+      <div>
+        {/* User info and logout */}
+        <div style={{ padding: '1rem', textAlign: 'right' }}>
+          Welcome, {session?.user?.name}! 
+          <button onClick={() => signOut()}>Logout</button>
+        </div>
+        
+        {/* Usage status */}
+        {showUsageStatus()}
+        
+        {/* Your existing compare UI */}
+        {/* Update your compare button to use handleCompareFiles */}
+      </div>
+    </AuthGuard>
+  )
+}
+
+export default ComparePage
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
