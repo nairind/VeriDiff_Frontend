@@ -61,7 +61,7 @@ function ComparePage() {
 
 Excel-CSV, CSV-CSV, JSON, PDF, and XML comparisons require a premium subscription.
 
-Excel-Excel comparisons remain FREE forever!
+Excel-Excel comparisons remain FREE for all signed-in users!
 
 Would you like to upgrade to unlock all formats?`);
     
@@ -183,12 +183,12 @@ Would you like to upgrade to unlock all formats?`);
       }}>
         {fileType === 'excel' ? (
           <p style={{ margin: 0, color: '#166534', fontWeight: '600' }}>
-            🎉 Excel-Excel comparisons are FREE forever! No limits, no signup required.
+            🎉 Excel-Excel comparisons are FREE forever! No usage limits for signed-in users.
           </p>
         ) : (
           <p style={{ margin: 0, color: '#dc2626' }}>
             {usage.tier === 'free' 
-              ? 'Premium formats require paid subscription • Excel-Excel always free!'
+              ? 'Premium formats require paid subscription • Excel-Excel free for signed-in users!'
               : 'Unlimited premium comparisons + Excel-Excel free'
             }
           </p>
@@ -899,7 +899,7 @@ Would you like to upgrade to unlock all formats?`);
               maxWidth: '600px',
               margin: '0 auto'
             }}>
-              Compare documents with precision and confidence. Excel comparisons are free forever. 
+              Compare documents with precision and confidence. Excel comparisons are free forever for all users. 
               Premium features unlock advanced formats with professional-grade accuracy.
             </p>
           </div>
@@ -915,7 +915,7 @@ Would you like to upgrade to unlock all formats?`);
               textAlign: 'center',
               margin: '0 0 35px 0'
             }}>
-              Excel-Excel is free forever • All other formats require premium
+              Excel-Excel is free for all signed-in users • Other formats require premium
             </p>
             
             <div style={fileTypeGridStyle} className="file-type-grid">
@@ -1012,7 +1012,7 @@ Would you like to upgrade to unlock all formats?`);
                         borderRadius: '6px',
                         fontWeight: '600'
                       }}>
-                        FREE ✨
+                        FREE for signed-in users ✨
                       </span>
                     )}
                     {option.badge && (
@@ -1046,7 +1046,7 @@ Would you like to upgrade to unlock all formats?`);
               margin: '0 0 35px 0'
             }}>
               {fileType === 'excel' 
-                ? '🎉 Free Excel comparison - no limits!' 
+                ? '🎉 Free Excel comparison for signed-in users!' 
                 : 'Premium comparison - advanced formats & features'
               }
             </p>
@@ -1111,7 +1111,7 @@ Would you like to upgrade to unlock all formats?`);
                         fontSize: '0.85rem',
                         fontWeight: '500'
                       }}>
-                        🎉 FREE Excel comparison forever!
+                        🎉 FREE Excel comparison for signed-in users!
                       </small>
                     )}
                     {fileType === 'excel_csv' && (
@@ -1217,7 +1217,7 @@ Would you like to upgrade to unlock all formats?`);
                         fontSize: '0.85rem',
                         fontWeight: '500'
                       }}>
-                        🎉 FREE Excel comparison forever!
+                        🎉 FREE Excel comparison for signed-in users!
                       </small>
                     )}
                     {fileType === 'excel_csv' && (
@@ -1427,7 +1427,7 @@ Would you like to upgrade to unlock all formats?`);
                 }}>
                   <strong style={{ color: '#166534' }}>🎉 Free Excel Comparison Complete!</strong>
                   <span style={{ color: '#16a34a', marginLeft: '8px' }}>
-                    No limits, no usage counted. Enjoy unlimited Excel comparisons!
+                    No usage limits for signed-in users. Enjoy unlimited Excel comparisons!
                   </span>
                 </div>
               )}
