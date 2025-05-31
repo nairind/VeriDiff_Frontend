@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
@@ -52,7 +52,7 @@ function ComparePage() {
   const [showSheetSelector, setShowSheetSelector] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // ✅ NEW: Processing protection state
+  // ✅ Processing protection state
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Usage tracking functions
@@ -80,6 +80,26 @@ function ComparePage() {
     }
   };
 
+  // ✅ NEW: Analytics tracking function (separate from usage limits)
+  const trackAnalytics = async (comparisonType, tier) => {
+    if (!session) return;
+
+    try {
+      await fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          comparison_type: comparisonType,
+          tier: tier,
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (error) {
+      console.error('Analytics tracking failed:', error);
+      // Don't block the comparison if analytics fails
+    }
+  };
+
   const fetchUsage = async () => {
     if (!session) return null;
 
@@ -104,7 +124,7 @@ function ComparePage() {
     }
   }, [session]);
 
-  // ✅ FIXED: Add this function to handle file comparison with usage tracking protection
+  // ✅ UPDATED: Handle file comparison with free Excel-Excel + paid other formats
   const handleCompareFiles = async () => {
     // ✅ PROTECTION: Prevent multiple calls
     if (isProcessing) {
@@ -113,55 +133,63 @@ function ComparePage() {
     }
 
     try {
-      setIsProcessing(true); // 🔒 Lock to prevent duplicate calls
+      setIsProcessing(true);
       
-      // Track usage ONCE at the start
-      console.log('📊 Tracking usage for comparison...');
-      const usageData = await trackUsage();
-      console.log('✅ Usage tracked successfully:', usageData);
-      
-      // Run the actual comparison
-      console.log('🚀 Starting file comparison...');
-      await handleRunComparison();
-      
-      console.log(`✅ Comparison completed. ${usageData?.remaining || 0} comparisons remaining.`);
+      if (fileType === 'excel') {
+        // ✅ Excel-Excel: Track for analytics but don't count toward limits
+        console.log('📊 Excel-Excel comparison - FREE tier, tracking for analytics only');
+        await trackAnalytics('excel-excel', 'free');
+        await handleRunComparison();
+        console.log('✅ Free Excel-Excel comparison completed');
+      } else {
+        // ✅ Other formats: Track usage AND enforce limits  
+        console.log('📊 Tracking usage for premium comparison...');
+        const usageData = await trackUsage();
+        console.log('✅ Usage tracked successfully:', usageData);
+        await handleRunComparison();
+        console.log(`✅ Premium comparison completed. ${usageData?.remaining || 0} comparisons remaining.`);
+      }
       
     } catch (error) {
       console.error('❌ Comparison error:', error);
       
       if (error.message.includes('Usage limit exceeded')) {
-        alert('You\'ve reached your monthly limit. Please upgrade to continue comparing files.');
-        // Optionally redirect to pricing page
+        alert('Premium formats require a paid subscription. Excel-Excel comparisons remain free forever!');
       } else {
         console.error('Comparison failed:', error);
-        // Don't run comparison if usage tracking fails and shows limit exceeded
         if (!error.message.includes('limit')) {
-          console.log('🔄 Running comparison anyway (non-limit error)');
           await handleRunComparison();
         }
       }
     } finally {
-      setIsProcessing(false); // 🔓 Always unlock when done
+      setIsProcessing(false);
     }
   };
 
-  // Show usage status
+  // ✅ UPDATED: Show usage status with free Excel-Excel messaging
   const showUsageStatus = () => {
     if (!usage) return null;
     
     return (
       <div style={{ 
-        background: usage.remaining > 0 ? '#f0fdf4' : '#fef2f2',
+        background: fileType === 'excel' ? '#f0fdf4' : (usage.remaining > 0 ? '#f0fdf4' : '#fef2f2'),
         padding: '1rem',
         borderRadius: '0.5rem',
-        margin: '1rem 0'
+        margin: '1rem 0',
+        border: fileType === 'excel' ? '2px solid #22c55e' : 'none'
       }}>
-        <p style={{ margin: 0, color: usage.remaining > 0 ? '#166534' : '#dc2626' }}>
-          {usage.tier === 'free' 
-            ? `${usage.used}/${usage.limit} free comparisons used this month`
-            : 'Unlimited comparisons'
-          }
-        </p>
+        {fileType === 'excel' ? (
+          <p style={{ margin: 0, color: '#166534', fontWeight: '600' }}>
+            🎉 Excel-Excel comparisons are FREE forever! No limits, no signup required.
+          </p>
+        ) : (
+          <p style={{ margin: 0, color: '#dc2626' }}>
+            {usage.tier === 'free' 
+              ? 'Premium formats require paid subscription • Excel-Excel always free!'
+              : 'Unlimited premium comparisons + Excel-Excel free'
+            }
+          </p>
+        )}
       </div>
     );
   };
@@ -837,8 +865,8 @@ function ComparePage() {
               maxWidth: '600px',
               margin: '0 auto'
             }}>
-              Compare documents with precision and confidence. From Excel to PDFs, 
-              VeriDiff handles your most critical file comparisons with professional-grade accuracy.
+              Compare documents with precision and confidence. Excel comparisons are free forever. 
+              Premium features unlock advanced formats with professional-grade accuracy.
             </p>
           </div>
 
@@ -853,19 +881,19 @@ function ComparePage() {
               textAlign: 'center',
               margin: '0 0 35px 0'
             }}>
-              Select the file formats you want to compare
+              Excel-Excel is free forever • All other formats require premium
             </p>
             
             <div style={fileTypeGridStyle} className="file-type-grid">
               {[
-                { value: 'excel', label: 'Excel–Excel', featured: false },
-                { value: 'excel_csv', label: 'Excel–CSV', featured: true },
-                { value: 'csv', label: 'CSV–CSV', featured: false },
-                { value: 'pdf', label: 'PDF–PDF', featured: false, badge: 'v1' },
-                { value: 'text', label: 'TXT–TXT', featured: false },
-                { value: 'json', label: 'JSON–JSON', featured: false },
-                { value: 'xml', label: 'XML–XML', featured: false },
-                { value: 'pdf_ocr', label: 'PDF–PDF', disabled: true, badge: 'OCR coming' }
+                { value: 'excel', label: 'Excel–Excel', featured: false, free: true },
+                { value: 'excel_csv', label: 'Excel–CSV', featured: true, free: false },
+                { value: 'csv', label: 'CSV–CSV', featured: false, free: false },
+                { value: 'pdf', label: 'PDF–PDF', featured: false, badge: 'v1', free: false },
+                { value: 'text', label: 'TXT–TXT', featured: false, free: false },
+                { value: 'json', label: 'JSON–JSON', featured: false, free: false },
+                { value: 'xml', label: 'XML–XML', featured: false, free: false },
+                { value: 'pdf_ocr', label: 'PDF–PDF', disabled: true, badge: 'OCR coming', free: false }
               ].map((option) => (
                 <label
                   key={option.value}
@@ -877,18 +905,22 @@ function ComparePage() {
                     borderRadius: '12px',
                     cursor: option.disabled ? 'not-allowed' : 'pointer',
                     transition: 'all 0.3s ease',
-                    background: option.featured 
-                      ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                      : option.disabled 
-                        ? '#f9fafb' 
-                        : 'white',
-                    border: option.featured 
-                      ? '2px solid #f59e0b' 
-                      : option.disabled 
-                        ? '2px dashed #9ca3af' 
-                        : fileType === option.value 
-                          ? '2px solid #2563eb' 
-                          : '2px solid #e5e7eb',
+                    background: option.free
+                      ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                      : option.featured 
+                        ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+                        : option.disabled 
+                          ? '#f9fafb' 
+                          : 'white',
+                    border: option.free
+                      ? '2px solid #22c55e'
+                      : option.featured 
+                        ? '2px solid #f59e0b' 
+                        : option.disabled 
+                          ? '2px dashed #9ca3af' 
+                          : fileType === option.value 
+                            ? '2px solid #2563eb' 
+                            : '2px solid #e5e7eb',
                     opacity: option.disabled ? 0.7 : 1,
                     fontWeight: option.featured ? '600' : '500',
                     fontSize: '1rem',
@@ -896,15 +928,27 @@ function ComparePage() {
                   }}
                   onMouseOver={(e) => {
                     if (!option.disabled && fileType !== option.value) {
-                      e.target.style.borderColor = '#2563eb';
-                      e.target.style.background = option.featured ? 'linear-gradient(135deg, #fde68a, #fcd34d)' : '#f0f4ff';
+                      e.target.style.borderColor = option.free ? '#16a34a' : '#2563eb';
+                      e.target.style.background = option.free 
+                        ? 'linear-gradient(135deg, #d1fae5, #bbf7d0)'
+                        : option.featured 
+                          ? 'linear-gradient(135deg, #fde68a, #fcd34d)' 
+                          : '#f0f4ff';
                       e.target.style.transform = 'translateY(-2px)';
                     }
                   }}
                   onMouseOut={(e) => {
                     if (!option.disabled && fileType !== option.value) {
-                      e.target.style.borderColor = option.featured ? '#f59e0b' : '#e5e7eb';
-                      e.target.style.background = option.featured ? 'linear-gradient(135deg, #fef3c7, #fde68a)' : 'white';
+                      e.target.style.borderColor = option.free 
+                        ? '#22c55e'
+                        : option.featured 
+                          ? '#f59e0b' 
+                          : '#e5e7eb';
+                      e.target.style.background = option.free
+                        ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                        : option.featured 
+                          ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+                          : 'white';
                       e.target.style.transform = 'none';
                     }
                   }}
@@ -919,11 +963,24 @@ function ComparePage() {
                     style={{
                       width: '20px',
                       height: '20px',
-                      accentColor: '#2563eb'
+                      accentColor: option.free ? '#22c55e' : '#2563eb'
                     }}
                   />
                   <span style={{ flex: 1 }}>
                     {option.label}
+                    {option.free && (
+                      <span style={{
+                        marginLeft: '8px',
+                        fontSize: '0.75em',
+                        background: '#dcfce7',
+                        color: '#166534',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        fontWeight: '600'
+                      }}>
+                        FREE ✨
+                      </span>
+                    )}
                     {option.badge && (
                       <span style={{
                         marginLeft: '8px',
@@ -954,20 +1011,27 @@ function ComparePage() {
               textAlign: 'center',
               margin: '0 0 35px 0'
             }}>
-              Select files to compare
+              {fileType === 'excel' 
+                ? '🎉 Free Excel comparison - no limits!' 
+                : 'Premium comparison - advanced formats & features'
+              }
             </p>
 
             <div style={fileUploadGridStyle} className="file-upload-grid">
               {/* File 1 Upload */}
               <div style={{
-                background: fileType === 'excel_csv' 
-                  ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                  : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                background: fileType === 'excel'
+                  ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                  : fileType === 'excel_csv' 
+                    ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+                    : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
                 padding: '25px',
                 borderRadius: '16px',
-                border: fileType === 'excel_csv' 
-                  ? '2px solid #f59e0b' 
-                  : '2px solid #0ea5e9',
+                border: fileType === 'excel'
+                  ? '2px solid #22c55e'
+                  : fileType === 'excel_csv' 
+                    ? '2px solid #f59e0b' 
+                    : '2px solid #0ea5e9',
                 boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                 transition: 'all 0.3s ease'
               }}>
@@ -981,9 +1045,11 @@ function ComparePage() {
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
-                    background: fileType === 'excel_csv' 
-                      ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
-                      : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                    background: fileType === 'excel'
+                      ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                      : fileType === 'excel_csv' 
+                        ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
+                        : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1005,6 +1071,15 @@ function ComparePage() {
                         ? 'Excel File (.xlsx, .xls, .xlsm)' 
                         : 'File 1'}
                     </label>
+                    {fileType === 'excel' && (
+                      <small style={{
+                        color: '#166534',
+                        fontSize: '0.85rem',
+                        fontWeight: '500'
+                      }}>
+                        🎉 FREE Excel comparison forever!
+                      </small>
+                    )}
                     {fileType === 'excel_csv' && (
                       <small style={{
                         color: '#92400e',
@@ -1051,14 +1126,18 @@ function ComparePage() {
               
               {/* File 2 Upload */}
               <div style={{
-                background: fileType === 'excel_csv' 
-                  ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' 
-                  : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                background: fileType === 'excel'
+                  ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                  : fileType === 'excel_csv' 
+                    ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' 
+                    : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
                 padding: '25px',
                 borderRadius: '16px',
-                border: fileType === 'excel_csv' 
-                  ? '2px solid #22c55e' 
-                  : '2px solid #0ea5e9',
+                border: fileType === 'excel'
+                  ? '2px solid #22c55e'
+                  : fileType === 'excel_csv' 
+                    ? '2px solid #22c55e' 
+                    : '2px solid #0ea5e9',
                 boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                 transition: 'all 0.3s ease'
               }}>
@@ -1072,9 +1151,11 @@ function ComparePage() {
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
-                    background: fileType === 'excel_csv' 
-                      ? 'linear-gradient(135deg, #22c55e, #16a34a)' 
-                      : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                    background: fileType === 'excel'
+                      ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                      : fileType === 'excel_csv' 
+                        ? 'linear-gradient(135deg, #22c55e, #16a34a)' 
+                        : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1096,6 +1177,15 @@ function ComparePage() {
                         ? 'CSV File (.csv)' 
                         : 'File 2'}
                     </label>
+                    {fileType === 'excel' && (
+                      <small style={{
+                        color: '#166534',
+                        fontSize: '0.85rem',
+                        fontWeight: '500'
+                      }}>
+                        🎉 FREE Excel comparison forever!
+                      </small>
+                    )}
                     {fileType === 'excel_csv' && (
                       <small style={{
                         color: '#166534',
@@ -1176,7 +1266,7 @@ function ComparePage() {
                       marginRight: '12px',
                       fontSize: '1.6rem',
                       filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-                    }}>🚀</span>
+                    }}>{fileType === 'excel' ? '🎉' : '🚀'}</span>
                     <span style={{
                       background: 'linear-gradient(45deg, #ffffff, #f0f9ff)',
                       WebkitBackgroundClip: 'text',
@@ -1184,7 +1274,10 @@ function ComparePage() {
                       backgroundClip: 'text',
                       textShadow: '0 2px 4px rgba(0,0,0,0.3)'
                     }}>
-                      Load Files & Start Comparison
+                      {fileType === 'excel' 
+                        ? 'Start Free Excel Comparison' 
+                        : 'Load Files & Start Comparison'
+                      }
                     </span>
                   </>
                 )}
@@ -1288,6 +1381,23 @@ function ComparePage() {
               }}>
                 Comparison Results
               </h2>
+              
+              {fileType === 'excel' && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+                  border: '2px solid #22c55e',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  marginBottom: '20px',
+                  textAlign: 'center'
+                }}>
+                  <strong style={{ color: '#166534' }}>🎉 Free Excel Comparison Complete!</strong>
+                  <span style={{ color: '#16a34a', marginLeft: '8px' }}>
+                    No limits, no usage counted. Enjoy unlimited Excel comparisons!
+                  </span>
+                </div>
+              )}
+              
               <div style={{
                 margin: '25px 0',
                 padding: '25px',
