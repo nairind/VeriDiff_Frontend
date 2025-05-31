@@ -10,7 +10,7 @@ export default function AdminPage() {
   useEffect(() => {
     // Only allow specific admin emails - CHANGE THESE TO YOUR EMAIL
     const adminEmails = [
-      'sales@veridiff.com',  // ← CHANGE THIS TO YOUR EMAIL
+      'SALES@VERIDIFF.COM',  // ← CHANGE THIS TO YOUR EMAIL
       'contact@qubithcm.com'   // ← ADD MORE ADMIN EMAILS HERE
     ];
 
