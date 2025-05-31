@@ -44,7 +44,7 @@ export default function AdminPage() {
   }
 
   // Not admin
-  const adminEmails = ['your-email@gmail.com', 'admin@yourdomain.com']; // Same emails as above
+  const adminEmails = ['SALES@VERIDIFF.COM', 'contact@qubithcm.com']; // Same emails as above
   if (!adminEmails.includes(session.user.email)) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
