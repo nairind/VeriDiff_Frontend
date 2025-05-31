@@ -1,10 +1,12 @@
 // File: components/HeaderMapper.jsx - Updated to match landing page aesthetic
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm, onRun, sampleData1, sampleData2 }) => {
+const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm, onRun, sampleData1, sampleData2, isProcessing }) => {
   const [mappings, setMappings] = useState([]);
   const [autoRerunEnabled, setAutoRerunEnabled] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false); // ✅ NEW: Track initialization
+  const lastAutoRunRef = useRef(0); // ✅ NEW: Prevent rapid auto-runs
 
   // Auto-detect amount fields based on name and sample data
   const isLikelyAmountField = useCallback((fieldName, sampleValues = []) => {
@@ -49,22 +51,47 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
       };
     });
     setMappings(enriched);
+    
+    // ✅ NEW: Mark as initialized after setting initial mappings
+    setTimeout(() => {
+      setHasInitialized(true);
+      console.log('🎯 HeaderMapper initialized with', enriched.length, 'mappings');
+    }, 500);
   }, [suggestedMappings, isLikelyAmountField, getSampleValues]);
 
-  // Auto-rerun comparison when mappings change (with debounce)
+  // ✅ FIXED: Auto-rerun comparison when mappings change (with better protection)
   useEffect(() => {
-    if (autoRerunEnabled && mappings.length > 0) {
-      const timer = setTimeout(() => {
-        onConfirm(mappings);
-        // Auto-run comparison after confirming mappings
-        setTimeout(() => {
-          onRun();
-        }, 100);
-      }, 1000); // 1 second debounce
-
-      return () => clearTimeout(timer);
+    // Don't auto-run during initialization or when already processing
+    if (!hasInitialized || isProcessing || !autoRerunEnabled || mappings.length === 0) {
+      return;
     }
-  }, [mappings, autoRerunEnabled, onConfirm, onRun]);
+
+    // Prevent rapid auto-runs (minimum 2 seconds between runs)
+    const now = Date.now();
+    if (now - lastAutoRunRef.current < 2000) {
+      console.log('🚫 Auto-run skipped - too soon after last run');
+      return;
+    }
+
+    console.log('⚡ Auto-rerun triggered by mapping change');
+    
+    const timer = setTimeout(() => {
+      console.log('🚀 Executing auto-rerun...');
+      lastAutoRunRef.current = Date.now();
+      
+      onConfirm(mappings);
+      // Auto-run comparison after confirming mappings
+      setTimeout(() => {
+        if (!isProcessing) { // Double-check we're not already processing
+          onRun();
+        }
+      }, 100);
+    }, 1000); // 1 second debounce
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [mappings, autoRerunEnabled, onConfirm, onRun, hasInitialized, isProcessing]);
 
   const updateMapping = (index, key, value) => {
     const updated = [...mappings];
@@ -101,9 +128,21 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
   };
 
   const handleManualRun = () => {
+    if (isProcessing) {
+      console.log('🚫 Manual run blocked - already processing');
+      return;
+    }
+    
+    console.log('🔄 Manual run triggered');
     setAutoRerunEnabled(false); // Disable auto-rerun temporarily
+    lastAutoRunRef.current = Date.now();
     onRun();
-    setTimeout(() => setAutoRerunEnabled(true), 2000); // Re-enable after 2 seconds
+    
+    // Re-enable auto-rerun after 3 seconds
+    setTimeout(() => {
+      setAutoRerunEnabled(true);
+      console.log('✅ Auto-rerun re-enabled');
+    }, 3000);
   };
 
   const autoDetectedCount = mappings.filter(m => m.isAutoDetected).length;
@@ -172,6 +211,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
             type="checkbox"
             checked={autoRerunEnabled}
             onChange={(e) => setAutoRerunEnabled(e.target.checked)}
+            disabled={isProcessing}
             style={{
               width: '18px',
               height: '18px',
@@ -180,7 +220,8 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
           />
           <span>
             ⚡ Auto-rerun comparison when settings change
-            {autoRerunEnabled && <small style={{ color: '#6b7280', marginLeft: '8px' }}>(saves time!)</small>}
+            {autoRerunEnabled && !isProcessing && <small style={{ color: '#6b7280', marginLeft: '8px' }}>(saves time!)</small>}
+            {isProcessing && <small style={{ color: '#f59e0b', marginLeft: '8px' }}>(processing...)</small>}
           </span>
         </label>
       </div>
@@ -265,6 +306,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                     <select
                       value={m.file1Header}
                       onChange={(e) => updateMapping(i, 'file1Header', e.target.value)}
+                      disabled={isProcessing}
                       style={{
                         width: '100%',
                         padding: '8px 12px',
@@ -272,7 +314,8 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                         borderRadius: '6px',
                         fontSize: '0.9rem',
                         background: 'white',
-                        color: '#374151'
+                        color: '#374151',
+                        opacity: isProcessing ? 0.7 : 1
                       }}
                     >
                       <option value="">-- None --</option>
@@ -286,6 +329,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                     <select
                       value={m.file2Header}
                       onChange={(e) => updateMapping(i, 'file2Header', e.target.value)}
+                      disabled={isProcessing}
                       style={{
                         width: '100%',
                         padding: '8px 12px',
@@ -293,7 +337,8 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                         borderRadius: '6px',
                         fontSize: '0.9rem',
                         background: 'white',
-                        color: '#374151'
+                        color: '#374151',
+                        opacity: isProcessing ? 0.7 : 1
                       }}
                     >
                       <option value="">-- None --</option>
@@ -313,10 +358,12 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                         type="checkbox"
                         checked={m.isAmountField}
                         onChange={(e) => updateMapping(i, 'isAmountField', e.target.checked)}
+                        disabled={isProcessing}
                         style={{
                           width: '18px',
                           height: '18px',
-                          accentColor: '#2563eb'
+                          accentColor: '#2563eb',
+                          opacity: isProcessing ? 0.7 : 1
                         }}
                       />
                       {m.isAutoDetected && (
@@ -336,16 +383,16 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                     <select
                       value={m.toleranceType}
                       onChange={(e) => updateMapping(i, 'toleranceType', e.target.value)}
-                      disabled={!m.isAmountField}
+                      disabled={!m.isAmountField || isProcessing}
                       style={{
                         width: '100%',
                         padding: '8px 12px',
                         border: '2px solid #d1d5db',
                         borderRadius: '6px',
                         fontSize: '0.9rem',
-                        background: m.isAmountField ? 'white' : '#f9fafb',
-                        color: m.isAmountField ? '#374151' : '#9ca3af',
-                        opacity: m.isAmountField ? 1 : 0.7
+                        background: m.isAmountField && !isProcessing ? 'white' : '#f9fafb',
+                        color: m.isAmountField && !isProcessing ? '#374151' : '#9ca3af',
+                        opacity: (m.isAmountField && !isProcessing) ? 1 : 0.7
                       }}
                     >
                       <option value="flat">Flat</option>
@@ -362,16 +409,16 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                       onChange={(e) => updateMapping(i, 'toleranceValue', e.target.value)}
                       step="any"
                       placeholder={m.isAmountField ? "0.01" : ""}
-                      disabled={!m.isAmountField}
+                      disabled={!m.isAmountField || isProcessing}
                       style={{
                         width: '100%',
                         padding: '8px 12px',
                         border: '2px solid #d1d5db',
                         borderRadius: '6px',
                         fontSize: '0.9rem',
-                        background: m.isAmountField ? 'white' : '#f9fafb',
-                        color: m.isAmountField ? '#374151' : '#9ca3af',
-                        opacity: m.isAmountField ? 1 : 0.7
+                        background: m.isAmountField && !isProcessing ? 'white' : '#f9fafb',
+                        color: m.isAmountField && !isProcessing ? '#374151' : '#9ca3af',
+                        opacity: (m.isAmountField && !isProcessing) ? 1 : 0.7
                       }}
                     />
                   </td>
@@ -382,19 +429,21 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                     <button 
                       type="button" 
                       onClick={() => removeMapping(i)}
+                      disabled={isProcessing}
                       style={{
-                        background: '#ef4444',
+                        background: isProcessing ? '#9ca3af' : '#ef4444',
                         color: 'white',
                         border: 'none',
                         padding: '8px 16px',
                         borderRadius: '6px',
-                        cursor: 'pointer',
+                        cursor: isProcessing ? 'not-allowed' : 'pointer',
                         fontSize: '0.9rem',
                         fontWeight: '500',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        opacity: isProcessing ? 0.7 : 1
                       }}
-                      onMouseOver={(e) => e.target.style.background = '#dc2626'}
-                      onMouseOut={(e) => e.target.style.background = '#ef4444'}
+                      onMouseOver={(e) => !isProcessing && (e.target.style.background = '#dc2626')}
+                      onMouseOut={(e) => !isProcessing && (e.target.style.background = '#ef4444')}
                     >
                       Remove
                     </button>
@@ -414,24 +463,30 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
           <button 
             type="button" 
             onClick={addMapping}
+            disabled={isProcessing}
             style={{
-              background: 'linear-gradient(135deg, #6b7280, #4b5563)',
+              background: isProcessing ? '#9ca3af' : 'linear-gradient(135deg, #6b7280, #4b5563)',
               color: 'white',
               border: 'none',
               padding: '12px 24px',
               borderRadius: '8px',
-              cursor: 'pointer',
+              cursor: isProcessing ? 'not-allowed' : 'pointer',
               fontSize: '1rem',
               fontWeight: '500',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              opacity: isProcessing ? 0.7 : 1
             }}
             onMouseOver={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 4px 15px rgba(107, 114, 128, 0.3)';
+              if (!isProcessing) {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 15px rgba(107, 114, 128, 0.3)';
+              }
             }}
             onMouseOut={(e) => {
-              e.target.style.transform = 'none';
-              e.target.style.boxShadow = 'none';
+              if (!isProcessing) {
+                e.target.style.transform = 'none';
+                e.target.style.boxShadow = 'none';
+              }
             }}
           >
             Add Mapping
@@ -439,24 +494,30 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
           
           <button 
             type="submit"
+            disabled={isProcessing}
             style={{
-              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+              background: isProcessing ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
               color: 'white',
               border: 'none',
               padding: '12px 24px',
               borderRadius: '8px',
-              cursor: 'pointer',
+              cursor: isProcessing ? 'not-allowed' : 'pointer',
               fontSize: '1rem',
               fontWeight: '500',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              opacity: isProcessing ? 0.7 : 1
             }}
             onMouseOver={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 4px 15px rgba(37, 99, 235, 0.3)';
+              if (!isProcessing) {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 15px rgba(37, 99, 235, 0.3)';
+              }
             }}
             onMouseOut={(e) => {
-              e.target.style.transform = 'none';
-              e.target.style.boxShadow = 'none';
+              if (!isProcessing) {
+                e.target.style.transform = 'none';
+                e.target.style.boxShadow = 'none';
+              }
             }}
           >
             Confirm Mapping
@@ -465,31 +526,37 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
           <button 
             type="button" 
             onClick={handleManualRun}
+            disabled={isProcessing}
             style={{
-              background: 'linear-gradient(135deg, #10b981, #059669)',
+              background: isProcessing ? '#9ca3af' : 'linear-gradient(135deg, #10b981, #059669)',
               color: 'white',
               border: 'none',
               padding: '12px 24px',
               borderRadius: '8px',
-              cursor: 'pointer',
+              cursor: isProcessing ? 'not-allowed' : 'pointer',
               fontSize: '1rem',
               fontWeight: '500',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              opacity: isProcessing ? 0.7 : 1
             }}
             onMouseOver={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+              if (!isProcessing) {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+              }
             }}
             onMouseOut={(e) => {
-              e.target.style.transform = 'none';
-              e.target.style.boxShadow = 'none';
+              if (!isProcessing) {
+                e.target.style.transform = 'none';
+                e.target.style.boxShadow = 'none';
+              }
             }}
           >
-            🔄 Run Comparison
+            {isProcessing ? '⏳ Processing...' : '🔄 Run Comparison'}
           </button>
         </div>
 
-        {autoRerunEnabled && (
+        {autoRerunEnabled && !isProcessing && (
           <div style={{
             marginTop: '20px',
             padding: '12px',
