@@ -55,6 +55,20 @@ function ComparePage() {
   // ✅ Processing protection state
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // ✅ NEW: Premium upgrade handler
+  const handlePremiumUpgrade = () => {
+    alert(`🔒 Premium Subscription Required
+
+Excel-CSV, CSV-CSV, JSON, PDF, and XML comparisons require a premium subscription.
+
+Excel-Excel comparisons remain FREE forever!
+
+Would you like to upgrade to unlock all formats?`);
+    
+    // TODO: Redirect to pricing/subscription page when ready
+    // window.location.href = '/pricing';
+  };
+
   // Usage tracking functions
   const trackUsage = async () => {
     if (!session) return null;
@@ -124,9 +138,8 @@ function ComparePage() {
     }
   }, [session]);
 
-  // ✅ UPDATED: Handle file comparison with free Excel-Excel + paid other formats
+  // ✅ UPDATED: Simplified comparison handler since premium blocking is upfront
   const handleCompareFiles = async () => {
-    // ✅ PROTECTION: Prevent multiple calls
     if (isProcessing) {
       console.log('🚫 Comparison already in progress, ignoring duplicate call');
       return;
@@ -136,31 +149,21 @@ function ComparePage() {
       setIsProcessing(true);
       
       if (fileType === 'excel') {
-        // ✅ Excel-Excel: Track for analytics but don't count toward limits
-        console.log('📊 Excel-Excel comparison - FREE tier, tracking for analytics only');
+        // Excel-Excel: Free analytics tracking only
+        console.log('📊 Excel-Excel comparison - FREE tier');
         await trackAnalytics('excel-excel', 'free');
         await handleRunComparison();
         console.log('✅ Free Excel-Excel comparison completed');
       } else {
-        // ✅ Other formats: Track usage AND enforce limits  
-        console.log('📊 Tracking usage for premium comparison...');
-        const usageData = await trackUsage();
-        console.log('✅ Usage tracked successfully:', usageData);
+        // Premium formats: Should never reach here due to upfront blocking
+        console.log('🚀 Premium comparison proceeding...');
         await handleRunComparison();
-        console.log(`✅ Premium comparison completed. ${usageData?.remaining || 0} comparisons remaining.`);
+        console.log('✅ Premium comparison completed');
       }
       
     } catch (error) {
       console.error('❌ Comparison error:', error);
-      
-      if (error.message.includes('Usage limit exceeded')) {
-        alert('Premium formats require a paid subscription. Excel-Excel comparisons remain free forever!');
-      } else {
-        console.error('Comparison failed:', error);
-        if (!error.message.includes('limit')) {
-          await handleRunComparison();
-        }
-      }
+      setError(error.message);
     } finally {
       setIsProcessing(false);
     }
@@ -334,6 +337,7 @@ function ComparePage() {
     setSelectedSheet2(sheet2);
   };
 
+  // ✅ UPDATED: handleLoadFiles with upfront premium check
   const handleLoadFiles = async () => {
     console.log("🚀 handleLoadFiles started");
     console.log("📁 File 1:", file1?.name);
@@ -344,6 +348,36 @@ function ComparePage() {
       setError('Please select two files.');
       return;
     }
+
+    // ✅ UPFRONT PREMIUM CHECK - Block before any processing
+    if (fileType !== 'excel') {
+      console.log('🚫 Premium format detected, checking subscription...');
+      
+      // Check user tier
+      if (!session) {
+        handlePremiumUpgrade();
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/usage/current');
+        const data = await response.json();
+        
+        if (response.ok && data.user && data.user.tier === 'free') {
+          handlePremiumUpgrade();
+          return;
+        }
+        
+        // If premium user, continue processing
+        console.log('✅ Premium user confirmed, proceeding...');
+      } catch (error) {
+        console.error('Failed to check subscription:', error);
+        handlePremiumUpgrade();
+        return;
+      }
+    }
+
+    console.log('✅ Proceeding with file processing...');
     setLoading(true);
     setError(null);
     
