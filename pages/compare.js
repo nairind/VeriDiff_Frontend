@@ -52,6 +52,9 @@ function ComparePage() {
   const [showSheetSelector, setShowSheetSelector] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // ✅ NEW: Processing protection state
+  const [isProcessing, setIsProcessing] = useState(false);
+
   // Usage tracking functions
   const trackUsage = async () => {
     if (!session) return null;
@@ -101,26 +104,44 @@ function ComparePage() {
     }
   }, [session]);
 
-  // Add this function to handle file comparison with usage tracking
+  // ✅ FIXED: Add this function to handle file comparison with usage tracking protection
   const handleCompareFiles = async () => {
+    // ✅ PROTECTION: Prevent multiple calls
+    if (isProcessing) {
+      console.log('🚫 Comparison already in progress, ignoring duplicate call');
+      return;
+    }
+
     try {
-      // Track usage BEFORE processing
-      const usageData = await trackUsage();
+      setIsProcessing(true); // 🔒 Lock to prevent duplicate calls
       
-      // Your existing file comparison logic
+      // Track usage ONCE at the start
+      console.log('📊 Tracking usage for comparison...');
+      const usageData = await trackUsage();
+      console.log('✅ Usage tracked successfully:', usageData);
+      
+      // Run the actual comparison
+      console.log('🚀 Starting file comparison...');
       await handleRunComparison();
       
-      console.log(`Comparison completed. ${usageData?.remaining || 0} comparisons remaining.`);
+      console.log(`✅ Comparison completed. ${usageData?.remaining || 0} comparisons remaining.`);
       
     } catch (error) {
+      console.error('❌ Comparison error:', error);
+      
       if (error.message.includes('Usage limit exceeded')) {
         alert('You\'ve reached your monthly limit. Please upgrade to continue comparing files.');
         // Optionally redirect to pricing page
       } else {
         console.error('Comparison failed:', error);
-        // Run comparison anyway if usage tracking fails
-        await handleRunComparison();
+        // Don't run comparison if usage tracking fails and shows limit exceeded
+        if (!error.message.includes('limit')) {
+          console.log('🔄 Running comparison anyway (non-limit error)');
+          await handleRunComparison();
+        }
       }
+    } finally {
+      setIsProcessing(false); // 🔓 Always unlock when done
     }
   };
 
@@ -654,7 +675,7 @@ function ComparePage() {
   };
 
   const loadButtonStyle = {
-    background: loading || !file1 || !file2 
+    background: loading || !file1 || !file2 || isProcessing
       ? 'linear-gradient(135deg, #94a3b8, #64748b)' 
       : 'linear-gradient(135deg, #2563eb, #7c3aed, #ec4899)',
     color: 'white',
@@ -663,10 +684,10 @@ function ComparePage() {
     borderRadius: '60px',
     fontSize: '1.4rem',
     fontWeight: '700',
-    cursor: loading || !file1 || !file2 ? 'not-allowed' : 'pointer',
+    cursor: loading || !file1 || !file2 || isProcessing ? 'not-allowed' : 'pointer',
     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
     minWidth: '360px',
-    boxShadow: loading || !file1 || !file2 
+    boxShadow: loading || !file1 || !file2 || isProcessing
       ? '0 4px 15px rgba(100, 116, 139, 0.2)' 
       : '0 10px 30px rgba(37, 99, 235, 0.4)',
     position: 'relative',
@@ -1000,6 +1021,7 @@ function ComparePage() {
                   type="file"
                   onChange={(e) => handleFileChange(e, 1)}
                   accept={fileType === 'excel_csv' ? '.xlsx,.xls,.xlsm' : undefined}
+                  disabled={isProcessing}
                   style={{
                     width: '100%',
                     padding: '14px',
@@ -1007,7 +1029,8 @@ function ComparePage() {
                     borderRadius: '10px',
                     fontSize: '1rem',
                     background: 'rgba(255,255,255,0.9)',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    opacity: isProcessing ? 0.7 : 1
                   }}
                 />
                 {file1 && (
@@ -1089,6 +1112,7 @@ function ComparePage() {
                   type="file"
                   onChange={(e) => handleFileChange(e, 2)}
                   accept={fileType === 'excel_csv' ? '.csv' : undefined}
+                  disabled={isProcessing}
                   style={{
                     width: '100%',
                     padding: '14px',
@@ -1096,7 +1120,8 @@ function ComparePage() {
                     borderRadius: '10px',
                     fontSize: '1rem',
                     background: 'rgba(255,255,255,0.9)',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    opacity: isProcessing ? 0.7 : 1
                   }}
                 />
                 {file2 && (
@@ -1120,30 +1145,30 @@ function ComparePage() {
             <div style={{ textAlign: 'center', position: 'relative' }}>
               <button 
                 onClick={handleLoadFiles} 
-                disabled={loading || !file1 || !file2}
+                disabled={loading || !file1 || !file2 || isProcessing}
                 style={loadButtonStyle}
                 className="load-button"
                 onMouseOver={(e) => {
-                  if (!loading && file1 && file2) {
+                  if (!loading && file1 && file2 && !isProcessing) {
                     e.target.style.transform = 'translateY(-4px) scale(1.03)';
                     e.target.style.boxShadow = '0 15px 40px rgba(37, 99, 235, 0.6)';
                   }
                 }}
                 onMouseOut={(e) => {
-                  if (!loading && file1 && file2) {
+                  if (!loading && file1 && file2 && !isProcessing) {
                     e.target.style.transform = 'none';
                     e.target.style.boxShadow = '0 10px 30px rgba(37, 99, 235, 0.4)';
                   }
                 }}
               >
-                {loading ? (
+                {loading || isProcessing ? (
                   <>
                     <span style={{ 
                       marginRight: '12px',
                       display: 'inline-block',
                       animation: 'spin 1s linear infinite'
                     }}>⏳</span>
-                    Processing Files...
+                    {loading ? 'Processing Files...' : 'Comparison Running...'}
                   </>
                 ) : (
                   <>
@@ -1179,9 +1204,9 @@ function ComparePage() {
               <div style={{ textAlign: 'center', marginTop: '25px' }}>
                 <button 
                   onClick={handleProceedWithSheets} 
-                  disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
+                  disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) || isProcessing}
                   style={{
-                    background: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)
+                    background: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) || isProcessing
                       ? '#9ca3af' 
                       : 'linear-gradient(135deg, #2563eb, #7c3aed)',
                     color: 'white',
@@ -1190,11 +1215,11 @@ function ComparePage() {
                     borderRadius: '8px',
                     fontSize: '1.1rem',
                     fontWeight: '600',
-                    cursor: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) ? 'not-allowed' : 'pointer',
+                    cursor: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) || isProcessing ? 'not-allowed' : 'pointer',
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {loading ? 'Processing...' : 'Proceed with Selected Sheets'}
+                  {loading || isProcessing ? 'Processing...' : 'Proceed with Selected Sheets'}
                 </button>
               </div>
             </div>
@@ -1211,6 +1236,7 @@ function ComparePage() {
               onConfirm={handleMappingConfirmed}
               showRunButton={true}
               onRun={handleCompareFiles}
+              isProcessing={isProcessing}
             />
           )}
 
@@ -1231,7 +1257,7 @@ function ComparePage() {
           )}
 
           {/* Loading */}
-          {loading && (
+          {(loading || isProcessing) && (
             <div style={{
               margin: '20px 0',
               padding: '20px',
@@ -1243,7 +1269,7 @@ function ComparePage() {
               fontWeight: '500',
               textAlign: 'center'
             }}>
-              <strong>Processing...</strong> Please wait while we compare your files...
+              <strong>{loading ? 'Processing...' : 'Running Comparison...'}</strong> Please wait while we {loading ? 'load and analyze' : 'compare'} your files...
             </div>
           )}
 
