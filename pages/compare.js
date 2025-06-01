@@ -55,9 +55,12 @@ function ComparePage() {
   // ✅ Processing protection state
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // ✅ NEW: Premium upgrade state
-  const [showPremiumUpgrade, setShowPremiumUpgrade] = useState(false);
+  // ✅ NEW: Premium modal state (replaces showPremiumUpgrade)
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [userTier, setUserTier] = useState('free');
+
+  // ✅ NEW: Header state management
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // ✅ FIXED: Premium upgrade with simplified Stripe integration
   const handlePremiumUpgrade = async () => {
@@ -125,6 +128,43 @@ function ComparePage() {
     }
     
     console.log('=== FRONTEND STRIPE CHECKOUT END ===');
+  };
+
+  // ✅ NEW: Modal upgrade handler
+  const handleModalUpgrade = async () => {
+    setShowPremiumModal(false);
+    await handlePremiumUpgrade();
+  };
+
+  // ✅ NEW: Modal dismiss handler
+  const handleModalDismiss = () => {
+    setShowPremiumModal(false);
+    // Reset file type selection back to excel
+    setFileType('excel');
+  };
+
+  // ✅ NEW: Navigation handlers from index page
+  const handleSignIn = () => {
+    window.location.href = '/api/auth/signin';
+  };
+
+  const handleSignOut = () => {
+    signOut();
+    setUserMenuOpen(false);
+  };
+
+  const handleDashboard = () => {
+    window.location.href = '/dashboard';
+  };
+
+  const handleAccountSettings = () => {
+    window.location.href = '/account';
+  };
+
+  const scrollToSection = (sectionId) => {
+    // For compare page, redirect to homepage with section
+    window.location.href = `/#${sectionId}`;
+    setMobileMenuOpen(false);
   };
 
   // Usage tracking functions
@@ -243,26 +283,6 @@ function ComparePage() {
     }
   }, [session]);
 
-  // ✅ NEW: Check premium access when file type changes
-  useEffect(() => {
-    if (!session) return;
-    
-    const isPremiumFormat = fileType !== 'excel';
-    const hasPremiumAccess = userTier === 'premium';
-    
-    if (isPremiumFormat && !hasPremiumAccess) {
-      setShowPremiumUpgrade(true);
-      // Clear any uploaded files when switching to premium format
-      setFile1(null);
-      setFile2(null);
-      setResults(null);
-      setError(null);
-      setShowMapper(false);
-    } else {
-      setShowPremiumUpgrade(false);
-    }
-  }, [fileType, userTier, session]);
-
   // ✅ UPDATED: Simplified comparison handler since premium blocking is upfront
   const handleCompareFiles = async () => {
     if (isProcessing) {
@@ -376,7 +396,7 @@ function ComparePage() {
   };
 
   const handleFileChange = (e, fileNum) => {
-    // ✅ NEW: Block file uploads for premium formats unless user has premium
+    // ✅ UPDATED: Only block for non-premium users on premium formats
     if (fileType !== 'excel' && userTier !== 'premium') {
       return; // Don't allow file uploads for premium formats
     }
@@ -387,8 +407,19 @@ function ComparePage() {
     else setFile2(file);
   };
 
+  // ✅ UPDATED: File type change shows modal for premium formats
   const handleFileTypeChange = (e) => {
-    setFileType(e.target.value);
+    const newFileType = e.target.value;
+    
+    // If selecting a premium format and user is not premium, show modal immediately
+    if (newFileType !== 'excel' && userTier !== 'premium' && session) {
+      setShowPremiumModal(true);
+      // Don't change fileType yet - let user decide in modal
+      return;
+    }
+    
+    // Normal flow for excel or premium users
+    setFileType(newFileType);
     setFile1(null);
     setFile2(null);
     setResults(null);
@@ -745,6 +776,227 @@ function ComparePage() {
     }
   };
 
+  // ✅ NEW: Premium Upgrade Modal Component
+  const PremiumUpgradeModal = () => {
+    if (!showPremiumModal) return null;
+    
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: '20px'
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '24px',
+          padding: '0',
+          maxWidth: '600px',
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          position: 'relative',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.3)'
+        }}>
+          {/* Header */}
+          <div style={{
+            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+            color: 'white',
+            padding: '40px 30px',
+            borderRadius: '24px 24px 0 0',
+            textAlign: 'center',
+            position: 'relative'
+          }}>
+            {/* Close button */}
+            <button
+              onClick={handleModalDismiss}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                color: 'white',
+                fontSize: '20px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ×
+            </button>
+            
+            <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🚀</div>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: '700',
+              margin: '0 0 10px 0'
+            }}>
+              Upgrade to Premium
+            </h2>
+            <p style={{
+              fontSize: '1.1rem',
+              opacity: '0.9',
+              margin: '0'
+            }}>
+              This format requires premium access
+            </p>
+          </div>
+
+          {/* Content */}
+          <div style={{ padding: '30px' }}>
+            <p style={{
+              fontSize: '1.1rem',
+              color: '#374151',
+              textAlign: 'center',
+              marginBottom: '25px'
+            }}>
+              Get instant access to <strong>Excel-CSV</strong>, PDF, JSON, XML, and all advanced comparison formats with professional-grade features.
+            </p>
+
+            {/* Features grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: '15px',
+              marginBottom: '30px'
+            }}>
+              <div style={{
+                background: '#f0f9ff',
+                padding: '15px',
+                borderRadius: '12px',
+                textAlign: 'center',
+                border: '2px solid #e0f2fe'
+              }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📊</div>
+                <strong>All Formats</strong>
+                <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                  Excel-CSV, PDF, JSON, XML
+                </div>
+              </div>
+              <div style={{
+                background: '#f0fdf4',
+                padding: '15px',
+                borderRadius: '12px',
+                textAlign: 'center',
+                border: '2px solid #dcfce7'
+              }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>⚡</div>
+                <strong>Advanced Features</strong>
+                <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                  Smart mapping & controls
+                </div>
+              </div>
+              <div style={{
+                background: '#fefce8',
+                padding: '15px',
+                borderRadius: '12px',
+                textAlign: 'center',
+                border: '2px solid #fef3c7'
+              }}>
+                <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🔒</div>
+                <strong>Same Privacy</strong>
+                <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                  Local processing only
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing */}
+            <div style={{
+              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+              border: '2px solid #e5e7eb',
+              borderRadius: '16px',
+              padding: '25px',
+              textAlign: 'center',
+              marginBottom: '25px'
+            }}>
+              <div style={{
+                fontSize: '2.5rem',
+                fontWeight: '700',
+                color: '#1f2937',
+                marginBottom: '5px'
+              }}>
+                £19<span style={{ fontSize: '1rem', opacity: '0.7' }}>/month</span>
+              </div>
+              <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                Cancel anytime • 30-day money-back guarantee
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '15px',
+              justifyContent: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={handleModalUpgrade}
+                disabled={loading}
+                style={{
+                  background: loading 
+                    ? '#94a3b8' 
+                    : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  fontSize: '1.1rem',
+                  fontWeight: '700',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  minWidth: '200px'
+                }}
+              >
+                {loading ? '⏳ Loading...' : '🚀 Upgrade Now'}
+              </button>
+              
+              <button
+                onClick={handleModalDismiss}
+                style={{
+                  background: 'white',
+                  color: '#6b7280',
+                  border: '2px solid #e5e7eb',
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Maybe Later
+              </button>
+            </div>
+
+            {/* Excel reminder */}
+            <p style={{
+              fontSize: '0.9rem',
+              color: '#6b7280',
+              textAlign: 'center',
+              marginTop: '20px',
+              marginBottom: '0'
+            }}>
+              💡 <strong>Remember:</strong> Excel-Excel comparisons remain FREE forever!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Responsive styles
   const containerStyle = {
     minHeight: '100vh',
@@ -752,23 +1004,27 @@ function ComparePage() {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   };
 
-  const navStyle = {
+  // ✅ NEW: Header styles from index.js
+  const headerStyle = {
     background: 'white',
     borderBottom: '1px solid #e5e7eb',
-    padding: '1rem 0',
     position: 'sticky',
     top: 0,
-    zIndex: 100,
+    zIndex: 1000,
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
   };
 
-  const navContainerStyle = {
+  const headerContainerStyle = {
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: '0 20px',
+    padding: '0 20px'
+  };
+
+  const headerContentStyle = {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    height: '64px'
   };
 
   const logoStyle = {
@@ -788,12 +1044,35 @@ function ComparePage() {
     alignItems: 'center'
   };
 
+  const navButtonStyle = {
+    background: 'none',
+    border: 'none',
+    color: '#374151',
+    fontWeight: '500',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    padding: '0.5rem',
+    borderRadius: '0.25rem',
+    transition: 'color 0.2s'
+  };
+
+  const navLinkStyle = {
+    textDecoration: 'none',
+    color: '#374151',
+    fontWeight: '500',
+    padding: '0.5rem',
+    borderRadius: '0.25rem',
+    transition: 'color 0.2s',
+    display: 'block'
+  };
+
   const mobileNavButtonStyle = {
     display: 'none',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    padding: '8px'
+    padding: '8px',
+    color: '#374151'
   };
 
   const mainStyle = {
@@ -882,6 +1161,7 @@ function ComparePage() {
       .hero-title { font-size: 2.5rem !important; }
       .section-title { font-size: 1.5rem !important; }
       .section-padding { padding: 25px !important; }
+      .footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
     }
     
     @media (max-width: 480px) {
@@ -892,6 +1172,7 @@ function ComparePage() {
         font-size: 1.1rem !important;
         padding: 14px 30px !important;
       }
+      .footer-grid { grid-template-columns: 1fr !important; }
     }
   `;
 
@@ -903,85 +1184,231 @@ function ComparePage() {
           <style>{mediaQueries}</style>
         </Head>
 
-        {/* Navigation */}
-        <nav style={navStyle}>
-          <div style={navContainerStyle}>
-            <Link href="/" style={{ textDecoration: 'none' }}>
-              <span style={logoStyle}>VeriDiff</span>
-            </Link>
-            
-            <div style={desktopNavStyle} className="desktop-nav">
-              <Link href="/about" style={{ textDecoration: 'none' }}>
-                <span style={{
-                  color: '#FF6B35',
-                  cursor: 'pointer',
-                  fontSize: '1.1rem',
-                  fontWeight: '600'
-                }}>
-                  📖 About
-                </span>
+        {/* ✅ NEW: Professional Header from index.js */}
+        <header style={headerStyle}>
+          <div style={headerContainerStyle}>
+            <div style={headerContentStyle}>
+              <Link href="/" style={{ textDecoration: 'none' }}>
+                <span style={logoStyle}>VeriDiff</span>
               </Link>
-              <span style={{
-                color: '#2563eb',
-                fontWeight: '500',
-                fontSize: '1rem'
+              
+              <nav style={desktopNavStyle} className="desktop-nav">
+                <button onClick={() => scrollToSection('features')} style={navButtonStyle}>
+                  Features
+                </button>
+                <button onClick={() => scrollToSection('pricing')} style={navButtonStyle}>
+                  Pricing
+                </button>
+                <a href="/faq" style={navLinkStyle}>
+                  FAQ
+                </a>
+                
+                {session ? (
+                  <div style={{ position: 'relative' }}>
+                    <button 
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem',
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
+                        borderRadius: '0.25rem',
+                        transition: 'background 0.2s'
+                      }}
+                    >
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: '#2563eb',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.875rem',
+                        fontWeight: '500'
+                      }}>
+                        {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {userMenuOpen && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        right: 0,
+                        background: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                        minWidth: '200px',
+                        marginTop: '0.5rem',
+                        zIndex: 1000
+                      }}>
+                        <div style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>
+                          <div style={{ fontWeight: '500', fontSize: '0.875rem' }}>{session.user?.name}</div>
+                          <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>{session.user?.email}</div>
+                        </div>
+                        <div style={{ padding: '0.5rem' }}>
+                          <button onClick={handleDashboard} style={{ 
+                            width: '100%',
+                            textAlign: 'left',
+                            display: 'block',
+                            padding: '0.5rem',
+                            color: '#374151',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            borderRadius: '0.25rem',
+                            transition: 'background 0.2s'
+                          }}>
+                            Dashboard
+                          </button>
+                          <button onClick={handleAccountSettings} style={{ 
+                            width: '100%',
+                            textAlign: 'left',
+                            display: 'block',
+                            padding: '0.5rem',
+                            color: '#374151',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            borderRadius: '0.25rem',
+                            transition: 'background 0.2s'
+                          }}>
+                            Account Settings
+                          </button>
+                          <button onClick={handleSignOut} style={{ 
+                            width: '100%',
+                            textAlign: 'left',
+                            padding: '0.5rem',
+                            background: 'none',
+                            border: 'none',
+                            color: '#dc2626',
+                            cursor: 'pointer',
+                            borderRadius: '0.25rem',
+                            transition: 'background 0.2s'
+                          }}>
+                            Sign Out
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <button onClick={handleSignIn} style={{ ...navButtonStyle, background: 'transparent' }}>
+                      Sign In
+                    </button>
+                    <Link href="/" style={{ 
+                      padding: '0.5rem 1rem', 
+                      border: 'none', 
+                      borderRadius: '0.5rem', 
+                      fontWeight: '500', 
+                      cursor: 'pointer', 
+                      background: '#2563eb', 
+                      color: 'white',
+                      transition: 'all 0.2s',
+                      textDecoration: 'none'
+                    }}>
+                      Try Free Demo
+                    </Link>
+                  </>
+                )}
+              </nav>
+
+              <button 
+                style={mobileNavButtonStyle}
+                className="mobile-nav-button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                </svg>
+              </button>
+            </div>
+
+            {/* Mobile Navigation Menu */}
+            {mobileMenuOpen && (
+              <div style={{
+                borderTop: '1px solid #e5e7eb',
+                padding: '1rem 0',
+                background: 'white'
               }}>
-                Compare Files
-              </span>
-            </div>
-
-            <button 
-              style={mobileNavButtonStyle}
-              className="mobile-nav-button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-              </svg>
-            </button>
-          </div>
-
-          {mobileMenuOpen && (
-            <div style={{
-              borderTop: '1px solid #e5e7eb',
-              padding: '1rem 0',
-              background: 'white'
-            }}>
-              <div style={{ padding: '0 20px' }}>
-                <Link href="/about" style={{ textDecoration: 'none', display: 'block', marginBottom: '1rem' }}>
-                  <span style={{ color: '#FF6B35', fontSize: '1.1rem', fontWeight: '600' }}>
-                    📖 About
-                  </span>
-                </Link>
-                <span style={{ color: '#2563eb', fontWeight: '500' }}>
-                  Compare Files
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <button onClick={() => scrollToSection('features')} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                    Features
+                  </button>
+                  <button onClick={() => scrollToSection('pricing')} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                    Pricing
+                  </button>
+                  <a href="/faq" style={{ ...navLinkStyle, textAlign: 'left' }}>
+                    FAQ
+                  </a>
+                  {session ? (
+                    <>
+                      <button onClick={handleDashboard} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                        Dashboard
+                      </button>
+                      <button onClick={handleSignOut} style={{ ...navButtonStyle, textAlign: 'left', color: '#dc2626' }}>
+                        Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={handleSignIn} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                        Sign In
+                      </button>
+                      <Link href="/" style={{ 
+                        padding: '0.75rem 1rem', 
+                        border: 'none', 
+                        borderRadius: '0.5rem', 
+                        fontWeight: '500', 
+                        cursor: 'pointer', 
+                        background: '#2563eb', 
+                        color: 'white',
+                        width: '100%',
+                        textAlign: 'center',
+                        textDecoration: 'none',
+                        display: 'block'
+                      }}>
+                        Try Free Demo
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </nav>
+            )}
+          </div>
+        </header>
+
+        {/* Security Trust Banner */}
+        <div style={{
+          background: '#dcfce7',
+          borderBottom: '1px solid #bbf7d0',
+          padding: '0.75rem 0',
+          textAlign: 'center'
+        }}>
+          <div style={headerContainerStyle}>
+            <p style={{
+              margin: 0,
+              fontSize: '0.875rem',
+              color: '#166534',
+              fontWeight: '500'
+            }}>
+              🔒 Enterprise-Grade Privacy: All file processing happens in your browser. We never see, store, or access your data.
+            </p>
+          </div>
+        </div>
 
         <main style={mainStyle} className="main-container">
-          {/* User info and logout */}
-          <div style={{ padding: '1rem', textAlign: 'right' }}>
-            Welcome, {session?.user?.name}! 
-            <button 
-              onClick={() => signOut()}
-              style={{
-                marginLeft: '1rem',
-                background: '#ef4444',
-                color: 'white',
-                border: 'none',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.25rem',
-                cursor: 'pointer'
-              }}
-            >
-              Logout
-            </button>
-          </div>
-          
           {/* Usage status */}
           {showUsageStatus()}
 
@@ -1145,136 +1572,8 @@ function ComparePage() {
             </div>
           </div>
 
-          {/* ✅ NEW: Premium Upgrade Section */}
-          {showPremiumUpgrade && (
-            <div style={sectionStyle} className="section-padding">
-              <div style={{
-                textAlign: 'center',
-                background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-                color: 'white',
-                padding: '50px 30px',
-                borderRadius: '20px',
-                marginBottom: '30px'
-              }}>
-                <div style={{
-                  fontSize: '4rem',
-                  marginBottom: '20px'
-                }}>
-                  🚀
-                </div>
-                <h2 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: '700',
-                  margin: '0 0 20px 0'
-                }}>
-                  Upgrade to Premium
-                </h2>
-                <p style={{
-                  fontSize: '1.3rem',
-                  opacity: '0.9',
-                  marginBottom: '30px',
-                  maxWidth: '600px',
-                  margin: '0 auto 30px auto'
-                }}>
-                  Access all advanced comparison formats including {fileType === 'excel_csv' ? 'Excel-CSV' : fileType.toUpperCase()}, PDF, JSON, XML, and more with professional-grade features.
-                </p>
-                
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '20px',
-                  maxWidth: '600px',
-                  margin: '0 auto 40px auto',
-                  textAlign: 'left'
-                }}>
-                  <div style={{
-                    background: 'rgba(255,255,255,0.1)',
-                    padding: '15px',
-                    borderRadius: '10px'
-                  }}>
-                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📊</div>
-                    <strong>All Formats</strong><br/>
-                    Excel-CSV, CSV-CSV, PDF, JSON, XML, TXT
-                  </div>
-                  <div style={{
-                    background: 'rgba(255,255,255,0.1)',
-                    padding: '15px',
-                    borderRadius: '10px'
-                  }}>
-                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>⚡</div>
-                    <strong>Advanced Features</strong><br/>
-                    Smart mapping, tolerance controls
-                  </div>
-                  <div style={{
-                    background: 'rgba(255,255,255,0.1)',
-                    padding: '15px',
-                    borderRadius: '10px'
-                  }}>
-                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🔒</div>
-                    <strong>Same Privacy</strong><br/>
-                    Local processing, no data uploaded
-                  </div>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '15px',
-                  alignItems: 'center'
-                }}>
-                  <div style={{
-                    fontSize: '1.8rem',
-                    fontWeight: '700'
-                  }}>
-                    £19<span style={{ fontSize: '1rem', opacity: '0.8' }}>/month</span>
-                  </div>
-                  
-                  <button
-                    onClick={handlePremiumUpgrade}
-                    disabled={loading}
-                    style={{
-                      background: loading ? '#94a3b8' : 'white',
-                      color: loading ? 'white' : '#2563eb',
-                      border: 'none',
-                      padding: '20px 50px',
-                      borderRadius: '60px',
-                      fontSize: '1.3rem',
-                      fontWeight: '700',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.3s ease',
-                      minWidth: '300px',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
-                    }}
-                    onMouseOver={(e) => {
-                      if (!loading) {
-                        e.target.style.transform = 'translateY(-4px) scale(1.03)';
-                        e.target.style.boxShadow = '0 15px 40px rgba(0,0,0,0.3)';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (!loading) {
-                        e.target.style.transform = 'none';
-                        e.target.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
-                      }
-                    }}
-                  >
-                    {loading ? '⏳ Loading...' : '🚀 Upgrade to Premium'}
-                  </button>
-                  
-                  <p style={{
-                    fontSize: '0.9rem',
-                    opacity: '0.8',
-                    margin: '10px 0 0 0'
-                  }}>
-                    ✓ Cancel anytime • ✓ 30-day money-back guarantee • ✓ Excel-Excel stays FREE
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* File Upload Section - Only show if not premium upgrade needed */}
-          {!showPremiumUpgrade && (
+          {/* File Upload Section - Show for all allowed formats */}
+          {(fileType === 'excel' || userTier === 'premium') && (
             <div style={sectionStyle} className="section-padding">
               <h2 style={sectionTitleStyle} className="section-title">
                 Upload Your Files
@@ -1871,6 +2170,153 @@ function ComparePage() {
             </div>
           )}
         </main>
+
+        {/* ✅ NEW: Premium Upgrade Modal */}
+        <PremiumUpgradeModal />
+
+        {/* ✅ NEW: Professional Footer from index.js */}
+        <footer style={{ 
+          background: '#111827', 
+          color: 'white', 
+          padding: '3rem 0' 
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '2rem', 
+              marginBottom: '2rem' 
+            }} className="footer-grid">
+              <div>
+                <span style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: '700', 
+                  background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', 
+                  WebkitBackgroundClip: 'text', 
+                  WebkitTextFillColor: 'transparent', 
+                  backgroundClip: 'text', 
+                  marginBottom: '1rem', 
+                  display: 'block' 
+                }}>
+                  VeriDiff
+                </span>
+                <p style={{ color: '#d1d5db', fontSize: '0.875rem' }}>
+                  Precision-engineered in London for global business professionals. Your data never leaves your browser.
+                </p>
+              </div>
+              
+              <div>
+                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Product</h4>
+                <div>
+                  <button onClick={() => scrollToSection('features')} style={{ 
+                    color: '#d1d5db', 
+                    fontSize: '0.875rem', 
+                    cursor: 'pointer', 
+                    background: 'none', 
+                    border: 'none', 
+                    padding: '0.25rem 0', 
+                    textAlign: 'left', 
+                    display: 'block', 
+                    marginBottom: '0.5rem',
+                    width: '100%'
+                  }}>
+                    Features
+                  </button>
+                  <button onClick={() => scrollToSection('pricing')} style={{ 
+                    color: '#d1d5db', 
+                    fontSize: '0.875rem', 
+                    cursor: 'pointer', 
+                    background: 'none', 
+                    border: 'none', 
+                    padding: '0.25rem 0', 
+                    textAlign: 'left', 
+                    display: 'block', 
+                    marginBottom: '0.5rem',
+                    width: '100%'
+                  }}>
+                    Pricing
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
+                <div>
+                  <a href="mailto:sales@veridiff.com" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    Contact Us
+                  </a>
+                </div>
+              </div>
+              
+              <div>
+                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Legal</h4>
+                <div>
+                  <a href="/privacy" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    Privacy Policy
+                  </a>
+                  <a href="/terms" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    Terms of Service
+                  </a>
+                  <a href="/cookies" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    Cookie Policy
+                  </a>
+                  <a href="/gdpr" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    GDPR Rights
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ 
+              borderTop: '1px solid #374151', 
+              paddingTop: '2rem', 
+              textAlign: 'center', 
+              color: '#9ca3af', 
+              fontSize: '0.875rem' 
+            }}>
+              <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
+            </div>
+          </div>
+        </footer>
 
         <style jsx>{`
           @keyframes spin {
