@@ -240,15 +240,38 @@ export default function SignUp() {
           </Link>
         </div>
 
+        {/* ✅ UPDATED: Correct free account messaging */}
         <div style={{
-          background: '#f0fdf4',
-          padding: '1rem',
-          borderRadius: '0.5rem',
+          background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+          border: '2px solid #22c55e',
+          padding: '1.25rem',
+          borderRadius: '0.75rem',
           marginTop: '1.5rem'
         }}>
-          <p style={{ color: '#166534', margin: 0, fontSize: '0.875rem', textAlign: 'center' }}>
-            🎉 <strong>Free Account:</strong> Compare up to 5 files per month
-          </p>
+          <div style={{
+            textAlign: 'center',
+            color: '#166534',
+            fontSize: '0.95rem',
+            lineHeight: '1.4'
+          }}>
+            <div style={{ 
+              fontSize: '1rem',
+              fontWeight: '700',
+              marginBottom: '0.25rem'
+            }}>
+              ✨ Free Account Benefits:
+            </div>
+            <div style={{ fontWeight: '600' }}>
+              Excel-Excel comparisons <strong>FREE forever!</strong>
+            </div>
+            <div style={{ 
+              fontSize: '0.85rem',
+              marginTop: '0.25rem',
+              opacity: '0.9'
+            }}>
+              No usage limits • Premium formats available
+            </div>
+          </div>
         </div>
       </div>
     </div>
