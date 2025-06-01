@@ -59,10 +59,13 @@ function ComparePage() {
   const [showPremiumUpgrade, setShowPremiumUpgrade] = useState(false);
   const [userTier, setUserTier] = useState('free');
 
-  // ✅ UPDATED: Premium upgrade with Stripe integration
+  // ✅ FIXED: Premium upgrade with simplified Stripe integration
   const handlePremiumUpgrade = async () => {
+    console.log('=== FRONTEND STRIPE CHECKOUT START ===');
+    
     try {
       setLoading(true);
+      console.log('Making request to create checkout session...');
       
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
@@ -70,28 +73,42 @@ function ComparePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1RVEnnJbX57fsaKHqLt143Fg',
-          successUrl: `${window.location.origin}/compare?success=true&session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${window.location.origin}/compare?canceled=true`,
-          mode: 'subscription',
-          allowPromotionCodes: true,
+          timestamp: new Date().toISOString(),
         }),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        const errorText = await response.text();
+        console.log('❌ Error response:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (parseError) {
+          errorData = { error: 'Unknown error', details: errorText };
+        }
+        
+        throw new Error(`${errorData.error || 'Unknown error'}: ${errorData.message || errorText}`);
       }
 
-      const { url } = await response.json();
-      
-      if (url) {
-        // Redirect to Stripe Checkout
-        window.location.href = url;
-      } else {
-        throw new Error('No checkout URL received');
+      const data = await response.json();
+      console.log('✅ Checkout session data:', data);
+
+      if (!data.url) {
+        throw new Error('No checkout URL received from server');
       }
+
+      console.log('Redirecting to Stripe checkout:', data.url);
+      
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
+      
     } catch (error) {
-      console.error('Stripe checkout error:', error);
+      console.log('❌ FRONTEND ERROR:', error);
+      setLoading(false);
       
       // Enhanced error handling with user-friendly messages
       let errorMessage = 'Sorry, there was an error starting your premium subscription. ';
@@ -105,9 +122,9 @@ function ComparePage() {
       }
       
       alert(`🔒 Premium Subscription Error\n\n${errorMessage}\n\nNote: Excel-Excel comparisons remain FREE for all signed-in users!`);
-    } finally {
-      setLoading(false);
     }
+    
+    console.log('=== FRONTEND STRIPE CHECKOUT END ===');
   };
 
   // Usage tracking functions
@@ -204,22 +221,20 @@ function ComparePage() {
   // ✅ NEW: Check for successful payment on component mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const success = urlParams.get('success');
-    const canceled = urlParams.get('canceled');
-    const sessionId = urlParams.get('session_id');
+    const success = urlParams.get('upgrade');
 
-    if (success === 'true') {
+    if (success === 'success') {
       // Clear URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
       
       // Show success message
-      alert(`🎉 Premium Subscription Activated!\n\nWelcome to VeriDiff Premium! You now have access to all file comparison formats.\n\nYour payment was successful${sessionId ? ` (Session: ${sessionId.slice(-8)})` : ''}.\n\nStart comparing any file format now!`);
+      alert(`🎉 Premium Subscription Activated!\n\nWelcome to VeriDiff Premium! You now have access to all file comparison formats.\n\nYour payment was successful.\n\nStart comparing any file format now!`);
       
       // Refresh user data to get updated tier
       if (session) {
         fetchUsage();
       }
-    } else if (canceled === 'true') {
+    } else if (success === 'cancelled') {
       // Clear URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
       
