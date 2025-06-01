@@ -55,18 +55,55 @@ function ComparePage() {
   // ✅ Processing protection state
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // ✅ Premium upgrade handler
-  const handlePremiumUpgrade = () => {
-    alert(`🔒 Premium Subscription Required
+  // ✅ UPDATED: Premium upgrade with Stripe integration
+  const handlePremiumUpgrade = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1RVEnnJbX57fsaKHqLt143Fg',
+          successUrl: `${window.location.origin}/compare?success=true&session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${window.location.origin}/compare?canceled=true`,
+          mode: 'subscription',
+          allowPromotionCodes: true,
+        }),
+      });
 
-Excel-CSV, CSV-CSV, JSON, PDF, and XML comparisons require a premium subscription.
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
 
-Excel-Excel comparisons remain FREE for all signed-in users!
-
-Would you like to upgrade to unlock all formats?`);
-    
-    // TODO: Redirect to pricing/subscription page when ready
-    // window.location.href = '/pricing';
+      const { url } = await response.json();
+      
+      if (url) {
+        // Redirect to Stripe Checkout
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Stripe checkout error:', error);
+      
+      // Enhanced error handling with user-friendly messages
+      let errorMessage = 'Sorry, there was an error starting your premium subscription. ';
+      
+      if (error.message.includes('Failed to create checkout session')) {
+        errorMessage += 'Please try again in a moment, or contact support if the issue persists.';
+      } else if (error.message.includes('network')) {
+        errorMessage += 'Please check your internet connection and try again.';
+      } else {
+        errorMessage += 'Please contact support at hello@veridiff.com for assistance.';
+      }
+      
+      alert(`🔒 Premium Subscription Error\n\n${errorMessage}\n\nNote: Excel-Excel comparisons remain FREE for all signed-in users!`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Usage tracking functions
@@ -156,6 +193,33 @@ Would you like to upgrade to unlock all formats?`);
   useEffect(() => {
     if (session) {
       fetchUsage();
+    }
+  }, [session]);
+
+  // ✅ NEW: Check for successful payment on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const canceled = urlParams.get('canceled');
+    const sessionId = urlParams.get('session_id');
+
+    if (success === 'true') {
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Show success message
+      alert(`🎉 Premium Subscription Activated!\n\nWelcome to VeriDiff Premium! You now have access to all file comparison formats.\n\nYour payment was successful${sessionId ? ` (Session: ${sessionId.slice(-8)})` : ''}.\n\nStart comparing any file format now!`);
+      
+      // Refresh user data to get updated tier
+      if (session) {
+        fetchUsage();
+      }
+    } else if (canceled === 'true') {
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Show cancellation message
+      alert(`❌ Subscription Canceled\n\nNo worries! You can upgrade to Premium anytime.\n\nExcel-Excel comparisons remain FREE forever for signed-in users!`);
     }
   }, [session]);
 
@@ -386,7 +450,7 @@ Would you like to upgrade to unlock all formats?`);
         const data = await response.json();
         
         if (response.ok && data.user && data.user.tier === 'free') {
-          handlePremiumUpgrade();
+          await handlePremiumUpgrade();
           return;
         }
         
@@ -394,7 +458,7 @@ Would you like to upgrade to unlock all formats?`);
         console.log('✅ Premium user confirmed, proceeding...');
       } catch (error) {
         console.error('Failed to check subscription:', error);
-        handlePremiumUpgrade();
+        await handlePremiumUpgrade();
         return;
       }
     }
