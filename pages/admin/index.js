@@ -1,4 +1,4 @@
-// pages/admin/index.js - Visually Enhanced Admin Dashboard (Functionality Preserved)
+// pages/admin/index.js - Enhanced Dashboard with Inline Styles (No Tailwind CSS Required)
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -69,13 +69,24 @@ export default function EnhancedAdminDashboard() {
     });
   };
 
-  const getTierBadge = (tier) => {
-    const colors = {
-      premium: 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 shadow-lg',
-      pro: 'bg-gradient-to-r from-purple-400 to-purple-500 text-purple-900 shadow-lg',
-      free: 'bg-gradient-to-r from-gray-400 to-gray-500 text-gray-900 shadow-lg'
+  const getTierBadgeStyle = (tier) => {
+    const baseStyle = {
+      display: 'inline-block',
+      padding: '4px 12px',
+      borderRadius: '20px',
+      fontSize: '12px',
+      fontWeight: 'bold',
+      textTransform: 'uppercase'
     };
-    return colors[tier?.toLowerCase()] || colors.free;
+    
+    switch (tier?.toLowerCase()) {
+      case 'premium':
+        return { ...baseStyle, background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: '#92400e' };
+      case 'pro':
+        return { ...baseStyle, background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)', color: '#6b21a8' };
+      default:
+        return { ...baseStyle, background: 'linear-gradient(135deg, #9ca3af, #6b7280)', color: '#374151' };
+    }
   };
 
   const getComparisonTypeDisplay = (type) => {
@@ -89,18 +100,172 @@ export default function EnhancedAdminDashboard() {
     return types[type] || type?.replace('-', ' → ') || 'Unknown';
   };
 
+  // Inline styles
+  const containerStyle = {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  };
+
+  const headerStyle = {
+    background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%)',
+    color: 'white',
+    padding: '2rem 0',
+    boxShadow: '0 10px 30px rgba(37, 99, 235, 0.3)'
+  };
+
+  const headerContainerStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 1rem',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '1rem'
+  };
+
+  const logoStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem'
+  };
+
+  const buttonStyle = {
+    padding: '0.5rem 1rem',
+    borderRadius: '8px',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '600',
+    transition: 'all 0.3s ease'
+  };
+
+  const debugButtonStyle = {
+    ...buttonStyle,
+    background: 'rgba(255,255,255,0.2)',
+    color: 'white',
+    backdropFilter: 'blur(10px)'
+  };
+
+  const refreshButtonStyle = {
+    ...buttonStyle,
+    background: 'white',
+    color: '#2563eb'
+  };
+
+  const mainStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '2rem 1rem'
+  };
+
+  const statsGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '1.5rem',
+    marginBottom: '2rem'
+  };
+
+  const statCardStyle = {
+    background: 'white',
+    borderRadius: '16px',
+    padding: '1.5rem',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    border: '1px solid #e2e8f0',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+  };
+
+  const tableContainerStyle = {
+    background: 'white',
+    borderRadius: '16px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    overflow: 'hidden',
+    border: '1px solid #e2e8f0'
+  };
+
+  const tableHeaderStyle = {
+    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+    padding: '1.5rem',
+    borderBottom: '1px solid #e2e8f0'
+  };
+
+  const tableStyle = {
+    width: '100%',
+    borderCollapse: 'collapse'
+  };
+
+  const thStyle = {
+    padding: '1rem',
+    textAlign: 'left',
+    fontWeight: '600',
+    fontSize: '0.875rem',
+    color: '#374151',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    background: '#f8fafc',
+    borderBottom: '1px solid #e2e8f0'
+  };
+
+  const tdStyle = {
+    padding: '1rem',
+    borderBottom: '1px solid #f1f5f9',
+    verticalAlign: 'top'
+  };
+
+  const actionButtonStyle = {
+    padding: '0.5rem 1rem',
+    margin: '0.25rem',
+    borderRadius: '8px',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '0.875rem',
+    transition: 'all 0.3s ease'
+  };
+
+  const viewButtonStyle = {
+    ...actionButtonStyle,
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    color: 'white'
+  };
+
+  const contactButtonStyle = {
+    ...actionButtonStyle,
+    background: '#f3f4f6',
+    color: '#374151',
+    border: '1px solid #d1d5db'
+  };
+
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-2xl border border-blue-100">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-2xl animate-pulse">📊</div>
-            </div>
-          </div>
-          <p className="mt-6 text-lg font-medium text-gray-700">Loading Enhanced Dashboard</p>
-          <p className="text-sm text-gray-500">Analyzing user activity & business intelligence...</p>
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          padding: '2rem',
+          background: 'white',
+          borderRadius: '16px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+          border: '1px solid #e2e8f0'
+        }}>
+          <div style={{
+            width: '60px',
+            height: '60px',
+            border: '4px solid #e2e8f0',
+            borderTop: '4px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }}></div>
+          <h3 style={{ margin: '0 0 0.5rem 0', color: '#374151' }}>Loading Enhanced Dashboard</h3>
+          <p style={{ margin: '0', color: '#6b7280', fontSize: '0.875rem' }}>
+            Analyzing user activity & business intelligence...
+          </p>
         </div>
       </div>
     );
@@ -109,84 +274,190 @@ export default function EnhancedAdminDashboard() {
   if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* ✨ ENHANCED: Stunning Header with Glass Effect */}
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600"></div>
-        <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-        <div className="relative backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-8">
-              <div className="flex items-center space-x-4">
-                <div className="h-16 w-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white border-opacity-30">
-                  <span className="text-3xl">🎯</span>
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold text-white drop-shadow-lg">
-                    VeriDiff Analytics
-                  </h1>
-                  <p className="text-blue-100 text-lg font-medium">
-                    Complete User Activity & Business Intelligence
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="hidden md:block text-right mr-4">
-                  <p className="text-white font-medium">{session.user.email}</p>
-                  <p className="text-blue-200 text-sm">Admin Dashboard</p>
-                </div>
-                <button
-                  onClick={() => setDebugMode(!debugMode)}
-                  className="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 backdrop-blur-sm border border-white border-opacity-30 font-medium"
-                >
-                  {debugMode ? '🔍 Hide Debug' : '🔍 Debug'}
-                </button>
-                <button
-                  onClick={fetchData}
-                  className="px-6 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  🔄 Refresh
-                </button>
-              </div>
+    <div style={containerStyle}>
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .stat-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        .action-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        @media (max-width: 768px) {
+          .header-container {
+            flex-direction: column;
+            text-align: center;
+          }
+          .stats-grid {
+            grid-template-columns: 1fr;
+          }
+          .table-container {
+            overflow-x: auto;
+          }
+        }
+      `}</style>
+
+      {/* Header */}
+      <div style={headerStyle}>
+        <div style={headerContainerStyle} className="header-container">
+          <div style={logoStyle}>
+            <div style={{
+              width: '50px',
+              height: '50px',
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.3)'
+            }}>
+              <span style={{ fontSize: '24px' }}>🎯</span>
             </div>
+            <div>
+              <h1 style={{
+                margin: '0',
+                fontSize: '2.5rem',
+                fontWeight: '700',
+                background: 'linear-gradient(45deg, #ffffff, #f0f9ff)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+              }}>
+                VeriDiff Analytics
+              </h1>
+              <p style={{
+                margin: '0',
+                fontSize: '1.1rem',
+                opacity: '0.9',
+                fontWeight: '500'
+              }}>
+                Complete User Activity & Business Intelligence
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ textAlign: 'right', marginRight: '1rem', display: 'none' }}>
+              <p style={{ margin: '0', fontWeight: '600' }}>{session.user.email}</p>
+              <p style={{ margin: '0', fontSize: '0.875rem', opacity: '0.8' }}>Admin Dashboard</p>
+            </div>
+            <button
+              onClick={() => setDebugMode(!debugMode)}
+              style={debugButtonStyle}
+              onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.3)'}
+              onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+            >
+              {debugMode ? '🔍 Hide Debug' : '🔍 Debug'}
+            </button>
+            <button
+              onClick={fetchData}
+              style={refreshButtonStyle}
+              onMouseOver={(e) => e.target.style.background = '#f0f9ff'}
+              onMouseOut={(e) => e.target.style.background = 'white'}
+            >
+              🔄 Refresh
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* ✅ PRESERVED: Error Display with Enhanced Styling */}
+      <div style={mainStyle}>
+        {/* Error Display */}
         {error && (
-          <div className="mb-8 bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 rounded-lg p-6 shadow-lg">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">⚠</span>
-                </div>
+          <div style={{
+            marginBottom: '2rem',
+            background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+            border: '1px solid #fca5a5',
+            borderLeft: '4px solid #ef4444',
+            borderRadius: '8px',
+            padding: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                background: '#ef4444',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '1rem'
+              }}>
+                <span style={{ color: 'white', fontSize: '18px' }}>⚠</span>
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-red-800">Error Loading Data</h3>
-                <p className="text-red-700 mt-1">{error}</p>
+              <div>
+                <h3 style={{ margin: '0 0 0.5rem 0', color: '#dc2626', fontWeight: '600' }}>
+                  Error Loading Data
+                </h3>
+                <p style={{ margin: '0', color: '#b91c1c' }}>{error}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* ✅ PRESERVED: Debug Information with Enhanced Styling */}
+        {/* Debug Information */}
         {debugMode && (stats || users.length > 0) && (
-          <div className="mb-8 bg-white rounded-2xl p-6 shadow-xl border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <span className="mr-2">🔍</span> Debug Information
+          <div style={{
+            marginBottom: '2rem',
+            background: 'white',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{
+              margin: '0 0 1rem 0',
+              fontSize: '1.25rem',
+              fontWeight: '700',
+              color: '#374151',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <span style={{ marginRight: '0.5rem' }}>🔍</span> Debug Information
             </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '1rem'
+            }}>
               <div>
-                <h4 className="font-semibold text-gray-700 mb-3 text-lg">📊 Stats Data:</h4>
-                <pre className="text-xs text-gray-600 overflow-auto bg-gray-50 p-4 rounded-lg border max-h-48 font-mono">
+                <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#6b7280' }}>
+                  📊 Stats Data:
+                </h4>
+                <pre style={{
+                  fontSize: '0.75rem',
+                  color: '#4b5563',
+                  overflow: 'auto',
+                  background: '#f9fafb',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  maxHeight: '200px',
+                  fontFamily: 'monospace'
+                }}>
                   {JSON.stringify(stats, null, 2)}
                 </pre>
               </div>
               <div>
-                <h4 className="font-semibold text-gray-700 mb-3 text-lg">👥 Users Sample:</h4>
-                <pre className="text-xs text-gray-600 overflow-auto bg-gray-50 p-4 rounded-lg border max-h-48 font-mono">
+                <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: '600', color: '#6b7280' }}>
+                  👥 Users Sample:
+                </h4>
+                <pre style={{
+                  fontSize: '0.75rem',
+                  color: '#4b5563',
+                  overflow: 'auto',
+                  background: '#f9fafb',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  maxHeight: '200px',
+                  fontFamily: 'monospace'
+                }}>
                   {JSON.stringify(users.slice(0, 2), null, 2)}
                 </pre>
               </div>
@@ -194,60 +465,97 @@ export default function EnhancedAdminDashboard() {
           </div>
         )}
 
-        {/* ✨ ENHANCED: Beautiful Stats Cards */}
+        {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div style={statsGridStyle} className="stats-grid">
             {[
               {
                 title: 'Total Users',
                 value: stats.totalUsers,
                 subtitle: 'All signups',
                 icon: '👥',
-                gradient: 'from-emerald-400 to-emerald-600',
-                bgGradient: 'from-emerald-50 to-emerald-100',
-                iconBg: 'bg-emerald-500'
+                gradient: 'linear-gradient(135deg, #10b981, #059669)',
+                bgGradient: 'linear-gradient(135deg, #d1fae5, #a7f3d0)'
               },
               {
                 title: 'This Week',
                 value: stats.weeklyUsers,
                 subtitle: 'New signups',
                 icon: '📅',
-                gradient: 'from-blue-400 to-blue-600',
-                bgGradient: 'from-blue-50 to-blue-100',
-                iconBg: 'bg-blue-500'
+                gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                bgGradient: 'linear-gradient(135deg, #dbeafe, #bfdbfe)'
               },
               {
                 title: 'Premium Users',
                 value: stats.premiumUsers,
                 subtitle: 'Paying customers',
                 icon: '⭐',
-                gradient: 'from-yellow-400 to-yellow-600',
-                bgGradient: 'from-yellow-50 to-yellow-100',
-                iconBg: 'bg-yellow-500'
+                gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                bgGradient: 'linear-gradient(135deg, #fef3c7, #fde68a)'
               },
               {
                 title: 'Total Comparisons',
                 value: stats.totalComparisons,
                 subtitle: 'Tool usage',
                 icon: '📊',
-                gradient: 'from-purple-400 to-purple-600',
-                bgGradient: 'from-purple-50 to-purple-100',
-                iconBg: 'bg-purple-500'
+                gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                bgGradient: 'linear-gradient(135deg, #e9d5ff, #ddd6fe)'
               }
             ].map((stat, index) => (
-              <div key={index} className={`bg-gradient-to-br ${stat.bgGradient} rounded-2xl p-6 shadow-xl border border-white/50 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-1">
+              <div
+                key={index}
+                className="stat-card"
+                style={{
+                  ...statCardStyle,
+                  background: stat.bgGradient,
+                  border: '1px solid rgba(255,255,255,0.5)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{
+                      margin: '0 0 0.5rem 0',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      color: '#6b7280',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
                       {stat.title}
                     </p>
-                    <div className={`text-4xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-1`}>
+                    <div style={{
+                      fontSize: '2.5rem',
+                      fontWeight: '700',
+                      background: stat.gradient,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      lineHeight: '1.2',
+                      marginBottom: '0.25rem'
+                    }}>
                       {stat.value}
                     </div>
-                    <p className="text-sm text-gray-600 font-medium">{stat.subtitle}</p>
+                    <p style={{
+                      margin: '0',
+                      fontSize: '0.875rem',
+                      color: '#6b7280',
+                      fontWeight: '500'
+                    }}>
+                      {stat.subtitle}
+                    </p>
                   </div>
-                  <div className={`w-16 h-16 ${stat.iconBg} rounded-2xl flex items-center justify-center shadow-lg`}>
-                    <span className="text-2xl text-white">{stat.icon}</span>
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    background: stat.gradient,
+                    borderRadius: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                  }}>
+                    <span style={{ fontSize: '24px', filter: 'brightness(0) invert(1)' }}>
+                      {stat.icon}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -255,19 +563,35 @@ export default function EnhancedAdminDashboard() {
           </div>
         )}
 
-        {/* ✨ ENHANCED: Stunning User Activity Table */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">📈</span>
+        {/* User Activity Table */}
+        <div style={tableContainerStyle} className="table-container">
+          <div style={tableHeaderStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <span style={{ fontSize: '20px', filter: 'brightness(0) invert(1)' }}>📈</span>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">
+                <h3 style={{
+                  margin: '0',
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: '#374151'
+                }}>
                   User Activity & Business Intelligence
                 </h3>
-                <p className="text-gray-600 font-medium">
+                <p style={{
+                  margin: '0',
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}>
                   Complete user profiles with activity tracking and upgrade opportunities
                 </p>
               </div>
@@ -275,9 +599,9 @@ export default function EnhancedAdminDashboard() {
           </div>
           
           {users && users.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+            <div style={{ overflowX: 'auto' }}>
+              <table style={tableStyle}>
+                <thead>
                   <tr>
                     {[
                       'User Profile',
@@ -287,91 +611,183 @@ export default function EnhancedAdminDashboard() {
                       'Last Activity',
                       'Actions'
                     ].map((header, idx) => (
-                      <th key={idx} className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      <th key={idx} style={thStyle}>
                         {header}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
+                <tbody>
                   {users.map((user, index) => (
                     <>
-                      {/* ✨ ENHANCED: Beautiful User Row */}
-                      <tr key={user.id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="flex items-center space-x-4">
-                            <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-white text-lg font-bold shadow-lg">
+                      {/* User Row */}
+                      <tr key={user.id} style={{ 
+                        background: index % 2 === 0 ? 'white' : '#fafbfc',
+                        transition: 'background-color 0.3s ease'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.background = '#f0f9ff'}
+                      onMouseOut={(e) => e.currentTarget.style.background = index % 2 === 0 ? 'white' : '#fafbfc'}
+                      >
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '18px',
+                              fontWeight: '700',
+                              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
+                            }}>
                               {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <div className="text-lg font-semibold text-gray-900">
+                              <div style={{
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                color: '#374151',
+                                marginBottom: '0.25rem'
+                              }}>
                                 {user.name || 'No name provided'}
                               </div>
-                              <div className="text-sm text-gray-500 font-medium">ID: {user.id}</div>
+                              <div style={{
+                                fontSize: '0.875rem',
+                                color: '#6b7280',
+                                fontWeight: '500'
+                              }}>
+                                ID: {user.id}
+                              </div>
                             </div>
                           </div>
                         </td>
                         
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="space-y-1">
-                            <div className="flex items-center text-sm text-gray-900">
-                              <span className="mr-2">📧</span>
-                              <span className="font-medium">{user.email}</span>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              fontSize: '0.875rem',
+                              color: '#374151',
+                              fontWeight: '500'
+                            }}>
+                              <span style={{ marginRight: '0.5rem' }}>📧</span>
+                              {user.email}
                             </div>
-                            <div className="flex items-center text-sm text-gray-500">
-                              <span className="mr-2">📞</span>
-                              <span>{user.phone || 'No phone'}</span>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              fontSize: '0.875rem',
+                              color: '#6b7280'
+                            }}>
+                              <span style={{ marginRight: '0.5rem' }}>📞</span>
+                              {user.phone || 'No phone'}
                             </div>
                           </div>
                         </td>
                         
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="space-y-2">
-                            <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full ${getTierBadge(user.tier)}`}>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <span style={getTierBadgeStyle(user.tier)}>
                               {user.tier || 'free'}
                             </span>
-                            <div className="text-xs text-gray-500 font-medium">
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: '#6b7280',
+                              fontWeight: '500'
+                            }}>
                               Joined: {formatDate(user.createdAt)}
                             </div>
                           </div>
                         </td>
                         
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="space-y-1">
-                            <div className="text-lg font-bold text-gray-900">
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div style={{
+                              fontSize: '1.125rem',
+                              fontWeight: '700',
+                              color: '#374151'
+                            }}>
                               {user.totalComparisons} comparisons
                             </div>
-                            <div className="flex items-center space-x-3 text-xs">
-                              <span className="flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full font-medium">
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '0.25rem 0.5rem',
+                                background: '#dcfce7',
+                                color: '#166534',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600'
+                              }}>
                                 📗 {user.excelComparisons}
                               </span>
-                              <span className="flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full font-medium">
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '0.25rem 0.5rem',
+                                background: '#fef3c7',
+                                color: '#92400e',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600'
+                              }}>
                                 ⭐ {user.premiumComparisons}
                               </span>
                             </div>
-                            <div className="text-xs text-gray-500 font-medium">
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: '#6b7280',
+                              fontWeight: '500'
+                            }}>
                               Favorite: {getComparisonTypeDisplay(user.favoriteComparison)}
                             </div>
                           </div>
                         </td>
                         
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                        <td style={tdStyle}>
+                          <div style={{
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            color: '#374151'
+                          }}>
                             {formatDate(user.lastActivity)}
                           </div>
                         </td>
                         
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="flex flex-col space-y-2">
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             <button
                               onClick={() => toggleUserDetails(user.id)}
-                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                              className="action-button"
+                              style={viewButtonStyle}
+                              onMouseOver={(e) => {
+                                e.target.style.background = 'linear-gradient(135deg, #2563eb, #1d4ed8)';
+                                e.target.style.transform = 'translateY(-2px)';
+                              }}
+                              onMouseOut={(e) => {
+                                e.target.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+                                e.target.style.transform = 'none';
+                              }}
                             >
                               {expandedUser === user.id ? '🔼 Hide Activity' : '🔽 View Activity'}
                             </button>
                             <button
                               onClick={() => window.open(`mailto:${user.email}?subject=VeriDiff%20Follow%20Up`)}
-                              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                              className="action-button"
+                              style={contactButtonStyle}
+                              onMouseOver={(e) => {
+                                e.target.style.background = '#e5e7eb';
+                                e.target.style.transform = 'translateY(-2px)';
+                              }}
+                              onMouseOut={(e) => {
+                                e.target.style.background = '#f3f4f6';
+                                e.target.style.transform = 'none';
+                              }}
                             >
                               📧 Contact
                             </button>
@@ -379,84 +795,257 @@ export default function EnhancedAdminDashboard() {
                         </td>
                       </tr>
                       
-                      {/* ✨ ENHANCED: Beautiful Expanded Activity Details */}
+                      {/* Expanded Activity Details */}
                       {expandedUser === user.id && (
                         <tr>
-                          <td colSpan="6" className="px-8 py-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-l-4 border-blue-500">
-                            <div className="space-y-6">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
-                                  <span className="text-white text-xl">📊</span>
+                          <td colSpan="6" style={{
+                            padding: '2rem',
+                            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                            borderLeft: '4px solid #3b82f6'
+                          }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div style={{
+                                  width: '50px',
+                                  height: '50px',
+                                  background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                                  borderRadius: '12px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>
+                                  <span style={{ fontSize: '20px', filter: 'brightness(0) invert(1)' }}>📊</span>
                                 </div>
-                                <h4 className="text-2xl font-bold text-gray-900">
+                                <h4 style={{
+                                  margin: '0',
+                                  fontSize: '1.5rem',
+                                  fontWeight: '700',
+                                  color: '#374151'
+                                }}>
                                   Detailed Activity for {user.name || user.email}
                                 </h4>
                               </div>
                               
-                              {/* ✨ ENHANCED: Beautiful Activity Cards */}
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="bg-white p-6 rounded-2xl shadow-lg border border-green-200 hover:shadow-xl transition-all duration-300">
-                                  <div className="flex items-center space-x-3 mb-4">
-                                    <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-500 rounded-xl flex items-center justify-center">
-                                      <span className="text-white text-xl">📗</span>
+                              {/* Activity Cards */}
+                              <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                gap: '1rem'
+                              }}>
+                                <div style={{
+                                  background: 'white',
+                                  padding: '1.5rem',
+                                  borderRadius: '12px',
+                                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                  border: '1px solid #dcfce7'
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                                    <div style={{
+                                      width: '40px',
+                                      height: '40px',
+                                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                                      borderRadius: '10px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <span style={{ fontSize: '16px', filter: 'brightness(0) invert(1)' }}>📗</span>
                                     </div>
                                     <div>
-                                      <h5 className="text-lg font-bold text-green-800">Excel-Excel (Free)</h5>
-                                      <p className="text-sm text-green-600">Free comparisons</p>
+                                      <h5 style={{
+                                        margin: '0',
+                                        fontSize: '1rem',
+                                        fontWeight: '700',
+                                        color: '#166534'
+                                      }}>
+                                        Excel-Excel (Free)
+                                      </h5>
+                                      <p style={{
+                                        margin: '0',
+                                        fontSize: '0.875rem',
+                                        color: '#059669'
+                                      }}>
+                                        Free comparisons
+                                      </p>
                                     </div>
                                   </div>
-                                  <div className="text-4xl font-bold text-green-600 mb-2">{user.excelComparisons}</div>
-                                  <div className="w-full bg-green-100 rounded-full h-2">
-                                    <div className="bg-gradient-to-r from-green-400 to-green-500 h-2 rounded-full" style={{width: user.totalComparisons > 0 ? `${(user.excelComparisons / user.totalComparisons) * 100}%` : '0%'}}></div>
+                                  <div style={{
+                                    fontSize: '2.5rem',
+                                    fontWeight: '700',
+                                    color: '#10b981',
+                                    marginBottom: '0.5rem'
+                                  }}>
+                                    {user.excelComparisons}
+                                  </div>
+                                  <div style={{
+                                    width: '100%',
+                                    height: '8px',
+                                    background: '#dcfce7',
+                                    borderRadius: '4px',
+                                    overflow: 'hidden'
+                                  }}>
+                                    <div style={{
+                                      width: user.totalComparisons > 0 ? `${(user.excelComparisons / user.totalComparisons) * 100}%` : '0%',
+                                      height: '100%',
+                                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                                      borderRadius: '4px'
+                                    }}></div>
                                   </div>
                                 </div>
                                 
-                                <div className="bg-white p-6 rounded-2xl shadow-lg border border-yellow-200 hover:shadow-xl transition-all duration-300">
-                                  <div className="flex items-center space-x-3 mb-4">
-                                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center">
-                                      <span className="text-white text-xl">⭐</span>
+                                <div style={{
+                                  background: 'white',
+                                  padding: '1.5rem',
+                                  borderRadius: '12px',
+                                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                  border: '1px solid #fef3c7'
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                                    <div style={{
+                                      width: '40px',
+                                      height: '40px',
+                                      background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                      borderRadius: '10px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <span style={{ fontSize: '16px', filter: 'brightness(0) invert(1)' }}>⭐</span>
                                     </div>
                                     <div>
-                                      <h5 className="text-lg font-bold text-yellow-800">Premium Features</h5>
-                                      <p className="text-sm text-yellow-600">Advanced formats</p>
+                                      <h5 style={{
+                                        margin: '0',
+                                        fontSize: '1rem',
+                                        fontWeight: '700',
+                                        color: '#92400e'
+                                      }}>
+                                        Premium Features
+                                      </h5>
+                                      <p style={{
+                                        margin: '0',
+                                        fontSize: '0.875rem',
+                                        color: '#d97706'
+                                      }}>
+                                        Advanced formats
+                                      </p>
                                     </div>
                                   </div>
-                                  <div className="text-4xl font-bold text-yellow-600 mb-2">{user.premiumComparisons}</div>
-                                  <div className="w-full bg-yellow-100 rounded-full h-2">
-                                    <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-2 rounded-full" style={{width: user.totalComparisons > 0 ? `${(user.premiumComparisons / user.totalComparisons) * 100}%` : '0%'}}></div>
+                                  <div style={{
+                                    fontSize: '2.5rem',
+                                    fontWeight: '700',
+                                    color: '#f59e0b',
+                                    marginBottom: '0.5rem'
+                                  }}>
+                                    {user.premiumComparisons}
+                                  </div>
+                                  <div style={{
+                                    width: '100%',
+                                    height: '8px',
+                                    background: '#fef3c7',
+                                    borderRadius: '4px',
+                                    overflow: 'hidden'
+                                  }}>
+                                    <div style={{
+                                      width: user.totalComparisons > 0 ? `${(user.premiumComparisons / user.totalComparisons) * 100}%` : '0%',
+                                      height: '100%',
+                                      background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                      borderRadius: '4px'
+                                    }}></div>
                                   </div>
                                 </div>
                                 
-                                <div className="bg-white p-6 rounded-2xl shadow-lg border border-purple-200 hover:shadow-xl transition-all duration-300">
-                                  <div className="flex items-center space-x-3 mb-4">
-                                    <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-500 rounded-xl flex items-center justify-center">
-                                      <span className="text-white text-xl">🎯</span>
+                                <div style={{
+                                  background: 'white',
+                                  padding: '1.5rem',
+                                  borderRadius: '12px',
+                                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                  border: '1px solid #e9d5ff'
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                                    <div style={{
+                                      width: '40px',
+                                      height: '40px',
+                                      background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                                      borderRadius: '10px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
+                                    }}>
+                                      <span style={{ fontSize: '16px', filter: 'brightness(0) invert(1)' }}>🎯</span>
                                     </div>
                                     <div>
-                                      <h5 className="text-lg font-bold text-purple-800">Most Used</h5>
-                                      <p className="text-sm text-purple-600">Preferred format</p>
+                                      <h5 style={{
+                                        margin: '0',
+                                        fontSize: '1rem',
+                                        fontWeight: '700',
+                                        color: '#6b21a8'
+                                      }}>
+                                        Most Used
+                                      </h5>
+                                      <p style={{
+                                        margin: '0',
+                                        fontSize: '0.875rem',
+                                        color: '#7c3aed'
+                                      }}>
+                                        Preferred format
+                                      </p>
                                     </div>
                                   </div>
-                                  <div className="text-lg font-bold text-purple-600 mb-2">
+                                  <div style={{
+                                    fontSize: '1.125rem',
+                                    fontWeight: '700',
+                                    color: '#8b5cf6',
+                                    marginBottom: '0.5rem'
+                                  }}>
                                     {getComparisonTypeDisplay(user.favoriteComparison)}
                                   </div>
-                                  <div className="text-sm text-purple-500">Primary choice</div>
+                                  <div style={{
+                                    fontSize: '0.875rem',
+                                    color: '#7c3aed'
+                                  }}>
+                                    Primary choice
+                                  </div>
                                 </div>
                               </div>
                               
-                              {/* ✅ PRESERVED: Upgrade Opportunity Alert with Enhanced Styling */}
+                              {/* Upgrade Opportunity */}
                               {user.tier !== 'premium' && user.premiumComparisons > 0 && (
-                                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 rounded-lg p-6 shadow-lg">
-                                  <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
-                                      <span className="text-white text-lg">💡</span>
+                                <div style={{
+                                  background: 'linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%)',
+                                  borderLeft: '4px solid #f59e0b',
+                                  borderRadius: '8px',
+                                  padding: '1.5rem',
+                                  boxShadow: '0 4px 15px rgba(245, 158, 11, 0.2)'
+                                }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div style={{
+                                      width: '50px',
+                                      height: '50px',
+                                      background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+                                      borderRadius: '50%',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)'
+                                    }}>
+                                      <span style={{ fontSize: '20px', filter: 'brightness(0) invert(1)' }}>💡</span>
                                     </div>
                                     <div>
-                                      <h3 className="text-lg font-bold text-yellow-800">
+                                      <h3 style={{
+                                        margin: '0 0 0.5rem 0',
+                                        fontSize: '1.25rem',
+                                        fontWeight: '700',
+                                        color: '#92400e'
+                                      }}>
                                         🎯 High-Priority Upgrade Opportunity!
                                       </h3>
-                                      <p className="text-yellow-700 mt-1 font-medium">
-                                        This user has tried <span className="font-bold">{user.premiumComparisons}</span> premium features but is still on the free tier. 
+                                      <p style={{
+                                        margin: '0',
+                                        color: '#b45309',
+                                        fontWeight: '500',
+                                        lineHeight: '1.5'
+                                      }}>
+                                        This user has tried <span style={{ fontWeight: '700' }}>{user.premiumComparisons}</span> premium features but is still on the free tier. 
                                         Perfect candidate for upgrade outreach!
                                       </p>
                                     </div>
@@ -464,34 +1053,85 @@ export default function EnhancedAdminDashboard() {
                                 </div>
                               )}
                               
-                              {/* ✨ ENHANCED: Beautiful Recent Activity Feed */}
+                              {/* Recent Activity */}
                               {user.recentActivity && user.recentActivity.length > 0 && (
                                 <div>
-                                  <h5 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                                    <span className="mr-2">🕒</span> Recent Activity (Last 10 Actions)
+                                  <h5 style={{
+                                    margin: '0 0 1rem 0',
+                                    fontSize: '1.25rem',
+                                    fontWeight: '700',
+                                    color: '#374151',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                  }}>
+                                    <span style={{ marginRight: '0.5rem' }}>🕒</span> Recent Activity (Last 10 Actions)
                                   </h5>
-                                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
+                                  <div style={{
+                                    background: 'white',
+                                    borderRadius: '12px',
+                                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                    border: '1px solid #e5e7eb',
+                                    maxHeight: '400px',
+                                    overflowY: 'auto'
+                                  }}>
                                     {user.recentActivity.map((activity, idx) => (
-                                      <div key={idx} className={`p-4 ${idx < user.recentActivity.length - 1 ? 'border-b border-gray-100' : ''} hover:bg-gray-50 transition-colors duration-200`}>
-                                        <div className="flex items-center justify-between">
-                                          <div className="flex items-center space-x-3">
-                                            <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
-                                              <span className="text-white text-sm">📊</span>
+                                      <div key={idx} style={{
+                                        padding: '1rem',
+                                        borderBottom: idx < user.recentActivity.length - 1 ? '1px solid #f1f5f9' : 'none',
+                                        transition: 'background-color 0.3s ease'
+                                      }}
+                                      onMouseOver={(e) => e.currentTarget.style.background = '#f8fafc'}
+                                      onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                      >
+                                        <div style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'space-between'
+                                        }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <div style={{
+                                              width: '32px',
+                                              height: '32px',
+                                              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                                              borderRadius: '8px',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center'
+                                            }}>
+                                              <span style={{ fontSize: '14px', filter: 'brightness(0) invert(1)' }}>📊</span>
                                             </div>
                                             <div>
-                                              <span className="text-lg font-semibold text-gray-900">
+                                              <span style={{
+                                                fontSize: '1rem',
+                                                fontWeight: '600',
+                                                color: '#374151'
+                                              }}>
                                                 {getComparisonTypeDisplay(activity.comparisonType)}
                                               </span>
-                                              <span className={`ml-3 px-3 py-1 text-xs rounded-full font-bold ${getTierBadge(activity.tier)}`}>
+                                              <span style={{
+                                                ...getTierBadgeStyle(activity.tier),
+                                                marginLeft: '0.75rem',
+                                                fontSize: '0.75rem'
+                                              }}>
                                                 {activity.tier}
                                               </span>
                                             </div>
                                           </div>
-                                          <div className="text-sm text-gray-500 font-medium">
+                                          <div style={{
+                                            fontSize: '0.875rem',
+                                            color: '#6b7280',
+                                            fontWeight: '500'
+                                          }}>
                                             {formatDate(activity.timestamp)}
                                           </div>
                                         </div>
-                                        <div className="text-sm text-gray-600 mt-2 ml-11 font-medium">
+                                        <div style={{
+                                          fontSize: '0.875rem',
+                                          color: '#6b7280',
+                                          marginTop: '0.5rem',
+                                          marginLeft: '3rem',
+                                          fontWeight: '500'
+                                        }}>
                                           📁 {activity.files}
                                         </div>
                                       </div>
@@ -501,10 +1141,29 @@ export default function EnhancedAdminDashboard() {
                               )}
                               
                               {user.recentActivity?.length === 0 && (
-                                <div className="text-center py-12 bg-white rounded-2xl shadow-lg border border-gray-200">
-                                  <div className="text-6xl mb-4">📊</div>
-                                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No Activity Yet</h3>
-                                  <p className="text-gray-600">This user hasn't used the comparison tool yet.</p>
+                                <div style={{
+                                  textAlign: 'center',
+                                  padding: '3rem 2rem',
+                                  background: 'white',
+                                  borderRadius: '12px',
+                                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                  border: '1px solid #e5e7eb'
+                                }}>
+                                  <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📊</div>
+                                  <h3 style={{
+                                    margin: '0 0 0.5rem 0',
+                                    fontSize: '1.25rem',
+                                    fontWeight: '600',
+                                    color: '#374151'
+                                  }}>
+                                    No Activity Yet
+                                  </h3>
+                                  <p style={{
+                                    margin: '0',
+                                    color: '#6b7280'
+                                  }}>
+                                    This user hasn't used the comparison tool yet.
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -517,53 +1176,130 @@ export default function EnhancedAdminDashboard() {
               </table>
             </div>
           ) : (
-            <div className="px-8 py-16 text-center">
-              <div className="text-6xl mb-6">📊</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">No Users Found</h3>
-              <p className="text-gray-600 text-lg">Users will appear here as people sign up for VeriDiff.</p>
+            <div style={{
+              padding: '4rem 2rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>📊</div>
+              <h3 style={{
+                margin: '0 0 1rem 0',
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                color: '#374151'
+              }}>
+                No Users Found
+              </h3>
+              <p style={{
+                margin: '0',
+                color: '#6b7280',
+                fontSize: '1.125rem'
+              }}>
+                Users will appear here as people sign up for VeriDiff.
+              </p>
             </div>
           )}
         </div>
 
-        {/* ✨ ENHANCED: Beautiful Instructions Panel */}
-        <div className="mt-8 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 shadow-xl border border-blue-200">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-              <span className="text-white text-2xl">🎯</span>
+        {/* Instructions Panel */}
+        <div style={{
+          marginTop: '2rem',
+          background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+          borderRadius: '16px',
+          padding: '2rem',
+          boxShadow: '0 4px 20px rgba(59, 130, 246, 0.1)',
+          border: '1px solid #93c5fd'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <span style={{ fontSize: '24px', filter: 'brightness(0) invert(1)' }}>🎯</span>
             </div>
-            <h3 className="text-2xl font-bold text-blue-900">How to Use This Enhanced Dashboard</h3>
+            <h3 style={{
+              margin: '0',
+              fontSize: '1.5rem',
+              fontWeight: '700',
+              color: '#1e3a8a'
+            }}>
+              How to Use This Enhanced Dashboard
+            </h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-blue-800">
-            <div className="space-y-4">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '1.5rem',
+            color: '#1e40af'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
                 { icon: '📊', title: 'Overview Stats', desc: 'Track total growth, weekly signups, premium conversions' },
                 { icon: '👤', title: 'User Profiles', desc: 'Complete contact info, tier status, signup dates' },
                 { icon: '📈', title: 'Activity Analytics', desc: 'Usage patterns, favorite features, engagement levels' }
               ].map((item, idx) => (
-                <div key={idx} className="flex items-start space-x-3 p-4 bg-white bg-opacity-50 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white text-lg">
-                    {item.icon}
+                <div key={idx} style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  padding: '1rem',
+                  background: 'rgba(255,255,255,0.7)',
+                  borderRadius: '12px',
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    background: '#3b82f6',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <span style={{ fontSize: '18px', filter: 'brightness(0) invert(1)' }}>{item.icon}</span>
                   </div>
                   <div>
-                    <span className="font-bold text-lg">{item.title}:</span>
-                    <span className="ml-2">{item.desc}</span>
+                    <span style={{ fontWeight: '700', fontSize: '1rem' }}>{item.title}:</span>
+                    <span style={{ marginLeft: '0.5rem' }}>{item.desc}</span>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
                 { icon: '🎯', title: 'Upgrade Opportunities', desc: 'Users trying premium features = sales leads' },
                 { icon: '📱', title: 'Contact Integration', desc: 'Click "Contact" to send emails directly' },
                 { icon: '🕒', title: 'Activity History', desc: 'See exactly what users are comparing' }
               ].map((item, idx) => (
-                <div key={idx} className="flex items-start space-x-3 p-4 bg-white bg-opacity-50 rounded-xl">
-                  <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-lg">
-                    {item.icon}
+                <div key={idx} style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  padding: '1rem',
+                  background: 'rgba(255,255,255,0.7)',
+                  borderRadius: '12px',
+                  backdropFilter: 'blur(10px)'
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    background: '#6366f1',
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <span style={{ fontSize: '18px', filter: 'brightness(0) invert(1)' }}>{item.icon}</span>
                   </div>
                   <div>
-                    <span className="font-bold text-lg">{item.title}:</span>
-                    <span className="ml-2">{item.desc}</span>
+                    <span style={{ fontWeight: '700', fontSize: '1rem' }}>{item.title}:</span>
+                    <span style={{ marginLeft: '0.5rem' }}>{item.desc}</span>
                   </div>
                 </div>
               ))}
