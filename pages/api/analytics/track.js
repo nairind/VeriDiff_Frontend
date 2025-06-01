@@ -71,7 +71,8 @@ export default async function handler(req, res) {
         file1_size || null,
         file2_size || null,
         user_agent || null,
-        page_url || null
+        page_url || null,
+        true  // success = true
       ]);
 
       const analyticsId = result.rows[0].id;
