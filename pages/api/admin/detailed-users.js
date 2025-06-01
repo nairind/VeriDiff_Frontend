@@ -1,8 +1,11 @@
-// pages/api/admin/detailed-users.js
+// pages/api/admin/detailed-users.js - Enhanced user activity tracking
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
+import { query } from '../../../lib/db';
 
 export default async function handler(req, res) {
+  console.log('🔍 Detailed Users API called');
+  
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -11,174 +14,174 @@ export default async function handler(req, res) {
   
   // Check if user is admin
   const adminEmails = [
-    'SALES@VERIDIFF.COM',  // Your email
-    'contact@gubithcm.com' // Add more if needed
+    'SALES@VERIDIFF.COM',
+    'sales@veridiff.com',
+    'contact@gubithcm.com'
   ];
   
-  if (!session || !adminEmails.includes(session.user.email)) {
+  if (!session || !adminEmails.some(email => 
+    email.toLowerCase() === session.user.email.toLowerCase()
+  )) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
   try {
-    // Start with empty arrays in case database isn't set up yet
-    let users = [];
-    let totalUsers = 0;
-    let activeUsers = 0;
-    let premiumUsers = 0;
-    let upgradeOpportunities = 0;
+    console.log('📊 Fetching detailed user data...');
 
-    try {
-      // Try to get users from database
-      // IMPORTANT: You'll need to replace 'prisma' with your actual database connection
-      
-      // Get all users with basic info
-      const basicUsers = await prisma.user.findMany({
-        orderBy: {
-          createdAt: 'desc'
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,    // This field might not exist yet - that's okay
-          tier: true,
-          createdAt: true,
-          updatedAt: true
-        }
-      });
+    // Get all users with basic info
+    const usersResult = await query(`
+      SELECT 
+        id, 
+        full_name as name, 
+        email, 
+        tier, 
+        created_at, 
+        phone_number
+      FROM users 
+      ORDER BY created_at DESC
+    `);
 
-      totalUsers = basicUsers.length;
+    const users = usersResult.rows;
+    console.log(`✅ Found ${users.length} users`);
 
-      // For each user, try to get their activity
-      for (const user of basicUsers) {
-        let userActivity = [];
-        let totalComparisons = 0;
-        let excelComparisons = 0;
-        let premiumComparisons = 0;
-        let favoriteComparison = 'excel-excel';
-        let lastActivity = null;
-
+    // For each user, get their activity data
+    const usersWithActivity = await Promise.all(
+      users.map(async (user) => {
         try {
-          // Try to get analytics data
-          userActivity = await prisma.analytics.findMany({
-            where: {
-              OR: [
-                { userId: user.id },
-                { user_id: user.id },
-                { userEmail: user.email },
-                { user_email: user.email }
-              ]
-            },
-            orderBy: {
-              timestamp: 'desc'
-            },
-            take: 50, // Limit to recent activity
-            select: {
-              comparisonType: true,
-              comparison_type: true,
-              tier: true,
-              timestamp: true
-            }
-          });
+          // Get total comparisons for this user
+          const totalComparisonsResult = await query(`
+            SELECT COUNT(*) as count 
+            FROM analytics 
+            WHERE user_id = $1
+          `, [user.id]);
 
-          // Calculate stats from activity
-          totalComparisons = userActivity.length;
-          
-          userActivity.forEach(activity => {
-            const compType = activity.comparisonType || activity.comparison_type || 'excel-excel';
-            if (compType === 'excel-excel') {
-              excelComparisons++;
-            } else {
-              premiumComparisons++;
-            }
-          });
+          // Get Excel-Excel comparisons (free)
+          const excelComparisonsResult = await query(`
+            SELECT COUNT(*) as count 
+            FROM analytics 
+            WHERE user_id = $1 
+            AND (comparison_type = 'excel-excel' OR comparison_type LIKE '%xlsx%')
+          `, [user.id]);
 
-          lastActivity = userActivity.length > 0 ? userActivity[0].timestamp : null;
+          // Get premium comparisons
+          const premiumComparisonsResult = await query(`
+            SELECT COUNT(*) as count 
+            FROM analytics 
+            WHERE user_id = $1 
+            AND comparison_type != 'excel-excel' 
+            AND comparison_type NOT LIKE '%xlsx%'
+          `, [user.id]);
 
-          // Find most used comparison type
-          const comparisonCounts = {};
-          userActivity.forEach(activity => {
-            const compType = activity.comparisonType || activity.comparison_type || 'excel-excel';
-            comparisonCounts[compType] = (comparisonCounts[compType] || 0) + 1;
-          });
-          
-          if (Object.keys(comparisonCounts).length > 0) {
-            favoriteComparison = Object.keys(comparisonCounts).reduce((a, b) => 
-              comparisonCounts[a] > comparisonCounts[b] ? a : b
-            );
-          }
+          // Get last activity
+          const lastActivityResult = await query(`
+            SELECT timestamp 
+            FROM analytics 
+            WHERE user_id = $1 
+            ORDER BY timestamp DESC 
+            LIMIT 1
+          `, [user.id]);
 
-        } catch (analyticsError) {
-          console.log(`No analytics data for user ${user.id} - that's normal for new setups`);
+          // Get favorite comparison type
+          const favoriteTypeResult = await query(`
+            SELECT comparison_type, COUNT(*) as count 
+            FROM analytics 
+            WHERE user_id = $1 
+            GROUP BY comparison_type 
+            ORDER BY count DESC 
+            LIMIT 1
+          `, [user.id]);
+
+          // Get recent activity (last 10)
+          const recentActivityResult = await query(`
+            SELECT 
+              comparison_type,
+              tier,
+              timestamp,
+              file1_name,
+              file2_name
+            FROM analytics 
+            WHERE user_id = $1 
+            ORDER BY timestamp DESC 
+            LIMIT 10
+          `, [user.id]);
+
+          const totalComparisons = parseInt(totalComparisonsResult.rows[0]?.count || 0);
+          const excelComparisons = parseInt(excelComparisonsResult.rows[0]?.count || 0);
+          const premiumComparisons = parseInt(premiumComparisonsResult.rows[0]?.count || 0);
+          const lastActivity = lastActivityResult.rows[0]?.timestamp || null;
+          const favoriteComparison = favoriteTypeResult.rows[0]?.comparison_type || 'None';
+          const recentActivity = recentActivityResult.rows || [];
+
+          return {
+            ...user,
+            createdAt: user.created_at,
+            phone: user.phone_number,
+            totalComparisons,
+            excelComparisons,
+            premiumComparisons,
+            lastActivity,
+            favoriteComparison,
+            recentActivity: recentActivity.map(activity => ({
+              comparisonType: activity.comparison_type,
+              tier: activity.tier,
+              timestamp: activity.timestamp,
+              files: `${activity.file1_name || 'File1'} vs ${activity.file2_name || 'File2'}`
+            }))
+          };
+
+        } catch (activityError) {
+          console.error(`⚠️ Error fetching activity for user ${user.id}:`, activityError);
+          // Return user with zero activity if analytics fails
+          return {
+            ...user,
+            createdAt: user.created_at,
+            phone: user.phone_number,
+            totalComparisons: 0,
+            excelComparisons: 0,
+            premiumComparisons: 0,
+            lastActivity: null,
+            favoriteComparison: 'None',
+            recentActivity: []
+          };
         }
+      })
+    );
 
-        users.push({
-          ...user,
-          totalComparisons,
-          excelComparisons,
-          premiumComparisons,
-          favoriteComparison,
-          lastActivity,
-          recentActivity: userActivity.slice(0, 10).map(a => ({
-            comparisonType: a.comparisonType || a.comparison_type,
-            tier: a.tier,
-            timestamp: a.timestamp
-          }))
-        });
+    console.log('✅ Detailed user data compiled successfully');
 
-        // Count active and premium users
-        if (totalComparisons > 0) activeUsers++;
-        if (user.tier === 'premium') premiumUsers++;
-        if (user.tier !== 'premium' && premiumComparisons > 0) upgradeOpportunities++;
-      }
-
-    } catch (dbError) {
-      console.error('Database error (this is normal if not set up yet):', dbError.message);
-      
-      // Return empty but valid response
-      return res.status(200).json({
-        users: [],
-        totalUsers: 0,
-        activeUsers: 0,
-        premiumUsers: 0,
-        upgradeOpportunities: 0,
-        message: 'Database not fully configured yet. Users will appear here once database is set up and people start signing up.',
-        setupNeeded: true
-      });
-    }
-
-    // Sort users by most recent activity
-    users.sort((a, b) => {
-      if (!a.lastActivity && !b.lastActivity) {
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      }
-      if (!a.lastActivity) return 1;
-      if (!b.lastActivity) return -1;
-      return new Date(b.lastActivity) - new Date(a.lastActivity);
-    });
+    // Calculate summary stats
+    const totalUsers = users.length;
+    const activeUsers = usersWithActivity.filter(u => u.totalComparisons > 0).length;
+    const upgradeOpportunities = usersWithActivity.filter(u => 
+      u.tier !== 'premium' && u.premiumComparisons > 0
+    ).length;
 
     res.status(200).json({
-      users,
-      totalUsers,
-      activeUsers,
-      premiumUsers,
-      upgradeOpportunities,
-      message: users.length === 0 ? 'No users found yet. Users will appear here as people sign up.' : null
+      success: true,
+      users: usersWithActivity,
+      summary: {
+        totalUsers,
+        activeUsers,
+        upgradeOpportunities,
+        totalComparisons: usersWithActivity.reduce((sum, u) => sum + u.totalComparisons, 0)
+      },
+      debug: {
+        timestamp: new Date().toISOString(),
+        usersProcessed: users.length
+      }
     });
 
   } catch (error) {
-    console.error('Detailed users API error:', error);
+    console.error('❌ Detailed users error:', error);
     
-    // Always return a valid response, even if there's an error
-    res.status(200).json({
-      users: [],
-      totalUsers: 0,
-      activeUsers: 0,
-      premiumUsers: 0,
-      upgradeOpportunities: 0,
-      error: 'Unable to fetch user data',
-      message: 'This is normal if your database is not fully configured yet.',
-      setupNeeded: true
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch detailed user data',
+      message: error.message,
+      debug: {
+        timestamp: new Date().toISOString(),
+        errorStack: error.stack
+      }
     });
   }
 }
