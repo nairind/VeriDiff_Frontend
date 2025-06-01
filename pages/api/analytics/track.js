@@ -56,8 +56,8 @@ export default async function handler(req, res) {
           file2_size,
           user_agent,
           page_url,
-          created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+          success
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING id
       `, [
         user_id || session.user.id,
