@@ -1,4 +1,4 @@
-// pages/api/admin/simple-stats.js - Enhanced with better debugging
+// pages/api/admin/simple-stats.js - Using YOUR correct database connection
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { query } from '../../../lib/db';
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     try {
       console.log('📊 Fetching user data...');
       
-      // Get total users count
+      // Get total users count - USING YOUR DATABASE CONNECTION
       const totalResult = await query('SELECT COUNT(*) as count FROM users');
       totalUsers = parseInt(totalResult.rows[0].count);
       console.log(`✅ Total users: ${totalUsers}`);
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
       premiumUsers = parseInt(premiumResult.rows[0].count);
       console.log(`✅ Premium users: ${premiumUsers}`);
 
-      // Get recent users (last 10) - with more detailed logging
+      // Get recent users (last 10) - with all fields you need
       const recentResult = await query(`
         SELECT id, full_name as name, email, tier, created_at, phone_number
         FROM users 
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      // Try to get total comparisons
+      // Try to get total comparisons - USING YOUR DATABASE CONNECTION
       const analyticsResult = await query('SELECT COUNT(*) as count FROM analytics');
       totalComparisons = parseInt(analyticsResult.rows[0].count);
       console.log(`✅ Analytics data fetched: ${totalComparisons} total comparisons`);
