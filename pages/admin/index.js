@@ -1,439 +1,335 @@
-// pages/admin.js - Enhanced admin dashboard with detailed user activity
+// pages/admin.js - Complete Admin Dashboard
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
-export default function AdminPage() {
-  const { data: session } = useSession();
-  const [data, setData] = useState(null);
-  const [users, setUsers] = useState([]);
+export default function AdminDashboard() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [expandedUser, setExpandedUser] = useState(null);
+  const [error, setError] = useState(null);
+  const [debugMode, setDebugMode] = useState(false);
 
   useEffect(() => {
-    // Only allow specific admin emails
-    const adminEmails = [
-      'SALES@VERIDIFF.COM',  // Your email
-      'contact@gubithcm.com' // Add more if needed
-    ];
-
-    if (!session || !adminEmails.includes(session.user.email)) {
-      setLoading(false);
+    if (status === 'loading') return;
+    
+    if (!session) {
+      router.push('/auth/signin');
       return;
     }
 
-    fetchData();
-  }, [session]);
+    fetchStats();
+  }, [session, status]);
 
-  const fetchData = async () => {
+  const fetchStats = async () => {
     try {
-      // Get basic stats
-      const statsResponse = await fetch('/api/admin/simple-stats');
-      const statsData = await statsResponse.json();
-      setData(statsData);
-
-      // Get detailed user activity
-      const usersResponse = await fetch('/api/admin/detailed-users');
-      const usersData = await usersResponse.json();
-      setUsers(usersData.users || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔄 Fetching admin stats...');
+      const response = await fetch('/api/admin/simple-stats');
+      
+      console.log('📡 Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ API Error:', errorData);
+        throw new Error(`HTTP ${response.status}: ${errorData}`);
+      }
+      
+      const data = await response.json();
+      console.log('📊 Stats data received:', data);
+      
+      setStats(data);
+    } catch (err) {
+      console.error('❌ Fetch error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // Not logged in
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getTierBadgeColor = (tier) => {
+    switch (tier?.toLowerCase()) {
+      case 'premium': return 'bg-yellow-100 text-yellow-800';
+      case 'pro': return 'bg-purple-100 text-purple-800';
+      case 'free': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!session) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>Please sign in to access admin panel</h1>
-      </div>
-    );
+    return null; // Will redirect
   }
-
-  // Not admin
-  const adminEmails = ['SALES@VERIDIFF.COM', 'contact@gubithcm.com'];
-  if (!adminEmails.includes(session.user.email)) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>Access Denied</h1>
-        <p>You don't have admin permissions.</p>
-        <p>Current email: {session.user.email}</p>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>Loading admin data...</h1>
-      </div>
-    );
-  }
-
-  const toggleUserDetails = (userId) => {
-    setExpandedUser(expandedUser === userId ? null : userId);
-  };
 
   return (
-    <div style={{ 
-      padding: '1rem', 
-      maxWidth: '1400px', 
-      margin: '0 auto',
-      fontFamily: 'Arial, sans-serif'
-    }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-        color: 'white',
-        padding: '2rem',
-        borderRadius: '12px',
-        marginBottom: '2rem',
-        textAlign: 'center'
-      }}>
-        <h1 style={{ margin: 0, fontSize: '2rem' }}>VeriDiff Admin Dashboard</h1>
-        <p style={{ margin: '0.5rem 0 0 0', opacity: 0.9 }}>
-          Welcome {session.user.name}! Complete user activity overview.
-        </p>
-      </div>
-
-      {/* Quick Stats */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '1rem',
-        marginBottom: '2rem'
-      }}>
-        <div style={{
-          background: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          border: '2px solid #22c55e',
-          textAlign: 'center'
-        }}>
-          <h3 style={{ margin: '0 0 0.5rem 0', color: '#166534' }}>Total Users</h3>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#22c55e' }}>
-            {data?.totalUsers || '0'}
-          </div>
-        </div>
-
-        <div style={{
-          background: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          border: '2px solid #3b82f6',
-          textAlign: 'center'
-        }}>
-          <h3 style={{ margin: '0 0 0.5rem 0', color: '#1e40af' }}>This Week</h3>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#3b82f6' }}>
-            {data?.weeklyUsers || '0'}
-          </div>
-        </div>
-
-        <div style={{
-          background: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          border: '2px solid #f59e0b',
-          textAlign: 'center'
-        }}>
-          <h3 style={{ margin: '0 0 0.5rem 0', color: '#92400e' }}>Premium Users</h3>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b' }}>
-            {data?.premiumUsers || '0'}
-          </div>
-        </div>
-
-        <div style={{
-          background: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          border: '2px solid #8b5cf6',
-          textAlign: 'center'
-        }}>
-          <h3 style={{ margin: '0 0 0.5rem 0', color: '#6b21a8' }}>Total Comparisons</h3>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#8b5cf6' }}>
-            {data?.totalComparisons || '0'}
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">VeriDiff Admin Dashboard</h1>
+              <p className="text-gray-600">Welcome, {session.user.email}</p>
+            </div>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setDebugMode(!debugMode)}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                {debugMode ? 'Hide Debug' : 'Show Debug'}
+              </button>
+              <button
+                onClick={fetchStats}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Detailed User Table */}
-      <div style={{
-        background: 'white',
-        borderRadius: '8px',
-        border: '1px solid #e5e7eb',
-        overflow: 'hidden',
-        marginBottom: '2rem'
-      }}>
-        <h2 style={{ 
-          padding: '1rem', 
-          margin: 0, 
-          borderBottom: '1px solid #e5e7eb',
-          background: '#f8fafc'
-        }}>
-          📊 Detailed User Activity
-        </h2>
-        
-        {users && users.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-              <thead>
-                <tr style={{ background: '#f1f5f9', fontWeight: 'bold' }}>
-                  <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>
-                    User Details
-                  </th>
-                  <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>
-                    Contact Info
-                  </th>
-                  <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>
-                    Account Status
-                  </th>
-                  <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>
-                    Usage Stats
-                  </th>
-                  <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>
-                    Last Activity
-                  </th>
-                  <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user, index) => (
-                  <React.Fragment key={user.id}>
-                    {/* Main User Row */}
-                    <tr style={{ 
-                      borderBottom: '1px solid #f1f5f9',
-                      backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafbfc'
-                    }}>
-                      <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                        <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>
-                          {user.name || 'No name'}
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                          ID: {user.id}
-                        </div>
-                      </td>
-                      
-                      <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                        <div style={{ marginBottom: '0.25rem' }}>
-                          📧 {user.email}
-                        </div>
-                        <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
-                          📞 {user.phone || 'No phone'}
-                        </div>
-                      </td>
-                      
-                      <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                        <span style={{
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.8rem',
-                          fontWeight: 'bold',
-                          background: user.tier === 'premium' ? '#fef3c7' : '#f0fdf4',
-                          color: user.tier === 'premium' ? '#92400e' : '#166534'
-                        }}>
-                          {user.tier || 'free'}
-                        </span>
-                        <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                          Joined: {new Date(user.createdAt).toLocaleDateString()}
-                        </div>
-                      </td>
-                      
-                      <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                        <div style={{ fontWeight: 'bold', color: '#2563eb' }}>
-                          {user.totalComparisons || 0} comparisons
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                          Excel: {user.excelComparisons || 0} | Premium: {user.premiumComparisons || 0}
-                        </div>
-                      </td>
-                      
-                      <td style={{ padding: '1rem', verticalAlign: 'top' }}>
-                        <div style={{ fontSize: '0.9rem' }}>
-                          {user.lastActivity ? new Date(user.lastActivity).toLocaleDateString() : 'Never'}
-                        </div>
-                        <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                          {user.lastActivity ? new Date(user.lastActivity).toLocaleTimeString() : ''}
-                        </div>
-                      </td>
-                      
-                      <td style={{ padding: '1rem', textAlign: 'center' }}>
-                        <button
-                          onClick={() => toggleUserDetails(user.id)}
-                          style={{
-                            background: '#3b82f6',
-                            color: 'white',
-                            border: 'none',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.8rem'
-                          }}
-                        >
-                          {expandedUser === user.id ? 'Hide Details' : 'View Activity'}
-                        </button>
-                      </td>
-                    </tr>
-                    
-                    {/* Expanded Details Row */}
-                    {expandedUser === user.id && (
-                      <tr>
-                        <td colSpan="6" style={{ 
-                          padding: '0',
-                          background: '#f8fafc',
-                          borderBottom: '2px solid #e5e7eb'
-                        }}>
-                          <div style={{ padding: '1rem' }}>
-                            <h4 style={{ margin: '0 0 1rem 0', color: '#374151' }}>
-                              📈 Detailed Activity for {user.name}
-                            </h4>
-                            
-                            {/* Activity Breakdown */}
-                            <div style={{
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                              gap: '1rem',
-                              marginBottom: '1rem'
-                            }}>
-                              <div style={{
-                                background: 'white',
-                                padding: '1rem',
-                                borderRadius: '6px',
-                                border: '1px solid #e5e7eb'
-                              }}>
-                                <h5 style={{ margin: '0 0 0.5rem 0', color: '#22c55e' }}>
-                                  Excel-Excel (Free)
-                                </h5>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                                  {user.excelComparisons || 0}
-                                </div>
-                              </div>
-                              
-                              <div style={{
-                                background: 'white',
-                                padding: '1rem',
-                                borderRadius: '6px',
-                                border: '1px solid #e5e7eb'
-                              }}>
-                                <h5 style={{ margin: '0 0 0.5rem 0', color: '#f59e0b' }}>
-                                  Premium Features
-                                </h5>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-                                  {user.premiumComparisons || 0}
-                                </div>
-                              </div>
-                              
-                              <div style={{
-                                background: 'white',
-                                padding: '1rem',
-                                borderRadius: '6px',
-                                border: '1px solid #e5e7eb'
-                              }}>
-                                <h5 style={{ margin: '0 0 0.5rem 0', color: '#8b5cf6' }}>
-                                  Most Used Feature
-                                </h5>
-                                <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>
-                                  {user.favoriteComparison || 'Excel-Excel'}
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {/* Recent Activity */}
-                            {user.recentActivity && user.recentActivity.length > 0 && (
-                              <div>
-                                <h5 style={{ margin: '0 0 0.5rem 0', color: '#374151' }}>
-                                  🕒 Recent Activity (Last 10)
-                                </h5>
-                                <div style={{ 
-                                  maxHeight: '200px', 
-                                  overflowY: 'auto',
-                                  background: 'white',
-                                  borderRadius: '6px',
-                                  border: '1px solid #e5e7eb'
-                                }}>
-                                  {user.recentActivity.map((activity, idx) => (
-                                    <div key={idx} style={{
-                                      padding: '0.75rem',
-                                      borderBottom: idx < user.recentActivity.length - 1 ? '1px solid #f1f5f9' : 'none',
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center'
-                                    }}>
-                                      <div>
-                                        <span style={{ fontWeight: 'bold' }}>
-                                          {activity.comparisonType?.replace('-', ' → ') || 'Unknown'}
-                                        </span>
-                                        <span style={{
-                                          marginLeft: '0.5rem',
-                                          padding: '0.125rem 0.375rem',
-                                          borderRadius: '3px',
-                                          fontSize: '0.7rem',
-                                          background: activity.tier === 'premium' ? '#fef3c7' : '#f0fdf4',
-                                          color: activity.tier === 'premium' ? '#92400e' : '#166534'
-                                        }}>
-                                          {activity.tier}
-                                        </span>
-                                      </div>
-                                      <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
-                                        {new Date(activity.timestamp).toLocaleString()}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Upgrade Opportunity */}
-                            {user.tier !== 'premium' && user.premiumComparisons > 0 && (
-                              <div style={{
-                                background: '#fef3c7',
-                                border: '1px solid #f59e0b',
-                                borderRadius: '6px',
-                                padding: '1rem',
-                                marginTop: '1rem'
-                              }}>
-                                <h5 style={{ margin: '0 0 0.5rem 0', color: '#92400e' }}>
-                                  💡 Upgrade Opportunity!
-                                </h5>
-                                <p style={{ margin: 0, color: '#92400e', fontSize: '0.9rem' }}>
-                                  This user tried {user.premiumComparisons} premium features but is still on free tier. 
-                                  Great candidate for upgrade outreach!
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-            No users found yet. Once people start signing up, they'll appear here with detailed activity!
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error loading data</h3>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Instructions */}
-      <div style={{
-        background: '#f0f9ff',
-        border: '2px solid #3b82f6',
-        borderRadius: '8px',
-        padding: '1.5rem'
-      }}>
-        <h3 style={{ margin: '0 0 1rem 0', color: '#1e40af' }}>📊 How to Use This Dashboard:</h3>
-        <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#374151', lineHeight: '1.6' }}>
-          <li><strong>Quick Stats:</strong> Overview of total growth and activity</li>
-          <li><strong>User Table:</strong> Complete contact info and usage for each user</li>
-          <li><strong>"View Activity" Button:</strong> Click to see detailed comparison history</li>
-          <li><strong>Upgrade Opportunities:</strong> Users trying premium features = potential customers</li>
-          <li><strong>Contact Info:</strong> Email and phone for direct outreach</li>
-          <li><strong>Usage Patterns:</strong> See who's actively using your tool</li>
-        </ul>
+        {/* Debug Information */}
+        {debugMode && stats && (
+          <div className="mb-6 bg-gray-50 border border-gray-200 rounded-md p-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Debug Information</h3>
+            <pre className="text-sm text-gray-600 overflow-auto">
+              {JSON.stringify(stats, null, 2)}
+            </pre>
+          </div>
+        )}
+
+        {/* Stats Cards */}
+        {stats && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
+                        <dd className="text-lg font-medium text-gray-900">{stats.totalUsers}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">This Week</dt>
+                        <dd className="text-lg font-medium text-gray-900">{stats.weeklyUsers}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Premium Users</dt>
+                        <dd className="text-lg font-medium text-gray-900">{stats.premiumUsers}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Comparisons</dt>
+                        <dd className="text-lg font-medium text-gray-900">{stats.totalComparisons}</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Database Status */}
+            <div className="mb-6">
+              <div className={`rounded-md p-4 ${
+                stats.databaseStatus === 'connected' ? 'bg-green-50 border border-green-200' :
+                stats.databaseStatus === 'missing_analytics_table' ? 'bg-yellow-50 border border-yellow-200' :
+                'bg-red-50 border border-red-200'
+              }`}>
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    {stats.databaseStatus === 'connected' ? (
+                      <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="ml-3">
+                    <h3 className={`text-sm font-medium ${
+                      stats.databaseStatus === 'connected' ? 'text-green-800' :
+                      stats.databaseStatus === 'missing_analytics_table' ? 'text-yellow-800' :
+                      'text-red-800'
+                    }`}>
+                      Database Status: {stats.databaseStatus}
+                    </h3>
+                    {stats.message && (
+                      <p className={`text-sm mt-1 ${
+                        stats.databaseStatus === 'connected' ? 'text-green-700' :
+                        stats.databaseStatus === 'missing_analytics_table' ? 'text-yellow-700' :
+                        'text-red-700'
+                      }`}>
+                        {stats.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Users Table */}
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+              <div className="px-4 py-5 sm:px-6">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Users</h3>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                  Latest {stats.recentUsers?.length || 0} registered users
+                </p>
+              </div>
+              
+              {stats.recentUsers && stats.recentUsers.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tier</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {stats.recentUsers.map((user, index) => (
+                        <tr key={user.id || index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.name || 'N/A'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{user.email}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTierBadgeColor(user.tier)}`}>
+                              {user.tier || 'free'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{user.phone_number || 'N/A'}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{formatDate(user.created_at)}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                              onClick={() => alert(`View activity for ${user.email} - Coming soon!`)}
+                              className="text-blue-600 hover:text-blue-900 mr-3"
+                            >
+                              View Activity
+                            </button>
+                            <button
+                              onClick={() => alert(`Contact ${user.email} - Coming soon!`)}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              Contact
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="px-6 py-4 text-center text-gray-500">
+                  {stats.totalUsers === 0 ? 'No users found in database.' : 'No recent users to display.'}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
