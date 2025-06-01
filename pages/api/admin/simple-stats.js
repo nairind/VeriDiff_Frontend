@@ -1,6 +1,7 @@
-// pages/api/admin/simple-stats.js - Updated with better error handling
+// pages/api/admin/simple-stats.js - Fixed to use your database connection
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
+import { query } from '../../../lib/db';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -29,43 +30,33 @@ export default async function handler(req, res) {
     let databaseStatus = 'unknown';
 
     try {
-      // Try to get total users count
-      totalUsers = await prisma.user.count();
+      // Get total users count
+      const totalUsersResult = await query('SELECT COUNT(*) as count FROM users');
+      totalUsers = parseInt(totalUsersResult.rows[0].count);
       databaseStatus = 'connected';
 
       // Get users from this week
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      
-      weeklyUsers = await prisma.user.count({
-        where: {
-          createdAt: {
-            gte: oneWeekAgo
-          }
-        }
-      });
+      const weeklyUsersResult = await query(`
+        SELECT COUNT(*) as count FROM users 
+        WHERE created_at >= NOW() - INTERVAL '7 days'
+      `);
+      weeklyUsers = parseInt(weeklyUsersResult.rows[0].count);
 
       // Get premium users count
-      premiumUsers = await prisma.user.count({
-        where: {
-          tier: 'premium'
-        }
-      });
+      const premiumUsersResult = await query(`
+        SELECT COUNT(*) as count FROM users 
+        WHERE tier = 'premium'
+      `);
+      premiumUsers = parseInt(premiumUsersResult.rows[0].count);
 
       // Get recent users (last 10)
-      recentUsers = await prisma.user.findMany({
-        take: 10,
-        orderBy: {
-          createdAt: 'desc'
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          tier: true,
-          createdAt: true
-        }
-      });
+      const recentUsersResult = await query(`
+        SELECT id, full_name as name, email, tier, created_at 
+        FROM users 
+        ORDER BY created_at DESC 
+        LIMIT 10
+      `);
+      recentUsers = recentUsersResult.rows;
 
       console.log(`✅ User data fetched: ${totalUsers} total users`);
 
@@ -75,8 +66,9 @@ export default async function handler(req, res) {
     }
 
     try {
-      // Try to get total comparisons (this might not work if analytics table doesn't exist yet)
-      totalComparisons = await prisma.analytics.count();
+      // Try to get total comparisons from analytics table
+      const analyticsResult = await query('SELECT COUNT(*) as count FROM analytics');
+      totalComparisons = parseInt(analyticsResult.rows[0].count);
       console.log(`✅ Analytics data fetched: ${totalComparisons} total comparisons`);
       
     } catch (analyticsError) {
