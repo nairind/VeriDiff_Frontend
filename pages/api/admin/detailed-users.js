@@ -1,4 +1,4 @@
-// pages/api/admin/detailed-users.js - Enhanced API with detailed user activity
+// pages/api/admin/detailed-users.js
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 
@@ -20,13 +20,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    // IMPORTANT: Replace 'prisma' with your actual database connection method
-    // If you're using a different database setup, adjust these queries accordingly
-    
+    // Start with empty arrays in case database isn't set up yet
     let users = [];
-    
+    let totalUsers = 0;
+    let activeUsers = 0;
+    let premiumUsers = 0;
+    let upgradeOpportunities = 0;
+
     try {
-      // Get all users with their basic info
+      // Try to get users from database
+      // IMPORTANT: You'll need to replace 'prisma' with your actual database connection
+      
+      // Get all users with basic info
       const basicUsers = await prisma.user.findMany({
         orderBy: {
           createdAt: 'desc'
@@ -35,92 +40,118 @@ export default async function handler(req, res) {
           id: true,
           name: true,
           email: true,
-          phone: true,    // Add this field if it doesn't exist in your schema
+          phone: true,    // This field might not exist yet - that's okay
           tier: true,
           createdAt: true,
           updatedAt: true
         }
       });
 
-      // For each user, get their detailed activity
+      totalUsers = basicUsers.length;
+
+      // For each user, try to get their activity
       for (const user of basicUsers) {
+        let userActivity = [];
+        let totalComparisons = 0;
+        let excelComparisons = 0;
+        let premiumComparisons = 0;
+        let favoriteComparison = 'excel-excel';
+        let lastActivity = null;
+
         try {
-          // Get comparison activity from analytics table
-          const userActivity = await prisma.analytics.findMany({
+          // Try to get analytics data
+          userActivity = await prisma.analytics.findMany({
             where: {
-              userId: user.id  // or user_id depending on your schema
+              OR: [
+                { userId: user.id },
+                { user_id: user.id },
+                { userEmail: user.email },
+                { user_email: user.email }
+              ]
             },
             orderBy: {
               timestamp: 'desc'
             },
+            take: 50, // Limit to recent activity
             select: {
-              comparisonType: true,  // or comparison_type
+              comparisonType: true,
+              comparison_type: true,
               tier: true,
               timestamp: true
             }
           });
 
-          // Calculate stats
-          const totalComparisons = userActivity.length;
-          const excelComparisons = userActivity.filter(a => a.comparisonType === 'excel-excel').length;
-          const premiumComparisons = userActivity.filter(a => a.comparisonType !== 'excel-excel').length;
+          // Calculate stats from activity
+          totalComparisons = userActivity.length;
           
+          userActivity.forEach(activity => {
+            const compType = activity.comparisonType || activity.comparison_type || 'excel-excel';
+            if (compType === 'excel-excel') {
+              excelComparisons++;
+            } else {
+              premiumComparisons++;
+            }
+          });
+
+          lastActivity = userActivity.length > 0 ? userActivity[0].timestamp : null;
+
           // Find most used comparison type
           const comparisonCounts = {};
           userActivity.forEach(activity => {
-            comparisonCounts[activity.comparisonType] = (comparisonCounts[activity.comparisonType] || 0) + 1;
+            const compType = activity.comparisonType || activity.comparison_type || 'excel-excel';
+            comparisonCounts[compType] = (comparisonCounts[compType] || 0) + 1;
           });
           
-          const favoriteComparison = Object.keys(comparisonCounts).reduce((a, b) => 
-            comparisonCounts[a] > comparisonCounts[b] ? a : b, 'excel-excel'
-          );
+          if (Object.keys(comparisonCounts).length > 0) {
+            favoriteComparison = Object.keys(comparisonCounts).reduce((a, b) => 
+              comparisonCounts[a] > comparisonCounts[b] ? a : b
+            );
+          }
 
-          // Get last activity date
-          const lastActivity = userActivity.length > 0 ? userActivity[0].timestamp : null;
-
-          // Get recent activity (last 10)
-          const recentActivity = userActivity.slice(0, 10);
-
-          users.push({
-            ...user,
-            totalComparisons,
-            excelComparisons,
-            premiumComparisons,
-            favoriteComparison,
-            lastActivity,
-            recentActivity
-          });
-
-        } catch (activityError) {
-          console.log(`No activity data for user ${user.id} - that's normal for new users`);
-          
-          // Add user with zero activity
-          users.push({
-            ...user,
-            totalComparisons: 0,
-            excelComparisons: 0,
-            premiumComparisons: 0,
-            favoriteComparison: 'excel-excel',
-            lastActivity: null,
-            recentActivity: []
-          });
+        } catch (analyticsError) {
+          console.log(`No analytics data for user ${user.id} - that's normal for new setups`);
         }
+
+        users.push({
+          ...user,
+          totalComparisons,
+          excelComparisons,
+          premiumComparisons,
+          favoriteComparison,
+          lastActivity,
+          recentActivity: userActivity.slice(0, 10).map(a => ({
+            comparisonType: a.comparisonType || a.comparison_type,
+            tier: a.tier,
+            timestamp: a.timestamp
+          }))
+        });
+
+        // Count active and premium users
+        if (totalComparisons > 0) activeUsers++;
+        if (user.tier === 'premium') premiumUsers++;
+        if (user.tier !== 'premium' && premiumComparisons > 0) upgradeOpportunities++;
       }
 
-    } catch (userError) {
-      console.error('Error fetching users:', userError);
+    } catch (dbError) {
+      console.error('Database error (this is normal if not set up yet):', dbError.message);
       
-      // If there's an error, return empty data with helpful message
+      // Return empty but valid response
       return res.status(200).json({
         users: [],
-        error: 'Could not fetch user data. This is normal if your database tables are not set up yet.',
-        message: 'Users will appear here once your database is properly configured and people start signing up.'
+        totalUsers: 0,
+        activeUsers: 0,
+        premiumUsers: 0,
+        upgradeOpportunities: 0,
+        message: 'Database not fully configured yet. Users will appear here once database is set up and people start signing up.',
+        setupNeeded: true
       });
     }
 
     // Sort users by most recent activity
     users.sort((a, b) => {
-      if (!a.lastActivity && !b.lastActivity) return new Date(b.createdAt) - new Date(a.createdAt);
+      if (!a.lastActivity && !b.lastActivity) {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
       if (!a.lastActivity) return 1;
       if (!b.lastActivity) return -1;
       return new Date(b.lastActivity) - new Date(a.lastActivity);
@@ -128,49 +159,26 @@ export default async function handler(req, res) {
 
     res.status(200).json({
       users,
-      totalUsers: users.length,
-      activeUsers: users.filter(u => u.totalComparisons > 0).length,
-      premiumUsers: users.filter(u => u.tier === 'premium').length,
-      upgradeOpportunities: users.filter(u => u.tier !== 'premium' && u.premiumComparisons > 0).length
+      totalUsers,
+      activeUsers,
+      premiumUsers,
+      upgradeOpportunities,
+      message: users.length === 0 ? 'No users found yet. Users will appear here as people sign up.' : null
     });
 
   } catch (error) {
     console.error('Detailed users API error:', error);
     
-    // Return helpful error response
+    // Always return a valid response, even if there's an error
     res.status(200).json({
       users: [],
       totalUsers: 0,
       activeUsers: 0,
       premiumUsers: 0,
       upgradeOpportunities: 0,
-      error: 'Database connection issue. This is normal if your database is not fully set up yet.',
-      message: 'Contact your developer to ensure user and analytics tables are properly configured.'
+      error: 'Unable to fetch user data',
+      message: 'This is normal if your database is not fully configured yet.',
+      setupNeeded: true
     });
   }
 }
-
-// SAMPLE DATABASE SCHEMA UPDATES NEEDED:
-/*
-
--- Add phone field to users table if not exists
-ALTER TABLE users ADD COLUMN phone VARCHAR(20);
-
--- Analytics table for tracking comparisons (if not exists)
-CREATE TABLE IF NOT EXISTS analytics (
-  id SERIAL PRIMARY KEY,
-  user_id VARCHAR(255) REFERENCES users(id),
-  user_email VARCHAR(255),
-  comparison_type VARCHAR(50), -- 'excel-excel', 'excel-csv', etc.
-  tier VARCHAR(20), -- 'free' or 'premium'
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  file1_size INTEGER, -- optional
-  file2_size INTEGER, -- optional
-  success BOOLEAN DEFAULT true
-);
-
--- Indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_analytics_user_id ON analytics(user_id);
-CREATE INDEX IF NOT EXISTS idx_analytics_timestamp ON analytics(timestamp);
-
-*/
