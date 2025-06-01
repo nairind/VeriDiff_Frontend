@@ -76,8 +76,32 @@ export default function Home() {
     alert('Demo video coming soon! Click Try Live Demo above to test VeriDiff now.');
   };
 
-  const handleProTrial = () => {
-    alert('Pro trial signup coming soon! Click Try Free Demo to test VeriDiff now.');
+  // ✅ UPDATED: Premium trial with Stripe integration
+  const handleProTrial = async () => {
+    try {
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1RVEnnJbX57fsaKHqLt143Fg',
+          successUrl: `${window.location.origin}/compare?success=true`,
+          cancelUrl: `${window.location.origin}/?canceled=true`,
+        }),
+      });
+
+      const { url } = await response.json();
+      
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('Failed to create checkout session');
+      }
+    } catch (error) {
+      console.error('Stripe checkout error:', error);
+      alert('Sorry, there was an error starting your premium trial. Please try again or contact support.');
+    }
   };
 
   const handleContactSales = () => {
@@ -1181,7 +1205,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Pricing Section */}
+        {/* ✅ UPDATED Pricing Section - Simplified Free vs Premium */}
         <section id="pricing" style={{ ...sectionStyle, background: '#f9fafb' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -1194,274 +1218,269 @@ export default function Home() {
                 Simple, Transparent Pricing
               </h2>
               <p style={{ fontSize: '1.25rem', color: '#6b7280' }}>
-                Start free, upgrade when you need more
+                Excel-Excel comparisons free forever • Premium unlocks all formats
               </p>
             </div>
 
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
               gap: '2rem', 
-              maxWidth: '80rem', 
+              maxWidth: '900px', 
               margin: '0 auto' 
             }} className="pricing-grid">
               
-              {/* Starter Plan */}
+              {/* Free Plan */}
               <div style={{ 
                 background: 'white', 
-                padding: '2rem', 
+                padding: '2.5rem', 
                 borderRadius: '1rem', 
-                border: '2px solid #e5e7eb' 
+                border: '3px solid #22c55e',
+                boxShadow: '0 4px 20px rgba(34, 197, 94, 0.1)'
               }} className="pricing-card">
+                <div style={{ 
+                  background: '#22c55e', 
+                  color: 'white', 
+                  padding: '0.5rem 1rem', 
+                  borderRadius: '2rem', 
+                  fontSize: '0.875rem', 
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  marginBottom: '1.5rem'
+                }}>
+                  Always Free for Signed-In Users
+                </div>
                 <h3 style={{ 
-                  fontSize: '1.5rem', 
+                  fontSize: '1.75rem', 
                   fontWeight: '700', 
                   marginBottom: '0.5rem', 
                   color: '#1f2937' 
                 }}>
-                  Starter
+                  Free
                 </h3>
-                <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
-                  Perfect for trying VeriDiff
+                <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+                  Perfect for Excel comparisons
                 </p>
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <span style={{ 
-                    fontSize: '2.25rem', 
-                    fontWeight: '700', 
-                    color: '#111827' 
-                  }}>
-                    Free
-                  </span>
-                  <span style={{ color: '#6b7280' }}>/month</span>
-                </div>
                 <div style={{ marginBottom: '2rem' }}>
+                  <span style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: '#22c55e' 
+                  }}>
+                    £0
+                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '1.1rem' }}>/month</span>
+                </div>
+                <div style={{ marginBottom: '2.5rem' }}>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>5 comparisons per month</span>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span><strong>Unlimited Excel-Excel comparisons</strong></span>
                   </div>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Files up to 5MB</span>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span>Smart header mapping & tolerance settings</span>
                   </div>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>All comparison formats</span>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span>Local processing - files never leave your browser</span>
                   </div>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Local processing only</span>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span>GDPR compliant by design</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
+                  }}>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span>Download results as Excel or CSV</span>
                   </div>
                 </div>
                 <button onClick={handleTryDemo} style={{ 
                   width: '100%', 
-                  padding: '0.75rem', 
-                  borderRadius: '0.5rem', 
-                  fontWeight: '500', 
+                  padding: '1rem', 
+                  borderRadius: '0.75rem', 
+                  fontWeight: '600', 
                   cursor: 'pointer', 
                   border: 'none', 
-                  background: '#f3f4f6', 
-                  color: '#111827',
+                  background: '#22c55e', 
+                  color: 'white',
+                  fontSize: '1.1rem',
                   transition: 'all 0.2s'
                 }}>
-                  Start Free
+                  🎉 Start Free Now
                 </button>
               </div>
 
-              {/* Professional Plan */}
+              {/* Premium Plan */}
               <div style={{ 
                 background: 'white', 
-                padding: '2rem', 
+                padding: '2.5rem', 
                 borderRadius: '1rem', 
-                border: '2px solid #2563eb', 
-                position: 'relative' 
+                border: '3px solid #2563eb',
+                boxShadow: '0 4px 20px rgba(37, 99, 235, 0.1)',
+                position: 'relative'
               }} className="pricing-card">
                 <div style={{ 
-                  position: 'absolute', 
-                  top: '-0.5rem', 
-                  left: '50%', 
-                  transform: 'translateX(-50%)', 
                   background: '#2563eb', 
                   color: 'white', 
-                  padding: '0.25rem 1rem', 
-                  borderRadius: '1rem', 
+                  padding: '0.5rem 1rem', 
+                  borderRadius: '2rem', 
                   fontSize: '0.875rem', 
-                  fontWeight: '500' 
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  marginBottom: '1.5rem'
                 }}>
-                  Most Popular
+                  All Formats + Advanced Features
                 </div>
                 <h3 style={{ 
-                  fontSize: '1.5rem', 
+                  fontSize: '1.75rem', 
                   fontWeight: '700', 
                   marginBottom: '0.5rem', 
                   color: '#1f2937' 
                 }}>
-                  Professional
+                  Premium
                 </h3>
-                <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
-                  For growing businesses
+                <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+                  For professional data analysis
                 </p>
-                <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ marginBottom: '2rem' }}>
                   <span style={{ 
-                    fontSize: '2.25rem', 
+                    fontSize: '3rem', 
                     fontWeight: '700', 
-                    color: '#111827' 
+                    color: '#2563eb' 
                   }}>
                     £19
                   </span>
-                  <span style={{ color: '#6b7280' }}>/month</span>
+                  <span style={{ color: '#6b7280', fontSize: '1.1rem' }}>/month</span>
                 </div>
-                <div style={{ marginBottom: '2rem' }}>
+                <div style={{ marginBottom: '2.5rem' }}>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Unlimited comparisons</span>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span><strong>Everything in Free, plus:</strong></span>
                   </div>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Files up to 50MB</span>
+                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>🚀</span>
+                    <span><strong>Excel-CSV, CSV-CSV comparisons</strong></span>
                   </div>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Advanced tolerance settings</span>
+                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>📄</span>
+                    <span>PDF, JSON, XML, TXT comparisons</span>
                   </div>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Local processing only</span>
+                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>⚡</span>
+                    <span>Advanced tolerance & precision controls</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
+                  }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>📊</span>
+                    <span>Priority support & feature requests</span>
                   </div>
                 </div>
                 <button onClick={handleProTrial} style={{ 
                   width: '100%', 
-                  padding: '0.75rem', 
-                  borderRadius: '0.5rem', 
-                  fontWeight: '500', 
+                  padding: '1rem', 
+                  borderRadius: '0.75rem', 
+                  fontWeight: '600', 
                   cursor: 'pointer', 
                   border: 'none', 
                   background: '#2563eb', 
                   color: 'white',
+                  fontSize: '1.1rem',
                   transition: 'all 0.2s'
                 }}>
-                  Start Pro Trial
+                  🚀 Start Premium Trial
                 </button>
-              </div>
-
-              {/* Business Plan */}
-              <div style={{ 
-                background: 'white', 
-                padding: '2rem', 
-                borderRadius: '1rem', 
-                border: '2px solid #e5e7eb' 
-              }} className="pricing-card">
-                <h3 style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: '700', 
-                  marginBottom: '0.5rem', 
-                  color: '#1f2937' 
+                <p style={{ 
+                  textAlign: 'center', 
+                  color: '#6b7280', 
+                  fontSize: '0.875rem', 
+                  marginTop: '1rem' 
                 }}>
-                  Business
-                </h3>
-                <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
-                  For teams and organizations
+                  Cancel anytime • 30-day money-back guarantee
                 </p>
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <span style={{ 
-                    fontSize: '2.25rem', 
-                    fontWeight: '700', 
-                    color: '#111827' 
-                  }}>
-                    £79
-                  </span>
-                  <span style={{ color: '#6b7280' }}>/month</span>
-                </div>
-                <div style={{ marginBottom: '2rem' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
-                  }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Everything in Pro</span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
-                  }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Unlimited file size</span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
-                  }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Team collaboration</span>
-                    </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '0.75rem' 
-                  }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
-                    <span>Local processing only</span>
-                  </div>
-                </div>
-                <button onClick={handleContactSales} style={{ 
-                  width: '100%', 
-                  padding: '0.75rem', 
-                  borderRadius: '0.5rem', 
-                  fontWeight: '500', 
-                  cursor: 'pointer', 
-                  border: 'none', 
-                  background: '#111827', 
-                  color: 'white',
-                  transition: 'all 0.2s'
-                }}>
-                  Contact Sales
-                </button>
+              </div>
+            </div>
+
+            {/* Security guarantee */}
+            <div style={{
+              background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+              padding: '2rem',
+              borderRadius: '1rem',
+              border: '1px solid #a7f3d0',
+              textAlign: 'center',
+              marginTop: '3rem'
+            }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#065f46' }}>
+                🔒 Security Promise: Both Plans Include
+              </h3>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                gap: '1rem',
+                fontSize: '1rem',
+                color: '#047857'
+              }}>
+                <div>✓ <strong>100% local processing</strong> - files never uploaded</div>
+                <div>✓ <strong>Zero data collection</strong> - GDPR compliant</div>
+                <div>✓ <strong>Bank-level privacy</strong> - perfect for confidential data</div>
+                <div>✓ <strong>No registration required</strong> to test with real files</div>
               </div>
             </div>
           </div>
@@ -1521,7 +1540,7 @@ export default function Home() {
                 minWidth: '180px',
                 transition: 'all 0.2s'
               }}>
-                Start Pro Trial - £19/month
+                Start Premium - £19/month
               </button>
             </div>
             
