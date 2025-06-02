@@ -16,6 +16,186 @@ import JsonResults from '../../components/JsonResults';
 import XmlResults from '../../components/XmlResults';
 import PdfResults from '../../components/PdfResults';
 
+// ===== USER GUIDANCE COMPONENTS =====
+
+// File Requirements Info Component
+const FileRequirementsInfo = () => (
+  <div style={{
+    background: '#eff6ff',
+    border: '1px solid #2563eb',
+    borderRadius: '8px',
+    padding: '16px',
+    marginBottom: '20px',
+    fontSize: '0.9rem'
+  }}>
+    <h4 style={{ margin: '0 0 10px 0', color: '#1e40af', fontSize: '1rem' }}>
+      📋 Supported Text Files
+    </h4>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+      <div>
+        <strong>✅ Supported:</strong>
+        <br />• .txt, .csv, .log files
+        <br />• Code files (.js, .html, .css)
+        <br />• Config files (.json, .xml, .yaml)
+      </div>
+      <div>
+        <strong>📏 Requirements:</strong>
+        <br />• Maximum size: 10MB
+        <br />• UTF-8 text encoding
+        <br />• No binary/image files
+      </div>
+    </div>
+  </div>
+);
+
+// Success Tips Component
+const SuccessTips = () => (
+  <div style={{
+    background: '#f0fdf4',
+    border: '1px solid #22c55e',
+    borderRadius: '8px',
+    padding: '16px',
+    marginBottom: '20px'
+  }}>
+    <h4 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '1rem' }}>
+      💡 Pro Tips for Best Results
+    </h4>
+    <div style={{ fontSize: '0.9rem', color: '#166534' }}>
+      • <strong>Small files compare faster:</strong> Under 1MB for instant results
+      <br />
+      • <strong>Save as UTF-8:</strong> Ensures all characters display correctly  
+      <br />
+      • <strong>Use .txt extension:</strong> Guarantees compatibility
+      <br />
+      • <strong>Line-by-line works best:</strong> For code and structured text
+    </div>
+  </div>
+);
+
+// Enhanced Error Messages with Solutions
+const getHelpfulErrorMessage = (error, fileName) => {
+  const errorMsg = error.message.toLowerCase();
+  
+  if (errorMsg.includes('too large')) {
+    return {
+      title: "📁 File Too Large",
+      message: `"${fileName}" exceeds our 10MB limit.`,
+      solutions: [
+        "Try splitting large files into smaller sections",
+        "Use a text editor to reduce file size",
+        "Compare specific sections instead of entire files",
+        "For large datasets, consider our Premium bulk comparison tools"
+      ]
+    };
+  }
+  
+  if (errorMsg.includes('binary') || errorMsg.includes('not readable as text')) {
+    return {
+      title: "🚫 Binary File Detected",
+      message: `"${fileName}" appears to be a binary file (image, PDF, etc.).`,
+      solutions: [
+        "Select .txt, .csv, or other text files instead",
+        "For PDF comparison, use our PDF comparison tool",
+        "Extract text content from documents first",
+        "Save files as plain text (.txt) format"
+      ]
+    };
+  }
+  
+  if (errorMsg.includes('empty')) {
+    return {
+      title: "📄 Empty File",
+      message: `"${fileName}" contains no content.`,
+      solutions: [
+        "Check if the file contains text content",
+        "Try opening the file in a text editor first",
+        "Ensure the file finished uploading completely"
+      ]
+    };
+  }
+  
+  if (errorMsg.includes('encoding') || errorMsg.includes('tolowercase')) {
+    return {
+      title: "🔤 Text Encoding Issue",
+      message: `"${fileName}" may have incompatible text encoding.`,
+      solutions: [
+        "Save file as UTF-8 encoding in your text editor",
+        "Try opening in Notepad and 'Save As' with UTF-8 encoding",
+        "Avoid files with special characters or non-English text",
+        "Convert file to plain text format first"
+      ]
+    };
+  }
+  
+  if (errorMsg.includes('failed to read') || errorMsg.includes('corrupted')) {
+    return {
+      title: "💾 File Reading Error",
+      message: `Unable to read "${fileName}".`,
+      solutions: [
+        "Check if the file is open in another program",
+        "Try uploading the file again",
+        "Ensure the file isn't corrupted",
+        "Save a copy of the file and try again"
+      ]
+    };
+  }
+  
+  // Generic fallback
+  return {
+    title: "⚠️ Comparison Error",
+    message: error.message,
+    solutions: [
+      "Ensure both files are valid text files",
+      "Check file size is under 10MB",
+      "Try refreshing the page and uploading again",
+      "Contact support if the issue persists"
+    ]
+  };
+};
+
+// User-Friendly Error Display Component
+const HelpfulErrorDisplay = ({ error, fileName }) => {
+  const errorInfo = getHelpfulErrorMessage(error, fileName || 'Unknown file');
+  
+  return (
+    <div style={{
+      background: '#fef2f2',
+      border: '2px solid #dc2626',
+      borderRadius: '12px',
+      padding: '20px',
+      margin: '20px 0'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
+        <div style={{ fontSize: '2rem' }}>❌</div>
+        <div>
+          <h3 style={{ margin: 0, color: '#dc2626', fontSize: '1.3rem' }}>
+            {errorInfo.title}
+          </h3>
+          <p style={{ margin: '5px 0 0 0', color: '#7f1d1d', fontSize: '1rem' }}>
+            {errorInfo.message}
+          </p>
+        </div>
+      </div>
+      
+      <div style={{
+        background: 'white',
+        borderRadius: '8px',
+        padding: '15px',
+        border: '1px solid #fca5a5'
+      }}>
+        <h4 style={{ margin: '0 0 10px 0', color: '#dc2626', fontSize: '1rem' }}>
+          💡 How to Fix This:
+        </h4>
+        <ul style={{ margin: 0, paddingLeft: '20px', color: '#7f1d1d' }}>
+          {errorInfo.solutions.map((solution, index) => (
+            <li key={index} style={{ marginBottom: '5px' }}>{solution}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
 // ===== DATA ADAPTER FOR TEXT RESULTS =====
 const adaptTextComparisonResults = (rawResults, file1Content, file2Content, file1Name, file2Name) => {
   console.log('🔧 Adapting text comparison results...', {
@@ -127,7 +307,7 @@ const readFileContent = (file) => {
     }
 
     if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      reject(new Error('File is too large (max 10MB)'));
+      reject(new Error(`File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 10MB.`));
       return;
     }
 
@@ -139,13 +319,25 @@ const readFileContent = (file) => {
         console.log('🐛 DEBUG: File read successfully. Length:', content?.length);
         
         if (typeof content !== 'string') {
-          reject(new Error('File content is not text'));
+          reject(new Error('File content is not readable as text'));
+          return;
+        }
+        
+        // Check for binary content (null bytes indicate binary)
+        if (content.includes('\0')) {
+          reject(new Error(`File "${file.name}" appears to contain binary data. Please select a text file.`));
           return;
         }
         
         if (content.length === 0) {
           reject(new Error('File appears to be empty'));
           return;
+        }
+        
+        // Performance warnings
+        const lineCount = content.split('\n').length;
+        if (lineCount > 10000) {
+          console.warn(`⚠️ File "${file.name}" has ${lineCount} lines. Comparison may be slow.`);
         }
         
         resolve(content);
@@ -157,12 +349,131 @@ const readFileContent = (file) => {
     
     reader.onerror = (e) => {
       console.error('🚨 FileReader error:', e);
-      reject(new Error('Failed to read file: ' + file.name));
+      reject(new Error(`Failed to read file "${file.name}". The file may be corrupted or in use.`));
     };
     
     // Read as text with UTF-8 encoding
     reader.readAsText(file, 'UTF-8');
   });
+};
+
+// ===== ENHANCED FILE UPLOAD COMPONENT =====
+const FileUploadWithValidation = ({ fileNum, file, onChange, fileType }) => {
+  const [validationWarning, setValidationWarning] = useState(null);
+  
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+    
+    setValidationWarning(null);
+    
+    try {
+      // Proactive validation
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        setValidationWarning({
+          type: 'error',
+          message: `File is ${(selectedFile.size / 1024 / 1024).toFixed(1)}MB (max 10MB allowed)`
+        });
+        return;
+      }
+      
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setValidationWarning({
+          type: 'warning',
+          message: `Large file (${(selectedFile.size / 1024 / 1024).toFixed(1)}MB) - comparison may take longer`
+        });
+      }
+      
+      // Check file type
+      const fileName = selectedFile.name.toLowerCase();
+      const isBinaryType = selectedFile.type && (
+        selectedFile.type.startsWith('image/') ||
+        selectedFile.type.startsWith('video/') ||
+        selectedFile.type === 'application/pdf'
+      );
+      
+      if (isBinaryType) {
+        setValidationWarning({
+          type: 'error',
+          message: 'Binary files not supported. Please select a text file (.txt, .csv, .log, etc.)'
+        });
+        return;
+      }
+      
+      const textExtensions = ['.txt', '.csv', '.log', '.md', '.html', '.css', '.js', '.json', '.xml'];
+      const hasTextExtension = textExtensions.some(ext => fileName.endsWith(ext));
+      
+      if (!hasTextExtension && !selectedFile.type.startsWith('text/')) {
+        setValidationWarning({
+          type: 'warning',
+          message: `File extension "${fileName.split('.').pop()}" may not be a text file`
+        });
+      }
+      
+      onChange(e, fileNum);
+      
+    } catch (error) {
+      setValidationWarning({
+        type: 'error',
+        message: error.message
+      });
+    }
+  };
+  
+  return (
+    <div style={{
+      background: '#f0f9ff',
+      padding: '25px',
+      borderRadius: '16px',
+      border: '2px solid #0ea5e9'
+    }}>
+      <h3 style={{ margin: '0 0 15px 0', color: '#1f2937' }}>File {fileNum}</h3>
+      
+      <input
+        type="file"
+        onChange={handleFileChange}
+        accept=".txt,.csv,.log,.md,.html,.css,.js,.json,.xml,.yaml,.yml,.ini,.cfg,.conf,text/*"
+        style={{
+          width: '100%',
+          padding: '14px',
+          border: '2px solid rgba(255,255,255,0.8)',
+          borderRadius: '10px',
+          fontSize: '1rem',
+          background: 'rgba(255,255,255,0.9)'
+        }}
+      />
+      
+      {/* File Status Display */}
+      {file && !validationWarning && (
+        <div style={{
+          marginTop: '15px',
+          padding: '12px',
+          background: 'rgba(34, 197, 94, 0.1)',
+          border: '2px solid #22c55e',
+          borderRadius: '8px',
+          color: '#166534',
+          fontWeight: '600'
+        }}>
+          ✅ {file.name} ({(file.size / 1024).toFixed(1)}KB)
+        </div>
+      )}
+      
+      {/* Validation Warnings */}
+      {validationWarning && (
+        <div style={{
+          marginTop: '15px',
+          padding: '12px',
+          background: validationWarning.type === 'error' ? '#fef2f2' : '#fffbeb',
+          border: `2px solid ${validationWarning.type === 'error' ? '#dc2626' : '#f59e0b'}`,
+          borderRadius: '8px',
+          color: validationWarning.type === 'error' ? '#dc2626' : '#92400e',
+          fontWeight: '500'
+        }}>
+          {validationWarning.type === 'error' ? '❌' : '⚠️'} {validationWarning.message}
+        </div>
+      )}
+    </div>
+  );
 };
 
 function DocumentComparePage() {
@@ -369,8 +680,6 @@ function DocumentComparePage() {
           console.log('🐛 DEBUG: File contents read successfully');
           console.log('🐛 DEBUG: File 1 content length:', file1Content?.length);
           console.log('🐛 DEBUG: File 2 content length:', file2Content?.length);
-          console.log('🐛 DEBUG: File 1 preview:', file1Content?.substring(0, 100));
-          console.log('🐛 DEBUG: File 2 preview:', file2Content?.substring(0, 100));
 
           // Validate file contents
           if (!file1Content || !file2Content) {
@@ -413,8 +722,6 @@ function DocumentComparePage() {
           }
 
           console.log('🐛 DEBUG: Raw comparison results:', rawTextResults);
-          console.log('🐛 DEBUG: Raw results type:', typeof rawTextResults);
-          console.log('🐛 DEBUG: Raw results keys:', Object.keys(rawTextResults || {}));
 
           // Adapt the results to TextResults expected format
           result = adaptTextComparisonResults(
@@ -465,19 +772,7 @@ function DocumentComparePage() {
     } catch (err) {
       console.error('🚨 COMPARISON ERROR:', err);
       console.error('🚨 ERROR STACK:', err.stack);
-      
-      // Provide more specific error messages
-      let errorMessage = err.message;
-      
-      if (err.message.includes('toLowerCase')) {
-        errorMessage = 'Text comparison failed: Invalid text data. Please check that your files contain valid text content.';
-      } else if (err.message.includes('Cannot read properties')) {
-        errorMessage = 'Comparison failed: Invalid data format. Please ensure your files are properly formatted.';
-      } else if (err.message.includes('compareTextFiles_main')) {
-        errorMessage = 'Text comparison function error. Please try again or contact support.';
-      }
-      
-      setError(errorMessage);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -1211,6 +1506,14 @@ function DocumentComparePage() {
             </div>
           </div>
 
+          {/* File Requirements and Tips */}
+          {(fileType === 'text' || userTier === 'premium') && (
+            <>
+              <FileRequirementsInfo />
+              <SuccessTips />
+            </>
+          )}
+
           {/* File Upload Section */}
           {(fileType === 'text' || userTier === 'premium') && (
             <div style={{
@@ -1240,75 +1543,19 @@ function DocumentComparePage() {
                 gap: '25px',
                 marginBottom: '35px'
               }}>
-                {/* File 1 */}
-                <div style={{
-                  background: '#f0f9ff',
-                  padding: '25px',
-                  borderRadius: '16px',
-                  border: '2px solid #0ea5e9'
-                }}>
-                  <h3 style={{ margin: '0 0 15px 0', color: '#1f2937' }}>File 1</h3>
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(e, 1)}
-                    style={{
-                      width: '100%',
-                      padding: '14px',
-                      border: '2px solid rgba(255,255,255,0.8)',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      background: 'rgba(255,255,255,0.9)'
-                    }}
-                  />
-                  {file1 && (
-                    <div style={{
-                      marginTop: '15px',
-                      padding: '12px',
-                      background: 'rgba(34, 197, 94, 0.1)',
-                      border: '2px solid #22c55e',
-                      borderRadius: '8px',
-                      color: '#166534',
-                      fontWeight: '600'
-                    }}>
-                      ✅ {file1.name}
-                    </div>
-                  )}
-                </div>
-
-                {/* File 2 */}
-                <div style={{
-                  background: '#f0f9ff',
-                  padding: '25px',
-                  borderRadius: '16px',
-                  border: '2px solid #0ea5e9'
-                }}>
-                  <h3 style={{ margin: '0 0 15px 0', color: '#1f2937' }}>File 2</h3>
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(e, 2)}
-                    style={{
-                      width: '100%',
-                      padding: '14px',
-                      border: '2px solid rgba(255,255,255,0.8)',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      background: 'rgba(255,255,255,0.9)'
-                    }}
-                  />
-                  {file2 && (
-                    <div style={{
-                      marginTop: '15px',
-                      padding: '12px',
-                      background: 'rgba(34, 197, 94, 0.1)',
-                      border: '2px solid #22c55e',
-                      borderRadius: '8px',
-                      color: '#166534',
-                      fontWeight: '600'
-                    }}>
-                      ✅ {file2.name}
-                    </div>
-                  )}
-                </div>
+                {/* Enhanced File Upload Components */}
+                <FileUploadWithValidation 
+                  fileNum={1} 
+                  file={file1} 
+                  onChange={handleFileChange} 
+                  fileType={fileType} 
+                />
+                <FileUploadWithValidation 
+                  fileNum={2} 
+                  file={file2} 
+                  onChange={handleFileChange} 
+                  fileType={fileType} 
+                />
               </div>
 
               {/* Load Files Button */}
@@ -1342,20 +1589,12 @@ function DocumentComparePage() {
           {showXmlOptions && <XmlOptionsComponent />}
           {showPdfOptions && <PdfOptionsComponent />}
 
-          {/* Error Display */}
+          {/* Enhanced Error Display */}
           {error && (
-            <div style={{
-              color: '#dc2626',
-              margin: '20px 0',
-              padding: '20px',
-              border: '2px solid #dc2626',
-              borderRadius: '12px',
-              background: '#fef2f2',
-              fontSize: '1rem',
-              fontWeight: '500'
-            }}>
-              <strong>Error:</strong> {error}
-            </div>
+            <HelpfulErrorDisplay 
+              error={new Error(error)} 
+              fileName={file1?.name || file2?.name} 
+            />
           )}
 
           {/* Loading */}
