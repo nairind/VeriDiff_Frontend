@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 
 const XmlResults = ({ results, file1Name, file2Name }) => {
   const [viewMode, setViewMode] = useState('structured'); // 'structured' or 'source'
