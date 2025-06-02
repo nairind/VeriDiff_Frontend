@@ -111,13 +111,57 @@ const adaptTextComparisonResults = (rawResults, file1Content, file2Content, file
   return adaptedResults;
 };
 
-// ===== FILE READING UTILITY =====
+// ===== ENHANCED FILE READING UTILITY =====
 const readFileContent = (file) => {
   return new Promise((resolve, reject) => {
+    console.log('🐛 DEBUG: Reading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+    
+    if (!file) {
+      reject(new Error('No file provided'));
+      return;
+    }
+
+    if (file.size === 0) {
+      reject(new Error('File is empty'));
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      reject(new Error('File is too large (max 10MB)'));
+      return;
+    }
+
     const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
-    reader.onerror = (e) => reject(new Error('Failed to read file'));
-    reader.readAsText(file);
+    
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result;
+        console.log('🐛 DEBUG: File read successfully. Length:', content?.length);
+        
+        if (typeof content !== 'string') {
+          reject(new Error('File content is not text'));
+          return;
+        }
+        
+        if (content.length === 0) {
+          reject(new Error('File appears to be empty'));
+          return;
+        }
+        
+        resolve(content);
+      } catch (error) {
+        console.error('🚨 File reading error:', error);
+        reject(new Error('Failed to process file content'));
+      }
+    };
+    
+    reader.onerror = (e) => {
+      console.error('🚨 FileReader error:', e);
+      reject(new Error('Failed to read file: ' + file.name));
+    };
+    
+    // Read as text with UTF-8 encoding
+    reader.readAsText(file, 'UTF-8');
   });
 };
 
@@ -281,7 +325,7 @@ function DocumentComparePage() {
     setShowPdfOptions(false);
   };
 
-  // ===== UPDATED MAIN COMPARISON HANDLER =====
+  // ===== ENHANCED MAIN COMPARISON HANDLER =====
   const handleCompareFiles = async () => {
     if (!file1 || !file2) {
       setError('Please select two files.');
@@ -297,34 +341,81 @@ function DocumentComparePage() {
     setError(null);
 
     try {
-      // Read file contents first
-      const file1Content = await readFileContent(file1);
-      const file2Content = await readFileContent(file2);
+      console.log('🐛 DEBUG: Starting comparison...');
+      console.log('🐛 DEBUG: Files:', { file1: file1.name, file2: file2.name });
+      console.log('🐛 DEBUG: File type:', fileType);
+      console.log('🐛 DEBUG: Text options BEFORE:', textOptions);
 
-      console.log('🐛 DEBUG: File contents read:', {
-        file1_name: file1.name,
-        file2_name: file2.name,
-        file1_preview: file1Content.substring(0, 100),
-        file2_preview: file2Content.substring(0, 100),
-        file1_lines: file1Content.split('\n').length,
-        file2_lines: file2Content.split('\n').length
-      });
+      // Ensure textOptions has all required properties with safe defaults
+      const safeTextOptions = {
+        compareMode: textOptions.compareMode || 'line',
+        caseSensitive: textOptions.caseSensitive !== undefined ? textOptions.caseSensitive : true,
+        ignoreWhitespace: textOptions.ignoreWhitespace !== undefined ? textOptions.ignoreWhitespace : false,
+        showLineNumbers: textOptions.showLineNumbers !== undefined ? textOptions.showLineNumbers : true
+      };
+
+      console.log('🐛 DEBUG: Safe text options:', safeTextOptions);
 
       let result;
 
       switch (fileType) {
         case 'text':
-          console.log('🐛 DEBUG: Text options:', textOptions);
+          // Read file contents first
+          console.log('🐛 DEBUG: Reading file contents...');
           
-          // Get raw results from your comparison function
-          const rawTextResults = await compareTextFiles_main(
-            file1Content, 
-            file2Content, 
-            textOptions
-          );
+          const file1Content = await readFileContent(file1);
+          const file2Content = await readFileContent(file2);
+
+          console.log('🐛 DEBUG: File contents read successfully');
+          console.log('🐛 DEBUG: File 1 content length:', file1Content?.length);
+          console.log('🐛 DEBUG: File 2 content length:', file2Content?.length);
+          console.log('🐛 DEBUG: File 1 preview:', file1Content?.substring(0, 100));
+          console.log('🐛 DEBUG: File 2 preview:', file2Content?.substring(0, 100));
+
+          // Validate file contents
+          if (!file1Content || !file2Content) {
+            throw new Error('Failed to read file contents. Please ensure both files contain text.');
+          }
+
+          if (typeof file1Content !== 'string' || typeof file2Content !== 'string') {
+            throw new Error('File contents are not valid text strings.');
+          }
+
+          console.log('🐛 DEBUG: Calling compareTextFiles_main...');
+
+          // Try the comparison function with different parameter formats
+          let rawTextResults;
           
+          try {
+            // First try: pass file content strings (most likely correct)
+            console.log('🐛 DEBUG: Trying compareTextFiles_main with file contents...');
+            rawTextResults = await compareTextFiles_main(
+              file1Content, 
+              file2Content, 
+              safeTextOptions
+            );
+          } catch (error1) {
+            console.log('🐛 DEBUG: Failed with file contents, trying with file objects...', error1.message);
+            
+            try {
+              // Second try: pass file objects (legacy format)
+              rawTextResults = await compareTextFiles_main(
+                file1, 
+                file2, 
+                safeTextOptions
+              );
+            } catch (error2) {
+              console.log('🐛 DEBUG: Failed with file objects, trying basic call...', error2.message);
+              
+              // Third try: basic call without options
+              rawTextResults = await compareTextFiles_main(file1Content, file2Content);
+            }
+          }
+
           console.log('🐛 DEBUG: Raw comparison results:', rawTextResults);
-          
+          console.log('🐛 DEBUG: Raw results type:', typeof rawTextResults);
+          console.log('🐛 DEBUG: Raw results keys:', Object.keys(rawTextResults || {}));
+
           // Adapt the results to TextResults expected format
           result = adaptTextComparisonResults(
             rawTextResults,
@@ -333,24 +424,32 @@ function DocumentComparePage() {
             file1.name,
             file2.name
           );
+
+          console.log('🐛 DEBUG: Final adapted result:', result);
           break;
           
         case 'json':
-          // JSON files: Parse then compare with options
-          const json1 = await parseJSONFile(file1Content);
-          const json2 = await parseJSONFile(file2Content);
+          console.log('🐛 DEBUG: Processing JSON files...');
+          const json1Content = await readFileContent(file1);
+          const json2Content = await readFileContent(file2);
+          
+          const json1 = await parseJSONFile(json1Content);
+          const json2 = await parseJSONFile(json2Content);
           result = await compareJSONFiles(json1, json2, jsonOptions);
           break;
           
         case 'xml':
-          // XML files: Parse then compare with options
-          const xml1 = await parseXMLFile(file1Content);
-          const xml2 = await parseXMLFile(file2Content);
+          console.log('🐛 DEBUG: Processing XML files...');
+          const xml1Content = await readFileContent(file1);
+          const xml2Content = await readFileContent(file2);
+          
+          const xml1 = await parseXMLFile(xml1Content);
+          const xml2 = await parseXMLFile(xml2Content);
           result = await compareXMLFiles(xml1, xml2, xmlOptions);
           break;
           
         case 'pdf':
-          // PDF files: Parse then compare with options
+          console.log('🐛 DEBUG: Processing PDF files...');
           const pdf1 = await parsePDFFile(file1);
           const pdf2 = await parsePDFFile(file2);
           result = await comparePDFFiles(pdf1, pdf2, pdfOptions);
@@ -360,12 +459,25 @@ function DocumentComparePage() {
           throw new Error('Unsupported file type');
       }
 
-      console.log('🐛 DEBUG: Final result being set:', result);
+      console.log('🐛 DEBUG: Setting final result:', result);
       setResults(result);
       
     } catch (err) {
-      console.error('Comparison error:', err);
-      setError(err.message);
+      console.error('🚨 COMPARISON ERROR:', err);
+      console.error('🚨 ERROR STACK:', err.stack);
+      
+      // Provide more specific error messages
+      let errorMessage = err.message;
+      
+      if (err.message.includes('toLowerCase')) {
+        errorMessage = 'Text comparison failed: Invalid text data. Please check that your files contain valid text content.';
+      } else if (err.message.includes('Cannot read properties')) {
+        errorMessage = 'Comparison failed: Invalid data format. Please ensure your files are properly formatted.';
+      } else if (err.message.includes('compareTextFiles_main')) {
+        errorMessage = 'Text comparison function error. Please try again or contact support.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
