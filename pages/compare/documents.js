@@ -16,6 +16,111 @@ import JsonResults from '../../components/JsonResults';
 import XmlResults from '../../components/XmlResults';
 import PdfResults from '../../components/PdfResults';
 
+// ===== DATA ADAPTER FOR TEXT RESULTS =====
+const adaptTextComparisonResults = (rawResults, file1Content, file2Content, file1Name, file2Name) => {
+  console.log('🔧 Adapting text comparison results...', {
+    file1Name,
+    file2Name,
+    file1_length: file1Content?.length,
+    file2_length: file2Content?.length,
+    rawResults: rawResults
+  });
+
+  // Handle different possible result structures from compareTextFiles_main
+  const file1Lines = (file1Content || '').split('\n');
+  const file2Lines = (file2Content || '').split('\n');
+  const maxLines = Math.max(file1Lines.length, file2Lines.length);
+  
+  // Initialize arrays to match lengths
+  const normalizedFile1 = [...file1Lines];
+  const normalizedFile2 = [...file2Lines];
+  
+  // Pad shorter array with empty strings
+  while (normalizedFile1.length < maxLines) normalizedFile1.push('');
+  while (normalizedFile2.length < maxLines) normalizedFile2.push('');
+  
+  // Generate line-by-line comparison
+  const lineByLineComparison = [];
+  let differences = 0;
+  let matches = 0;
+  
+  for (let i = 0; i < maxLines; i++) {
+    const line1 = normalizedFile1[i] || '';
+    const line2 = normalizedFile2[i] || '';
+    
+    let status;
+    if (line1 === line2) {
+      status = 'unchanged';
+      matches++;
+    } else if (line1 === '' && line2 !== '') {
+      status = 'added';
+      differences++;
+    } else if (line1 !== '' && line2 === '') {
+      status = 'removed';
+      differences++;
+    } else {
+      status = 'modified';
+      differences++;
+    }
+    
+    lineByLineComparison.push({
+      line_number: i + 1,
+      status: status,
+      file1_content: line1,
+      file2_content: line2
+    });
+  }
+  
+  // Create the expected data structure for TextResults
+  const adaptedResults = {
+    // Core statistics
+    total_lines: maxLines,
+    differences_found: differences,
+    matches_found: matches,
+    similarity_percentage: maxLines > 0 ? Math.round((matches / maxLines) * 100) : 0,
+    
+    // File contents
+    file1_content: file1Content || '',
+    file2_content: file2Content || '',
+    file1_name: file1Name,
+    file2_name: file2Name,
+    
+    // Detailed comparison
+    line_by_line_comparison: lineByLineComparison,
+    
+    // Legacy support - include original results if they exist
+    original_results: rawResults,
+    
+    // Summary changes array (for compatibility)
+    changes: lineByLineComparison.filter(line => line.status !== 'unchanged').map((line, index) => ({
+      type: line.status,
+      line_number: line.line_number,
+      old_content: line.file1_content,
+      new_content: line.file2_content,
+      description: `Line ${line.line_number}: ${line.status}`
+    }))
+  };
+  
+  console.log('✅ Text Comparison Results Adapted:', {
+    total_lines: adaptedResults.total_lines,
+    differences_found: adaptedResults.differences_found,
+    matches_found: adaptedResults.matches_found,
+    similarity: adaptedResults.similarity_percentage + '%'
+  });
+  
+  return adaptedResults;
+};
+
+// ===== FILE READING UTILITY =====
+const readFileContent = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = (e) => reject(new Error('Failed to read file'));
+    reader.readAsText(file);
+  });
+};
+
 function DocumentComparePage() {
   const { data: session } = useSession();
   
@@ -176,7 +281,7 @@ function DocumentComparePage() {
     setShowPdfOptions(false);
   };
 
-  // Main comparison handler
+  // ===== UPDATED MAIN COMPARISON HANDLER =====
   const handleCompareFiles = async () => {
     if (!file1 || !file2) {
       setError('Please select two files.');
@@ -192,25 +297,55 @@ function DocumentComparePage() {
     setError(null);
 
     try {
+      // Read file contents first
+      const file1Content = await readFileContent(file1);
+      const file2Content = await readFileContent(file2);
+
+      console.log('🐛 DEBUG: File contents read:', {
+        file1_name: file1.name,
+        file2_name: file2.name,
+        file1_preview: file1Content.substring(0, 100),
+        file2_preview: file2Content.substring(0, 100),
+        file1_lines: file1Content.split('\n').length,
+        file2_lines: file2Content.split('\n').length
+      });
+
       let result;
 
       switch (fileType) {
         case 'text':
-          // Text files: Direct comparison with options
-          result = await compareTextFiles_main(file1, file2, textOptions);
+          console.log('🐛 DEBUG: Text options:', textOptions);
+          
+          // Get raw results from your comparison function
+          const rawTextResults = await compareTextFiles_main(
+            file1Content, 
+            file2Content, 
+            textOptions
+          );
+          
+          console.log('🐛 DEBUG: Raw comparison results:', rawTextResults);
+          
+          // Adapt the results to TextResults expected format
+          result = adaptTextComparisonResults(
+            rawTextResults,
+            file1Content,
+            file2Content,
+            file1.name,
+            file2.name
+          );
           break;
           
         case 'json':
           // JSON files: Parse then compare with options
-          const json1 = await parseJSONFile(file1);
-          const json2 = await parseJSONFile(file2);
+          const json1 = await parseJSONFile(file1Content);
+          const json2 = await parseJSONFile(file2Content);
           result = await compareJSONFiles(json1, json2, jsonOptions);
           break;
           
         case 'xml':
           // XML files: Parse then compare with options
-          const xml1 = await parseXMLFile(file1);
-          const xml2 = await parseXMLFile(file2);
+          const xml1 = await parseXMLFile(file1Content);
+          const xml2 = await parseXMLFile(file2Content);
           result = await compareXMLFiles(xml1, xml2, xmlOptions);
           break;
           
@@ -225,6 +360,7 @@ function DocumentComparePage() {
           throw new Error('Unsupported file type');
       }
 
+      console.log('🐛 DEBUG: Final result being set:', result);
       setResults(result);
       
     } catch (err) {
