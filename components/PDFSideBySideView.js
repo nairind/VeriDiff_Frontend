@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
   const [currentChange, setCurrentChange] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileActiveFile, setMobileActiveFile] = useState(1); // 1 or 2
+  const [mobileActiveFile, setMobileActiveFile] = useState(1);
   const leftPanelRef = useRef(null);
   const rightPanelRef = useRef(null);
 
@@ -25,9 +25,11 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
 
   // Create enhanced document data with change highlighting
   const createDocumentData = (pages, fileNumber) => {
+    if (!pages) return [];
+    
     return pages.map(page => ({
       ...page,
-      enhancedParagraphs: page.paragraphs.map((para, paraIndex) => {
+      enhancedParagraphs: (page.paragraphs || []).map((para, paraIndex) => {
         // Find changes for this paragraph
         const change = allChanges.find(c => 
           c.page === page.page_number && 
@@ -75,18 +77,6 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         behavior: 'smooth', 
         block: 'center' 
       });
-    }
-  };
-
-  // Synchronized scrolling for desktop
-  const handleScroll = (source) => {
-    if (isMobile) return;
-    
-    const sourcePanel = source === 'left' ? leftPanelRef.current : rightPanelRef.current;
-    const targetPanel = source === 'left' ? rightPanelRef.current : leftPanelRef.current;
-    
-    if (sourcePanel && targetPanel) {
-      targetPanel.scrollTop = sourcePanel.scrollTop;
     }
   };
 
@@ -138,7 +128,6 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         {/* Document Content */}
         <div 
           ref={fileNumber === 1 ? leftPanelRef : rightPanelRef}
-          onScroll={() => handleScroll(fileNumber === 1 ? 'left' : 'right')}
           style={{
             height: '600px',
             overflowY: 'auto',
@@ -147,7 +136,7 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
             lineHeight: '1.6'
           }}
         >
-          {documentData.map((page, pageIndex) => (
+          {documentData.map((page) => (
             <div key={page.page_number} style={{ marginBottom: '30px' }}>
               {/* Page Header */}
               <div style={{
@@ -163,7 +152,7 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
               </div>
 
               {/* Page Content */}
-              {page.enhancedParagraphs.map((para, paraIndex) => {
+              {(page.enhancedParagraphs || []).map((para, paraIndex) => {
                 const changeId = `change-${page.page_number}-${paraIndex}`;
                 const isCurrentChange = allChanges[currentChange]?.page === page.page_number && 
                                        allChanges[currentChange]?.paragraph === paraIndex;
