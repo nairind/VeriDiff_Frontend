@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Head from 'next/head';   
+import Head from 'next/head';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import AuthGuard from '../../components/auth/AuthGuard';
@@ -1468,191 +1468,27 @@ function DocumentComparePage() {
         <Head>
           <title>VeriDiff - Document Comparison</title>
           
-          {/* FIXED PDF.js Loading System - Consistent Versions */}
+          {/* SIMPLIFIED PDF.js Loading - Reliable Version */}
           <script
             src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
-            onLoad="console.log('✅ PDF.js main script loaded from CDNJS'); window.pdfJsMainLoaded = true;"
-            onError="console.error('❌ PDF.js main script failed from CDNJS'); window.pdfJsMainError = true;"
+            onLoad="console.log('✅ PDF.js loaded successfully');"
+            onError="console.error('❌ PDF.js failed to load');"
           ></script>
           
-          {/* PDF.js Initialization with Enhanced Error Handling */}
+          {/* Simple PDF.js Worker Configuration */}
           <script dangerouslySetInnerHTML={{
             __html: `
-              (function() {
-                let initAttempts = 0;
-                const maxAttempts = 8;
-                let workerConfigured = false;
-                
-                // Multiple worker URLs to try (consistent with main version 3.11.174)
-                const workerUrls = [
-                  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
-                  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js',
-                  'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
-                ];
-                
-                function attemptPDFJSInit() {
-                  initAttempts++;
-                  console.log('🔄 PDF.js initialization attempt', initAttempts);
-                  
-                  if (typeof window.pdfjsLib !== 'undefined' && !workerConfigured) {
-                    console.log('📚 PDF.js library detected, configuring worker...');
-                    
-                    let workerIndex = 0;
-                    
-                    function tryWorker() {
-                      if (workerIndex >= workerUrls.length) {
-                        console.error('❌ All PDF.js worker URLs failed');
-                        showPDFJSError();
-                        return;
-                      }
-                      
-                      const workerUrl = workerUrls[workerIndex];
-                      console.log('🔧 Trying worker URL:', workerUrl);
-                      
-                      try {
-                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
-                        
-                        // Test worker by creating a dummy task
-                        const testData = new Uint8Array([37, 80, 68, 70]); // "%PDF"
-                        const loadingTask = window.pdfjsLib.getDocument({ data: testData });
-                        
-                        // Set timeout for worker test
-                        const testTimeout = setTimeout(() => {
-                          console.warn('⚠️ Worker test timeout, trying next URL...');
-                          workerIndex++;
-                          tryWorker();
-                        }, 3000);
-                        
-                        loadingTask.promise.then(() => {
-                          clearTimeout(testTimeout);
-                          console.log('✅ PDF.js worker configured successfully with:', workerUrl);
-                          workerConfigured = true;
-                          window.pdfJsReady = true;
-                          
-                          // Notify successful initialization
-                          if (window.onPDFJSReady) {
-                            window.onPDFJSReady();
-                          }
-                          
-                        }).catch((error) => {
-                          clearTimeout(testTimeout);
-                          console.warn('⚠️ Worker test failed:', error.message);
-                          workerIndex++;
-                          tryWorker();
-                        });
-                        
-                      } catch (error) {
-                        console.warn('⚠️ Worker configuration failed:', error.message);
-                        workerIndex++;
-                        tryWorker();
-                      }
-                    }
-                    
-                    tryWorker();
-                    return;
-                  }
-                  
-                  // PDF.js not loaded yet or already configured
-                  if (!workerConfigured && initAttempts < maxAttempts) {
-                    console.log('⏳ PDF.js not ready, retrying in 800ms...');
-                    setTimeout(attemptPDFJSInit, 800);
-                  } else if (initAttempts >= maxAttempts && !workerConfigured) {
-                    console.error('❌ PDF.js failed to initialize after', maxAttempts, 'attempts');
-                    loadFallbackPDFJS();
-                  }
-                }
-                
-                function loadFallbackPDFJS() {
-                  console.log('🔄 Loading fallback PDF.js from different CDN...');
-                  
-                  const fallbackScript = document.createElement('script');
-                  fallbackScript.src = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
-                  fallbackScript.onload = function() {
-                    console.log('✅ Fallback PDF.js loaded, retrying initialization...');
-                    setTimeout(attemptPDFJSInit, 1000);
-                  };
-                  fallbackScript.onerror = function() {
-                    console.error('❌ Fallback PDF.js also failed');
-                    showPDFJSError();
-                  };
-                  document.head.appendChild(fallbackScript);
-                }
-                
-                function showPDFJSError() {
-                  console.error('🚨 PDF.js completely failed to load');
-                  window.pdfJsError = true;
-                  
-                  // Create persistent error notification
-                  const errorDiv = document.createElement('div');
-                  errorDiv.id = 'pdfjs-error-persistent';
-                  errorDiv.innerHTML = \`
-                    <div style="
-                      position: fixed;
-                      top: 80px;
-                      right: 20px;
-                      background: #fef2f2;
-                      border: 2px solid #dc2626;
-                      border-radius: 12px;
-                      padding: 16px;
-                      max-width: 350px;
-                      z-index: 10000;
-                      box-shadow: 0 4px 20px rgba(220,38,38,0.3);
-                      animation: slideIn 0.3s ease-out;
-                    ">
-                      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <span style="font-size: 1.2rem;">⚠️</span>
-                        <strong style="color: #dc2626; font-size: 0.9rem;">PDF Service Unavailable</strong>
-                      </div>
-                      <p style="margin: 0 0 10px 0; color: #7f1d1d; font-size: 0.8rem; line-height: 1.3;">
-                        PDF comparison is temporarily disabled due to library loading issues.
-                      </p>
-                      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button onclick="window.location.reload()" style="
-                          background: #dc2626; color: white; border: none; padding: 4px 8px; 
-                          border-radius: 4px; cursor: pointer; font-size: 0.75rem;
-                        ">Refresh</button>
-                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
-                          background: #6b7280; color: white; border: none; padding: 4px 8px; 
-                          border-radius: 4px; cursor: pointer; font-size: 0.75rem;
-                        ">Dismiss</button>
-                      </div>
-                    </div>
-                    <style>
-                      @keyframes slideIn {
-                        from { transform: translateX(100%); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
-                      }
-                    </style>
-                  \`;
-                  document.body.appendChild(errorDiv);
-                  
-                  // Auto-dismiss after 10 seconds
-                  setTimeout(() => {
-                    const errorEl = document.getElementById('pdfjs-error-persistent');
-                    if (errorEl) errorEl.remove();
-                  }, 10000);
-                }
-                
-                // Start initialization sequence
-                console.log('🚀 Starting PDF.js initialization sequence...');
-                
-                if (document.readyState === 'loading') {
-                  document.addEventListener('DOMContentLoaded', function() {
-                    setTimeout(attemptPDFJSInit, 300);
-                  });
+              window.addEventListener('load', function() {
+                if (typeof window.pdfjsLib !== 'undefined') {
+                  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 
+                    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                  window.pdfJsReady = true;
+                  console.log('✅ PDF.js worker configured and ready');
                 } else {
-                  setTimeout(attemptPDFJSInit, 300);
+                  console.error('❌ PDF.js library not available');
+                  window.pdfJsError = true;
                 }
-                
-                // Backup initialization on window load
-                window.addEventListener('load', function() {
-                  if (!window.pdfJsReady && !window.pdfJsError) {
-                    console.log('🔄 Backup PDF.js initialization on window load...');
-                    setTimeout(attemptPDFJSInit, 1000);
-                  }
-                });
-                
-              })();
+              });
             `
           }} />
         </Head>
