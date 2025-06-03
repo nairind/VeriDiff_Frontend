@@ -426,6 +426,103 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     );
   };
 
+  // Download handlers
+  const handleDownloadReport = () => {
+    const report = generateJsonReport();
+    const blob = new Blob([report], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `json_comparison_${new Date().toISOString().slice(0,10)}_${new Date().getTime()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const generateJsonReport = () => {
+    const report = {
+      json_comparison_report: {
+        metadata: {
+          generated_at: new Date().toISOString(),
+          generator: "VeriDiff JSON Comparison Tool",
+          version: "1.0",
+          files: {
+            file1: {
+              name: file1Name || 'File 1',
+              type: 'JSON'
+            },
+            file2: {
+              name: file2Name || 'File 2', 
+              type: 'JSON'
+            }
+          }
+        },
+        
+        statistics: {
+          total_properties: total_records,
+          differences_found: differences_found,
+          matches_found: matches_found,
+          similarity_percentage: total_records > 0 ? Math.round((matches_found / total_records) * 100) : 0,
+          analysis_summary: `${differences_found} differences found across ${total_records} total properties`
+        },
+        
+        detailed_changes: changes.map(change => ({
+          path: change.path,
+          change_type: change.type,
+          old_value: change.oldValue,
+          new_value: change.newValue,
+          value_type: typeof change.newValue || typeof change.oldValue,
+          description: getChangeDescription(change)
+        })),
+        
+        file_contents: {
+          file1_structure: file1_content,
+          file2_structure: file2_content
+        },
+        
+        comparison_options: {
+          deep_comparison: true,
+          case_sensitive: true,
+          type_strict: true
+        },
+        
+        summary: {
+          has_differences: differences_found > 0,
+          most_common_change_type: getMostCommonChangeType(),
+          affected_paths: changes.map(c => c.path).filter(Boolean)
+        }
+      }
+    };
+    
+    return JSON.stringify(report, null, 2);
+  };
+
+  // Helper function to generate change descriptions
+  const getChangeDescription = (change) => {
+    switch (change.type) {
+      case 'added':
+        return `Property "${change.path}" was added with value: ${JSON.stringify(change.newValue)}`;
+      case 'removed':
+        return `Property "${change.path}" was removed (previous value: ${JSON.stringify(change.oldValue)})`;
+      case 'modified':
+        return `Property "${change.path}" was changed from ${JSON.stringify(change.oldValue)} to ${JSON.stringify(change.newValue)}`;
+      default:
+        return `Property "${change.path}" has changes`;
+    }
+  };
+
+  // Helper function to get most common change type
+  const getMostCommonChangeType = () => {
+    if (!changes || changes.length === 0) return 'none';
+    
+    const typeCounts = changes.reduce((acc, change) => {
+      acc[change.type] = (acc[change.type] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return Object.entries(typeCounts)
+      .sort(([,a], [,b]) => b - a)[0]?.[0] || 'unknown';
+  };
+
   return (
     <div style={{
       background: 'white',
@@ -556,15 +653,43 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           </button>
         </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={showUnchanged}
-            onChange={(e) => setShowUnchanged(e.target.checked)}
-            style={{ accentColor: '#2563eb' }}
-          />
-          <span style={{ fontSize: '13px', fontWeight: '500' }}>Show Unchanged</span>
-        </label>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={showUnchanged}
+              onChange={(e) => setShowUnchanged(e.target.checked)}
+              style={{ accentColor: '#2563eb' }}
+            />
+            <span style={{ fontSize: '13px', fontWeight: '500' }}>Show Unchanged</span>
+          </label>
+
+          <button
+            onClick={handleDownloadReport}
+            style={{
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: '13px',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = 'none';
+              e.target.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.3)';
+            }}
+          >
+            📄 Download Report
+          </button>
+        </div>
       </div>
 
       {/* Compact Legend */}
