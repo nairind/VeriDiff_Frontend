@@ -710,6 +710,7 @@ function DocumentComparePage() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pdfLoadingStatus, setPdfLoadingStatus] = useState('checking'); // checking, loaded, failed
   
   // UI states
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -754,6 +755,38 @@ function DocumentComparePage() {
     includeImages: false
   });
 
+  // Enhanced PDF.js loading check
+  const checkPDFJSLoading = () => {
+    let attempts = 0;
+    const maxAttempts = 30; // 30 seconds total
+    
+    const checkInterval = setInterval(() => {
+      attempts++;
+      console.log(`📚 PDF.js loading check attempt ${attempts}/${maxAttempts}`);
+      
+      if (typeof window !== 'undefined' && window.pdfjsLib && window.pdfJsReady) {
+        console.log('✅ PDF.js successfully loaded and ready');
+        setPdfLoadingStatus('loaded');
+        clearInterval(checkInterval);
+        return;
+      }
+      
+      if (window.pdfJsError) {
+        console.error('❌ PDF.js loading error detected');
+        setPdfLoadingStatus('failed');
+        clearInterval(checkInterval);
+        return;
+      }
+      
+      if (attempts >= maxAttempts) {
+        console.error('❌ PDF.js loading timeout after 30 seconds');
+        setPdfLoadingStatus('failed');
+        clearInterval(checkInterval);
+        return;
+      }
+    }, 1000); // Check every second
+  };
+
   // Fetch user data
   const fetchUserData = async () => {
     if (!session) return;
@@ -772,6 +805,14 @@ function DocumentComparePage() {
   useEffect(() => {
     if (session) {
       fetchUserData();
+    }
+    
+    // Start checking PDF.js loading after component mounts
+    if (typeof window !== 'undefined') {
+      // Small delay to let the scripts load
+      setTimeout(() => {
+        checkPDFJSLoading();
+      }, 1000);
     }
   }, [session]);
 
@@ -869,6 +910,12 @@ function DocumentComparePage() {
 
     if (!session) {
       alert('Please sign in to compare documents.');
+      return;
+    }
+
+    // Special check for PDF files
+    if (fileType === 'pdf' && pdfLoadingStatus !== 'loaded') {
+      setError('PDF processing library is not ready. Please refresh the page and try again.');
       return;
     }
 
@@ -1301,7 +1348,7 @@ function DocumentComparePage() {
     </div>
   );
 
-  // PDF Options Component
+  // PDF Options Component with Loading Status
   const PdfOptionsComponent = () => (
     <div style={{
       background: 'white',
@@ -1314,6 +1361,46 @@ function DocumentComparePage() {
       <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '20px', color: '#1f2937' }}>
         📑 PDF Comparison Options
       </h3>
+
+      {/* PDF.js Loading Status */}
+      {pdfLoadingStatus === 'checking' && (
+        <div style={{
+          background: '#fffbeb',
+          border: '2px solid #f59e0b',
+          borderRadius: '8px',
+          padding: '15px',
+          marginBottom: '20px',
+          color: '#92400e'
+        }}>
+          ⏳ Loading PDF processing engine... Please wait.
+        </div>
+      )}
+
+      {pdfLoadingStatus === 'failed' && (
+        <div style={{
+          background: '#fef2f2',
+          border: '2px solid #dc2626',
+          borderRadius: '8px',
+          padding: '15px',
+          marginBottom: '20px',
+          color: '#dc2626'
+        }}>
+          ❌ PDF processing engine failed to load. Please refresh the page and try again.
+        </div>
+      )}
+
+      {pdfLoadingStatus === 'loaded' && (
+        <div style={{
+          background: '#f0fdf4',
+          border: '2px solid #22c55e',
+          borderRadius: '8px',
+          padding: '15px',
+          marginBottom: '20px',
+          color: '#166534'
+        }}>
+          ✅ PDF processing engine ready!
+        </div>
+      )}
 
       <div style={{
         display: 'grid',
@@ -1334,6 +1421,7 @@ function DocumentComparePage() {
               border: '1px solid #e5e7eb',
               borderRadius: '6px'
             }}
+            disabled={pdfLoadingStatus !== 'loaded'}
           >
             <option value="text">Text content</option>
             <option value="visual">Visual appearance</option>
@@ -1341,32 +1429,35 @@ function DocumentComparePage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: pdfLoadingStatus === 'loaded' ? 'pointer' : 'not-allowed' }}>
             <input
               type="checkbox"
               checked={pdfOptions.ignoreFormatting}
               onChange={(e) => setPdfOptions({...pdfOptions, ignoreFormatting: e.target.checked})}
               style={{ accentColor: '#2563eb' }}
+              disabled={pdfLoadingStatus !== 'loaded'}
             />
             <span>Ignore formatting</span>
           </label>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: pdfLoadingStatus === 'loaded' ? 'pointer' : 'not-allowed' }}>
             <input
               type="checkbox"
               checked={pdfOptions.pageByPage}
               onChange={(e) => setPdfOptions({...pdfOptions, pageByPage: e.target.checked})}
               style={{ accentColor: '#2563eb' }}
+              disabled={pdfLoadingStatus !== 'loaded'}
             />
             <span>Page-by-page comparison</span>
           </label>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: pdfLoadingStatus === 'loaded' ? 'pointer' : 'not-allowed' }}>
             <input
               type="checkbox"
               checked={pdfOptions.includeImages}
               onChange={(e) => setPdfOptions({...pdfOptions, includeImages: e.target.checked})}
               style={{ accentColor: '#2563eb' }}
+              disabled={pdfLoadingStatus !== 'loaded'}
             />
             <span>Include images</span>
           </label>
@@ -1375,19 +1466,19 @@ function DocumentComparePage() {
 
       <button
         onClick={handleCompareFiles}
-        disabled={loading}
+        disabled={loading || pdfLoadingStatus !== 'loaded'}
         style={{
-          background: loading ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+          background: loading || pdfLoadingStatus !== 'loaded' ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
           color: 'white',
           border: 'none',
           padding: '12px 24px',
           borderRadius: '8px',
           fontSize: '1rem',
           fontWeight: '600',
-          cursor: loading ? 'not-allowed' : 'pointer'
+          cursor: loading || pdfLoadingStatus !== 'loaded' ? 'not-allowed' : 'pointer'
         }}
       >
-        {loading ? 'Comparing...' : '🚀 Compare PDF Files'}
+        {loading ? 'Comparing...' : pdfLoadingStatus !== 'loaded' ? 'PDF Engine Loading...' : '🚀 Compare PDF Files'}
       </button>
     </div>
   );
@@ -1468,27 +1559,81 @@ function DocumentComparePage() {
         <Head>
           <title>VeriDiff - Document Comparison</title>
           
-          {/* SIMPLIFIED PDF.js Loading - Reliable Version */}
-          <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
-            onLoad="console.log('✅ PDF.js loaded successfully');"
-            onError="console.error('❌ PDF.js failed to load');"
-          ></script>
-          
-          {/* Simple PDF.js Worker Configuration */}
+          {/* IMPROVED PDF.js Loading with Multiple CDN Fallbacks */}
           <script dangerouslySetInnerHTML={{
             __html: `
-              window.addEventListener('load', function() {
-                if (typeof window.pdfjsLib !== 'undefined') {
-                  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 
-                    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                  window.pdfJsReady = true;
-                  console.log('✅ PDF.js worker configured and ready');
-                } else {
-                  console.error('❌ PDF.js library not available');
-                  window.pdfJsError = true;
+              (function() {
+                console.log('🔧 Starting enhanced PDF.js loading process...');
+                
+                // Try multiple CDN sources
+                const pdfSources = [
+                  {
+                    lib: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+                    worker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+                  },
+                  {
+                    lib: 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js',
+                    worker: 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+                  },
+                  {
+                    lib: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+                    worker: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+                  }
+                ];
+                
+                let currentSourceIndex = 0;
+                
+                function loadPDFJS() {
+                  if (currentSourceIndex >= pdfSources.length) {
+                    console.error('❌ All PDF.js sources failed to load');
+                    window.pdfJsError = true;
+                    return;
+                  }
+                  
+                  const source = pdfSources[currentSourceIndex];
+                  console.log(\`📚 Attempting to load PDF.js from source \${currentSourceIndex + 1}/\${pdfSources.length}\`);
+                  
+                  const script = document.createElement('script');
+                  script.src = source.lib;
+                  
+                  script.onload = function() {
+                    console.log(\`✅ PDF.js library loaded from source \${currentSourceIndex + 1}\`);
+                    
+                    // Wait a bit for pdfjsLib to be available
+                    setTimeout(function() {
+                      if (typeof window.pdfjsLib !== 'undefined') {
+                        try {
+                          window.pdfjsLib.GlobalWorkerOptions.workerSrc = source.worker;
+                          window.pdfJsReady = true;
+                          console.log('✅ PDF.js worker configured and ready');
+                        } catch (error) {
+                          console.error('❌ PDF.js worker configuration failed:', error);
+                          window.pdfJsError = true;
+                        }
+                      } else {
+                        console.error('❌ PDF.js library object not available');
+                        currentSourceIndex++;
+                        loadPDFJS();
+                      }
+                    }, 500);
+                  };
+                  
+                  script.onerror = function() {
+                    console.warn(\`⚠️ PDF.js source \${currentSourceIndex + 1} failed, trying next...\`);
+                    currentSourceIndex++;
+                    loadPDFJS();
+                  };
+                  
+                  document.head.appendChild(script);
                 }
-              });
+                
+                // Start loading process when DOM is ready
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', loadPDFJS);
+                } else {
+                  loadPDFJS();
+                }
+              })();
             `
           }} />
         </Head>
