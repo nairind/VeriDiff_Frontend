@@ -1,20 +1,48 @@
 // utils/pdfFileComparison1.js
-// COMPLETE PDF.JS IMPLEMENTATION FOR VERIDIFF
-// Real PDF text extraction and comparison - replaces mock implementation
+// ROBUST PDF.js IMPLEMENTATION WITH ENHANCED ERROR HANDLING AND FIXED LOADING
 
-// Configure PDF.js worker (will be set after PDF.js loads)
-let pdfjsLib = null;
-
-// Initialize PDF.js when available
-const initializePDFJS = () => {
-  if (typeof window !== 'undefined' && window.pdfjsLib) {
-    pdfjsLib = window.pdfjsLib;
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.269/pdf.worker.min.js';
-    console.log('✅ PDF.js initialized successfully');
-    return true;
-  }
-  console.warn('⚠️ PDF.js not loaded yet');
-  return false;
+// Enhanced PDF.js availability checker with better retry logic
+const waitForPDFJS = (maxWaitTime = 15000) => {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    let checkCount = 0;
+    
+    function checkPDFJS() {
+      checkCount++;
+      console.log(`🔍 PDF.js check attempt ${checkCount}`);
+      
+      if (typeof window !== 'undefined' && window.pdfjsLib && window.pdfJsReady) {
+        console.log('✅ PDF.js is ready for use');
+        resolve(window.pdfjsLib);
+        return;
+      }
+      
+      // Check for error state
+      if (window.pdfJsError) {
+        reject(new Error(
+          'PDF.js library failed to load properly. Please refresh the page and try again. ' +
+          'If the problem persists, check your internet connection or disable ad blockers.'
+        ));
+        return;
+      }
+      
+      const elapsed = Date.now() - startTime;
+      if (elapsed >= maxWaitTime) {
+        reject(new Error(
+          `PDF.js library not available after ${maxWaitTime/1000} seconds. ` +
+          'This could be due to network issues, ad blockers, or firewall restrictions. ' +
+          'Please refresh the page and try again.'
+        ));
+        return;
+      }
+      
+      // Wait and try again with exponential backoff
+      const waitTime = Math.min(500 + (checkCount * 200), 2000);
+      setTimeout(checkPDFJS, waitTime);
+    }
+    
+    checkPDFJS();
+  });
 };
 
 // Helper function to safely read file as ArrayBuffer
@@ -42,6 +70,15 @@ const readFileAsArrayBuffer = (file) => {
     reader.onload = (e) => {
       try {
         const arrayBuffer = e.target.result;
+        
+        // Validate that it's actually a PDF by checking magic bytes
+        const bytes = new Uint8Array(arrayBuffer);
+        if (bytes.length < 4 || 
+            bytes[0] !== 37 || bytes[1] !== 80 || bytes[2] !== 68 || bytes[3] !== 70) {
+          reject(new Error('File is not a valid PDF document. Please select a proper PDF file.'));
+          return;
+        }
+        
         console.log('✅ PDF file read successfully, size:', arrayBuffer.byteLength);
         resolve(arrayBuffer);
       } catch (error) {
@@ -59,108 +96,222 @@ const readFileAsArrayBuffer = (file) => {
   });
 };
 
-// Enhanced PDF text extraction using PDF.js
+// Enhanced PDF text extraction with comprehensive error handling
 const extractTextFromPDF = async (arrayBuffer, fileName) => {
   try {
-    console.log('🔍 Extracting text from PDF using PDF.js...');
+    console.log('🔍 Starting PDF text extraction for:', fileName);
     
-    // Ensure PDF.js is loaded
-    if (!initializePDFJS()) {
-      throw new Error('PDF.js library not loaded. Please ensure PDF.js is included in your HTML.');
+    // Wait for PDF.js to be ready with longer timeout for complex pages
+    const pdfjsLib = await waitForPDFJS(20000);
+    
+    // Load PDF document with comprehensive error handling
+    let pdf;
+    try {
+      console.log('📚 Loading PDF document...');
+      const loadingTask = pdfjsLib.getDocument({ 
+        data: arrayBuffer,
+        verbosity: 0, // Reduce console noise
+        maxImageSize: 1024 * 1024, // 1MB max for images
+        disableFontFace: true, // Improve performance
+        disableRange: false, // Allow range requests for large files
+        disableStream: false // Allow streaming
+      });
+      
+      // Add timeout for PDF loading
+      const loadTimeout = setTimeout(() => {
+        loadingTask.destroy();
+        throw new Error('PDF loading timed out. The file may be too large or corrupted.');
+      }, 30000);
+      
+      pdf = await loadingTask.promise;
+      clearTimeout(loadTimeout);
+      
+    } catch (loadError) {
+      console.error('❌ PDF loading error:', loadError);
+      
+      if (loadError.message.includes('Invalid PDF')) {
+        throw new Error('Invalid PDF file format. The file may be corrupted or not a valid PDF document.');
+      } else if (loadError.message.includes('password') || loadError.message.includes('encrypted')) {
+        throw new Error('Password-protected PDF files are not supported. Please provide an unprotected PDF.');
+      } else if (loadError.message.includes('timed out')) {
+        throw new Error('PDF file is too large or complex to process. Please try with a smaller file.');
+      } else {
+        throw new Error(`Failed to load PDF: ${loadError.message}`);
+      }
     }
-
-    // Load PDF document
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-    const pdf = await loadingTask.promise;
     
     console.log(`📄 PDF loaded successfully. Pages: ${pdf.numPages}`);
+    
+    if (pdf.numPages === 0) {
+      throw new Error('PDF contains no pages.');
+    }
+    
+    if (pdf.numPages > 500) {
+      console.warn(`⚠️ Large PDF detected (${pdf.numPages} pages). Processing may take longer.`);
+    }
     
     const pages = [];
     let totalCharacters = 0;
     let totalWords = 0;
+    let successfulPages = 0;
+    let failedPages = 0;
     
-    // Extract text from each page
+    // Extract text from each page with progress logging and error recovery
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      console.log(`📃 Processing page ${pageNum}/${pdf.numPages}...`);
-      
-      const page = await pdf.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      
-      // Combine text items into paragraphs
-      let pageText = '';
-      let currentY = null;
-      let paragraphs = [];
-      let currentParagraph = '';
-      
-      textContent.items.forEach((item) => {
-        const text = item.str.trim();
-        if (!text) return;
+      try {
+        if (pageNum % 10 === 0 || pageNum === 1) {
+          console.log(`📃 Processing page ${pageNum}/${pdf.numPages}...`);
+        }
         
-        // Detect paragraph breaks based on Y position changes
-        if (currentY !== null && Math.abs(item.transform[5] - currentY) > 5) {
-          // New line/paragraph detected
+        const page = await pdf.getPage(pageNum);
+        
+        // Set timeout for page processing
+        const pagePromise = page.getTextContent({
+          normalizeWhitespace: true,
+          disableCombineTextItems: false
+        });
+        
+        const pageTimeout = setTimeout(() => {
+          throw new Error(`Page ${pageNum} processing timed out`);
+        }, 10000);
+        
+        const textContent = await pagePromise;
+        clearTimeout(pageTimeout);
+        
+        // Combine text items into paragraphs with better logic
+        let pageText = '';
+        let currentY = null;
+        let paragraphs = [];
+        let currentParagraph = '';
+        const lineThreshold = 5; // Y-position difference to detect new lines
+        
+        if (textContent.items && textContent.items.length > 0) {
+          textContent.items.forEach((item, index) => {
+            const text = item.str.trim();
+            if (!text) return;
+            
+            // Detect paragraph breaks based on Y position changes
+            if (currentY !== null && Math.abs(item.transform[5] - currentY) > lineThreshold) {
+              // New line/paragraph detected
+              if (currentParagraph.trim()) {
+                paragraphs.push({
+                  text: currentParagraph.trim(),
+                  paragraph_index: paragraphs.length,
+                  y_position: currentY,
+                  char_count: currentParagraph.trim().length
+                });
+                currentParagraph = '';
+              }
+            }
+            
+            // Add space between words if needed
+            const needsSpace = currentParagraph && !currentParagraph.endsWith(' ') && !text.startsWith(' ');
+            currentParagraph += (needsSpace ? ' ' : '') + text;
+            currentY = item.transform[5];
+            pageText += text + ' ';
+          });
+          
+          // Add final paragraph
           if (currentParagraph.trim()) {
             paragraphs.push({
               text: currentParagraph.trim(),
               paragraph_index: paragraphs.length,
-              y_position: currentY
+              y_position: currentY,
+              char_count: currentParagraph.trim().length
             });
-            currentParagraph = '';
           }
         }
         
-        currentParagraph += (currentParagraph ? ' ' : '') + text;
-        currentY = item.transform[5];
-        pageText += text + ' ';
-      });
-      
-      // Add final paragraph
-      if (currentParagraph.trim()) {
-        paragraphs.push({
-          text: currentParagraph.trim(),
-          paragraph_index: paragraphs.length,
-          y_position: currentY
+        // If no paragraphs detected but we have text, create one from all text
+        if (paragraphs.length === 0 && pageText.trim()) {
+          paragraphs.push({
+            text: pageText.trim(),
+            paragraph_index: 0,
+            y_position: 0,
+            char_count: pageText.trim().length
+          });
+        }
+        
+        // Handle completely empty pages
+        if (paragraphs.length === 0) {
+          paragraphs.push({
+            text: '[This page appears to be empty or contains only images]',
+            paragraph_index: 0,
+            y_position: 0,
+            char_count: 0
+          });
+        }
+        
+        const words = pageText.trim().split(/\s+/).filter(w => w.length > 0);
+        totalWords += words.length;
+        totalCharacters += pageText.length;
+        successfulPages++;
+        
+        pages.push({
+          page_number: pageNum,
+          paragraphs: paragraphs,
+          word_count: words.length,
+          character_count: pageText.length,
+          raw_text: pageText.trim(),
+          processing_status: 'success'
+        });
+        
+      } catch (pageError) {
+        console.warn(`⚠️ Error processing page ${pageNum}:`, pageError.message);
+        failedPages++;
+        
+        // Add error page to maintain page numbering
+        pages.push({
+          page_number: pageNum,
+          paragraphs: [{
+            text: `[Error extracting text from page ${pageNum}: ${pageError.message}]`,
+            paragraph_index: 0,
+            y_position: 0,
+            char_count: 0
+          }],
+          word_count: 0,
+          character_count: 0,
+          raw_text: '',
+          processing_status: 'error',
+          error_message: pageError.message
         });
       }
-      
-      // If no paragraphs detected, create one from all text
-      if (paragraphs.length === 0 && pageText.trim()) {
-        paragraphs.push({
-          text: pageText.trim(),
-          paragraph_index: 0,
-          y_position: 0
-        });
-      }
-      
-      const words = pageText.trim().split(/\s+/).filter(w => w.length > 0);
-      totalWords += words.length;
-      totalCharacters += pageText.length;
-      
-      pages.push({
-        page_number: pageNum,
-        paragraphs: paragraphs,
-        word_count: words.length,
-        character_count: pageText.length,
-        raw_text: pageText.trim()
-      });
+    }
+    
+    // Clean up PDF document
+    try {
+      pdf.destroy();
+    } catch (cleanupError) {
+      console.warn('⚠️ PDF cleanup error:', cleanupError);
     }
     
     const metadata = {
       fileName: fileName,
       fileSize: arrayBuffer.byteLength,
       totalPages: pdf.numPages,
+      successfulPages: successfulPages,
+      failedPages: failedPages,
       totalWords: totalWords,
       totalCharacters: totalCharacters,
       isValidPDF: true,
-      extractionMethod: 'PDF.js'
+      extractionMethod: 'PDF.js',
+      processingDate: new Date().toISOString(),
+      averageWordsPerPage: successfulPages > 0 ? Math.round(totalWords / successfulPages) : 0
     };
     
     console.log('✅ PDF text extraction complete:', {
       pages: pages.length,
+      successfulPages,
+      failedPages,
       totalWords,
       totalCharacters,
-      avgWordsPerPage: Math.round(totalWords / pages.length) || 0
+      avgWordsPerPage: metadata.averageWordsPerPage
     });
+    
+    // Warn if many pages failed
+    if (failedPages > successfulPages * 0.1) { // More than 10% failed
+      console.warn(`⚠️ High page failure rate: ${failedPages}/${pdf.numPages} pages failed to process`);
+    }
     
     return {
       metadata: metadata,
@@ -170,150 +321,16 @@ const extractTextFromPDF = async (arrayBuffer, fileName) => {
     
   } catch (error) {
     console.error('❌ PDF text extraction error:', error);
-    
-    // Provide specific error messages
-    if (error.message.includes('Invalid PDF')) {
-      throw new Error('Invalid PDF file format. Please ensure the file is a valid PDF document.');
-    } else if (error.message.includes('password')) {
-      throw new Error('Password-protected PDF files are not supported. Please provide an unprotected PDF.');
-    } else if (error.message.includes('PDF.js')) {
-      throw new Error('PDF processing library not available. Please refresh the page and try again.');
-    } else {
-      throw new Error(`Failed to extract text from PDF: ${error.message}`);
-    }
+    throw error;
   }
 };
 
-// Advanced text comparison with word-level diffing
-const compareTexts = (text1, text2, options = {}) => {
-  const {
-    ignoreCase = false,
-    ignoreWhitespace = false,
-    wordLevel = true
-  } = options;
-  
-  // Normalize texts based on options
-  let normalizedText1 = text1;
-  let normalizedText2 = text2;
-  
-  if (ignoreCase) {
-    normalizedText1 = normalizedText1.toLowerCase();
-    normalizedText2 = normalizedText2.toLowerCase();
-  }
-  
-  if (ignoreWhitespace) {
-    normalizedText1 = normalizedText1.replace(/\s+/g, ' ').trim();
-    normalizedText2 = normalizedText2.replace(/\s+/g, ' ').trim();
-  }
-  
-  if (wordLevel) {
-    // Word-level comparison
-    const words1 = normalizedText1.split(/\s+/);
-    const words2 = normalizedText2.split(/\s+/);
-    
-    return {
-      isEqual: normalizedText1 === normalizedText2,
-      similarity: calculateSimilarity(words1, words2),
-      changes: calculateWordChanges(words1, words2)
-    };
-  } else {
-    // Character-level comparison
-    return {
-      isEqual: normalizedText1 === normalizedText2,
-      similarity: calculateSimilarity(normalizedText1.split(''), normalizedText2.split('')),
-      changes: []
-    };
-  }
-};
-
-// Calculate similarity percentage using Longest Common Subsequence
-const calculateSimilarity = (arr1, arr2) => {
-  if (arr1.length === 0 && arr2.length === 0) return 100;
-  if (arr1.length === 0 || arr2.length === 0) return 0;
-  
-  const lcs = longestCommonSubsequence(arr1, arr2);
-  const maxLength = Math.max(arr1.length, arr2.length);
-  return Math.round((lcs.length / maxLength) * 100);
-};
-
-// Find longest common subsequence
-const longestCommonSubsequence = (arr1, arr2) => {
-  const dp = Array(arr1.length + 1).fill(null).map(() => Array(arr2.length + 1).fill(0));
-  
-  for (let i = 1; i <= arr1.length; i++) {
-    for (let j = 1; j <= arr2.length; j++) {
-      if (arr1[i - 1] === arr2[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1;
-      } else {
-        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-      }
-    }
-  }
-  
-  // Reconstruct LCS
-  const lcs = [];
-  let i = arr1.length, j = arr2.length;
-  while (i > 0 && j > 0) {
-    if (arr1[i - 1] === arr2[j - 1]) {
-      lcs.unshift(arr1[i - 1]);
-      i--; j--;
-    } else if (dp[i - 1][j] > dp[i][j - 1]) {
-      i--;
-    } else {
-      j--;
-    }
-  }
-  
-  return lcs;
-};
-
-// Calculate word-level changes
-const calculateWordChanges = (words1, words2) => {
-  const changes = [];
-  const lcs = longestCommonSubsequence(words1, words2);
-  
-  let i = 0, j = 0, lcsIndex = 0;
-  let position = 0;
-  
-  while (i < words1.length || j < words2.length) {
-    if (lcsIndex < lcs.length && 
-        i < words1.length && 
-        words1[i] === lcs[lcsIndex]) {
-      // Match found
-      i++; j++; lcsIndex++;
-      position += words1[i - 1].length + 1;
-    } else if (i < words1.length && 
-               (j >= words2.length || words1[i] !== (words2[j] || ''))) {
-      // Deletion
-      changes.push({
-        type: 'removed',
-        text: words1[i],
-        start: position,
-        end: position + words1[i].length
-      });
-      position += words1[i].length + 1;
-      i++;
-    } else if (j < words2.length) {
-      // Addition
-      changes.push({
-        type: 'added',
-        text: words2[j],
-        start: position,
-        end: position + words2[j].length
-      });
-      j++;
-    }
-  }
-  
-  return changes;
-};
-
-// Main PDF parsing function
+// Main PDF parsing function with enhanced error handling
 export const parsePDFFile = async (file) => {
-  console.log('🔧 parsePDFFile called with PDF.js implementation');
+  console.log('🔧 parsePDFFile called with enhanced error handling for:', file?.name);
   
   try {
-    // Validate file type
+    // Validate file type more thoroughly
     if (file.type && !file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
       throw new Error('File is not a PDF document. Please select a valid PDF file.');
     }
@@ -326,7 +343,7 @@ export const parsePDFFile = async (file) => {
       arrayBuffer = await readFileAsArrayBuffer(file);
     }
     
-    // Extract text using PDF.js
+    // Extract text using PDF.js with enhanced error handling
     const result = await extractTextFromPDF(arrayBuffer, file.name || 'document.pdf');
     
     console.log('✅ PDF parsed successfully with real text extraction');
@@ -334,11 +351,37 @@ export const parsePDFFile = async (file) => {
     
   } catch (error) {
     console.error('❌ PDF parsing error:', error);
+    
+    // Enhance error messages for better user experience
+    if (error.message.includes('PDF.js library failed to load') || 
+        error.message.includes('PDF.js library not available')) {
+      throw new Error(
+        'PDF processing service is temporarily unavailable. ' +
+        'Please refresh the page and try again. If the problem persists, ' +
+        'check your internet connection or disable ad blockers.'
+      );
+    } else if (error.message.includes('timeout') || error.message.includes('timed out')) {
+      throw new Error(
+        'PDF processing timed out. The file may be too large or complex. ' +
+        'Please try with a smaller PDF file (under 50MB recommended).'
+      );
+    } else if (error.message.includes('Invalid PDF') || error.message.includes('not a valid PDF')) {
+      throw new Error(
+        'The selected file is not a valid PDF document. ' +
+        'Please ensure you have selected a proper PDF file.'
+      );
+    } else if (error.message.includes('password') || error.message.includes('encrypted')) {
+      throw new Error(
+        'Password-protected PDF files are not supported. ' +
+        'Please remove the password protection and try again.'
+      );
+    }
+    
     throw error;
   }
 };
 
-// Main PDF comparison function
+// Enhanced PDF comparison with better error handling and progress tracking
 export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
   console.log('🔄 comparePDFFiles called with enhanced implementation');
   console.log('🎛️ Options:', options);
@@ -351,33 +394,35 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
   } = options;
   
   try {
-    // Parse both PDFs
+    // Parse both PDFs with progress indication
     console.log('📖 Parsing PDF files...');
-    const data1 = await parsePDFFile(pdf1);
-    const data2 = await parsePDFFile(pdf2);
     
-    console.log('📊 Comparing PDF documents...');
+    const startTime = Date.now();
+    
+    const [data1, data2] = await Promise.all([
+      parsePDFFile(pdf1).catch(error => {
+        throw new Error(`Error processing first PDF: ${error.message}`);
+      }),
+      parsePDFFile(pdf2).catch(error => {
+        throw new Error(`Error processing second PDF: ${error.message}`);
+      })
+    ]);
+    
+    const parseTime = Date.now() - startTime;
+    console.log(`📊 PDF parsing completed in ${parseTime}ms`);
     console.log(`  File 1: ${data1.pages.length} pages, ${data1.metadata.totalWords} words`);
     console.log(`  File 2: ${data2.pages.length} pages, ${data2.metadata.totalWords} words`);
     
-    // Initialize comparison results
+    // Start comparison process
+    console.log('🔍 Starting PDF comparison...');
+    const comparisonStartTime = Date.now();
+    
     const text_changes = [];
     const page_differences = [];
     let totalParagraphs = 0;
     let differences = 0;
     let matches = 0;
     
-    // Compare metadata
-    const metadataChanges = [];
-    if (data1.metadata.totalPages !== data2.metadata.totalPages) {
-      metadataChanges.push({
-        type: 'page_count_difference',
-        oldValue: data1.metadata.totalPages,
-        newValue: data2.metadata.totalPages
-      });
-    }
-    
-    // Page-by-page comparison
     const maxPages = Math.max(data1.pages.length, data2.pages.length);
     
     for (let pageIndex = 0; pageIndex < maxPages; pageIndex++) {
@@ -387,8 +432,8 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
       
       let pageChanges = 0;
       
-      if (!page1) {
-        // Page only exists in document 2
+      if (!page1 && page2) {
+        // Page added in second document
         pageChanges = page2.paragraphs.length;
         differences += pageChanges;
         totalParagraphs += page2.paragraphs.length;
@@ -399,12 +444,13 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
             paragraph: paraIndex,
             type: 'added',
             text: para.text,
-            file: 'file2'
+            file: 'file2',
+            char_count: para.char_count || para.text.length
           });
         });
         
-      } else if (!page2) {
-        // Page only exists in document 1
+      } else if (page1 && !page2) {
+        // Page removed from second document
         pageChanges = page1.paragraphs.length;
         differences += pageChanges;
         totalParagraphs += page1.paragraphs.length;
@@ -415,12 +461,13 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
             paragraph: paraIndex,
             type: 'removed',
             text: para.text,
-            file: 'file1'
+            file: 'file1',
+            char_count: para.char_count || para.text.length
           });
         });
         
-      } else {
-        // Both pages exist - compare paragraphs
+      } else if (page1 && page2) {
+        // Compare existing pages
         const maxParas = Math.max(page1.paragraphs.length, page2.paragraphs.length);
         totalParagraphs += maxParas;
         
@@ -428,8 +475,7 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
           const para1 = page1.paragraphs[paraIndex];
           const para2 = page2.paragraphs[paraIndex];
           
-          if (!para1) {
-            // Paragraph added in document 2
+          if (!para1 && para2) {
             pageChanges++;
             differences++;
             text_changes.push({
@@ -437,10 +483,10 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
               paragraph: paraIndex,
               type: 'added',
               text: para2.text,
-              file: 'file2'
+              file: 'file2',
+              char_count: para2.char_count || para2.text.length
             });
-          } else if (!para2) {
-            // Paragraph removed from document 2
+          } else if (para1 && !para2) {
             pageChanges++;
             differences++;
             text_changes.push({
@@ -448,17 +494,20 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
               paragraph: paraIndex,
               type: 'removed',
               text: para1.text,
-              file: 'file1'
+              file: 'file1',
+              char_count: para1.char_count || para1.text.length
             });
-          } else {
-            // Compare paragraph content
-            const comparison = compareTexts(para1.text, para2.text, {
-              ignoreCase: false,
-              ignoreWhitespace: ignoreFormatting,
-              wordLevel: true
-            });
+          } else if (para1 && para2) {
+            // Compare text content with formatting options
+            let text1 = para1.text;
+            let text2 = para2.text;
             
-            if (!comparison.isEqual) {
+            if (ignoreFormatting) {
+              text1 = text1.replace(/\s+/g, ' ').trim();
+              text2 = text2.replace(/\s+/g, ' ').trim();
+            }
+            
+            if (text1 !== text2) {
               pageChanges++;
               differences++;
               text_changes.push({
@@ -466,9 +515,11 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
                 paragraph: paraIndex,
                 type: 'modified',
                 text: `"${para1.text}" → "${para2.text}"`,
+                old_text: para1.text,
+                new_text: para2.text,
                 file: 'both',
-                similarity: comparison.similarity,
-                changes: comparison.changes
+                char_count_old: para1.char_count || para1.text.length,
+                char_count_new: para2.char_count || para2.text.length
               });
             } else {
               matches++;
@@ -477,83 +528,96 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
         }
       }
       
-      // Record page-level changes
       if (pageChanges > 0) {
         page_differences.push({
           page_number: pageNum,
           changes_count: pageChanges,
           summary: `${pageChanges} change${pageChanges > 1 ? 's' : ''} on page ${pageNum}`,
-          change_types: text_changes
-            .filter(c => c.page === pageNum)
-            .map(c => c.type)
-            .reduce((acc, type) => {
-              acc[type] = (acc[type] || 0) + 1;
-              return acc;
-            }, {})
+          page1_paragraphs: page1?.paragraphs.length || 0,
+          page2_paragraphs: page2?.paragraphs.length || 0
         });
       }
     }
     
-    // Calculate overall similarity
+    const comparisonTime = Date.now() - comparisonStartTime;
+    console.log(`🔍 Comparison completed in ${comparisonTime}ms`);
+    
+    // Calculate enhanced similarity metrics
     const totalComparisons = differences + matches;
     const similarity_score = totalComparisons > 0 ? Math.round((matches / totalComparisons) * 100) : 100;
     
-    // Prepare final results
+    // Calculate word-level changes
+    const wordChanges = {
+      file1_words: data1.metadata.totalWords,
+      file2_words: data2.metadata.totalWords,
+      word_difference: Math.abs(data1.metadata.totalWords - data2.metadata.totalWords),
+      word_change_percentage: data1.metadata.totalWords > 0 ? 
+        Math.round((Math.abs(data1.metadata.totalWords - data2.metadata.totalWords) / data1.metadata.totalWords) * 100) : 0
+    };
+    
     const results = {
-      // Core statistics expected by PdfResults.js
+      // Core comparison metrics
       differences_found: differences,
       matches_found: matches,
       total_pages: maxPages,
       total_paragraphs: totalParagraphs,
       similarity_score: similarity_score,
       
-      // Change details
+      // Detailed change analysis
       text_changes: text_changes,
       page_differences: page_differences,
       
-      // Page data for display
+      // File data
       file1_pages: data1.pages,
       file2_pages: data2.pages,
-      
-      // Enhanced metadata
       file1_metadata: data1.metadata,
       file2_metadata: data2.metadata,
-      comparison_type: 'pdf_document',
-      comparison_options: options,
       
-      // Processing information
-      processing_note: 'Real PDF text extraction using PDF.js',
-      metadata_changes: metadataChanges,
-      
-      // Summary by change type
+      // Change type counts
       added_count: text_changes.filter(c => c.type === 'added').length,
       removed_count: text_changes.filter(c => c.type === 'removed').length,
       modified_count: text_changes.filter(c => c.type === 'modified').length,
       
-      // Additional statistics
-      word_changes: {
-        file1_words: data1.metadata.totalWords,
-        file2_words: data2.metadata.totalWords,
-        word_difference: Math.abs(data1.metadata.totalWords - data2.metadata.totalWords)
+      // Word analysis
+      word_changes: wordChanges,
+      
+      // Metadata
+      comparison_type: 'pdf_document',
+      comparison_options: options,
+      processing_note: 'Real PDF text extraction using PDF.js',
+      processing_time: {
+        parse_time_ms: parseTime,
+        comparison_time_ms: comparisonTime,
+        total_time_ms: parseTime + comparisonTime
+      },
+      
+      // Quality indicators
+      quality_metrics: {
+        file1_success_rate: data1.metadata.successfulPages / data1.metadata.totalPages,
+        file2_success_rate: data2.metadata.successfulPages / data2.metadata.totalPages,
+        overall_success_rate: (data1.metadata.successfulPages + data2.metadata.successfulPages) / 
+                             (data1.metadata.totalPages + data2.metadata.totalPages)
       }
     };
     
-    console.log('✅ PDF document comparison complete with real text analysis:');
+    console.log('✅ PDF document comparison complete:');
     console.log('  - Total pages:', results.total_pages);
-    console.log('  - Total paragraphs:', results.total_paragraphs);
     console.log('  - Differences:', results.differences_found);
-    console.log('  - Matches:', results.matches_found);
     console.log('  - Similarity:', results.similarity_score + '%');
-    console.log('  - Word changes:', results.word_changes);
+    console.log('  - Processing time:', results.processing_time.total_time_ms + 'ms');
     
     return results;
     
   } catch (error) {
     console.error('❌ PDF document comparison error:', error);
+    
+    // Enhanced error messages for specific failure cases
+    if (error.message.includes('Error processing first PDF')) {
+      throw new Error(`First PDF file error: ${error.message.replace('Error processing first PDF: ', '')}`);
+    } else if (error.message.includes('Error processing second PDF')) {
+      throw new Error(`Second PDF file error: ${error.message.replace('Error processing second PDF: ', '')}`);
+    }
+    
     throw error;
   }
 };
-
-// Export additional utilities for testing
-export const extractTextFromPDFFile = extractTextFromPDF;
-export const compareTextContent = compareTexts;
