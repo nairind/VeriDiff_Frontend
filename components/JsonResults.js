@@ -35,48 +35,64 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     return 'unchanged';
   };
 
-  // Helper function to get styling for change types
+  // Helper function to get styling for change types with consistent highlighting
   const getChangeStyle = (changeType) => {
     switch (changeType) {
       case 'added':
         return {
-          backgroundColor: '#e6ffe6',
-          borderLeft: '4px solid #27ae60',
-          color: '#155724'
+          backgroundColor: '#dcfce7',
+          borderLeft: '3px solid #22c55e',
+          color: '#166534'
         };
       case 'removed':
         return {
-          backgroundColor: '#ffe6e6',
-          borderLeft: '4px solid #e74c3c',
-          color: '#721c24'
+          backgroundColor: '#fef2f2',
+          borderLeft: '3px solid #ef4444',
+          color: '#dc2626'
         };
       case 'modified':
         return {
-          backgroundColor: '#fff3cd',
-          borderLeft: '4px solid #ffc107',
-          color: '#856404'
+          backgroundColor: '#fef3c7',
+          borderLeft: '3px solid #f59e0b',
+          color: '#92400e'
         };
       default:
         return {
-          backgroundColor: '#f8f9fa',
-          borderLeft: '4px solid #e9ecef',
-          color: '#495057'
+          backgroundColor: 'transparent',
+          borderLeft: '3px solid transparent',
+          color: '#374151'
         };
     }
   };
 
-  // Recursive component to render JSON tree
-  const JsonTreeNode = ({ obj, path = '', level = 0, changeType = 'unchanged' }) => {
+  // Recursive component to render JSON tree with consistent highlighting
+  const JsonTreeNode = ({ obj, path = '', level = 0, fileNumber = 1 }) => {
     const indent = level * 20;
     
+    // Get change type for this specific path
+    const getChangeTypeForPath = (checkPath) => {
+      const change = changes.find(c => c.path === checkPath);
+      if (change) {
+        // For file 1: show 'removed' as removed, 'modified' as modified
+        // For file 2: show 'added' as added, 'modified' as modified  
+        if (change.type === 'removed' && fileNumber === 2) return 'unchanged';
+        if (change.type === 'added' && fileNumber === 1) return 'unchanged';
+        return change.type;
+      }
+      return 'unchanged';
+    };
+    
     if (obj === null) {
+      const changeType = getChangeTypeForPath(path);
       return (
         <div style={{ 
           marginLeft: `${indent}px`,
           ...getChangeStyle(changeType),
           padding: '2px 8px',
           fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-          fontSize: '13px'
+          fontSize: '13px',
+          borderRadius: '3px',
+          margin: '1px 0'
         }}>
           <span style={{ color: '#6b7280' }}>null</span>
         </div>
@@ -84,13 +100,16 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     }
 
     if (typeof obj !== 'object' || Array.isArray(obj)) {
+      const changeType = getChangeTypeForPath(path);
       return (
         <div style={{ 
           marginLeft: `${indent}px`,
           ...getChangeStyle(changeType),
           padding: '2px 8px',
           fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-          fontSize: '13px'
+          fontSize: '13px',
+          borderRadius: '3px',
+          margin: '1px 0'
         }}>
           <span style={{ color: typeof obj === 'string' ? '#059669' : '#2563eb' }}>
             {JSON.stringify(obj)}
@@ -101,18 +120,21 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
 
     const keys = Object.keys(obj);
     const isExpanded = expandedPaths.has(path || 'root');
+    const rootChangeType = getChangeTypeForPath(path);
 
     return (
       <div style={{ marginLeft: `${indent}px` }}>
         <div style={{
-          ...getChangeStyle(changeType),
+          ...getChangeStyle(rootChangeType),
           padding: '4px 8px',
           cursor: 'pointer',
           fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
           fontSize: '13px',
           display: 'flex',
           alignItems: 'center',
-          gap: '6px'
+          gap: '6px',
+          borderRadius: '3px',
+          margin: '1px 0'
         }}
         onClick={() => toggleExpanded(path || 'root')}
         >
@@ -136,30 +158,40 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           <div>
             {keys.map(key => {
               const childPath = path ? `${path}.${key}` : key;
-              const childChangeType = getChangeType(childPath);
+              const childChangeType = getChangeTypeForPath(childPath);
               
               return (
                 <div key={key} style={{ marginLeft: '20px' }}>
                   <div style={{
                     ...getChangeStyle(childChangeType),
-                    padding: '2px 8px',
+                    padding: '6px 8px',
                     fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
                     fontSize: '13px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '8px',
+                    borderRadius: '3px',
+                    margin: '1px 0',
+                    // Add a subtle border for differences to make them more obvious
+                    ...(childChangeType !== 'unchanged' ? {
+                      border: '1px solid rgba(0,0,0,0.1)',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                    } : {})
                   }}>
-                    <span style={{ color: '#7c3aed', fontWeight: '500' }}>"{key}":</span>
+                    <span style={{ color: '#7c3aed', fontWeight: '500', minWidth: 'fit-content' }}>
+                      "{key}":
+                    </span>
                     {typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key]) ? (
                       <JsonTreeNode 
                         obj={obj[key]} 
                         path={childPath} 
                         level={0}
-                        changeType={childChangeType}
+                        fileNumber={fileNumber}
                       />
                     ) : (
                       <span style={{ 
-                        color: typeof obj[key] === 'string' ? '#059669' : '#2563eb' 
+                        color: typeof obj[key] === 'string' ? '#059669' : '#2563eb',
+                        fontWeight: childChangeType !== 'unchanged' ? '600' : '400'
                       }}>
                         {JSON.stringify(obj[key])}
                       </span>
@@ -186,7 +218,7 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     );
   };
 
-  // Component for side-by-side JSON comparison
+  // Component for side-by-side JSON comparison with consistent highlighting
   const SideBySideView = () => (
     <div style={{
       display: 'grid',
@@ -214,7 +246,7 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           overflow: 'auto',
           padding: '12px'
         }}>
-          <JsonTreeNode obj={file1_content} path="root" />
+          <JsonTreeNode obj={file1_content} path="root" fileNumber={1} />
         </div>
       </div>
 
@@ -238,7 +270,7 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           overflow: 'auto',
           padding: '12px'
         }}>
-          <JsonTreeNode obj={file2_content} path="root" />
+          <JsonTreeNode obj={file2_content} path="root" fileNumber={2} />
         </div>
       </div>
     </div>
