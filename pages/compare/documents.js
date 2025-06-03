@@ -6,9 +6,9 @@ import AuthGuard from '../../components/auth/AuthGuard';
 
 // Import document-specific utilities
 import { compareTextFiles_main } from '../../utils/textFileComparison';
-import { parseJSONFile, compareJSONFiles } from '../../utils/jsonFileComparison';
-import { parseXMLFile, compareXMLFiles } from '../../utils/xmlFileComparison';
-import { parsePDFFile, comparePDFFiles } from '../../utils/pdfFileComparison';
+import { parseJSONFile, compareJSONFiles } from '../../utils/jsonFileComparison1';
+import { parseXMLFile, compareXMLFiles } from '../../utils/xmlFileComparison1';
+import { parsePDFFile, comparePDFFiles } from '../../utils/pdfFileComparison1';
 
 // Import format-specific result components
 import TextResults from '../../components/TextResults';
@@ -737,29 +737,20 @@ function DocumentComparePage() {
           
         case 'json':
           console.log('🐛 DEBUG: Processing JSON files...');
-          const json1Content = await readFileContent(file1);
-          const json2Content = await readFileContent(file2);
-          
-          const json1 = await parseJSONFile(json1Content);
-          const json2 = await parseJSONFile(json2Content);
-          result = await compareJSONFiles(json1, json2, jsonOptions);
+          // New simplified approach - utils handle file reading
+          result = await compareJSONFiles(file1, file2, jsonOptions);
           break;
           
         case 'xml':
           console.log('🐛 DEBUG: Processing XML files...');
-          const xml1Content = await readFileContent(file1);
-          const xml2Content = await readFileContent(file2);
-          
-          const xml1 = await parseXMLFile(xml1Content);
-          const xml2 = await parseXMLFile(xml2Content);
-          result = await compareXMLFiles(xml1, xml2, xmlOptions);
+          // New simplified approach - utils handle file reading
+          result = await compareXMLFiles(file1, file2, xmlOptions);
           break;
           
         case 'pdf':
           console.log('🐛 DEBUG: Processing PDF files...');
-          const pdf1 = await parsePDFFile(file1);
-          const pdf2 = await parsePDFFile(file2);
-          result = await comparePDFFiles(pdf1, pdf2, pdfOptions);
+          // New simplified approach - utils handle file reading
+          result = await comparePDFFiles(file1, file2, pdfOptions);
           break;
           
         default:
