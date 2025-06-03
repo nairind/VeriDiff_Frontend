@@ -37,6 +37,23 @@ export default function Home() {
         <meta name="description" content="Professional file comparison tools for business spreadsheets, PDF documents, and technical files. Excel comparison free forever!" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+        <style jsx>{`
+          .desktop-nav {
+            display: flex;
+            gap: 1.5rem;
+          }
+          .mobile-menu-btn {
+            display: none;
+          }
+          @media (max-width: 768px) {
+            .desktop-nav {
+              display: none;
+            }
+            .mobile-menu-btn {
+              display: block !important;
+            }
+          }
+        `}</style>
       </Head>
 
       {/* Header */}
@@ -70,7 +87,7 @@ export default function Home() {
           
           <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
             {/* Desktop Navigation */}
-            <div style={{ display: window.innerWidth > 768 ? 'flex' : 'none', gap: '1.5rem' }}>
+            <div className="desktop-nav" style={{ display: 'flex', gap: '1.5rem' }}>
               <button 
                 onClick={() => scrollToSection('tools')}
                 style={{
@@ -112,9 +129,10 @@ export default function Home() {
             
             {/* Mobile Menu Button */}
             <button 
+              className="mobile-menu-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{
-                display: window.innerWidth <= 768 ? 'block' : 'none',
+                display: 'none',
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
