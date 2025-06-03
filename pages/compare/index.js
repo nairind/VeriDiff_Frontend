@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import AuthGuard from '../components/auth/AuthGuard';
+import AuthGuard from '../../components/auth/AuthGuard';
 
 // ✅ KEEP: Excel/CSV utilities only
 import { parseCSVFile } from '../../utils/simpleCSVComparison';
