@@ -35,32 +35,36 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     return 'unchanged';
   };
 
-  // Helper function to get styling for change types with consistent highlighting
+  // Helper function to get styling for change types with MORE prominent highlighting
   const getChangeStyle = (changeType) => {
     switch (changeType) {
       case 'added':
         return {
           backgroundColor: '#dcfce7',
-          borderLeft: '3px solid #22c55e',
-          color: '#166534'
+          borderLeft: '4px solid #22c55e',
+          color: '#166534',
+          fontWeight: '600'
         };
       case 'removed':
         return {
           backgroundColor: '#fef2f2',
-          borderLeft: '3px solid #ef4444',
-          color: '#dc2626'
+          borderLeft: '4px solid #ef4444',
+          color: '#dc2626',
+          fontWeight: '600'
         };
       case 'modified':
         return {
           backgroundColor: '#fef3c7',
-          borderLeft: '3px solid #f59e0b',
-          color: '#92400e'
+          borderLeft: '4px solid #f59e0b',
+          color: '#92400e',
+          fontWeight: '600'
         };
       default:
         return {
           backgroundColor: 'transparent',
-          borderLeft: '3px solid transparent',
-          color: '#374151'
+          borderLeft: '4px solid transparent',
+          color: '#374151',
+          fontWeight: '400'
         };
     }
   };
@@ -72,12 +76,18 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     // Get change type for this specific path
     const getChangeTypeForPath = (checkPath) => {
       const change = changes.find(c => c.path === checkPath);
+      
+      // Debug logging
+      if (checkPath === 'age' || checkPath === 'department' || checkPath === 'salary' || checkPath === 'skills' || checkPath === 'manager') {
+        console.log(`🎨 Highlighting check for "${checkPath}" in file ${fileNumber}:`, {
+          change: change,
+          changeType: change?.type,
+          finalResult: change ? change.type : 'unchanged'
+        });
+      }
+      
       if (change) {
-        // For file 1: show 'removed' as removed, 'modified' as modified
-        // For file 2: show 'added' as added, 'modified' as modified  
-        if (change.type === 'removed' && fileNumber === 2) return 'unchanged';
-        if (change.type === 'added' && fileNumber === 1) return 'unchanged';
-        return change.type;
+        return change.type; // Return the actual change type for all files
       }
       return 'unchanged';
     };
