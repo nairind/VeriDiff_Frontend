@@ -202,13 +202,15 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: '20px',
-      height: '600px'
+      minHeight: '400px',
+      maxHeight: '600px'
     }}>
       {/* File 1 */}
       <div style={{
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        background: 'white'
       }}>
         <div style={{
           background: '#f8fafc',
@@ -220,12 +222,21 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
           📄 {file1Name || 'File 1'}
         </div>
         <div style={{
-          height: '100%',
+          height: '350px',
           overflow: 'auto',
           padding: '12px'
         }}>
-          {results.file1_parsed && (
+          {results?.file1_parsed ? (
             <XmlElement element={results.file1_parsed} />
+          ) : (
+            <div style={{ 
+              color: '#6b7280', 
+              fontStyle: 'italic',
+              padding: '20px',
+              textAlign: 'center' 
+            }}>
+              No XML structure to display
+            </div>
           )}
         </div>
       </div>
@@ -234,7 +245,8 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
       <div style={{
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        background: 'white'
       }}>
         <div style={{
           background: '#f8fafc',
@@ -246,12 +258,21 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
           📄 {file2Name || 'File 2'}
         </div>
         <div style={{
-          height: '100%',
+          height: '350px',
           overflow: 'auto',
           padding: '12px'
         }}>
-          {results.file2_parsed && (
+          {results?.file2_parsed ? (
             <XmlElement element={results.file2_parsed} />
+          ) : (
+            <div style={{ 
+              color: '#6b7280', 
+              fontStyle: 'italic',
+              padding: '20px',
+              textAlign: 'center' 
+            }}>
+              No XML structure to display
+            </div>
           )}
         </div>
       </div>
@@ -264,13 +285,15 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: '20px',
-      height: '600px'
+      minHeight: '400px',
+      maxHeight: '600px'
     }}>
       {/* File 1 Source */}
       <div style={{
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        background: 'white'
       }}>
         <div style={{
           background: '#f8fafc',
@@ -282,7 +305,7 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
           📄 {file1Name || 'File 1'} (Source)
         </div>
         <div style={{
-          height: '100%',
+          height: '350px',
           overflow: 'auto',
           padding: '12px',
           fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
@@ -291,7 +314,7 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
           whiteSpace: 'pre-wrap',
           background: '#f8f9fa'
         }}>
-          {file1_content}
+          {file1_content || 'No content available'}
         </div>
       </div>
 
@@ -299,7 +322,8 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
       <div style={{
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        background: 'white'
       }}>
         <div style={{
           background: '#f8fafc',
@@ -311,7 +335,7 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
           📄 {file2Name || 'File 2'} (Source)
         </div>
         <div style={{
-          height: '100%',
+          height: '350px',
           overflow: 'auto',
           padding: '12px',
           fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
@@ -320,7 +344,7 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
           whiteSpace: 'pre-wrap',
           background: '#f8f9fa'
         }}>
-          {file2_content}
+          {file2_content || 'No content available'}
         </div>
       </div>
     </div>
@@ -330,8 +354,6 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
   const ChangesSummary = () => {
     const allChanges = [...element_changes, ...attribute_changes];
     
-    if (allChanges.length === 0) return null;
-
     return (
       <div style={{
         border: '1px solid #e5e7eb',
@@ -348,64 +370,76 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
         }}>
           🔄 XML Changes Summary ({allChanges.length})
         </div>
-        <div style={{
-          maxHeight: '400px',
-          overflow: 'auto'
-        }}>
-          {allChanges.map((change, index) => (
-            <div
-              key={index}
-              style={{
-                ...getChangeStyle(change.type),
-                padding: '12px 16px',
-                borderBottom: '1px solid #e5e7eb',
-                fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-                fontSize: '13px'
-              }}
-            >
-              <div style={{ fontWeight: '600', marginBottom: '4px' }}>
-                📍 {change.path}
-              </div>
-              
-              {change.type === 'removed' && (
-                <div style={{ color: '#dc2626' }}>
-                  <strong>- Removed element:</strong> &lt;{change.elementName}&gt;
+        
+        {allChanges.length === 0 ? (
+          <div style={{
+            padding: '20px',
+            textAlign: 'center',
+            color: '#6b7280',
+            fontStyle: 'italic'
+          }}>
+            No changes detected. This might indicate an issue with the XML comparison logic.
+          </div>
+        ) : (
+          <div style={{
+            maxHeight: '400px',
+            overflow: 'auto'
+          }}>
+            {allChanges.map((change, index) => (
+              <div
+                key={index}
+                style={{
+                  ...getChangeStyle(change.type),
+                  padding: '12px 16px',
+                  borderBottom: '1px solid #e5e7eb',
+                  fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
+                  fontSize: '13px'
+                }}
+              >
+                <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                  📍 {change.path}
                 </div>
-              )}
-              
-              {change.type === 'added' && (
-                <div style={{ color: '#16a34a' }}>
-                  <strong>+ Added element:</strong> &lt;{change.elementName}&gt;
-                </div>
-              )}
-              
-              {change.type === 'modified' && (
-                <div>
+                
+                {change.type === 'removed' && (
                   <div style={{ color: '#dc2626' }}>
-                    <strong>- Old content:</strong> {change.oldValue}
+                    <strong>- Removed element:</strong> &lt;{change.elementName}&gt;
                   </div>
+                )}
+                
+                {change.type === 'added' && (
                   <div style={{ color: '#16a34a' }}>
-                    <strong>+ New content:</strong> {change.newValue}
+                    <strong>+ Added element:</strong> &lt;{change.elementName}&gt;
                   </div>
-                </div>
-              )}
-              
-              {change.type === 'attribute_changed' && (
-                <div>
-                  <div style={{ color: '#0c4a6e' }}>
-                    <strong>🏷️ Attribute "{change.attributeName}" changed:</strong>
+                )}
+                
+                {change.type === 'modified' && (
+                  <div>
+                    <div style={{ color: '#dc2626' }}>
+                      <strong>- Old content:</strong> {change.oldValue}
+                    </div>
+                    <div style={{ color: '#16a34a' }}>
+                      <strong>+ New content:</strong> {change.newValue}
+                    </div>
                   </div>
-                  <div style={{ color: '#dc2626', marginLeft: '16px' }}>
-                    <strong>- Old:</strong> {change.oldValue}
+                )}
+                
+                {change.type === 'attribute_changed' && (
+                  <div>
+                    <div style={{ color: '#0c4a6e' }}>
+                      <strong>🏷️ Attribute "{change.attributeName}" changed:</strong>
+                    </div>
+                    <div style={{ color: '#dc2626', marginLeft: '16px' }}>
+                      <strong>- Old:</strong> {change.oldValue}
+                    </div>
+                    <div style={{ color: '#16a34a', marginLeft: '16px' }}>
+                      <strong>+ New:</strong> {change.newValue}
+                    </div>
                   </div>
-                  <div style={{ color: '#16a34a', marginLeft: '16px' }}>
-                    <strong>+ New:</strong> {change.newValue}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -671,6 +705,41 @@ const XmlResults = ({ results, file1Name, file2Name }) => {
 
       {/* Changes Summary */}
       <ChangesSummary />
+
+      {/* Debug Information (temporary for troubleshooting) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{
+          border: '1px solid #f59e0b',
+          borderRadius: '8px',
+          marginTop: '20px',
+          background: '#fffbeb'
+        }}>
+          <div style={{
+            background: '#fef3c7',
+            padding: '12px 16px',
+            borderBottom: '1px solid #f59e0b',
+            fontWeight: '600',
+            color: '#92400e'
+          }}>
+            🐛 Debug Information
+          </div>
+          <div style={{
+            padding: '16px',
+            fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
+            fontSize: '12px',
+            color: '#92400e'
+          }}>
+            <div><strong>Total Elements:</strong> {total_elements}</div>
+            <div><strong>Differences Found:</strong> {differences_found}</div>
+            <div><strong>Matches Found:</strong> {matches_found}</div>
+            <div><strong>Element Changes:</strong> {element_changes.length}</div>
+            <div><strong>Attribute Changes:</strong> {attribute_changes.length}</div>
+            <div><strong>File 1 Parsed:</strong> {results?.file1_parsed ? 'Yes' : 'No'}</div>
+            <div><strong>File 2 Parsed:</strong> {results?.file2_parsed ? 'Yes' : 'No'}</div>
+            <div><strong>Results Object Keys:</strong> {results ? Object.keys(results).join(', ') : 'None'}</div>
+          </div>
+        </div>
+      )}
 
       {/* No differences message */}
       {differences_found === 0 && (
