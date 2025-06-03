@@ -15,6 +15,13 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     nested_differences = []
   } = results || {};
 
+  // Debug logging to see what we're working with
+  console.log('🐛 JsonResults Debug Info:');
+  console.log('Results object:', results);
+  console.log('Changes array:', changes);
+  console.log('File1 content:', file1_content);
+  console.log('File2 content:', file2_content);
+
   // Toggle expansion of object paths
   const toggleExpanded = (path) => {
     const newExpanded = new Set(expandedPaths);
@@ -29,46 +36,61 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
   // Helper function to determine change type for a path
   const getChangeType = (path) => {
     const change = changes.find(c => c.path === path);
-    if (change) {
-      return change.type;
-    }
-    return 'unchanged';
+    console.log(`🔍 Checking path "${path}":`, change ? change.type : 'unchanged');
+    return change ? change.type : 'unchanged';
   };
 
-  // Helper function to get styling for change types with VERY prominent highlighting
+  // Enhanced highlighting with more prominent colors and effects
   const getChangeStyle = (changeType) => {
+    const baseStyle = {
+      transition: 'all 0.3s ease',
+      borderRadius: '8px',
+      margin: '2px 0',
+      position: 'relative'
+    };
+
     switch (changeType) {
       case 'added':
         return {
-          backgroundColor: '#22c55e',
-          borderLeft: '6px solid #16a34a',
+          ...baseStyle,
+          backgroundColor: '#10b981',
+          borderLeft: '8px solid #059669',
           color: 'white',
           fontWeight: '700',
-          border: '2px solid #16a34a',
-          boxShadow: '0 2px 4px rgba(34, 197, 94, 0.3)'
+          border: '3px solid #059669',
+          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
+          transform: 'scale(1.02)',
+          animation: 'pulse 2s infinite'
         };
       case 'removed':
         return {
+          ...baseStyle,
           backgroundColor: '#ef4444',
-          borderLeft: '6px solid #dc2626',
+          borderLeft: '8px solid #dc2626',
           color: 'white',
           fontWeight: '700',
-          border: '2px solid #dc2626',
-          boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)'
+          border: '3px solid #dc2626',
+          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
+          transform: 'scale(1.02)',
+          animation: 'pulse 2s infinite'
         };
       case 'modified':
         return {
+          ...baseStyle,
           backgroundColor: '#f59e0b',
-          borderLeft: '6px solid #d97706',
+          borderLeft: '8px solid #d97706',
           color: 'white',
           fontWeight: '700',
-          border: '2px solid #d97706',
-          boxShadow: '0 2px 4px rgba(245, 158, 11, 0.3)'
+          border: '3px solid #d97706',
+          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
+          transform: 'scale(1.02)',
+          animation: 'pulse 2s infinite'
         };
       default:
         return {
-          backgroundColor: 'transparent',
-          borderLeft: '6px solid transparent',
+          ...baseStyle,
+          backgroundColor: showUnchanged ? '#f8f9fa' : 'transparent',
+          borderLeft: '4px solid transparent',
           color: '#374151',
           fontWeight: '400'
         };
@@ -83,19 +105,14 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     const getChangeTypeForPath = (checkPath) => {
       const change = changes.find(c => c.path === checkPath);
       
-      // Debug logging
-      if (checkPath === 'age' || checkPath === 'department' || checkPath === 'salary' || checkPath === 'skills' || checkPath === 'manager') {
-        console.log(`🎨 Highlighting check for "${checkPath}" in file ${fileNumber}:`, {
-          change: change,
-          changeType: change?.type,
-          finalResult: change ? change.type : 'unchanged'
-        });
-      }
+      // Enhanced debug logging
+      console.log(`🎨 Path "${checkPath}" in file ${fileNumber}:`, {
+        found: !!change,
+        changeType: change?.type || 'unchanged',
+        changeDetails: change
+      });
       
-      if (change) {
-        return change.type; // Return the actual change type for all files
-      }
-      return 'unchanged';
+      return change ? change.type : 'unchanged';
     };
     
     if (obj === null) {
@@ -104,13 +121,11 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
         <div style={{ 
           marginLeft: `${indent}px`,
           ...getChangeStyle(changeType),
-          padding: '2px 8px',
+          padding: '8px 12px',
           fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-          fontSize: '13px',
-          borderRadius: '3px',
-          margin: '1px 0'
+          fontSize: '14px'
         }}>
-          <span style={{ color: '#6b7280' }}>null</span>
+          <span style={{ color: changeType !== 'unchanged' ? 'white' : '#6b7280' }}>null</span>
         </div>
       );
     }
@@ -121,13 +136,13 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
         <div style={{ 
           marginLeft: `${indent}px`,
           ...getChangeStyle(changeType),
-          padding: '2px 8px',
+          padding: '8px 12px',
           fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-          fontSize: '13px',
-          borderRadius: '3px',
-          margin: '1px 0'
+          fontSize: '14px'
         }}>
-          <span style={{ color: typeof obj === 'string' ? '#059669' : '#2563eb' }}>
+          <span style={{ 
+            color: changeType !== 'unchanged' ? 'white' : (typeof obj === 'string' ? '#059669' : '#2563eb')
+          }}>
             {JSON.stringify(obj)}
           </span>
         </div>
@@ -142,20 +157,18 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
       <div style={{ marginLeft: `${indent}px` }}>
         <div style={{
           ...getChangeStyle(rootChangeType),
-          padding: '4px 8px',
+          padding: '8px 12px',
           cursor: 'pointer',
           fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-          fontSize: '13px',
+          fontSize: '14px',
           display: 'flex',
           alignItems: 'center',
-          gap: '6px',
-          borderRadius: '3px',
-          margin: '1px 0'
+          gap: '8px'
         }}
         onClick={() => toggleExpanded(path || 'root')}
         >
           <span style={{ 
-            fontSize: '10px',
+            fontSize: '12px',
             transition: 'transform 0.2s',
             transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
             width: '12px'
@@ -165,7 +178,10 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           <span style={{ fontWeight: '600' }}>
             {path ? path.split('.').pop() : 'root'}: {'{'}
           </span>
-          <span style={{ color: '#6b7280', fontSize: '11px' }}>
+          <span style={{ 
+            color: rootChangeType !== 'unchanged' ? 'rgba(255,255,255,0.8)' : '#6b7280', 
+            fontSize: '12px' 
+          }}>
             {keys.length} {keys.length === 1 ? 'property' : 'properties'}
           </span>
         </div>
@@ -176,32 +192,28 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
               const childPath = path ? `${path}.${key}` : key;
               const childChangeType = getChangeTypeForPath(childPath);
               
+              // Hide unchanged items if showUnchanged is false
+              if (!showUnchanged && childChangeType === 'unchanged') {
+                return null;
+              }
+              
               return (
                 <div key={key} style={{ marginLeft: '20px' }}>
                   <div style={{
                     ...getChangeStyle(childChangeType),
-                    padding: '8px 12px',
+                    padding: '10px 16px',
                     fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-                    fontSize: '13px',
+                    fontSize: '14px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    borderRadius: '6px',
-                    margin: '2px 0',
-                    // Force visible highlighting for testing
-                    ...(childChangeType !== 'unchanged' ? {
-                      minHeight: '32px',
-                      transform: 'scale(1.02)',
-                      zIndex: 10
-                    } : {}),
-                    // Debug styling - temporary bright colors to test
-                    ...(childPath === 'age' ? { backgroundColor: '#ff0000 !important', color: 'white' } : {}),
-                    ...(childPath === 'department' ? { backgroundColor: '#00ff00 !important', color: 'white' } : {}),
-                    ...(childPath === 'salary' ? { backgroundColor: '#0000ff !important', color: 'white' } : {}),
-                    ...(childPath === 'skills' ? { backgroundColor: '#ff00ff !important', color: 'white' } : {}),
-                    ...(childPath === 'manager' ? { backgroundColor: '#ffff00 !important', color: 'black' } : {})
+                    gap: '12px',
+                    minHeight: '40px'
                   }}>
-                    <span style={{ color: '#7c3aed', fontWeight: '500', minWidth: 'fit-content' }}>
+                    <span style={{ 
+                      color: childChangeType !== 'unchanged' ? 'white' : '#7c3aed', 
+                      fontWeight: '600', 
+                      minWidth: 'fit-content' 
+                    }}>
                       "{key}":
                     </span>
                     {typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key]) ? (
@@ -213,10 +225,25 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
                       />
                     ) : (
                       <span style={{ 
-                        color: typeof obj[key] === 'string' ? '#059669' : '#2563eb',
+                        color: childChangeType !== 'unchanged' ? 'white' : (typeof obj[key] === 'string' ? '#059669' : '#2563eb'),
                         fontWeight: childChangeType !== 'unchanged' ? '600' : '400'
                       }}>
                         {JSON.stringify(obj[key])}
+                      </span>
+                    )}
+                    {/* Add change indicator badge */}
+                    {childChangeType !== 'unchanged' && (
+                      <span style={{
+                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '12px',
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        textTransform: 'uppercase',
+                        marginLeft: 'auto'
+                      }}>
+                        {childChangeType}
                       </span>
                     )}
                   </div>
@@ -230,9 +257,9 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           <div style={{
             marginLeft: `${indent}px`,
             fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-            fontSize: '13px',
+            fontSize: '14px',
             color: '#6b7280',
-            padding: '2px 8px'
+            padding: '4px 12px'
           }}>
             {'}'}
           </div>
@@ -246,28 +273,30 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     <div style={{
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
-      gap: '20px',
-      height: '600px'
+      gap: '24px',
+      minHeight: '600px'
     }}>
       {/* File 1 */}
       <div style={{
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        overflow: 'hidden'
+        border: '2px solid #e5e7eb',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        backgroundColor: 'white'
       }}>
         <div style={{
-          background: '#f8fafc',
-          padding: '12px 16px',
-          borderBottom: '1px solid #e5e7eb',
-          fontWeight: '600',
-          color: '#1f2937'
+          background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+          padding: '16px 20px',
+          borderBottom: '2px solid #e5e7eb',
+          fontWeight: '700',
+          color: '#1f2937',
+          fontSize: '16px'
         }}>
           📄 {file1Name || 'File 1'}
         </div>
         <div style={{
-          height: 'calc(100% - 50px)',
+          height: 'calc(100% - 60px)',
           overflow: 'auto',
-          padding: '12px'
+          padding: '16px'
         }}>
           <JsonTreeNode obj={file1_content} path="root" fileNumber={1} />
         </div>
@@ -275,23 +304,25 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
 
       {/* File 2 */}
       <div style={{
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        overflow: 'hidden'
+        border: '2px solid #e5e7eb',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        backgroundColor: 'white'
       }}>
         <div style={{
-          background: '#f8fafc',
-          padding: '12px 16px',
-          borderBottom: '1px solid #e5e7eb',
-          fontWeight: '600',
-          color: '#1f2937'
+          background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+          padding: '16px 20px',
+          borderBottom: '2px solid #e5e7eb',
+          fontWeight: '700',
+          color: '#1f2937',
+          fontSize: '16px'
         }}>
           📄 {file2Name || 'File 2'}
         </div>
         <div style={{
-          height: 'calc(100% - 50px)',
+          height: 'calc(100% - 60px)',
           overflow: 'auto',
-          padding: '12px'
+          padding: '16px'
         }}>
           <JsonTreeNode obj={file2_content} path="root" fileNumber={2} />
         </div>
@@ -305,17 +336,19 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
 
     return (
       <div style={{
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
+        border: '2px solid #e5e7eb',
+        borderRadius: '12px',
         overflow: 'hidden',
-        marginTop: '20px'
+        marginTop: '24px',
+        backgroundColor: 'white'
       }}>
         <div style={{
-          background: '#f8fafc',
-          padding: '12px 16px',
-          borderBottom: '1px solid #e5e7eb',
-          fontWeight: '600',
-          color: '#1f2937'
+          background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+          padding: '16px 20px',
+          borderBottom: '2px solid #e5e7eb',
+          fontWeight: '700',
+          color: '#1f2937',
+          fontSize: '16px'
         }}>
           🔄 Changes Summary ({changes.length})
         </div>
@@ -328,34 +361,34 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
               key={index}
               style={{
                 ...getChangeStyle(change.type),
-                padding: '12px 16px',
+                padding: '16px 20px',
                 borderBottom: '1px solid #e5e7eb',
                 fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-                fontSize: '13px'
+                fontSize: '14px'
               }}
             >
-              <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+              <div style={{ fontWeight: '700', marginBottom: '8px', fontSize: '16px' }}>
                 📍 {change.path || 'root'}
               </div>
               
               {change.type === 'removed' && (
-                <div style={{ color: '#dc2626' }}>
-                  <strong>- Old:</strong> {JSON.stringify(change.oldValue)}
+                <div style={{ color: change.type !== 'unchanged' ? 'white' : '#dc2626' }}>
+                  <strong>- Removed:</strong> {JSON.stringify(change.oldValue)}
                 </div>
               )}
               
               {change.type === 'added' && (
-                <div style={{ color: '#16a34a' }}>
+                <div style={{ color: change.type !== 'unchanged' ? 'white' : '#16a34a' }}>
                   <strong>+ Added:</strong> {JSON.stringify(change.newValue)}
                 </div>
               )}
               
               {change.type === 'modified' && (
                 <div>
-                  <div style={{ color: '#dc2626' }}>
+                  <div style={{ color: change.type !== 'unchanged' ? 'rgba(255,255,255,0.9)' : '#dc2626', marginBottom: '4px' }}>
                     <strong>- Old:</strong> {JSON.stringify(change.oldValue)}
                   </div>
-                  <div style={{ color: '#16a34a' }}>
+                  <div style={{ color: change.type !== 'unchanged' ? 'white' : '#16a34a' }}>
                     <strong>+ New:</strong> {JSON.stringify(change.newValue)}
                   </div>
                 </div>
@@ -411,9 +444,19 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
       borderRadius: '16px',
       padding: '30px',
       marginBottom: '30px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
       border: '1px solid #e5e7eb'
     }}>
+      {/* Add CSS for animations */}
+      <style>
+        {`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+          }
+        `}
+      </style>
+
       {/* Header */}
       <div style={{
         textAlign: 'center',
@@ -424,7 +467,7 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
-          fontSize: '2rem',
+          fontSize: '2.2rem',
           fontWeight: '700',
           margin: '0 0 15px 0'
         }}>
@@ -435,16 +478,16 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           fontSize: '1.1rem',
           margin: 0
         }}>
-          Hierarchical structure comparison with nested analysis
+          Hierarchical structure comparison with prominent difference highlighting
         </p>
       </div>
 
       {/* Statistics */}
       <div style={{
-        background: '#f8fafc',
-        border: '1px solid #e5e7eb',
+        background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+        border: '2px solid #e5e7eb',
         borderRadius: '12px',
-        padding: '20px',
+        padding: '24px',
         marginBottom: '25px'
       }}>
         <div style={{
@@ -454,28 +497,28 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           textAlign: 'center'
         }}>
           <div>
-            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#1f2937' }}>
               {total_records}
             </div>
-            <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Total Properties</div>
+            <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '600' }}>Total Properties</div>
           </div>
           <div>
-            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#ef4444' }}>
               {differences_found}
             </div>
-            <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Differences</div>
+            <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '600' }}>Differences</div>
           </div>
           <div>
-            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#16a34a' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#10b981' }}>
               {matches_found}
             </div>
-            <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Matches</div>
+            <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '600' }}>Matches</div>
           </div>
           <div>
-            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2563eb' }}>
+            <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#2563eb' }}>
               {total_records > 0 ? Math.round((matches_found / total_records) * 100) : 0}%
             </div>
-            <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Similarity</div>
+            <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '600' }}>Similarity</div>
           </div>
         </div>
       </div>
@@ -488,30 +531,30 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
         alignItems: 'center',
         gap: '15px',
         marginBottom: '25px',
-        padding: '15px',
-        background: '#f8fafc',
-        borderRadius: '8px',
-        border: '1px solid #e5e7eb'
+        padding: '20px',
+        background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+        borderRadius: '12px',
+        border: '2px solid #e5e7eb'
       }}>
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <button
             onClick={() => setExpandedPaths(new Set())}
             style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: '1px solid #e5e7eb',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '2px solid #e5e7eb',
               background: 'white',
               cursor: 'pointer',
-              fontWeight: '500',
+              fontWeight: '600',
               color: '#374151',
-              fontSize: '0.9rem'
+              fontSize: '14px',
+              transition: 'all 0.2s ease'
             }}
           >
             📦 Collapse All
           </button>
           <button
             onClick={() => {
-              // Expand root and first level
               const newPaths = new Set(['root']);
               if (file1_content && typeof file1_content === 'object') {
                 Object.keys(file1_content).forEach(key => {
@@ -521,97 +564,106 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
               setExpandedPaths(newPaths);
             }}
             style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: '1px solid #e5e7eb',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '2px solid #e5e7eb',
               background: 'white',
               cursor: 'pointer',
-              fontWeight: '500',
+              fontWeight: '600',
               color: '#374151',
-              fontSize: '0.9rem'
+              fontSize: '14px',
+              transition: 'all 0.2s ease'
             }}
           >
             📂 Expand All
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={showUnchanged}
               onChange={(e) => setShowUnchanged(e.target.checked)}
-              style={{ accentColor: '#2563eb' }}
+              style={{ accentColor: '#2563eb', transform: 'scale(1.2)' }}
             />
-            <span style={{ fontSize: '0.9rem', color: '#374151' }}>Show Unchanged</span>
+            <span style={{ fontSize: '14px', color: '#374151', fontWeight: '600' }}>Show Unchanged</span>
           </label>
-        </div>
 
-        <button
-          onClick={handleDownloadReport}
-          style={{
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            color: 'white',
-            border: 'none',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontWeight: '600',
-            fontSize: '0.9rem',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          📄 Download Report
-        </button>
+          <button
+            onClick={handleDownloadReport}
+            style={{
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: '14px',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+            }}
+          >
+            📄 Download Report
+          </button>
+        </div>
       </div>
 
-      {/* Legend */}
+      {/* Enhanced Legend */}
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
-        gap: '15px',
-        marginBottom: '20px',
-        fontSize: '0.85rem'
+        gap: '20px',
+        marginBottom: '25px',
+        fontSize: '14px',
+        padding: '16px',
+        background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+        borderRadius: '12px',
+        border: '2px solid #e5e7eb'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
-            width: '16px',
-            height: '16px',
-            backgroundColor: '#e6ffe6',
-            border: '1px solid #27ae60',
-            borderRadius: '3px'
+            width: '20px',
+            height: '20px',
+            backgroundColor: '#10b981',
+            border: '2px solid #059669',
+            borderRadius: '6px',
+            boxShadow: '0 2px 4px rgba(16, 185, 129, 0.3)'
           }}></div>
-          <span>Added properties</span>
+          <span style={{ fontWeight: '600' }}>Added properties</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
-            width: '16px',
-            height: '16px',
-            backgroundColor: '#ffe6e6',
-            border: '1px solid #e74c3c',
-            borderRadius: '3px'
+            width: '20px',
+            height: '20px',
+            backgroundColor: '#ef4444',
+            border: '2px solid #dc2626',
+            borderRadius: '6px',
+            boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)'
           }}></div>
-          <span>Removed properties</span>
+          <span style={{ fontWeight: '600' }}>Removed properties</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
-            width: '16px',
-            height: '16px',
-            backgroundColor: '#fff3cd',
-            border: '1px solid #ffc107',
-            borderRadius: '3px'
+            width: '20px',
+            height: '20px',
+            backgroundColor: '#f59e0b',
+            border: '2px solid #d97706',
+            borderRadius: '6px',
+            boxShadow: '0 2px 4px rgba(245, 158, 11, 0.3)'
           }}></div>
-          <span>Modified properties</span>
+          <span style={{ fontWeight: '600' }}>Modified properties</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
-            width: '16px',
-            height: '16px',
+            width: '20px',
+            height: '20px',
             backgroundColor: '#f8f9fa',
-            border: '1px solid #e9ecef',
-            borderRadius: '3px'
+            border: '2px solid #e9ecef',
+            borderRadius: '6px'
           }}></div>
-          <span>Unchanged properties</span>
+          <span style={{ fontWeight: '600' }}>Unchanged properties</span>
         </div>
       </div>
 
@@ -627,23 +679,24 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           textAlign: 'center',
           padding: '40px',
           background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
-          border: '2px solid #22c55e',
-          borderRadius: '12px',
-          marginTop: '20px'
+          border: '3px solid #10b981',
+          borderRadius: '16px',
+          marginTop: '24px'
         }}>
-          <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🎉</div>
+          <div style={{ fontSize: '4rem', marginBottom: '15px' }}>🎉</div>
           <h3 style={{
             color: '#166534',
-            fontSize: '1.5rem',
-            fontWeight: '600',
+            fontSize: '1.6rem',
+            fontWeight: '700',
             margin: '0 0 10px 0'
           }}>
             JSON structures are identical!
           </h3>
           <p style={{
             color: '#16a34a',
-            fontSize: '1.1rem',
-            margin: 0
+            fontSize: '1.2rem',
+            margin: 0,
+            fontWeight: '500'
           }}>
             No differences found between the JSON files.
           </p>
