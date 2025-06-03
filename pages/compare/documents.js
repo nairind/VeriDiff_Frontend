@@ -16,61 +16,183 @@ import JsonResults from '../../components/JsonResults';
 import XmlResults from '../../components/XmlResults';
 import PdfResults from '../../components/PdfResults';
 
-// ===== USER GUIDANCE COMPONENTS =====
+// ===== DYNAMIC USER GUIDANCE COMPONENTS =====
 
-// File Requirements Info Component
-const FileRequirementsInfo = () => (
-  <div style={{
-    background: '#eff6ff',
-    border: '1px solid #2563eb',
-    borderRadius: '8px',
-    padding: '16px',
-    marginBottom: '20px',
-    fontSize: '0.9rem'
-  }}>
-    <h4 style={{ margin: '0 0 10px 0', color: '#1e40af', fontSize: '1rem' }}>
-      📋 Supported Text Files
-    </h4>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-      <div>
-        <strong>✅ Supported:</strong>
-        <br />• .txt, .csv, .log files
-        <br />• Code files (.js, .html, .css)
-        <br />• Config files (.json, .xml, .yaml)
-      </div>
-      <div>
-        <strong>📏 Requirements:</strong>
-        <br />• Maximum size: 10MB
-        <br />• UTF-8 text encoding
-        <br />• No binary/image files
+// Dynamic File Requirements Info Component
+const FileRequirementsInfo = ({ fileType }) => {
+  const getFileTypeInfo = () => {
+    switch (fileType) {
+      case 'text':
+        return {
+          title: '📋 Supported Text Files',
+          supported: [
+            '.txt, .csv, .log files',
+            'Code files (.js, .html, .css)',
+            'Config files (.json, .xml, .yaml)'
+          ],
+          requirements: [
+            'Maximum size: 10MB',
+            'UTF-8 text encoding',
+            'No binary/image files'
+          ]
+        };
+      
+      case 'json':
+        return {
+          title: '🌳 Supported JSON Files',
+          supported: [
+            '.json files with valid syntax',
+            'Nested objects and arrays',
+            'All JSON data types',
+            'Pretty-formatted or minified'
+          ],
+          requirements: [
+            'Maximum size: 10MB',
+            'Valid JSON syntax required',
+            'UTF-8 encoding preferred'
+          ]
+        };
+      
+      case 'xml':
+        return {
+          title: '🏗️ Supported XML Files',
+          supported: [
+            '.xml files with valid markup',
+            'XML documents with namespaces',
+            'Elements, attributes, and text',
+            'XML with comments and CDATA'
+          ],
+          requirements: [
+            'Maximum size: 10MB',
+            'Well-formed XML required',
+            'UTF-8 encoding preferred'
+          ]
+        };
+      
+      case 'pdf':
+        return {
+          title: '📑 Supported PDF Files',
+          supported: [
+            '.pdf files with extractable text',
+            'Multi-page documents',
+            'Text-based content',
+            'Standard PDF formats'
+          ],
+          requirements: [
+            'Maximum size: 10MB',
+            'Text-extractable PDFs only',
+            'No password-protected files'
+          ]
+        };
+      
+      default:
+        return {
+          title: '📋 Supported Files',
+          supported: ['Select a file type above'],
+          requirements: ['File type not selected']
+        };
+    }
+  };
+
+  const info = getFileTypeInfo();
+
+  return (
+    <div style={{
+      background: '#eff6ff',
+      border: '1px solid #2563eb',
+      borderRadius: '8px',
+      padding: '16px',
+      marginBottom: '20px',
+      fontSize: '0.9rem'
+    }}>
+      <h4 style={{ margin: '0 0 10px 0', color: '#1e40af', fontSize: '1rem' }}>
+        {info.title}
+      </h4>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+        <div>
+          <strong>✅ Supported:</strong>
+          {info.supported.map((item, index) => (
+            <div key={index}>• {item}</div>
+          ))}
+        </div>
+        <div>
+          <strong>📏 Requirements:</strong>
+          {info.requirements.map((item, index) => (
+            <div key={index}>• {item}</div>
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-// Success Tips Component
-const SuccessTips = () => (
-  <div style={{
-    background: '#f0fdf4',
-    border: '1px solid #22c55e',
-    borderRadius: '8px',
-    padding: '16px',
-    marginBottom: '20px'
-  }}>
-    <h4 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '1rem' }}>
-      💡 Pro Tips for Best Results
-    </h4>
-    <div style={{ fontSize: '0.9rem', color: '#166534' }}>
-      • <strong>Small files compare faster:</strong> Under 1MB for instant results
-      <br />
-      • <strong>Save as UTF-8:</strong> Ensures all characters display correctly  
-      <br />
-      • <strong>Use .txt extension:</strong> Guarantees compatibility
-      <br />
-      • <strong>Line-by-line works best:</strong> For code and structured text
+// Dynamic Success Tips Component
+const SuccessTips = ({ fileType }) => {
+  const getSuccessTips = () => {
+    switch (fileType) {
+      case 'text':
+        return [
+          { label: 'Small files compare faster:', tip: 'Under 1MB for instant results' },
+          { label: 'Save as UTF-8:', tip: 'Ensures all characters display correctly' },
+          { label: 'Use .txt extension:', tip: 'Guarantees compatibility' },
+          { label: 'Line-by-line works best:', tip: 'For code and structured text' }
+        ];
+      
+      case 'json':
+        return [
+          { label: 'Validate JSON first:', tip: 'Use jsonlint.com to check syntax' },
+          { label: 'Pretty-format for clarity:', tip: 'Formatted JSON is easier to compare' },
+          { label: 'Consistent key ordering:', tip: 'Helps identify structural changes' },
+          { label: 'Nested structures supported:', tip: 'Deep object comparison included' }
+        ];
+      
+      case 'xml':
+        return [
+          { label: 'Well-formed XML required:', tip: 'Validate with XML validator first' },
+          { label: 'Namespace handling:', tip: 'Namespaces are compared accurately' },
+          { label: 'Attribute comparison:', tip: 'Both order and values are analyzed' },
+          { label: 'Comments preserved:', tip: 'XML comments included in comparison' }
+        ];
+      
+      case 'pdf':
+        return [
+          { label: 'Text-based PDFs work best:', tip: 'Avoid image-only PDF files' },
+          { label: 'Page-by-page analysis:', tip: 'Each page compared individually' },
+          { label: 'Formatting differences:', tip: 'Can ignore or include formatting' },
+          { label: 'Extract text first:', tip: 'For image PDFs, convert to text' }
+        ];
+      
+      default:
+        return [
+          { label: 'Select file type above:', tip: 'Choose your document format first' }
+        ];
+    }
+  };
+
+  const tips = getSuccessTips();
+
+  return (
+    <div style={{
+      background: '#f0fdf4',
+      border: '1px solid #22c55e',
+      borderRadius: '8px',
+      padding: '16px',
+      marginBottom: '20px'
+    }}>
+      <h4 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '1rem' }}>
+        💡 Pro Tips for Best Results
+      </h4>
+      <div style={{ fontSize: '0.9rem', color: '#166534' }}>
+        {tips.map((tip, index) => (
+          <div key={index}>
+            • <strong>{tip.label}</strong> {tip.tip}
+            <br />
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Enhanced Error Messages with Solutions
 const getHelpfulErrorMessage = (error, fileName) => {
@@ -361,6 +483,21 @@ const readFileContent = (file) => {
 const FileUploadWithValidation = ({ fileNum, file, onChange, fileType }) => {
   const [validationWarning, setValidationWarning] = useState(null);
   
+  const getAcceptedFileTypes = () => {
+    switch (fileType) {
+      case 'text':
+        return ".txt,.csv,.log,.md,.html,.css,.js,.json,.xml,.yaml,.yml,.ini,.cfg,.conf,text/*";
+      case 'json':
+        return ".json,application/json";
+      case 'xml':
+        return ".xml,application/xml,text/xml";
+      case 'pdf':
+        return ".pdf,application/pdf";
+      default:
+        return "*";
+    }
+  };
+  
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
@@ -384,30 +521,34 @@ const FileUploadWithValidation = ({ fileNum, file, onChange, fileType }) => {
         });
       }
       
-      // Check file type
+      // File type specific validation
       const fileName = selectedFile.name.toLowerCase();
-      const isBinaryType = selectedFile.type && (
-        selectedFile.type.startsWith('image/') ||
-        selectedFile.type.startsWith('video/') ||
-        selectedFile.type === 'application/pdf'
-      );
+      let isValidType = false;
       
-      if (isBinaryType) {
-        setValidationWarning({
-          type: 'error',
-          message: 'Binary files not supported. Please select a text file (.txt, .csv, .log, etc.)'
-        });
-        return;
+      switch (fileType) {
+        case 'text':
+          const textExtensions = ['.txt', '.csv', '.log', '.md', '.html', '.css', '.js', '.json', '.xml'];
+          isValidType = textExtensions.some(ext => fileName.endsWith(ext)) || selectedFile.type.startsWith('text/');
+          break;
+        case 'json':
+          isValidType = fileName.endsWith('.json') || selectedFile.type === 'application/json';
+          break;
+        case 'xml':
+          isValidType = fileName.endsWith('.xml') || selectedFile.type.includes('xml');
+          break;
+        case 'pdf':
+          isValidType = fileName.endsWith('.pdf') || selectedFile.type === 'application/pdf';
+          break;
+        default:
+          isValidType = true;
       }
       
-      const textExtensions = ['.txt', '.csv', '.log', '.md', '.html', '.css', '.js', '.json', '.xml'];
-      const hasTextExtension = textExtensions.some(ext => fileName.endsWith(ext));
-      
-      if (!hasTextExtension && !selectedFile.type.startsWith('text/')) {
+      if (!isValidType) {
         setValidationWarning({
-          type: 'warning',
-          message: `File extension "${fileName.split('.').pop()}" may not be a text file`
+          type: 'error',
+          message: `Please select a ${fileType.toUpperCase()} file with the correct extension`
         });
+        return;
       }
       
       onChange(e, fileNum);
@@ -432,7 +573,7 @@ const FileUploadWithValidation = ({ fileNum, file, onChange, fileType }) => {
       <input
         type="file"
         onChange={handleFileChange}
-        accept=".txt,.csv,.log,.md,.html,.css,.js,.json,.xml,.yaml,.yml,.ini,.cfg,.conf,text/*"
+        accept={getAcceptedFileTypes()}
         style={{
           width: '100%',
           padding: '14px',
@@ -1497,11 +1638,11 @@ function DocumentComparePage() {
             </div>
           </div>
 
-          {/* File Requirements and Tips */}
+          {/* Dynamic File Requirements and Tips */}
           {(fileType === 'text' || userTier === 'premium') && (
             <>
-              <FileRequirementsInfo />
-              <SuccessTips />
+              <FileRequirementsInfo fileType={fileType} />
+              <SuccessTips fileType={fileType} />
             </>
           )}
 
