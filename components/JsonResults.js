@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 const JsonResults = ({ results, file1Name, file2Name }) => {
-  const [expandedPaths, setExpandedPaths] = useState(new Set());
+  const [expandedPaths, setExpandedPaths] = useState(new Set(['root']));
   const [showUnchanged, setShowUnchanged] = useState(false);
 
   // Extract data from results
@@ -26,11 +26,12 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     setExpandedPaths(newExpanded);
   };
 
-  // Helper function to determine change type
-  const getChangeType = (change) => {
-    if (change.type === 'added') return 'added';
-    if (change.type === 'removed') return 'removed';
-    if (change.type === 'modified') return 'modified';
+  // Helper function to determine change type for a path
+  const getChangeType = (path) => {
+    const change = changes.find(c => c.path === path);
+    if (change) {
+      return change.type;
+    }
     return 'unchanged';
   };
 
@@ -99,7 +100,7 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     }
 
     const keys = Object.keys(obj);
-    const isExpanded = expandedPaths.has(path);
+    const isExpanded = expandedPaths.has(path || 'root');
 
     return (
       <div style={{ marginLeft: `${indent}px` }}>
@@ -113,17 +114,18 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           alignItems: 'center',
           gap: '6px'
         }}
-        onClick={() => toggleExpanded(path)}
+        onClick={() => toggleExpanded(path || 'root')}
         >
           <span style={{ 
             fontSize: '10px',
             transition: 'transform 0.2s',
-            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'
+            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+            width: '12px'
           }}>
             ▶
           </span>
           <span style={{ fontWeight: '600' }}>
-            {path.split('.').pop() || 'root'}: {'{'}
+            {path ? path.split('.').pop() : 'root'}: {'{'}
           </span>
           <span style={{ color: '#6b7280', fontSize: '11px' }}>
             {keys.length} {keys.length === 1 ? 'property' : 'properties'}
@@ -134,7 +136,7 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           <div>
             {keys.map(key => {
               const childPath = path ? `${path}.${key}` : key;
-              const childChangeType = getChangeType(changes.find(c => c.path === childPath) || {});
+              const childChangeType = getChangeType(childPath);
               
               return (
                 <div key={key} style={{ marginLeft: '20px' }}>
@@ -148,7 +150,7 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
                     gap: '8px'
                   }}>
                     <span style={{ color: '#7c3aed', fontWeight: '500' }}>"{key}":</span>
-                    {typeof obj[key] === 'object' && obj[key] !== null ? (
+                    {typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key]) ? (
                       <JsonTreeNode 
                         obj={obj[key]} 
                         path={childPath} 
@@ -208,11 +210,11 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           📄 {file1Name || 'File 1'}
         </div>
         <div style={{
-          height: '100%',
+          height: 'calc(100% - 50px)',
           overflow: 'auto',
           padding: '12px'
         }}>
-          <JsonTreeNode obj={file1_content} />
+          <JsonTreeNode obj={file1_content} path="root" />
         </div>
       </div>
 
@@ -232,11 +234,11 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           📄 {file2Name || 'File 2'}
         </div>
         <div style={{
-          height: '100%',
+          height: 'calc(100% - 50px)',
           overflow: 'auto',
           padding: '12px'
         }}>
-          <JsonTreeNode obj={file2_content} />
+          <JsonTreeNode obj={file2_content} path="root" />
         </div>
       </div>
     </div>
@@ -270,7 +272,7 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
             <div
               key={index}
               style={{
-                ...getChangeStyle(getChangeType(change)),
+                ...getChangeStyle(change.type),
                 padding: '12px 16px',
                 borderBottom: '1px solid #e5e7eb',
                 fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
@@ -283,7 +285,7 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
               
               {change.type === 'removed' && (
                 <div style={{ color: '#dc2626' }}>
-                  <strong>- Removed:</strong> {JSON.stringify(change.oldValue)}
+                  <strong>- Old:</strong> {JSON.stringify(change.oldValue)}
                 </div>
               )}
               
@@ -454,9 +456,14 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           </button>
           <button
             onClick={() => {
-              // Expand all available paths - this would need to be calculated from the actual JSON structure
-              const allPaths = new Set(['root']);
-              setExpandedPaths(allPaths);
+              // Expand root and first level
+              const newPaths = new Set(['root']);
+              if (file1_content && typeof file1_content === 'object') {
+                Object.keys(file1_content).forEach(key => {
+                  newPaths.add(key);
+                });
+              }
+              setExpandedPaths(newPaths);
             }}
             style={{
               padding: '6px 12px',
