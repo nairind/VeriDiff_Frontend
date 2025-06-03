@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const JsonResults = ({ results, file1Name, file2Name }) => {
-  const [expandedPaths, setExpandedPaths] = useState(new Set(['root']));
-  const [showUnchanged, setShowUnchanged] = useState(false);
+  const [expandedPaths, setExpandedPaths] = useState(new Set());
+  const [showUnchanged, setShowUnchanged] = useState(true);
 
   // Extract data from results
   const {
@@ -15,12 +15,32 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     nested_differences = []
   } = results || {};
 
-  // Debug logging to see what we're working with
+  // Auto-expand paths with differences on load
+  useEffect(() => {
+    const pathsToExpand = new Set(['root']);
+    
+    // Add all paths with changes
+    changes.forEach(change => {
+      if (change.path) {
+        // Add the path itself
+        pathsToExpand.add(change.path);
+        
+        // Add all parent paths
+        const pathParts = change.path.split('.');
+        for (let i = 1; i < pathParts.length; i++) {
+          pathsToExpand.add(pathParts.slice(0, i).join('.'));
+        }
+      }
+    });
+
+    setExpandedPaths(pathsToExpand);
+  }, [changes]);
+
+  // Debug logging
   console.log('🐛 JsonResults Debug Info:');
   console.log('Results object:', results);
   console.log('Changes array:', changes);
-  console.log('File1 content:', file1_content);
-  console.log('File2 content:', file2_content);
+  console.log('Auto-expanded paths:', Array.from(expandedPaths));
 
   // Toggle expansion of object paths
   const toggleExpanded = (path) => {
@@ -36,131 +56,123 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
   // Helper function to determine change type for a path
   const getChangeType = (path) => {
     const change = changes.find(c => c.path === path);
-    console.log(`🔍 Checking path "${path}":`, change ? change.type : 'unchanged');
     return change ? change.type : 'unchanged';
   };
 
-  // Enhanced highlighting with more prominent colors and effects
+  // Enhanced highlighting with very prominent colors
   const getChangeStyle = (changeType) => {
     const baseStyle = {
-      transition: 'all 0.3s ease',
       borderRadius: '8px',
       margin: '2px 0',
-      position: 'relative'
+      fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
+      fontSize: '14px',
+      padding: '12px 16px',
+      transition: 'all 0.3s ease'
     };
 
     switch (changeType) {
       case 'added':
         return {
           ...baseStyle,
-          backgroundColor: '#10b981',
-          borderLeft: '8px solid #059669',
+          backgroundColor: '#059669',
           color: 'white',
           fontWeight: '700',
-          border: '3px solid #059669',
-          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
-          transform: 'scale(1.02)',
-          animation: 'pulse 2s infinite'
+          border: '3px solid #047857',
+          boxShadow: '0 4px 12px rgba(5, 150, 105, 0.4)',
+          animation: 'glow-green 2s ease-in-out infinite alternate'
         };
       case 'removed':
         return {
           ...baseStyle,
-          backgroundColor: '#ef4444',
-          borderLeft: '8px solid #dc2626',
+          backgroundColor: '#dc2626',
           color: 'white',
           fontWeight: '700',
-          border: '3px solid #dc2626',
-          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4)',
-          transform: 'scale(1.02)',
-          animation: 'pulse 2s infinite'
+          border: '3px solid #b91c1c',
+          boxShadow: '0 4px 12px rgba(220, 38, 38, 0.4)',
+          animation: 'glow-red 2s ease-in-out infinite alternate'
         };
       case 'modified':
         return {
           ...baseStyle,
-          backgroundColor: '#f59e0b',
-          borderLeft: '8px solid #d97706',
+          backgroundColor: '#d97706',
           color: 'white',
           fontWeight: '700',
-          border: '3px solid #d97706',
-          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
-          transform: 'scale(1.02)',
-          animation: 'pulse 2s infinite'
+          border: '3px solid #b45309',
+          boxShadow: '0 4px 12px rgba(217, 119, 6, 0.4)',
+          animation: 'glow-orange 2s ease-in-out infinite alternate'
         };
       default:
         return {
           ...baseStyle,
           backgroundColor: showUnchanged ? '#f8f9fa' : 'transparent',
-          borderLeft: '4px solid transparent',
           color: '#374151',
-          fontWeight: '400'
+          fontWeight: '400',
+          border: '1px solid transparent'
         };
     }
   };
 
-  // Recursive component to render JSON tree with consistent highlighting
+  // Recursive component to render JSON tree
   const JsonTreeNode = ({ obj, path = '', level = 0, fileNumber = 1 }) => {
-    const indent = level * 20;
-    
-    // Get change type for this specific path
-    const getChangeTypeForPath = (checkPath) => {
-      const change = changes.find(c => c.path === checkPath);
-      
-      // Enhanced debug logging
-      console.log(`🎨 Path "${checkPath}" in file ${fileNumber}:`, {
-        found: !!change,
-        changeType: change?.type || 'unchanged',
-        changeDetails: change
-      });
-      
-      return change ? change.type : 'unchanged';
-    };
-    
     if (obj === null) {
-      const changeType = getChangeTypeForPath(path);
+      const changeType = getChangeType(path);
+      if (!showUnchanged && changeType === 'unchanged') return null;
+      
       return (
-        <div style={{ 
-          marginLeft: `${indent}px`,
-          ...getChangeStyle(changeType),
-          padding: '8px 12px',
-          fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-          fontSize: '14px'
-        }}>
-          <span style={{ color: changeType !== 'unchanged' ? 'white' : '#6b7280' }}>null</span>
+        <div style={getChangeStyle(changeType)}>
+          <span>null</span>
+          {changeType !== 'unchanged' && (
+            <span style={{
+              backgroundColor: 'rgba(255,255,255,0.3)',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              fontSize: '10px',
+              marginLeft: '8px',
+              textTransform: 'uppercase'
+            }}>
+              {changeType}
+            </span>
+          )}
         </div>
       );
     }
 
     if (typeof obj !== 'object' || Array.isArray(obj)) {
-      const changeType = getChangeTypeForPath(path);
+      const changeType = getChangeType(path);
+      if (!showUnchanged && changeType === 'unchanged') return null;
+      
       return (
-        <div style={{ 
-          marginLeft: `${indent}px`,
-          ...getChangeStyle(changeType),
-          padding: '8px 12px',
-          fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-          fontSize: '14px'
-        }}>
+        <div style={getChangeStyle(changeType)}>
           <span style={{ 
             color: changeType !== 'unchanged' ? 'white' : (typeof obj === 'string' ? '#059669' : '#2563eb')
           }}>
             {JSON.stringify(obj)}
           </span>
+          {changeType !== 'unchanged' && (
+            <span style={{
+              backgroundColor: 'rgba(255,255,255,0.3)',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              fontSize: '10px',
+              marginLeft: '8px',
+              textTransform: 'uppercase'
+            }}>
+              {changeType}
+            </span>
+          )}
         </div>
       );
     }
 
     const keys = Object.keys(obj);
     const isExpanded = expandedPaths.has(path || 'root');
-    const rootChangeType = getChangeTypeForPath(path);
+    const rootChangeType = getChangeType(path);
 
     return (
-      <div style={{ marginLeft: `${indent}px` }}>
+      <div>
         <div style={{
           ...getChangeStyle(rootChangeType),
-          padding: '8px 12px',
           cursor: 'pointer',
-          fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-          fontSize: '14px',
           display: 'flex',
           alignItems: 'center',
           gap: '8px'
@@ -175,22 +187,34 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
           }}>
             ▶
           </span>
-          <span style={{ fontWeight: '600' }}>
+          <span style={{ fontWeight: '700' }}>
             {path ? path.split('.').pop() : 'root'}: {'{'}
           </span>
           <span style={{ 
             color: rootChangeType !== 'unchanged' ? 'rgba(255,255,255,0.8)' : '#6b7280', 
             fontSize: '12px' 
           }}>
-            {keys.length} {keys.length === 1 ? 'property' : 'properties'}
+            {keys.length} properties
           </span>
+          {rootChangeType !== 'unchanged' && (
+            <span style={{
+              backgroundColor: 'rgba(255,255,255,0.3)',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              marginLeft: 'auto'
+            }}>
+              {rootChangeType}
+            </span>
+          )}
         </div>
         
         {isExpanded && (
-          <div>
+          <div style={{ marginLeft: '20px' }}>
             {keys.map(key => {
               const childPath = path ? `${path}.${key}` : key;
-              const childChangeType = getChangeTypeForPath(childPath);
+              const childChangeType = getChangeType(childPath);
               
               // Hide unchanged items if showUnchanged is false
               if (!showUnchanged && childChangeType === 'unchanged') {
@@ -198,16 +222,12 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
               }
               
               return (
-                <div key={key} style={{ marginLeft: '20px' }}>
+                <div key={key} style={{ margin: '4px 0' }}>
                   <div style={{
                     ...getChangeStyle(childChangeType),
-                    padding: '10px 16px',
-                    fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-                    fontSize: '14px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '12px',
-                    minHeight: '40px'
+                    gap: '12px'
                   }}>
                     <span style={{ 
                       color: childChangeType !== 'unchanged' ? 'white' : '#7c3aed', 
@@ -220,31 +240,32 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
                       <JsonTreeNode 
                         obj={obj[key]} 
                         path={childPath} 
-                        level={0}
+                        level={level + 1}
                         fileNumber={fileNumber}
                       />
                     ) : (
-                      <span style={{ 
-                        color: childChangeType !== 'unchanged' ? 'white' : (typeof obj[key] === 'string' ? '#059669' : '#2563eb'),
-                        fontWeight: childChangeType !== 'unchanged' ? '600' : '400'
-                      }}>
-                        {JSON.stringify(obj[key])}
-                      </span>
-                    )}
-                    {/* Add change indicator badge */}
-                    {childChangeType !== 'unchanged' && (
-                      <span style={{
-                        backgroundColor: 'rgba(255,255,255,0.2)',
-                        color: 'white',
-                        padding: '2px 6px',
-                        borderRadius: '12px',
-                        fontSize: '10px',
-                        fontWeight: '600',
-                        textTransform: 'uppercase',
-                        marginLeft: 'auto'
-                      }}>
-                        {childChangeType}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                        <span style={{ 
+                          color: childChangeType !== 'unchanged' ? 'white' : (typeof obj[key] === 'string' ? '#059669' : '#2563eb'),
+                          fontWeight: childChangeType !== 'unchanged' ? '700' : '400'
+                        }}>
+                          {JSON.stringify(obj[key])}
+                        </span>
+                        {childChangeType !== 'unchanged' && (
+                          <span style={{
+                            backgroundColor: 'rgba(255,255,255,0.3)',
+                            color: 'white',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            textTransform: 'uppercase',
+                            marginLeft: 'auto'
+                          }}>
+                            {childChangeType}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -255,11 +276,10 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
         
         {isExpanded && (
           <div style={{
-            marginLeft: `${indent}px`,
             fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
             fontSize: '14px',
             color: '#6b7280',
-            padding: '4px 12px'
+            padding: '4px 16px'
           }}>
             {'}'}
           </div>
@@ -268,13 +288,13 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     );
   };
 
-  // Component for side-by-side JSON comparison with consistent highlighting
-  const SideBySideView = () => (
+  // Compact side-by-side view with immediate difference visibility
+  const CompactSideBySideView = () => (
     <div style={{
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
-      gap: '24px',
-      minHeight: '600px'
+      gap: '16px',
+      minHeight: 'auto' // Remove fixed height
     }}>
       {/* File 1 */}
       <div style={{
@@ -284,21 +304,21 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
         backgroundColor: 'white'
       }}>
         <div style={{
-          background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
-          padding: '16px 20px',
+          background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
+          padding: '12px 16px',
           borderBottom: '2px solid #e5e7eb',
           fontWeight: '700',
           color: '#1f2937',
-          fontSize: '16px'
+          fontSize: '14px'
         }}>
           📄 {file1Name || 'File 1'}
         </div>
         <div style={{
-          height: 'calc(100% - 60px)',
-          overflow: 'auto',
-          padding: '16px'
+          padding: '12px',
+          maxHeight: '600px',
+          overflow: 'auto'
         }}>
-          <JsonTreeNode obj={file1_content} path="root" fileNumber={1} />
+          <JsonTreeNode obj={file1_content} path="" fileNumber={1} />
         </div>
       </div>
 
@@ -310,396 +330,296 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
         backgroundColor: 'white'
       }}>
         <div style={{
-          background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
-          padding: '16px 20px',
+          background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
+          padding: '12px 16px',
           borderBottom: '2px solid #e5e7eb',
           fontWeight: '700',
           color: '#1f2937',
-          fontSize: '16px'
+          fontSize: '14px'
         }}>
           📄 {file2Name || 'File 2'}
         </div>
         <div style={{
-          height: 'calc(100% - 60px)',
-          overflow: 'auto',
-          padding: '16px'
+          padding: '12px',
+          maxHeight: '600px',
+          overflow: 'auto'
         }}>
-          <JsonTreeNode obj={file2_content} path="root" fileNumber={2} />
+          <JsonTreeNode obj={file2_content} path="" fileNumber={2} />
         </div>
       </div>
     </div>
   );
 
-  // Component for changes summary
-  const ChangesSummary = () => {
+  // Quick differences overview for immediate visibility
+  const QuickDifferencesOverview = () => {
     if (!changes || changes.length === 0) return null;
 
     return (
       <div style={{
-        border: '2px solid #e5e7eb',
+        background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+        border: '2px solid #d97706',
         borderRadius: '12px',
-        overflow: 'hidden',
-        marginTop: '24px',
-        backgroundColor: 'white'
+        padding: '16px',
+        marginBottom: '20px'
       }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
-          padding: '16px 20px',
-          borderBottom: '2px solid #e5e7eb',
+        <h3 style={{
+          color: '#92400e',
+          fontSize: '16px',
           fontWeight: '700',
-          color: '#1f2937',
-          fontSize: '16px'
+          margin: '0 0 12px 0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
         }}>
-          🔄 Changes Summary ({changes.length})
-        </div>
+          ⚡ Quick Differences Overview
+        </h3>
         <div style={{
-          maxHeight: '400px',
-          overflow: 'auto'
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '12px'
         }}>
-          {changes.map((change, index) => (
+          {changes.slice(0, 6).map((change, index) => (
             <div
               key={index}
               style={{
-                ...getChangeStyle(change.type),
-                padding: '16px 20px',
-                borderBottom: '1px solid #e5e7eb',
-                fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
-                fontSize: '14px'
+                background: 'white',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid #d97706',
+                fontSize: '13px'
               }}
             >
-              <div style={{ fontWeight: '700', marginBottom: '8px', fontSize: '16px' }}>
-                📍 {change.path || 'root'}
-              </div>
-              
-              {change.type === 'removed' && (
-                <div style={{ color: change.type !== 'unchanged' ? 'white' : '#dc2626' }}>
-                  <strong>- Removed:</strong> {JSON.stringify(change.oldValue)}
-                </div>
-              )}
-              
-              {change.type === 'added' && (
-                <div style={{ color: change.type !== 'unchanged' ? 'white' : '#16a34a' }}>
-                  <strong>+ Added:</strong> {JSON.stringify(change.newValue)}
-                </div>
-              )}
-              
-              {change.type === 'modified' && (
-                <div>
-                  <div style={{ color: change.type !== 'unchanged' ? 'rgba(255,255,255,0.9)' : '#dc2626', marginBottom: '4px' }}>
-                    <strong>- Old:</strong> {JSON.stringify(change.oldValue)}
-                  </div>
-                  <div style={{ color: change.type !== 'unchanged' ? 'white' : '#16a34a' }}>
-                    <strong>+ New:</strong> {JSON.stringify(change.newValue)}
-                  </div>
-                </div>
-              )}
+              <span style={{ fontWeight: '600', color: '#92400e' }}>
+                {change.path}
+              </span>
+              <span style={{
+                marginLeft: '8px',
+                padding: '2px 6px',
+                borderRadius: '6px',
+                fontSize: '10px',
+                textTransform: 'uppercase',
+                fontWeight: '600',
+                backgroundColor: change.type === 'added' ? '#059669' : 
+                              change.type === 'removed' ? '#dc2626' : '#d97706',
+                color: 'white'
+              }}>
+                {change.type}
+              </span>
             </div>
           ))}
+          {changes.length > 6 && (
+            <div style={{
+              background: 'white',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid #d97706',
+              fontSize: '13px',
+              color: '#92400e',
+              fontWeight: '600',
+              textAlign: 'center'
+            }}>
+              +{changes.length - 6} more...
+            </div>
+          )}
         </div>
       </div>
     );
-  };
-
-  // Download handler
-  const handleDownloadReport = () => {
-    const report = generateJsonReport();
-    const blob = new Blob([report], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `json_comparison_${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const generateJsonReport = () => {
-    const report = {
-      comparison_report: {
-        generated_at: new Date().toISOString(),
-        files: {
-          file1: file1Name || 'File 1',
-          file2: file2Name || 'File 2'
-        },
-        statistics: {
-          total_properties: total_records,
-          differences_found,
-          matches_found,
-          similarity_percentage: total_records > 0 ? Math.round((matches_found / total_records) * 100) : 0
-        },
-        changes: changes.map(change => ({
-          path: change.path,
-          type: change.type,
-          old_value: change.oldValue,
-          new_value: change.newValue
-        }))
-      }
-    };
-    
-    return JSON.stringify(report, null, 2);
   };
 
   return (
     <div style={{
       background: 'white',
       borderRadius: '16px',
-      padding: '30px',
-      marginBottom: '30px',
+      padding: '24px',
+      marginBottom: '24px',
       boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
       border: '1px solid #e5e7eb'
     }}>
       {/* Add CSS for animations */}
       <style>
         {`
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
+          @keyframes glow-green {
+            0% { box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4); }
+            100% { box-shadow: 0 6px 20px rgba(5, 150, 105, 0.6); }
+          }
+          @keyframes glow-red {
+            0% { box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4); }
+            100% { box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6); }
+          }
+          @keyframes glow-orange {
+            0% { box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4); }
+            100% { box-shadow: 0 6px 20px rgba(217, 119, 6, 0.6); }
           }
         `}
       </style>
 
-      {/* Header */}
+      {/* Compact Header */}
       <div style={{
         textAlign: 'center',
-        marginBottom: '30px'
+        marginBottom: '20px'
       }}>
         <h2 style={{
           background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
-          fontSize: '2.2rem',
+          fontSize: '1.8rem',
           fontWeight: '700',
-          margin: '0 0 15px 0'
+          margin: '0 0 8px 0'
         }}>
-          🌳 JSON Comparison Results
+          🌳 JSON Comparison
         </h2>
-        <p style={{
-          color: '#6b7280',
-          fontSize: '1.1rem',
-          margin: 0
-        }}>
-          Hierarchical structure comparison with prominent difference highlighting
-        </p>
       </div>
 
-      {/* Statistics */}
+      {/* Compact Statistics */}
       <div style={{
-        background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
-        border: '2px solid #e5e7eb',
-        borderRadius: '12px',
-        padding: '24px',
-        marginBottom: '25px'
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '24px',
+        marginBottom: '20px',
+        fontSize: '14px'
       }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '20px',
-          textAlign: 'center'
-        }}>
-          <div>
-            <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#1f2937' }}>
-              {total_records}
-            </div>
-            <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '600' }}>Total Properties</div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#ef4444' }}>
+            {differences_found}
           </div>
-          <div>
-            <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#ef4444' }}>
-              {differences_found}
-            </div>
-            <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '600' }}>Differences</div>
+          <div style={{ color: '#6b7280', fontWeight: '600' }}>Differences</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#10b981' }}>
+            {matches_found}
           </div>
-          <div>
-            <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#10b981' }}>
-              {matches_found}
-            </div>
-            <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '600' }}>Matches</div>
+          <div style={{ color: '#6b7280', fontWeight: '600' }}>Matches</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#2563eb' }}>
+            {total_records > 0 ? Math.round((matches_found / total_records) * 100) : 0}%
           </div>
-          <div>
-            <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#2563eb' }}>
-              {total_records > 0 ? Math.round((matches_found / total_records) * 100) : 0}%
-            </div>
-            <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '600' }}>Similarity</div>
-          </div>
+          <div style={{ color: '#6b7280', fontWeight: '600' }}>Similarity</div>
         </div>
       </div>
 
-      {/* Controls */}
+      {/* Quick Differences Overview */}
+      <QuickDifferencesOverview />
+
+      {/* Compact Controls */}
       <div style={{
         display: 'flex',
-        flexWrap: 'wrap',
         justifyContent: 'space-between',
         alignItems: 'center',
-        gap: '15px',
-        marginBottom: '25px',
-        padding: '20px',
-        background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
-        borderRadius: '12px',
-        border: '2px solid #e5e7eb'
+        marginBottom: '16px',
+        padding: '12px',
+        background: '#f8fafc',
+        borderRadius: '8px',
+        fontSize: '14px'
       }}>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button
             onClick={() => setExpandedPaths(new Set())}
             style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: '2px solid #e5e7eb',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid #e5e7eb',
               background: 'white',
               cursor: 'pointer',
-              fontWeight: '600',
-              color: '#374151',
-              fontSize: '14px',
-              transition: 'all 0.2s ease'
+              fontWeight: '500',
+              fontSize: '13px'
             }}
           >
             📦 Collapse All
           </button>
           <button
             onClick={() => {
-              const newPaths = new Set(['root']);
-              if (file1_content && typeof file1_content === 'object') {
-                Object.keys(file1_content).forEach(key => {
-                  newPaths.add(key);
-                });
-              }
-              setExpandedPaths(newPaths);
+              const pathsToExpand = new Set(['root']);
+              changes.forEach(change => {
+                if (change.path) {
+                  pathsToExpand.add(change.path);
+                  const pathParts = change.path.split('.');
+                  for (let i = 1; i < pathParts.length; i++) {
+                    pathsToExpand.add(pathParts.slice(0, i).join('.'));
+                  }
+                }
+              });
+              setExpandedPaths(pathsToExpand);
             }}
             style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: '2px solid #e5e7eb',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid #e5e7eb',
               background: 'white',
               cursor: 'pointer',
-              fontWeight: '600',
-              color: '#374151',
-              fontSize: '14px',
-              transition: 'all 0.2s ease'
+              fontWeight: '500',
+              fontSize: '13px'
             }}
           >
-            📂 Expand All
+            📂 Show Differences
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={showUnchanged}
-              onChange={(e) => setShowUnchanged(e.target.checked)}
-              style={{ accentColor: '#2563eb', transform: 'scale(1.2)' }}
-            />
-            <span style={{ fontSize: '14px', color: '#374151', fontWeight: '600' }}>Show Unchanged</span>
-          </label>
-
-          <button
-            onClick={handleDownloadReport}
-            style={{
-              background: 'linear-gradient(135deg, #10b981, #059669)',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '700',
-              fontSize: '14px',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-            }}
-          >
-            📄 Download Report
-          </button>
-        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={showUnchanged}
+            onChange={(e) => setShowUnchanged(e.target.checked)}
+            style={{ accentColor: '#2563eb' }}
+          />
+          <span style={{ fontSize: '13px', fontWeight: '500' }}>Show Unchanged</span>
+        </label>
       </div>
 
-      {/* Enhanced Legend */}
+      {/* Compact Legend */}
       <div style={{
         display: 'flex',
-        flexWrap: 'wrap',
-        gap: '20px',
-        marginBottom: '25px',
-        fontSize: '14px',
-        padding: '16px',
-        background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
-        borderRadius: '12px',
-        border: '2px solid #e5e7eb'
+        justifyContent: 'center',
+        gap: '16px',
+        marginBottom: '16px',
+        fontSize: '12px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <div style={{
-            width: '20px',
-            height: '20px',
-            backgroundColor: '#10b981',
-            border: '2px solid #059669',
-            borderRadius: '6px',
-            boxShadow: '0 2px 4px rgba(16, 185, 129, 0.3)'
+            width: '12px', height: '12px', backgroundColor: '#059669',
+            borderRadius: '3px', border: '1px solid #047857'
           }}></div>
-          <span style={{ fontWeight: '600' }}>Added properties</span>
+          <span>Added</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <div style={{
-            width: '20px',
-            height: '20px',
-            backgroundColor: '#ef4444',
-            border: '2px solid #dc2626',
-            borderRadius: '6px',
-            boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)'
+            width: '12px', height: '12px', backgroundColor: '#dc2626',
+            borderRadius: '3px', border: '1px solid #b91c1c'
           }}></div>
-          <span style={{ fontWeight: '600' }}>Removed properties</span>
+          <span>Removed</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <div style={{
-            width: '20px',
-            height: '20px',
-            backgroundColor: '#f59e0b',
-            border: '2px solid #d97706',
-            borderRadius: '6px',
-            boxShadow: '0 2px 4px rgba(245, 158, 11, 0.3)'
+            width: '12px', height: '12px', backgroundColor: '#d97706',
+            borderRadius: '3px', border: '1px solid #b45309'
           }}></div>
-          <span style={{ fontWeight: '600' }}>Modified properties</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '20px',
-            height: '20px',
-            backgroundColor: '#f8f9fa',
-            border: '2px solid #e9ecef',
-            borderRadius: '6px'
-          }}></div>
-          <span style={{ fontWeight: '600' }}>Unchanged properties</span>
+          <span>Modified</span>
         </div>
       </div>
 
-      {/* Main Comparison View */}
-      <SideBySideView />
+      {/* Main Comparison View - Compact */}
+      <CompactSideBySideView />
 
-      {/* Changes Summary */}
-      <ChangesSummary />
-
-      {/* No differences message */}
+      {/* Success message for no differences */}
       {differences_found === 0 && (
         <div style={{
           textAlign: 'center',
-          padding: '40px',
+          padding: '24px',
           background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
-          border: '3px solid #10b981',
-          borderRadius: '16px',
-          marginTop: '24px'
+          border: '2px solid #10b981',
+          borderRadius: '12px',
+          marginTop: '16px'
         }}>
-          <div style={{ fontSize: '4rem', marginBottom: '15px' }}>🎉</div>
+          <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🎉</div>
           <h3 style={{
             color: '#166534',
-            fontSize: '1.6rem',
+            fontSize: '1.2rem',
             fontWeight: '700',
-            margin: '0 0 10px 0'
+            margin: '0 0 4px 0'
           }}>
             JSON structures are identical!
           </h3>
-          <p style={{
-            color: '#16a34a',
-            fontSize: '1.2rem',
-            margin: 0,
-            fontWeight: '500'
-          }}>
-            No differences found between the JSON files.
-          </p>
         </div>
       )}
     </div>
