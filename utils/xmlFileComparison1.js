@@ -69,34 +69,44 @@ const parseElement = (element, path = '') => {
   return result;
 };
 
-// Helper function to compare XML elements
+// Improved helper function to compare XML elements recursively
 const compareElements = (elem1, elem2, path = '') => {
   const changes = [];
   
-  if (!elem1 && !elem2) return changes;
+  console.log(`🔍 Comparing elements at path: ${path}`);
+  console.log('Element 1:', elem1?.name, 'Element 2:', elem2?.name);
+  
+  // Handle missing elements
+  if (!elem1 && !elem2) {
+    console.log('Both elements are null, no changes');
+    return changes;
+  }
   
   if (!elem1) {
+    console.log(`Element added at ${path}: ${elem2.name}`);
     changes.push({
       type: 'added',
       path: path,
       elementName: elem2.name,
-      newValue: elem2
+      newValue: elem2.name
     });
     return changes;
   }
   
   if (!elem2) {
+    console.log(`Element removed at ${path}: ${elem1.name}`);
     changes.push({
       type: 'removed',
       path: path,
       elementName: elem1.name,
-      oldValue: elem1
+      oldValue: elem1.name
     });
     return changes;
   }
   
   // Compare element names
   if (elem1.name !== elem2.name) {
+    console.log(`Element name changed at ${path}: ${elem1.name} -> ${elem2.name}`);
     changes.push({
       type: 'modified',
       path: path,
@@ -108,54 +118,69 @@ const compareElements = (elem1, elem2, path = '') => {
   
   // Compare text content
   if (elem1.text !== elem2.text) {
+    console.log(`Text content changed at ${path}: "${elem1.text}" -> "${elem2.text}"`);
     changes.push({
       type: 'modified',
       path: `${path}.text`,
       elementName: elem1.name,
-      oldValue: elem1.text,
-      newValue: elem2.text
+      oldValue: elem1.text || '(empty)',
+      newValue: elem2.text || '(empty)'
     });
   }
   
   // Compare attributes
   const allAttrKeys = new Set([
-    ...Object.keys(elem1.attributes),
-    ...Object.keys(elem2.attributes)
+    ...Object.keys(elem1.attributes || {}),
+    ...Object.keys(elem2.attributes || {})
   ]);
   
   for (const attrKey of allAttrKeys) {
-    const val1 = elem1.attributes[attrKey];
-    const val2 = elem2.attributes[attrKey];
+    const val1 = elem1.attributes?.[attrKey];
+    const val2 = elem2.attributes?.[attrKey];
     
     if (val1 !== val2) {
+      console.log(`Attribute changed at ${path}@${attrKey}: "${val1}" -> "${val2}"`);
       changes.push({
         type: 'attribute_changed',
         path: `${path}@${attrKey}`,
         elementName: elem1.name,
         attributeName: attrKey,
-        oldValue: val1,
-        newValue: val2
+        oldValue: val1 || '(undefined)',
+        newValue: val2 || '(undefined)'
       });
     }
   }
   
-  // Compare children
-  const maxChildren = Math.max(elem1.children.length, elem2.children.length);
+  // Compare children - improved logic
+  const maxChildren = Math.max(
+    elem1.children?.length || 0, 
+    elem2.children?.length || 0
+  );
+  
+  console.log(`Comparing ${maxChildren} children at ${path}`);
+  
   for (let i = 0; i < maxChildren; i++) {
-    const child1 = elem1.children[i];
-    const child2 = elem2.children[i];
-    const childPath = `${path}.${child1?.name || child2?.name}[${i}]`;
+    const child1 = elem1.children?.[i];
+    const child2 = elem2.children?.[i];
     
-    changes.push(...compareElements(child1, child2, childPath));
+    if (child1 || child2) {
+      const childName = child1?.name || child2?.name;
+      const childPath = path ? `${path}.${childName}[${i}]` : `${childName}[${i}]`;
+      
+      const childChanges = compareElements(child1, child2, childPath);
+      changes.push(...childChanges);
+    }
   }
   
+  console.log(`Found ${changes.length} changes at ${path}`);
   return changes;
 };
 
 // Helper function to count total elements
 const countElements = (element) => {
   if (!element) return 0;
-  return 1 + element.children.reduce((count, child) => count + countElements(child), 0);
+  const childCount = element.children?.reduce((count, child) => count + countElements(child), 0) || 0;
+  return 1 + childCount;
 };
 
 export const parseXMLFile = async (fileContent) => {
@@ -175,6 +200,9 @@ export const parseXMLFile = async (fileContent) => {
       throw new Error('XML file is empty');
     }
     
+    console.log('📄 XML content length:', content.length);
+    console.log('📄 XML content preview:', content.substring(0, 200));
+    
     // Parse XML using DOMParser
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(content, 'text/xml');
@@ -183,6 +211,7 @@ export const parseXMLFile = async (fileContent) => {
     const parseError = xmlDoc.getElementsByTagName('parsererror');
     if (parseError.length > 0) {
       const errorText = parseError[0].textContent;
+      console.error('❌ XML parsing error:', errorText);
       throw new Error(`Invalid XML format: ${errorText}`);
     }
     
@@ -190,7 +219,16 @@ export const parseXMLFile = async (fileContent) => {
     
     // Parse into structured format
     const rootElement = xmlDoc.documentElement;
+    if (!rootElement) {
+      throw new Error('No root element found in XML');
+    }
+    
+    console.log('🌳 Root element:', rootElement.tagName);
+    
     const parsedStructure = parseElement(rootElement, 'root');
+    
+    console.log('🔧 Parsed structure:', parsedStructure);
+    console.log('🔧 Parsed structure children count:', parsedStructure.children?.length);
     
     return {
       raw: content,
@@ -210,13 +248,20 @@ export const compareXMLFiles = async (xml1, xml2, options = {}) => {
   
   try {
     // Parse both inputs
+    console.log('📖 Parsing first XML file...');
     const data1 = typeof xml1 === 'string' ? await parseXMLFile(xml1) : xml1;
+    
+    console.log('📖 Parsing second XML file...');
     const data2 = typeof xml2 === 'string' ? await parseXMLFile(xml2) : xml2;
     
     console.log('📊 Comparing XML documents...');
+    console.log('File 1 structure:', data1.parsed);
+    console.log('File 2 structure:', data2.parsed);
     
     // Perform element comparison
     const allChanges = compareElements(data1.parsed, data2.parsed);
+    
+    console.log('🔍 All changes found:', allChanges);
     
     // Separate element changes from attribute changes
     const element_changes = allChanges.filter(change => 
@@ -227,10 +272,15 @@ export const compareXMLFiles = async (xml1, xml2, options = {}) => {
       change.type === 'attribute_changed'
     );
     
+    console.log('📊 Element changes:', element_changes);
+    console.log('📊 Attribute changes:', attribute_changes);
+    
     // Count totals
     const total1 = countElements(data1.parsed);
     const total2 = countElements(data2.parsed);
     const totalElements = Math.max(total1, total2);
+    
+    console.log('📊 Total elements - File 1:', total1, 'File 2:', total2, 'Max:', totalElements);
     
     const differences = allChanges.length;
     const matches = Math.max(0, totalElements - differences);
@@ -272,6 +322,7 @@ export const compareXMLFiles = async (xml1, xml2, options = {}) => {
     console.log('  - Matches:', results.matches_found);
     console.log('  - Element changes:', results.element_changes.length);
     console.log('  - Attribute changes:', results.attribute_changes.length);
+    console.log('📋 Final results object:', results);
     
     return results;
     
