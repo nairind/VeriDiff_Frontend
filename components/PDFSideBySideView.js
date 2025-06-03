@@ -1,10 +1,8 @@
 import React from 'react';
 
 const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
-  // Get all changes for highlighting
   const allChanges = results?.text_changes || [];
 
-  // Function to find if a paragraph has changes
   const findParagraphChange = (pageNumber, paragraphIndex, fileNumber) => {
     return allChanges.find(change => 
       change.page === pageNumber && 
@@ -13,23 +11,45 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
     );
   };
 
-  // Function to get colors for change types
-  const getChangeColors = (changeType) => {
-    switch (changeType) {
-      case 'added':
-        return { background: '#dcfce7', border: '#166534', color: '#166534' };
-      case 'removed':
-        return { background: '#fee2e2', border: '#dc2626', color: '#dc2626' };
-      case 'modified':
-        return { background: '#fef3c7', border: '#d97706', color: '#92400e' };
-      default:
-        return { background: 'transparent', border: 'transparent', color: '#374151' };
+  const getHighlightStyle = (changeType) => {
+    if (changeType === 'added') {
+      return {
+        background: '#dcfce7',
+        border: '1px solid #166534',
+        color: '#166534',
+        padding: '8px 12px',
+        borderRadius: '6px',
+        fontWeight: '500'
+      };
     }
+    if (changeType === 'removed') {
+      return {
+        background: '#fee2e2',
+        border: '1px solid #dc2626',
+        color: '#dc2626',
+        padding: '8px 12px',
+        borderRadius: '6px',
+        fontWeight: '500'
+      };
+    }
+    if (changeType === 'modified') {
+      return {
+        background: '#fef3c7',
+        border: '1px solid #d97706',
+        color: '#92400e',
+        padding: '8px 12px',
+        borderRadius: '6px',
+        fontWeight: '500'
+      };
+    }
+    return {
+      padding: '4px 0',
+      color: '#374151'
+    };
   };
 
   return (
     <div>
-      {/* Header Info */}
       <div style={{
         background: '#f8fafc',
         padding: '15px',
@@ -39,12 +59,10 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
       }}>
         <h3 style={{ margin: '0 0 10px 0' }}>📄 Side-by-Side Document Comparison</h3>
         <p style={{ margin: 0, color: '#6b7280' }}>
-          <strong>{results?.differences_found || 0} changes found</strong> • 
-          {results?.similarity_score || 0}% similarity
+          <strong>{allChanges.length} changes found</strong> • {results?.similarity_score || 0}% similarity
         </p>
       </div>
 
-      {/* Legend */}
       <div style={{
         display: 'flex',
         justifyContent: 'center',
@@ -84,13 +102,11 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         </div>
       </div>
 
-      {/* Side-by-Side Document Panels */}
       <div style={{
         display: 'flex',
         gap: '20px',
         minHeight: '600px'
       }}>
-        {/* Left Panel - File 1 */}
         <div style={{
           flex: 1,
           background: 'white',
@@ -129,39 +145,10 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
                 
                 {(page.paragraphs || []).map((para, paraIndex) => {
                   const change = findParagraphChange(page.page_number, paraIndex, 1);
-                  const colors = getChangeColors(change?.type);
+                  const style = getHighlightStyle(change?.type);
                   
                   return (
-                    <div 
-                      key={paraIndex} 
-                      style={{ 
-                        marginBottom: '12px',
-                        padding: change ? '8px 12px' : '4px 0',
-                        background: colors.background,
-                        border: change ? `1px solid ${colors.border}` : 'none',
-                        borderRadius: change ? '6px' : '0',
-                        color: colors.color,
-                        fontWeight: change ? '500' : 'normal',
-                        position: 'relative'
-                      }}
-                    >
-                      {/* Change type badge */}
-                      {change && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '-8px',
-                          left: '8px',
-                          background: colors.border,
-                          color: 'white',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          fontSize: '0.7rem',
-                          fontWeight: '600',
-                          textTransform: 'uppercase'
-                        }}>
-                          {change.type}
-                        </div>
-                      )}
+                    <div key={paraIndex} style={{ marginBottom: '12px', ...style }}>
                       {para.text}
                     </div>
                   );
@@ -171,7 +158,6 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
           </div>
         </div>
 
-        {/* Right Panel - File 2 */}
         <div style={{
           flex: 1,
           background: 'white',
@@ -210,39 +196,10 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
                 
                 {(page.paragraphs || []).map((para, paraIndex) => {
                   const change = findParagraphChange(page.page_number, paraIndex, 2);
-                  const colors = getChangeColors(change?.type);
+                  const style = getHighlightStyle(change?.type);
                   
                   return (
-                    <div 
-                      key={paraIndex} 
-                      style={{ 
-                        marginBottom: '12px',
-                        padding: change ? '8px 12px' : '4px 0',
-                        background: colors.background,
-                        border: change ? `1px solid ${colors.border}` : 'none',
-                        borderRadius: change ? '6px' : '0',
-                        color: colors.color,
-                        fontWeight: change ? '500' : 'normal',
-                        position: 'relative'
-                      }}
-                    >
-                      {/* Change type badge */}
-                      {change && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '-8px',
-                          left: '8px',
-                          background: colors.border,
-                          color: 'white',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          fontSize: '0.7rem',
-                          fontWeight: '600',
-                          textTransform: 'uppercase'
-                        }}>
-                          {change.type}
-                        </div>
-                      )}
+                    <div key={paraIndex} style={{ marginBottom: '12px', ...style }}>
                       {para.text}
                     </div>
                   );
@@ -253,7 +210,6 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         </div>
       </div>
 
-      {/* Summary Footer */}
       <div style={{
         background: '#f9fafb',
         padding: '15px',
@@ -264,12 +220,13 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         textAlign: 'center'
       }}>
         {allChanges.length > 0 ? (
-          <>
-            <strong>{allChanges.length} changes highlighted</strong> across {results?.total_pages || 0} pages • 
-            Scroll through both documents to see all differences
-          </>
+          <span>
+            <strong>{allChanges.length} changes highlighted</strong> across {results?.total_pages || 0} pages
+          </span>
         ) : (
-          <strong>No changes detected</strong> - Documents appear to be identical
+          <span>
+            <strong>No changes detected</strong> - Documents appear to be identical
+          </span>
         )}
       </div>
     </div>
