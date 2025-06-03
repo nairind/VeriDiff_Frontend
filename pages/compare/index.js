@@ -5,15 +5,15 @@ import { useSession, signOut } from 'next-auth/react';
 import AuthGuard from '../components/auth/AuthGuard';
 
 // ✅ KEEP: Excel/CSV utilities only
-import { parseCSVFile } from '../utils/simpleCSVComparison';
-import { parseExcelFile, compareExcelFiles, getExcelFileInfo } from '../utils/excelFileComparison';
-import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
+import { parseCSVFile } from '../../utils/simpleCSVComparison';
+import { parseExcelFile, compareExcelFiles, getExcelFileInfo } from '../../utils/excelFileComparison';
+import { compareExcelCSVFiles } from '../../utils/excelCSVComparison';
 
 // ✅ KEEP: Business logic components
-import HeaderMapper from '../components/HeaderMapper';
-import SheetSelector from '../components/SheetSelector';
-import { mapHeaders } from '../utils/mapHeaders';
-import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
+import HeaderMapper from '../../components/HeaderMapper';
+import SheetSelector from '../../components/SheetSelector';
+import { mapHeaders } from '../../utils/mapHeaders';
+import { downloadResultsAsExcel, downloadResultsAsCSV } from '../../utils/downloadResults';
 
 // FEATURE FLAGS - easily disable problematic features
 const FEATURES = {
