@@ -35,34 +35,40 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
     return 'unchanged';
   };
 
-  // Helper function to get styling for change types with MORE prominent highlighting
+  // Helper function to get styling for change types with VERY prominent highlighting
   const getChangeStyle = (changeType) => {
     switch (changeType) {
       case 'added':
         return {
-          backgroundColor: '#dcfce7',
-          borderLeft: '4px solid #22c55e',
-          color: '#166534',
-          fontWeight: '600'
+          backgroundColor: '#22c55e',
+          borderLeft: '6px solid #16a34a',
+          color: 'white',
+          fontWeight: '700',
+          border: '2px solid #16a34a',
+          boxShadow: '0 2px 4px rgba(34, 197, 94, 0.3)'
         };
       case 'removed':
         return {
-          backgroundColor: '#fef2f2',
-          borderLeft: '4px solid #ef4444',
-          color: '#dc2626',
-          fontWeight: '600'
+          backgroundColor: '#ef4444',
+          borderLeft: '6px solid #dc2626',
+          color: 'white',
+          fontWeight: '700',
+          border: '2px solid #dc2626',
+          boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)'
         };
       case 'modified':
         return {
-          backgroundColor: '#fef3c7',
-          borderLeft: '4px solid #f59e0b',
-          color: '#92400e',
-          fontWeight: '600'
+          backgroundColor: '#f59e0b',
+          borderLeft: '6px solid #d97706',
+          color: 'white',
+          fontWeight: '700',
+          border: '2px solid #d97706',
+          boxShadow: '0 2px 4px rgba(245, 158, 11, 0.3)'
         };
       default:
         return {
           backgroundColor: 'transparent',
-          borderLeft: '4px solid transparent',
+          borderLeft: '6px solid transparent',
           color: '#374151',
           fontWeight: '400'
         };
@@ -174,19 +180,26 @@ const JsonResults = ({ results, file1Name, file2Name }) => {
                 <div key={key} style={{ marginLeft: '20px' }}>
                   <div style={{
                     ...getChangeStyle(childChangeType),
-                    padding: '6px 8px',
+                    padding: '8px 12px',
                     fontFamily: 'Monaco, "Cascadia Code", "Roboto Mono", monospace',
                     fontSize: '13px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    borderRadius: '3px',
-                    margin: '1px 0',
-                    // Add a subtle border for differences to make them more obvious
+                    borderRadius: '6px',
+                    margin: '2px 0',
+                    // Force visible highlighting for testing
                     ...(childChangeType !== 'unchanged' ? {
-                      border: '1px solid rgba(0,0,0,0.1)',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                    } : {})
+                      minHeight: '32px',
+                      transform: 'scale(1.02)',
+                      zIndex: 10
+                    } : {}),
+                    // Debug styling - temporary bright colors to test
+                    ...(childPath === 'age' ? { backgroundColor: '#ff0000 !important', color: 'white' } : {}),
+                    ...(childPath === 'department' ? { backgroundColor: '#00ff00 !important', color: 'white' } : {}),
+                    ...(childPath === 'salary' ? { backgroundColor: '#0000ff !important', color: 'white' } : {}),
+                    ...(childPath === 'skills' ? { backgroundColor: '#ff00ff !important', color: 'white' } : {}),
+                    ...(childPath === 'manager' ? { backgroundColor: '#ffff00 !important', color: 'black' } : {})
                   }}>
                     <span style={{ color: '#7c3aed', fontWeight: '500', minWidth: 'fit-content' }}>
                       "{key}":
