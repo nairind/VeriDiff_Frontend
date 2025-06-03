@@ -16,6 +16,32 @@ import JsonResults from '../../components/JsonResults';
 import XmlResults from '../../components/XmlResults';
 import PdfResults from '../../components/PdfResults';
 
+// ===== UPDATED FILE SIZE LIMITS =====
+const getFileSizeLimit = (fileType) => {
+  switch (fileType) {
+    case 'text':
+      return 10 * 1024 * 1024; // 10MB - text files are usually small
+    case 'json':
+      return 25 * 1024 * 1024; // 25MB - JSON can be large datasets
+    case 'xml': 
+      return 25 * 1024 * 1024; // 25MB - XML documents can be substantial
+    case 'pdf':
+      return 100 * 1024 * 1024; // 100MB - PDFs can be very large
+    default:
+      return 10 * 1024 * 1024;
+  }
+};
+
+const getFileSizeLimitText = (fileType) => {
+  switch (fileType) {
+    case 'text': return '10MB';
+    case 'json': return '25MB';
+    case 'xml': return '25MB';
+    case 'pdf': return '100MB';
+    default: return '10MB';
+  }
+};
+
 // ===== DYNAMIC USER GUIDANCE COMPONENTS =====
 
 // Dynamic File Requirements Info Component
@@ -47,7 +73,7 @@ const FileRequirementsInfo = ({ fileType }) => {
             'Pretty-formatted or minified'
           ],
           requirements: [
-            'Maximum size: 10MB',
+            'Maximum size: 25MB',
             'Valid JSON syntax required',
             'UTF-8 encoding preferred'
           ]
@@ -63,7 +89,7 @@ const FileRequirementsInfo = ({ fileType }) => {
             'XML with comments and CDATA'
           ],
           requirements: [
-            'Maximum size: 10MB',
+            'Maximum size: 25MB',
             'Well-formed XML required',
             'UTF-8 encoding preferred'
           ]
@@ -79,7 +105,7 @@ const FileRequirementsInfo = ({ fileType }) => {
             'Standard PDF formats'
           ],
           requirements: [
-            'Maximum size: 10MB',
+            'Maximum size: 100MB',
             'Text-extractable PDFs only',
             'No password-protected files'
           ]
@@ -158,8 +184,8 @@ const SuccessTips = ({ fileType }) => {
         return [
           { label: 'Text-based PDFs work best:', tip: 'Avoid image-only PDF files' },
           { label: 'Page-by-page analysis:', tip: 'Each page compared individually' },
-          { label: 'Formatting differences:', tip: 'Can ignore or include formatting' },
-          { label: 'Extract text first:', tip: 'For image PDFs, convert to text' }
+          { label: 'Large files supported:', tip: 'Up to 100MB for comprehensive documents' },
+          { label: 'Real text extraction:', tip: 'Uses PDF.js for accurate text analysis' }
         ];
       
       default:
@@ -201,12 +227,26 @@ const getHelpfulErrorMessage = (error, fileName) => {
   if (errorMsg.includes('too large')) {
     return {
       title: "📁 File Too Large",
-      message: `"${fileName}" exceeds our 10MB limit.`,
+      message: `"${fileName}" exceeds our size limit.`,
       solutions: [
+        "Text files: Maximum 10MB",
+        "JSON/XML files: Maximum 25MB", 
+        "PDF files: Maximum 100MB",
         "Try splitting large files into smaller sections",
-        "Use a text editor to reduce file size",
-        "Compare specific sections instead of entire files",
         "For large datasets, consider our Premium bulk comparison tools"
+      ]
+    };
+  }
+  
+  if (errorMsg.includes('pdf.js') || errorMsg.includes('pdfjslib')) {
+    return {
+      title: "📚 PDF Library Error",
+      message: `PDF processing library issue.`,
+      solutions: [
+        "Refresh the page and try again",
+        "Ensure your internet connection is stable",
+        "Try a different PDF file to test",
+        "Contact support if the issue persists"
       ]
     };
   }
@@ -214,12 +254,12 @@ const getHelpfulErrorMessage = (error, fileName) => {
   if (errorMsg.includes('binary') || errorMsg.includes('not readable as text')) {
     return {
       title: "🚫 Binary File Detected",
-      message: `"${fileName}" appears to be a binary file (image, PDF, etc.).`,
+      message: `"${fileName}" appears to be a binary file.`,
       solutions: [
-        "Select .txt, .csv, or other text files instead",
-        "For PDF comparison, use our PDF comparison tool",
-        "Extract text content from documents first",
-        "Save files as plain text (.txt) format"
+        "For PDF files, use the PDF comparison tool",
+        "For images, convert to text first",
+        "Save files as plain text (.txt) format",
+        "Use appropriate file type selector"
       ]
     };
   }
@@ -232,6 +272,18 @@ const getHelpfulErrorMessage = (error, fileName) => {
         "Check if the file contains text content",
         "Try opening the file in a text editor first",
         "Ensure the file finished uploading completely"
+      ]
+    };
+  }
+  
+  if (errorMsg.includes('password') || errorMsg.includes('encrypted')) {
+    return {
+      title: "🔒 Protected PDF File",
+      message: `"${fileName}" is password-protected.`,
+      solutions: [
+        "Remove password protection from the PDF",
+        "Use an unprotected version of the document",
+        "Contact the document owner for an unlocked version"
       ]
     };
   }
@@ -267,8 +319,8 @@ const getHelpfulErrorMessage = (error, fileName) => {
     title: "⚠️ Comparison Error",
     message: error.message,
     solutions: [
-      "Ensure both files are valid text files",
-      "Check file size is under 10MB",
+      "Ensure both files are valid and correct format",
+      "Check file size is within limits",
       "Try refreshing the page and uploading again",
       "Contact support if the issue persists"
     ]
@@ -414,9 +466,9 @@ const adaptTextComparisonResults = (rawResults, file1Content, file2Content, file
 };
 
 // ===== ENHANCED FILE READING UTILITY =====
-const readFileContent = (file) => {
+const readFileContent = (file, fileType = 'text') => {
   return new Promise((resolve, reject) => {
-    console.log('🐛 DEBUG: Reading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+    console.log('🐛 DEBUG: Reading file:', file.name, 'Size:', file.size, 'Type:', file.type, 'Expected:', fileType);
     
     if (!file) {
       reject(new Error('No file provided'));
@@ -428,11 +480,37 @@ const readFileContent = (file) => {
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      reject(new Error(`File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 10MB.`));
+    const sizeLimit = getFileSizeLimit(fileType);
+    if (file.size > sizeLimit) {
+      reject(new Error(`File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size for ${fileType.toUpperCase()} files is ${getFileSizeLimitText(fileType)}.`));
       return;
     }
 
+    // For PDF files, use ArrayBuffer reading (not text)
+    if (fileType === 'pdf') {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const arrayBuffer = e.target.result;
+          console.log('✅ PDF file read as ArrayBuffer, size:', arrayBuffer.byteLength);
+          resolve(arrayBuffer);
+        } catch (error) {
+          console.error('❌ PDF file reading error:', error);
+          reject(new Error('Failed to process PDF file content'));
+        }
+      };
+      
+      reader.onerror = (e) => {
+        console.error('❌ FileReader error:', e);
+        reject(new Error(`Failed to read PDF file "${file.name}". The file may be corrupted.`));
+      };
+      
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    // For text-based files (JSON, XML, TXT), use text reading
     const reader = new FileReader();
     
     reader.onload = (e) => {
@@ -505,16 +583,20 @@ const FileUploadWithValidation = ({ fileNum, file, onChange, fileType }) => {
     setValidationWarning(null);
     
     try {
-      // Proactive validation
-      if (selectedFile.size > 10 * 1024 * 1024) {
+      const sizeLimit = getFileSizeLimit(fileType);
+      const sizeLimitText = getFileSizeLimitText(fileType);
+      
+      // Updated size validation with proper limits
+      if (selectedFile.size > sizeLimit) {
         setValidationWarning({
           type: 'error',
-          message: `File is ${(selectedFile.size / 1024 / 1024).toFixed(1)}MB (max 10MB allowed)`
+          message: `File is ${(selectedFile.size / 1024 / 1024).toFixed(1)}MB (max ${sizeLimitText} allowed for ${fileType.toUpperCase()} files)`
         });
         return;
       }
       
-      if (selectedFile.size > 5 * 1024 * 1024) {
+      // Warning for large files (but still within limits)
+      if (selectedFile.size > sizeLimit * 0.7) { // 70% of limit
         setValidationWarning({
           type: 'warning',
           message: `Large file (${(selectedFile.size / 1024 / 1024).toFixed(1)}MB) - comparison may take longer`
@@ -796,42 +878,26 @@ function DocumentComparePage() {
       console.log('🐛 DEBUG: Starting comparison...');
       console.log('🐛 DEBUG: Files:', { file1: file1.name, file2: file2.name });
       console.log('🐛 DEBUG: File type:', fileType);
-      console.log('🐛 DEBUG: Text options BEFORE:', textOptions);
-
-      // Ensure textOptions has all required properties with safe defaults
-      const safeTextOptions = {
-        compareMode: textOptions.compareMode || 'line',
-        caseSensitive: textOptions.caseSensitive !== undefined ? textOptions.caseSensitive : true,
-        ignoreWhitespace: textOptions.ignoreWhitespace !== undefined ? textOptions.ignoreWhitespace : false,
-        showLineNumbers: textOptions.showLineNumbers !== undefined ? textOptions.showLineNumbers : true
-      };
-
-      console.log('🐛 DEBUG: Safe text options:', safeTextOptions);
 
       let result;
 
       switch (fileType) {
         case 'text':
           // Read file contents first
-          console.log('🐛 DEBUG: Reading file contents...');
+          console.log('🐛 DEBUG: Reading text file contents...');
           
-          const file1Content = await readFileContent(file1);
-          const file2Content = await readFileContent(file2);
+          const file1Content = await readFileContent(file1, 'text');
+          const file2Content = await readFileContent(file2, 'text');
 
-          console.log('🐛 DEBUG: File contents read successfully');
-          console.log('🐛 DEBUG: File 1 content length:', file1Content?.length);
-          console.log('🐛 DEBUG: File 2 content length:', file2Content?.length);
+          console.log('🐛 DEBUG: Text file contents read successfully');
 
-          // Validate file contents
-          if (!file1Content || !file2Content) {
-            throw new Error('Failed to read file contents. Please ensure both files contain text.');
-          }
-
-          if (typeof file1Content !== 'string' || typeof file2Content !== 'string') {
-            throw new Error('File contents are not valid text strings.');
-          }
-
-          console.log('🐛 DEBUG: Calling compareTextFiles_main...');
+          // Ensure textOptions has all required properties with safe defaults
+          const safeTextOptions = {
+            compareMode: textOptions.compareMode || 'line',
+            caseSensitive: textOptions.caseSensitive !== undefined ? textOptions.caseSensitive : true,
+            ignoreWhitespace: textOptions.ignoreWhitespace !== undefined ? textOptions.ignoreWhitespace : false,
+            showLineNumbers: textOptions.showLineNumbers !== undefined ? textOptions.showLineNumbers : true
+          };
 
           // Try the comparison function with different parameter formats
           let rawTextResults;
@@ -862,8 +928,6 @@ function DocumentComparePage() {
             }
           }
 
-          console.log('🐛 DEBUG: Raw comparison results:', rawTextResults);
-
           // Adapt the results to TextResults expected format
           result = adaptTextComparisonResults(
             rawTextResults,
@@ -872,25 +936,21 @@ function DocumentComparePage() {
             file1.name,
             file2.name
           );
-
-          console.log('🐛 DEBUG: Final adapted result:', result);
           break;
           
         case 'json':
           console.log('🐛 DEBUG: Processing JSON files...');
-          // New simplified approach - utils handle file reading
           result = await compareJSONFiles(file1, file2, jsonOptions);
           break;
           
         case 'xml':
           console.log('🐛 DEBUG: Processing XML files...');
-          // New simplified approach - utils handle file reading
           result = await compareXMLFiles(file1, file2, xmlOptions);
           break;
           
         case 'pdf':
           console.log('🐛 DEBUG: Processing PDF files...');
-          // New simplified approach - utils handle file reading
+          // PDFs are handled differently - pass file objects directly
           result = await comparePDFFiles(file1, file2, pdfOptions);
           break;
           
@@ -925,7 +985,6 @@ function DocumentComparePage() {
     // Route to appropriate options based on file type
     switch (fileType) {
       case 'text':
-        // Text files can be compared directly or show options
         setShowTextOptions(true);
         break;
       case 'json':
@@ -1407,9 +1466,10 @@ function DocumentComparePage() {
       }}>
         <Head>
           <title>VeriDiff - Document Comparison</title>
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.269/pdf.min.js"></script>
         </Head>
 
-        {/* Header (same as main compare page) */}
+        {/* Header */}
         <header style={{
           background: 'white',
           borderBottom: '1px solid #e5e7eb',
@@ -1675,7 +1735,6 @@ function DocumentComparePage() {
                 gap: '25px',
                 marginBottom: '35px'
               }}>
-                {/* Enhanced File Upload Components */}
                 <FileUploadWithValidation 
                   fileNum={1} 
                   file={file1} 
