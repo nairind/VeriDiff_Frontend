@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Head from 'next.js';
+import Head from 'next/head';   
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import AuthGuard from '../../components/auth/AuthGuard';
