@@ -18,6 +18,7 @@ const readFileContent = (file) => {
       try {
         const content = e.target.result;
         console.log('✅ XML file read successfully, length:', content?.length);
+        console.log('📄 First 500 chars:', content?.substring(0, 500));
         resolve(content);
       } catch (error) {
         console.error('❌ XML file reading error:', error);
@@ -36,6 +37,13 @@ const readFileContent = (file) => {
 
 // Helper function to parse XML element into structured data
 const parseElement = (element, path = '') => {
+  console.log('🔧 parseElement called with:', element?.tagName, 'at path:', path);
+  
+  if (!element) {
+    console.log('❌ parseElement: element is null/undefined');
+    return null;
+  }
+  
   const result = {
     name: element.tagName,
     path: path,
@@ -44,10 +52,15 @@ const parseElement = (element, path = '') => {
     children: []
   };
   
+  console.log('🏗️ Building element structure for:', result.name);
+  
   // Extract attributes
-  Array.from(element.attributes).forEach(attr => {
-    result.attributes[attr.name] = attr.value;
-  });
+  if (element.attributes) {
+    Array.from(element.attributes).forEach(attr => {
+      result.attributes[attr.name] = attr.value;
+      console.log(`📋 Added attribute: ${attr.name}="${attr.value}"`);
+    });
+  }
   
   // Extract text content (only direct text, not from children)
   const directText = Array.from(element.childNodes)
@@ -58,14 +71,23 @@ const parseElement = (element, path = '') => {
   
   if (directText) {
     result.text = directText;
+    console.log(`📝 Added text content: "${directText}"`);
   }
   
   // Parse child elements
-  Array.from(element.children).forEach((child, index) => {
+  const childElements = Array.from(element.children);
+  console.log(`👶 Found ${childElements.length} child elements`);
+  
+  childElements.forEach((child, index) => {
     const childPath = path ? `${path}.${child.tagName}[${index}]` : `${child.tagName}[${index}]`;
-    result.children.push(parseElement(child, childPath));
+    console.log(`🔄 Processing child ${index}: ${child.tagName}`);
+    const childResult = parseElement(child, childPath);
+    if (childResult) {
+      result.children.push(childResult);
+    }
   });
   
+  console.log(`✅ parseElement complete for ${result.name}:`, result);
   return result;
 };
 
@@ -185,15 +207,21 @@ const countElements = (element) => {
 
 export const parseXMLFile = async (fileContent) => {
   console.log('🔧 parseXMLFile called for documents comparison');
+  console.log('🔧 Input type:', typeof fileContent);
+  console.log('🔧 Input:', fileContent);
   
   try {
     let content;
     
     // Handle both file objects and file content strings
     if (typeof fileContent === 'string') {
+      console.log('📄 Input is string, using directly');
       content = fileContent;
-    } else {
+    } else if (fileContent && typeof fileContent === 'object') {
+      console.log('📁 Input is file object, reading content...');
       content = await readFileContent(fileContent);
+    } else {
+      throw new Error('Invalid input: expected file object or string');
     }
     
     if (!content || content.trim().length === 0) {
@@ -201,11 +229,16 @@ export const parseXMLFile = async (fileContent) => {
     }
     
     console.log('📄 XML content length:', content.length);
-    console.log('📄 XML content preview:', content.substring(0, 200));
+    console.log('📄 XML content preview (first 500 chars):', content.substring(0, 500));
     
     // Parse XML using DOMParser
     const parser = new DOMParser();
+    console.log('🔄 Parsing XML with DOMParser...');
     const xmlDoc = parser.parseFromString(content, 'text/xml');
+    
+    console.log('📋 XML Document:', xmlDoc);
+    console.log('📋 XML Document type:', xmlDoc.nodeType);
+    console.log('📋 XML Document children:', xmlDoc.childNodes.length);
     
     // Check for parsing errors
     const parseError = xmlDoc.getElementsByTagName('parsererror');
@@ -219,25 +252,36 @@ export const parseXMLFile = async (fileContent) => {
     
     // Parse into structured format
     const rootElement = xmlDoc.documentElement;
+    console.log('🌳 Root element:', rootElement);
+    console.log('🌳 Root element tag name:', rootElement?.tagName);
+    console.log('🌳 Root element children:', rootElement?.children?.length);
+    
     if (!rootElement) {
       throw new Error('No root element found in XML');
     }
     
-    console.log('🌳 Root element:', rootElement.tagName);
-    
+    console.log('🔧 Starting parseElement for root...');
     const parsedStructure = parseElement(rootElement, 'root');
     
-    console.log('🔧 Parsed structure:', parsedStructure);
-    console.log('🔧 Parsed structure children count:', parsedStructure.children?.length);
+    console.log('🔧 Parsed structure result:', parsedStructure);
+    console.log('🔧 Parsed structure children count:', parsedStructure?.children?.length);
     
-    return {
+    if (!parsedStructure) {
+      throw new Error('Failed to parse XML structure');
+    }
+    
+    const result = {
       raw: content,
       parsed: parsedStructure,
       doc: xmlDoc
     };
     
+    console.log('📦 Final parseXMLFile result:', result);
+    return result;
+    
   } catch (error) {
     console.error('❌ XML parsing error:', error);
+    console.error('❌ Error stack:', error.stack);
     throw new Error(`Failed to parse XML file: ${error.message}`);
   }
 };
@@ -245,14 +289,26 @@ export const parseXMLFile = async (fileContent) => {
 export const compareXMLFiles = async (xml1, xml2, options = {}) => {
   console.log('🔄 compareXMLFiles called for documents comparison');
   console.log('🎛️ Options:', options);
+  console.log('🔧 Input 1 type:', typeof xml1);
+  console.log('🔧 Input 2 type:', typeof xml2);
   
   try {
     // Parse both inputs
     console.log('📖 Parsing first XML file...');
-    const data1 = typeof xml1 === 'string' ? await parseXMLFile(xml1) : xml1;
+    const data1 = typeof xml1 === 'string' ? await parseXMLFile(xml1) : await parseXMLFile(xml1);
+    console.log('📊 Data1 result:', data1);
     
     console.log('📖 Parsing second XML file...');
-    const data2 = typeof xml2 === 'string' ? await parseXMLFile(xml2) : xml2;
+    const data2 = typeof xml2 === 'string' ? await parseXMLFile(xml2) : await parseXMLFile(xml2);
+    console.log('📊 Data2 result:', data2);
+    
+    if (!data1 || !data1.parsed) {
+      throw new Error('Failed to parse first XML file');
+    }
+    
+    if (!data2 || !data2.parsed) {
+      throw new Error('Failed to parse second XML file');
+    }
     
     console.log('📊 Comparing XML documents...');
     console.log('File 1 structure:', data1.parsed);
@@ -328,6 +384,7 @@ export const compareXMLFiles = async (xml1, xml2, options = {}) => {
     
   } catch (error) {
     console.error('❌ XML document comparison error:', error);
+    console.error('❌ Error stack:', error.stack);
     throw new Error(`XML comparison failed: ${error.message}`);
   }
 };
