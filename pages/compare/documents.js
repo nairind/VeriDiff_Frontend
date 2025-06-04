@@ -1572,19 +1572,21 @@ function DocumentComparePage() {
                 gap: '25px',
                 marginBottom: '35px'
               }}>
-                <FileUploadWithValidation 
-                  fileNum={1} 
-                  file={file1} 
-                  onChange={handleFileChange} 
-                  fileType={fileType} 
-                />
-                <FileUploadWithValidation 
-                  fileNum={2} 
-                  file={file2} 
-                  onChange={handleFileChange} 
-                  fileType={fileType} 
-                />
-              </div>
+                  <FileUploadWithValidation 
+                    key={`file1-${fileType}`}
+                    fileNum={1} 
+                    file={file1} 
+                    onChange={handleFileChange} 
+                    fileType={fileType} 
+                  />
+                  <FileUploadWithValidation 
+                    key={`file2-${fileType}`}
+                    fileNum={2} 
+                    file={file2} 
+                    onChange={handleFileChange} 
+                    fileType={fileType} 
+                  />
+                 </div>
 
               {/* Load Files Button */}
               <div style={{ textAlign: 'center' }}>
