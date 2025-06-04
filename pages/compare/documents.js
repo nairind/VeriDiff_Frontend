@@ -1445,58 +1445,93 @@ function DocumentComparePage() {
               Choose File Type
             </h2>
             
+            {/* Updated: Horizontal flex layout with proper selection highlighting */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              display: 'flex',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
               gap: '15px',
-              maxWidth: '600px',
+              maxWidth: '800px',
               margin: '0 auto'
             }}>
               {[
                 { value: 'text', label: 'Text Files (.txt)', free: true },
                 { value: 'json', label: 'JSON Files (.json)', free: false },
                 { value: 'xml', label: 'XML Files (.xml)', free: false }
-              ].map((option) => (
-                <label
-                  key={option.value}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '15px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    background: option.free ? '#f0fdf4' : 'white',
-                    border: option.free ? '2px solid #22c55e' : '2px solid #e5e7eb',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="fileType"
-                    value={option.value}
-                    checked={fileType === option.value}
-                    onChange={handleFileTypeChange}
-                    style={{ accentColor: '#2563eb' }}
-                  />
-                  <span>
-                    {option.label}
-                    {option.free && (
-                      <span style={{
-                        marginLeft: '8px',
-                        fontSize: '0.75em',
-                        background: '#dcfce7',
-                        color: '#166534',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontWeight: '600'
-                      }}>
-                        FREE
-                      </span>
-                    )}
-                  </span>
-                </label>
-              ))}
+              ].map((option) => {
+                const isSelected = fileType === option.value;
+                const isSelectedAndFree = isSelected && option.free;
+                const isSelectedAndPremium = isSelected && !option.free;
+                
+                return (
+                  <label
+                    key={option.value}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '15px 20px',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      minWidth: '200px',
+                      justifyContent: 'center',
+                      // Updated logic: Green border for selected items, gray for unselected
+                      background: isSelected 
+                        ? (option.free ? '#f0fdf4' : '#eff6ff')
+                        : 'white',
+                      border: isSelected 
+                        ? '2px solid #22c55e' 
+                        : '2px solid #e5e7eb',
+                      transition: 'all 0.2s',
+                      boxShadow: isSelected 
+                        ? '0 4px 12px rgba(34, 197, 94, 0.15)' 
+                        : 'none'
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="fileType"
+                      value={option.value}
+                      checked={isSelected}
+                      onChange={handleFileTypeChange}
+                      style={{ accentColor: '#22c55e' }}
+                    />
+                    <span style={{
+                      fontSize: '1rem',
+                      fontWeight: isSelected ? '600' : '500',
+                      color: isSelected ? '#1f2937' : '#6b7280'
+                    }}>
+                      {option.label}
+                      {option.free && (
+                        <span style={{
+                          marginLeft: '8px',
+                          fontSize: '0.75em',
+                          background: '#dcfce7',
+                          color: '#166534',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontWeight: '600'
+                        }}>
+                          FREE
+                        </span>
+                      )}
+                      {!option.free && isSelected && (
+                        <span style={{
+                          marginLeft: '8px',
+                          fontSize: '0.75em',
+                          background: '#dbeafe',
+                          color: '#1e40af',
+                          padding: '2px 8px',
+                          borderRadius: '6px',
+                          fontWeight: '600'
+                        }}>
+                          PREMIUM
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </div>
 
