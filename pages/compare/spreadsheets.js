@@ -1152,7 +1152,7 @@ function ComparePage() {
     <AuthGuard>
       <div style={containerStyle}>
         <Head>
-          <title>VeriDiff - File Comparison Tool</title>
+          <title>VeriDiff - Spreadsheet Comparison Tool</title>
           <style>{mediaQueries}</style>
         </Head>
 
@@ -1174,6 +1174,10 @@ function ComparePage() {
                 <a href="/faq" style={navLinkStyle}>
                   FAQ
                 </a>
+                
+                <Link href="/compare" style={{ ...navLinkStyle, textDecoration: 'none' }}>
+                  ← Back to Comparison Engine
+                </Link>
                 
                 {session ? (
                   <div style={{ position: 'relative' }}>
@@ -1428,95 +1432,104 @@ function ComparePage() {
               Excel-Excel is free for all signed-in users • Excel-CSV requires premium
             </p>
             
-            <div style={fileTypeGridStyle} className="file-type-grid">
+            {/* ✅ FIXED: Updated comparison type selection with green highlighting */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              gap: '15px',
+              maxWidth: '900px',
+              margin: '0 auto'
+            }}>
               {[
-                { value: 'excel', label: 'Excel–Excel', featured: false, free: true },
-                { value: 'excel_csv', label: 'Excel–CSV', featured: true, free: false },
-                { value: 'csv', label: 'CSV–CSV', featured: false, free: false }
-              ].map((option) => (
-                <label
-                  key={option.value}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '15px',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    background: option.free
-                      ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
-                      : option.featured 
-                        ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                        : 'white',
-                    border: option.free
-                      ? '2px solid #22c55e'
-                      : option.featured 
-                        ? '2px solid #f59e0b' 
-                        : fileType === option.value 
-                          ? '2px solid #2563eb' 
-                          : '2px solid #e5e7eb',
-                    fontWeight: option.featured ? '600' : '500',
-                    fontSize: '1rem',
-                    minHeight: '60px'
-                  }}
-                  onMouseOver={(e) => {
-                    if (fileType !== option.value) {
-                      e.target.style.borderColor = option.free ? '#16a34a' : '#2563eb';
-                      e.target.style.background = option.free 
-                        ? 'linear-gradient(135deg, #d1fae5, #bbf7d0)'
-                        : option.featured 
-                          ? 'linear-gradient(135deg, #fde68a, #fcd34d)' 
-                          : '#f0f4ff';
-                      e.target.style.transform = 'translateY(-2px)';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (fileType !== option.value) {
-                      e.target.style.borderColor = option.free 
-                        ? '#22c55e'
-                        : option.featured 
-                          ? '#f59e0b' 
-                          : '#e5e7eb';
-                      e.target.style.background = option.free
-                        ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
-                        : option.featured 
-                          ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                          : 'white';
-                      e.target.style.transform = 'none';
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="fileType"
-                    value={option.value}
-                    checked={fileType === option.value}
-                    onChange={handleFileTypeChange}
+                { value: 'excel', label: 'Excel–Excel', description: 'FREE for signed-in users ✨', free: true },
+                { value: 'excel_csv', label: 'Excel–CSV', description: 'Premium format comparison', free: false },
+                { value: 'csv', label: 'CSV–CSV', description: 'Advanced CSV analysis', free: false }
+              ].map((option) => {
+                const isSelected = fileType === option.value;
+                
+                return (
+                  <label
+                    key={option.value}
                     style={{
-                      width: '20px',
-                      height: '20px',
-                      accentColor: option.free ? '#22c55e' : '#2563eb'
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '20px',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      minWidth: '250px',
+                      textAlign: 'center',
+                      // ✅ FIXED: Green border for selected items, gray for unselected
+                      background: isSelected 
+                        ? (option.free ? '#f0fdf4' : '#eff6ff')
+                        : 'white',
+                      border: isSelected 
+                        ? '3px solid #22c55e' 
+                        : '2px solid #e5e7eb',
+                      transition: 'all 0.2s',
+                      boxShadow: isSelected 
+                        ? '0 4px 12px rgba(34, 197, 94, 0.15)' 
+                        : 'none'
                     }}
-                  />
-                  <span style={{ flex: 1 }}>
-                    {option.label}
-                    {option.free && (
-                      <span style={{
-                        marginLeft: '8px',
-                        fontSize: '0.75em',
-                        background: '#dcfce7',
-                        color: '#166534',
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        fontWeight: '600'
+                  >
+                    <input
+                      type="radio"
+                      name="comparisonType"
+                      value={option.value}
+                      checked={isSelected}
+                      onChange={handleFileTypeChange}
+                      style={{ accentColor: '#22c55e', transform: 'scale(1.2)' }}
+                    />
+                    <div>
+                      <div style={{
+                        fontSize: '1.1rem',
+                        fontWeight: isSelected ? '700' : '600',
+                        color: isSelected ? '#1f2937' : '#6b7280',
+                        marginBottom: '4px'
                       }}>
-                        FREE for signed-in users ✨
-                      </span>
-                    )}
-                  </span>
-                </label>
-              ))}
+                        {option.label}
+                      </div>
+                      <div style={{
+                        fontSize: '0.85rem',
+                        color: isSelected ? '#059669' : '#9ca3af',
+                        fontWeight: '500'
+                      }}>
+                        {option.description}
+                      </div>
+                      {option.free && (
+                        <span style={{
+                          marginTop: '8px',
+                          fontSize: '0.75em',
+                          background: '#dcfce7',
+                          color: '#166534',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontWeight: '600',
+                          display: 'inline-block'
+                        }}>
+                          FREE
+                        </span>
+                      )}
+                      {!option.free && isSelected && (
+                        <span style={{
+                          marginTop: '8px',
+                          fontSize: '0.75em',
+                          background: '#dbeafe',
+                          color: '#1e40af',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontWeight: '600',
+                          display: 'inline-block'
+                        }}>
+                          PREMIUM
+                        </span>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
             </div>
           </div>
 
@@ -1539,7 +1552,7 @@ function ComparePage() {
               </p>
 
               <div style={fileUploadGridStyle} className="file-upload-grid">
-                {/* File 1 Upload */}
+                {/* ✅ FIXED: File 1 Upload with key prop for clearing */}
                 <div style={{
                   background: fileType === 'excel'
                     ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
@@ -1614,6 +1627,7 @@ function ComparePage() {
                   </div>
                   
                   <input
+                    key={`file1-${fileType}`}
                     type="file"
                     onChange={(e) => handleFileChange(e, 1)}
                     accept={fileType === 'excel_csv' ? '.xlsx,.xls,.xlsm' : undefined}
@@ -1645,7 +1659,7 @@ function ComparePage() {
                   )}
                 </div>
                 
-                {/* File 2 Upload */}
+                {/* ✅ FIXED: File 2 Upload with key prop for clearing */}
                 <div style={{
                   background: fileType === 'excel'
                     ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
@@ -1720,6 +1734,7 @@ function ComparePage() {
                   </div>
                   
                   <input
+                    key={`file2-${fileType}`}
                     type="file"
                     onChange={(e) => handleFileChange(e, 2)}
                     accept={fileType === 'excel_csv' ? '.csv' : undefined}
