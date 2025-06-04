@@ -450,28 +450,31 @@ function PdfComparePage() {
     }
   }, [session]);
 
-  // Premium upgrade handlers
+  // ✅ UPDATED: Premium upgrade handlers to match index.js
   const handlePremiumUpgrade = async () => {
     try {
-      setLoading(true);
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ timestamp: new Date().toISOString() }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1RVEnnJbX57fsaKHqLt143Fg',
+          successUrl: `${window.location.origin}/compare?success=true`,
+          cancelUrl: `${window.location.origin}/?canceled=true`,
+        }),
       });
 
-      if (!response.ok) {
+      const { url } = await response.json();
+      
+      if (url) {
+        window.location.href = url;
+      } else {
         throw new Error('Failed to create checkout session');
       }
-
-      const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
     } catch (error) {
-      alert('Error starting premium subscription. Please try again.');
-    } finally {
-      setLoading(false);
+      console.error('Stripe checkout error:', error);
+      alert('Sorry, there was an error starting your premium trial. Please try again or contact support.');
     }
   };
 
