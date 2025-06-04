@@ -1,21 +1,111 @@
-import { useState, useEffect } from 'react';
-import Head from 'next/head';
-import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
+import React, { useState, useEffect } from 'react';
 
 export default function Home() {
-  const { data: session } = useSession();
+  const [selectedDemo, setSelectedDemo] = useState('excel-csv');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
-  // Navigation handlers
+  // Check for logged in user on component mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem('veridiff_token');
+      if (token) {
+        const response = await fetch('/api/auth/verify', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          localStorage.removeItem('veridiff_token');
+        }
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+    }
+  };
+
+  const handleTryDemo = () => {
+    // In a real Next.js app, this would be: router.push('/compare');
+    window.location.href = '/compare';
+  };
+
   const handleSignIn = () => {
+    // ✅ FIXED: Now redirects to NextAuth signin page
     window.location.href = '/api/auth/signin';
   };
 
   const handleSignOut = () => {
-    signOut();
+    localStorage.removeItem('veridiff_token');
+    setUser(null);
     setUserMenuOpen(false);
+  };
+
+  // ✅ NEW: Handle dashboard navigation
+  const handleDashboard = () => {
+    // TODO: Create /dashboard page
+    window.location.href = '/dashboard';
+  };
+
+  // ✅ NEW: Handle account settings navigation
+  const handleAccountSettings = () => {
+    // TODO: Create /account page
+    window.location.href = '/account';
+  };
+
+  // ✅ NEW: Handle FAQ navigation
+  const handleFAQ = () => {
+    // TODO: Create /faq page
+    window.location.href = '/faq';
+  };
+
+  // ✅ NEW: Handle legal page navigation
+  const handleLegalPage = (page) => {
+    // TODO: Create legal pages
+    window.location.href = `/${page}`;
+  };
+
+  const handleWatchVideo = () => {
+    alert('Demo video coming soon! Click Try Live Demo above to test VeriDiff now.');
+  };
+
+  // ✅ UPDATED: Premium trial with Stripe integration
+  const handleProTrial = async () => {
+    try {
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1RVEnnJbX57fsaKHqLt143Fg',
+          successUrl: `${window.location.origin}/compare?success=true`,
+          cancelUrl: `${window.location.origin}/?canceled=true`,
+        }),
+      });
+
+      const { url } = await response.json();
+      
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('Failed to create checkout session');
+      }
+    } catch (error) {
+      console.error('Stripe checkout error:', error);
+      alert('Sorry, there was an error starting your premium trial. Please try again or contact support.');
+    }
+  };
+
+  const handleContactSales = () => {
+    alert('Enterprise contact form coming soon! Email us at hello@veridiff.com');
   };
 
   const scrollToSection = (sectionId) => {
@@ -26,1138 +116,1580 @@ export default function Home() {
     setMobileMenuOpen(false);
   };
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f8fafc',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <Head>
-        <title>VeriDiff - Professional File Comparison Tools</title>
-        <meta name="description" content="Professional file comparison tools for business spreadsheets, PDF documents, and technical files. Excel comparison free forever!" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-        <style jsx>{`
-          .desktop-nav {
-            display: flex;
-            gap: 1.5rem;
-          }
-          .mobile-menu-btn {
-            display: none;
-          }
-          @media (max-width: 768px) {
-            .desktop-nav {
-              display: none;
-            }
-            .mobile-menu-btn {
-              display: block !important;
-            }
-          }
-        `}</style>
-      </Head>
+  // Responsive styles (same as before)
+  const containerStyle = {
+    minHeight: '100vh',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    margin: 0,
+    padding: 0,
+    color: '#1f2937'
+  };
 
-      {/* Header */}
-      <header style={{
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          height: '64px'
-        }}>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: '700',
-            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
-            VeriDiff
-          </div>
-          
-          <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-            {/* Desktop Navigation */}
-            <div className="desktop-nav" style={{ display: 'flex', gap: '1.5rem' }}>
+  const headerStyle = {
+    background: 'white',
+    borderBottom: '1px solid #e5e7eb',
+    position: 'sticky',
+    top: 0,
+    zIndex: 1000,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+  };
+
+  const headerContainerStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 20px'
+  };
+
+  const headerContentStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: '64px'
+  };
+
+  const logoStyle = {
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    cursor: 'pointer'
+  };
+
+  const desktopNavStyle = {
+    display: 'flex',
+    gap: '2rem',
+    alignItems: 'center'
+  };
+
+  const navButtonStyle = {
+    background: 'none',
+    border: 'none',
+    color: '#374151',
+    fontWeight: '500',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    padding: '0.5rem',
+    borderRadius: '0.25rem',
+    transition: 'color 0.2s'
+  };
+
+  const navLinkStyle = {
+    textDecoration: 'none',
+    color: '#374151',
+    fontWeight: '500',
+    padding: '0.5rem',
+    borderRadius: '0.25rem',
+    transition: 'color 0.2s',
+    display: 'block'
+  };
+
+  const mobileNavButtonStyle = {
+    display: 'none',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '8px',
+    color: '#374151'
+  };
+
+  const heroStyle = {
+    background: 'linear-gradient(135deg, #eff6ff, #f3e8ff)',
+    padding: '5rem 0',
+    textAlign: 'center'
+  };
+
+  const heroContainerStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 20px'
+  };
+
+  const sectionStyle = {
+    padding: '5rem 0'
+  };
+
+  const sectionContainerStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 20px'
+  };
+
+  // Media queries (same as before)
+  const mediaQueries = `
+    @media (max-width: 768px) {
+      .desktop-nav { display: none !important; }
+      .mobile-nav-button { display: block !important; }
+      .hero-title { font-size: 2.5rem !important; }
+      .hero-subtitle { font-size: 1.1rem !important; }
+      .section-title { font-size: 1.8rem !important; }
+      .section-padding { padding: 3rem 0 !important; }
+      .demo-grid { grid-template-columns: 1fr !important; }
+      .pricing-grid { grid-template-columns: 1fr !important; }
+      .feature-grid { grid-template-columns: 1fr !important; }
+      .footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .button-group { flex-direction: column !important; align-items: center !important; }
+      .demo-buttons { flex-direction: column !important; gap: 0.5rem !important; }
+      .tolerance-grid { grid-template-columns: 1fr !important; }
+      .security-grid { grid-template-columns: 1fr !important; }
+    }
+    
+    @media (max-width: 480px) {
+      .hero-section { padding: 3rem 0 !important; }
+      .hero-title { font-size: 2rem !important; }
+      .section-container { padding: 0 15px !important; }
+      .pricing-card { margin-bottom: 1rem !important; }
+    }
+    
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .demo-grid { grid-template-columns: 1fr !important; }
+    }
+  `;
+
+  return (
+    <>
+      <style>{mediaQueries}</style>
+      <div style={containerStyle}>
+        
+        {/* Header */}
+        <header style={headerStyle}>
+          <div style={headerContainerStyle}>
+            <div style={headerContentStyle}>
+              <div style={logoStyle}>
+                VeriDiff
+              </div>
+              
+              <nav style={desktopNavStyle} className="desktop-nav">
+                <button onClick={() => scrollToSection('features')} style={navButtonStyle}>
+                  Features
+                </button>
+                <button onClick={() => scrollToSection('pricing')} style={navButtonStyle}>
+                  Pricing
+                </button>
+                <a href="/faq" style={navLinkStyle}>
+                  FAQ
+                </a>
+                
+                {user ? (
+                  <div style={{ position: 'relative' }}>
+                    <button 
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      style={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem',
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
+                        borderRadius: '0.25rem',
+                        transition: 'background 0.2s'
+                      }}
+                    >
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: '#2563eb',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.875rem',
+                        fontWeight: '500'
+                      }}>
+                        {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {userMenuOpen && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        right: 0,
+                        background: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                        minWidth: '200px',
+                        marginTop: '0.5rem',
+                        zIndex: 1000
+                      }}>
+                        <div style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>
+                          <div style={{ fontWeight: '500', fontSize: '0.875rem' }}>{user.full_name}</div>
+                          <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>{user.email}</div>
+                        </div>
+                        <div style={{ padding: '0.5rem' }}>
+                          {/* ✅ UPDATED: Now uses handleDashboard function */}
+                          <button onClick={handleDashboard} style={{ 
+                            width: '100%',
+                            textAlign: 'left',
+                            display: 'block',
+                            padding: '0.5rem',
+                            color: '#374151',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            borderRadius: '0.25rem',
+                            transition: 'background 0.2s'
+                          }}>
+                            Dashboard
+                          </button>
+                          {/* ✅ UPDATED: Now uses handleAccountSettings function */}
+                          <button onClick={handleAccountSettings} style={{ 
+                            width: '100%',
+                            textAlign: 'left',
+                            display: 'block',
+                            padding: '0.5rem',
+                            color: '#374151',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            borderRadius: '0.25rem',
+                            transition: 'background 0.2s'
+                          }}>
+                            Account Settings
+                          </button>
+                          <button onClick={handleSignOut} style={{ 
+                            width: '100%',
+                            textAlign: 'left',
+                            padding: '0.5rem',
+                            background: 'none',
+                            border: 'none',
+                            color: '#dc2626',
+                            cursor: 'pointer',
+                            borderRadius: '0.25rem',
+                            transition: 'background 0.2s'
+                          }}>
+                            Sign Out
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <button onClick={handleSignIn} style={{ ...navButtonStyle, background: 'transparent' }}>
+                      Sign In
+                    </button>
+                    <button onClick={handleTryDemo} style={{ 
+                      padding: '0.5rem 1rem', 
+                      border: 'none', 
+                      borderRadius: '0.5rem', 
+                      fontWeight: '500', 
+                      cursor: 'pointer', 
+                      background: '#2563eb', 
+                      color: 'white',
+                      transition: 'all 0.2s'
+                    }}>
+                      Try Free Demo
+                    </button>
+                  </>
+                )}
+              </nav>
+
               <button 
-                onClick={() => scrollToSection('tools')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#374151',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  textDecoration: 'none'
-                }}
+                style={mobileNavButtonStyle}
+                className="mobile-nav-button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
-                Tools
-              </button>
-              <button 
-                onClick={() => scrollToSection('features')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#374151',
-                  fontWeight: '500',
-                  cursor: 'pointer'
-                }}
-              >
-                Features
-              </button>
-              <button 
-                onClick={() => scrollToSection('pricing')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#374151',
-                  fontWeight: '500',
-                  cursor: 'pointer'
-                }}
-              >
-                Pricing
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                </svg>
               </button>
             </div>
-            
-            {/* Mobile Menu Button */}
-            <button 
-              className="mobile-menu-btn"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{
-                display: 'none',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '1.5rem'
-              }}
-            >
-              ☰
-            </button>
-            
-            {/* User Menu */}
-            {session ? (
-              <div style={{ position: 'relative' }}>
-                <button 
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  style={{ 
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem',
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    borderRadius: '0.25rem'
-                  }}
-                >
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: '#2563eb',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: '500'
-                  }}>
-                    {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </div>
-                </button>
-                
-                {userMenuOpen && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: 0,
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '0.5rem',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                    minWidth: '200px',
-                    marginTop: '0.5rem',
-                    zIndex: 1000
-                  }}>
-                    <div style={{ padding: '0.5rem' }}>
-                      <button onClick={handleSignOut} style={{ 
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '0.5rem',
-                        background: 'none',
-                        border: 'none',
-                        color: '#dc2626',
-                        cursor: 'pointer',
-                        borderRadius: '0.25rem'
-                      }}>
+
+            {/* Mobile Navigation Menu */}
+            {mobileMenuOpen && (
+              <div style={{
+                borderTop: '1px solid #e5e7eb',
+                padding: '1rem 0',
+                background: 'white'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <button onClick={() => scrollToSection('features')} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                    Features
+                  </button>
+                  <button onClick={() => scrollToSection('pricing')} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                    Pricing
+                  </button>
+                  <a href="/faq" style={{ ...navLinkStyle, textAlign: 'left' }}>
+                    FAQ
+                  </a>
+                  {user ? (
+                    <>
+                      {/* ✅ UPDATED: Mobile dashboard uses handleDashboard function */}
+                      <button onClick={handleDashboard} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                        Dashboard
+                      </button>
+                      <button onClick={handleSignOut} style={{ ...navButtonStyle, textAlign: 'left', color: '#dc2626' }}>
                         Sign Out
                       </button>
-                    </div>
-                  </div>
-                )}
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={handleSignIn} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                        Sign In
+                      </button>
+                      <button onClick={handleTryDemo} style={{ 
+                        padding: '0.75rem 1rem', 
+                        border: 'none', 
+                        borderRadius: '0.5rem', 
+                        fontWeight: '500', 
+                        cursor: 'pointer', 
+                        background: '#2563eb', 
+                        color: 'white',
+                        width: '100%',
+                        textAlign: 'center'
+                      }}>
+                        Try Free Demo
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            ) : (
-              <button onClick={handleSignIn} style={{
-                background: '#2563eb',
-                color: 'white',
-                border: 'none',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}>
-                Sign In
-              </button>
             )}
-          </nav>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div style={{
-            background: 'white',
-            borderTop: '1px solid #e5e7eb',
-            padding: '1rem 20px'
-          }}>
-            <button onClick={() => scrollToSection('tools')} style={{
-              display: 'block',
-              width: '100%',
-              textAlign: 'left',
-              padding: '0.5rem 0',
-              background: 'none',
-              border: 'none',
-              color: '#374151',
-              fontWeight: '500'
-            }}>
-              Tools
-            </button>
-            <button onClick={() => scrollToSection('features')} style={{
-              display: 'block',
-              width: '100%',
-              textAlign: 'left',
-              padding: '0.5rem 0',
-              background: 'none',
-              border: 'none',
-              color: '#374151',
-              fontWeight: '500'
-            }}>
-              Features
-            </button>
-            <button onClick={() => scrollToSection('pricing')} style={{
-              display: 'block',
-              width: '100%',
-              textAlign: 'left',
-              padding: '0.5rem 0',
-              background: 'none',
-              border: 'none',
-              color: '#374151',
-              fontWeight: '500'
-            }}>
-              Pricing
-            </button>
           </div>
-        )}
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main>
-        {/* Hero Section */}
-        <section style={{
-          background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #dc2626 100%)',
-          color: 'white',
-          padding: '80px 20px',
+        {/* Security Trust Banner */}
+        <div style={{
+          background: '#dcfce7',
+          borderBottom: '1px solid #bbf7d0',
+          padding: '0.75rem 0',
           textAlign: 'center'
         }}>
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto'
-          }}>
-            <h1 style={{
-              fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-              fontWeight: '700',
-              margin: '0 0 20px 0',
-              lineHeight: '1.1'
-            }}>
-              Professional File Comparison
-            </h1>
+          <div style={headerContainerStyle}>
             <p style={{
-              fontSize: 'clamp(1.1rem, 2.5vw, 1.3rem)',
-              opacity: '0.9',
-              maxWidth: '800px',
-              margin: '0 auto 40px auto',
-              lineHeight: '1.5'
+              margin: 0,
+              fontSize: '0.875rem',
+              color: '#166534',
+              fontWeight: '500'
             }}>
-              Choose the right tool for your comparison needs. From business spreadsheets to 
-              technical documents, we have specialized solutions for every use case.
+              🔒 Enterprise-Grade Privacy: All file processing happens in your browser. We never see, store, or access your data.
             </p>
           </div>
-        </section>
+        </div>
 
-        {/* Three-Path Tool Selection */}
-        <section id="tools" style={{
-          padding: '80px 20px',
-          maxWidth: '1400px',
-          margin: '0 auto'
-        }}>
-          <div style={{
-            textAlign: 'center',
-            marginBottom: '60px'
-          }}>
-            <h2 style={{
-              fontSize: 'clamp(2rem, 4vw, 2.5rem)',
-              fontWeight: '700',
-              background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              margin: '0 0 20px 0'
+        {/* Hero Section */}
+        <section style={heroStyle} className="hero-section">
+          <div style={heroContainerStyle} className="section-container">
+            <div style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              background: '#dbeafe', 
+              color: '#1e40af', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '2rem', 
+              fontSize: '0.875rem', 
+              fontWeight: '500', 
+              marginBottom: '2rem', 
+              gap: '0.5rem' 
             }}>
-              🎯 Choose Your Comparison Tool
-            </h2>
-            <p style={{
-              fontSize: '1.1rem',
-              color: '#6b7280',
-              maxWidth: '600px',
-              margin: '0 auto'
-            }}>
-              Each tool is specialized for specific file types and use cases
-            </p>
-          </div>
-
-          {/* Three-Column Layout */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-            gap: '30px',
-            alignItems: 'stretch'
-          }}>
+              ⚡ Precision-Engineered in London for Global Professionals
+            </div>
             
-            {/* Business Spreadsheets Column */}
-            <div style={{
-              background: 'white',
-              borderRadius: '20px',
-              padding: '40px 30px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
-              border: '3px solid #22c55e',
-              textAlign: 'center',
-              position: 'relative',
-              transition: 'transform 0.3s ease'
-            }}>
-              {/* FREE Badge */}
-              <div style={{
-                position: 'absolute',
-                top: '-12px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: '#22c55e',
-                color: 'white',
-                padding: '8px 20px',
-                borderRadius: '20px',
-                fontSize: '0.9rem',
-                fontWeight: '700'
+            <h1 style={{ 
+              fontSize: '3.5rem', 
+              fontWeight: '700', 
+              marginBottom: '1.5rem', 
+              lineHeight: '1.2', 
+              color: '#1f2937' 
+            }} className="hero-title">
+              What Excel Comparison
+              <span style={{ 
+                display: 'block', 
+                background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
+                WebkitBackgroundClip: 'text', 
+                WebkitTextFillColor: 'transparent', 
+                backgroundClip: 'text' 
               }}>
-                EXCEL FREE FOREVER
-              </div>
-
-              <div style={{
-                fontSize: '4rem',
-                margin: '20px 0'
-              }}>📊</div>
-              
-              <h3 style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: '#1f2937',
-                margin: '0 0 15px 0'
-              }}>
-                Business Spreadsheets
-              </h3>
-              
-              <p style={{
-                fontSize: '1rem',
-                color: '#6b7280',
-                margin: '0 0 25px 0',
-                lineHeight: '1.5'
-              }}>
-                Excel & CSV Files
-              </p>
-
-              {/* Features */}
-              <div style={{
-                textAlign: 'left',
-                marginBottom: '30px'
-              }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
-                  Smart header mapping
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
-                  Financial tolerance
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
-                  Sheet selection
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
-                  Excel FREE forever
-                </div>
-              </div>
-
-              {/* Perfect For */}
-              <div style={{
-                background: '#f0fdf4',
-                borderRadius: '12px',
-                padding: '15px',
-                marginBottom: '25px',
-                textAlign: 'left'
-              }}>
-                <h4 style={{
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  color: '#166534',
-                  margin: '0 0 8px 0'
-                }}>
-                  Perfect for:
-                </h4>
-                <div style={{ fontSize: '0.85rem', color: '#166534', lineHeight: '1.4' }}>
-                  • Accountants & Finance<br/>
-                  • Data analysts<br/>
-                  • Business reconciliation
-                </div>
-              </div>
-
-              {/* CTA Button */}
-              <Link href="/compare" style={{ textDecoration: 'none' }}>
-                <button style={{
-                  background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '15px 25px',
-                  borderRadius: '12px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  width: '100%',
-                  transition: 'transform 0.2s ease'
-                }}>
-                  → Compare Spreadsheets
-                </button>
-              </Link>
-            </div>
-
-            {/* PDF Documents Column */}
-            <div style={{
-              background: 'white',
-              borderRadius: '20px',
-              padding: '40px 30px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
-              border: '3px solid #dc2626',
-              textAlign: 'center',
-              position: 'relative',
-              transition: 'transform 0.3s ease'
-            }}>
-              {/* PREMIUM Badge */}
-              <div style={{
-                position: 'absolute',
-                top: '-12px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: '#dc2626',
-                color: 'white',
-                padding: '8px 20px',
-                borderRadius: '20px',
-                fontSize: '0.9rem',
-                fontWeight: '700'
-              }}>
-                PREMIUM
-              </div>
-
-              <div style={{
-                fontSize: '4rem',
-                margin: '20px 0'
-              }}>📄</div>
-              
-              <h3 style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: '#1f2937',
-                margin: '0 0 15px 0'
-              }}>
-                PDF Documents
-              </h3>
-              
-              <p style={{
-                fontSize: '1rem',
-                color: '#6b7280',
-                margin: '0 0 25px 0',
-                lineHeight: '1.5'
-              }}>
-                All PDF Comparisons
-              </p>
-
-              {/* Features */}
-              <div style={{
-                textAlign: 'left',
-                marginBottom: '30px'
-              }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#dc2626', fontWeight: 'bold' }}>✓</span>
-                  Text extraction
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#dc2626', fontWeight: 'bold' }}>✓</span>
-                  Page-by-page view
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#dc2626', fontWeight: 'bold' }}>✓</span>
-                  Visual comparison
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#dc2626', fontWeight: 'bold' }}>✓</span>
-                  Universal format
-                </div>
-              </div>
-
-              {/* Perfect For */}
-              <div style={{
-                background: '#fef2f2',
-                borderRadius: '12px',
-                padding: '15px',
-                marginBottom: '25px',
-                textAlign: 'left'
-              }}>
-                <h4 style={{
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  color: '#dc2626',
-                  margin: '0 0 8px 0'
-                }}>
-                  Perfect for:
-                </h4>
-                <div style={{ fontSize: '0.85rem', color: '#dc2626', lineHeight: '1.4' }}>
-                  • Contract reviews<br/>
-                  • Legal comparisons<br/>
-                  • Academic papers
-                </div>
-              </div>
-
-              {/* CTA Button */}
-              <Link href="/compare/pdf" style={{ textDecoration: 'none' }}>
-                <button style={{
-                  background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '15px 25px',
-                  borderRadius: '12px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  width: '100%',
-                  transition: 'transform 0.2s ease'
-                }}>
-                  → Compare PDFs
-                </button>
-              </Link>
-            </div>
-
-            {/* Technical Files Column */}
-            <div style={{
-              background: 'white',
-              borderRadius: '20px',
-              padding: '40px 30px',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
-              border: '3px solid #7c3aed',
-              textAlign: 'center',
-              position: 'relative',
-              transition: 'transform 0.3s ease'
-            }}>
-              {/* MIXED Badge */}
-              <div style={{
-                position: 'absolute',
-                top: '-12px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: '#7c3aed',
-                color: 'white',
-                padding: '8px 20px',
-                borderRadius: '20px',
-                fontSize: '0.9rem',
-                fontWeight: '700'
-              }}>
-                TEXT FREE
-              </div>
-
-              <div style={{
-                fontSize: '4rem',
-                margin: '20px 0'
-              }}>⚙️</div>
-              
-              <h3 style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: '#1f2937',
-                margin: '0 0 15px 0'
-              }}>
-                Technical Files
-              </h3>
-              
-              <p style={{
-                fontSize: '1rem',
-                color: '#6b7280',
-                margin: '0 0 25px 0',
-                lineHeight: '1.5'
-              }}>
-                Text, JSON, XML Files
-              </p>
-
-              {/* Features */}
-              <div style={{
-                textAlign: 'left',
-                marginBottom: '30px'
-              }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#7c3aed', fontWeight: 'bold' }}>✓</span>
-                  Format validation
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#7c3aed', fontWeight: 'bold' }}>✓</span>
-                  Syntax checking
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#7c3aed', fontWeight: 'bold' }}>✓</span>
-                  Structure analysis
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '8px',
-                  fontSize: '0.9rem',
-                  color: '#374151'
-                }}>
-                  <span style={{ color: '#7c3aed', fontWeight: 'bold' }}>✓</span>
-                  Text files FREE
-                </div>
-              </div>
-
-              {/* Perfect For */}
-              <div style={{
-                background: '#f5f3ff',
-                borderRadius: '12px',
-                padding: '15px',
-                marginBottom: '25px',
-                textAlign: 'left'
-              }}>
-                <h4 style={{
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  color: '#7c3aed',
-                  margin: '0 0 8px 0'
-                }}>
-                  Perfect for:
-                </h4>
-                <div style={{ fontSize: '0.85rem', color: '#7c3aed', lineHeight: '1.4' }}>
-                  • Developers<br/>
-                  • Technical writers<br/>
-                  • Config validation
-                </div>
-              </div>
-
-              {/* CTA Button */}
-              <Link href="/compare/documents" style={{ textDecoration: 'none' }}>
-                <button style={{
-                  background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '15px 25px',
-                  borderRadius: '12px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  width: '100%',
-                  transition: 'transform 0.2s ease'
-                }}>
-                  → Compare Code & Data
-                </button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section id="features" style={{
-          background: 'white',
-          padding: '80px 20px'
-        }}>
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            textAlign: 'center'
-          }}>
-            <h2 style={{
-              fontSize: 'clamp(2rem, 4vw, 2.5rem)',
-              fontWeight: '700',
-              color: '#1f2937',
-              margin: '0 0 20px 0'
-            }}>
-              Why Choose VeriDiff?
-            </h2>
-            <p style={{
-              fontSize: '1.1rem',
-              color: '#6b7280',
-              maxWidth: '600px',
-              margin: '0 auto 60px auto'
-            }}>
-              Professional-grade comparison tools designed for different file types and use cases
+                Should Have Been
+              </span>
+            </h1>
+            
+            <p style={{ 
+              fontSize: '1.25rem', 
+              color: '#6b7280', 
+              marginBottom: '2rem', 
+              maxWidth: '48rem', 
+              marginLeft: 'auto', 
+              marginRight: 'auto',
+              lineHeight: '1.6'
+            }} className="hero-subtitle">
+              British-engineered smart mapping + tolerance settings for business data that is never perfect. 
+              Unlike cloud-based tools that upload your sensitive data to remote servers, VeriDiff processes everything locally in your browser.
             </p>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '40px'
-            }}>
-              {/* Feature 1 */}
-              <div style={{
-                textAlign: 'center',
-                padding: '30px 20px'
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: '1rem', 
+              justifyContent: 'center', 
+              marginBottom: '3rem' 
+            }} className="button-group">
+              <button onClick={handleTryDemo} style={{ 
+                background: '#2563eb', 
+                color: 'white', 
+                border: 'none', 
+                padding: '1rem 2rem', 
+                borderRadius: '0.5rem', 
+                fontSize: '1.125rem', 
+                fontWeight: '500', 
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                minWidth: '250px'
               }}>
-                <div style={{
-                  fontSize: '3rem',
-                  marginBottom: '20px'
-                }}>⚡</div>
-                <h3 style={{
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  color: '#1f2937',
-                  margin: '0 0 15px 0'
-                }}>
-                  Lightning Fast
-                </h3>
-                <p style={{
-                  color: '#6b7280',
-                  lineHeight: '1.6'
-                }}>
-                  Optimized algorithms process your files in seconds, not minutes
-                </p>
-              </div>
+                ▶ Try Full Demo - No Signup Required
+              </button>
+              <button onClick={handleWatchVideo} style={{ 
+                background: 'white', 
+                color: '#374151', 
+                border: '1px solid #d1d5db', 
+                padding: '1rem 2rem', 
+                borderRadius: '0.5rem', 
+                fontSize: '1.125rem', 
+                fontWeight: '500', 
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                minWidth: '200px'
+              }}>
+                Watch 2-Min Video
+              </button>
+            </div>
 
-              {/* Feature 2 */}
-              <div style={{
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '1.5rem', 
+              maxWidth: '80rem', 
+              margin: '0 auto' 
+            }} className="security-grid">
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '0.5rem', 
+                color: '#374151',
                 textAlign: 'center',
-                padding: '30px 20px'
+                padding: '1rem',
+                background: 'rgba(255,255,255,0.7)',
+                borderRadius: '0.5rem'
               }}>
-                <div style={{
-                  fontSize: '3rem',
-                  marginBottom: '20px'
-                }}>🔒</div>
-                <h3 style={{
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  color: '#1f2937',
-                  margin: '0 0 15px 0'
-                }}>
-                  Secure & Private
-                </h3>
-                <p style={{
-                  color: '#6b7280',
-                  lineHeight: '1.6'
-                }}>
-                  Your files are processed securely and never stored on our servers
-                </p>
+                <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>🚫</span>
+                <span><strong>No registration required</strong> to test with your real files</span>
               </div>
-
-              {/* Feature 3 */}
-              <div style={{
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '0.5rem', 
+                color: '#374151',
                 textAlign: 'center',
-                padding: '30px 20px'
+                padding: '1rem',
+                background: 'rgba(255,255,255,0.7)',
+                borderRadius: '0.5rem'
               }}>
-                <div style={{
-                  fontSize: '3rem',
-                  marginBottom: '20px'
-                }}>🎯</div>
-                <h3 style={{
-                  fontSize: '1.3rem',
-                  fontWeight: '600',
-                  color: '#1f2937',
-                  margin: '0 0 15px 0'
-                }}>
-                  Format Specific
-                </h3>
-                <p style={{
-                  color: '#6b7280',
-                  lineHeight: '1.6'
-                }}>
-                  Specialized tools designed for each file type's unique requirements
-                </p>
+                <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>🔒</span>
+                <span><strong>Your files never leave your browser</strong> - processed locally</span>
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '0.5rem', 
+                color: '#374151',
+                textAlign: 'center',
+                padding: '1rem',
+                background: 'rgba(255,255,255,0.7)',
+                borderRadius: '0.5rem'
+              }}>
+                <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>⚡</span>
+                <span><strong>Smart mapping</strong> when columns don't match perfectly</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Pricing Section */}
-        <section id="pricing" style={{
-          background: '#f8fafc',
-          padding: '80px 20px'
-        }}>
-          <div style={{
-            maxWidth: '1000px',
-            margin: '0 auto',
-            textAlign: 'center'
-          }}>
-            <h2 style={{
-              fontSize: 'clamp(2rem, 4vw, 2.5rem)',
-              fontWeight: '700',
-              color: '#1f2937',
-              margin: '0 0 20px 0'
-            }}>
-              Simple, Transparent Pricing
-            </h2>
-            <p style={{
-              fontSize: '1.1rem',
-              color: '#6b7280',
-              maxWidth: '600px',
-              margin: '0 auto 60px auto'
-            }}>
-              Start free with Excel comparison, upgrade when you need more
-            </p>
+        {/* Security Section */}
+        <section style={{ ...sectionStyle, background: '#f8fafc' }} className="section-padding">
+          <div style={sectionContainerStyle} className="section-container">
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ 
+                fontSize: '2.25rem', 
+                fontWeight: '700', 
+                marginBottom: '1rem', 
+                color: '#1f2937' 
+              }} className="section-title">
+                Bank-Level Security Without the Complexity
+              </h2>
+              <p style={{ fontSize: '1.25rem', color: '#6b7280' }}>
+                Perfect for confidential business data that can't be uploaded to third-party servers
+              </p>
+            </div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '30px',
-              maxWidth: '800px',
-              margin: '0 auto'
-            }}>
-              {/* Free Plan */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+              gap: '2rem', 
+              marginBottom: '3rem' 
+            }} className="security-grid">
+              
               <div style={{
                 background: 'white',
-                borderRadius: '16px',
-                padding: '40px 30px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                border: '2px solid #22c55e'
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e5e7eb',
+                textAlign: 'center'
               }}>
-                <h3 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: '700',
-                  color: '#1f2937',
-                  margin: '0 0 10px 0'
-                }}>
-                  Free Forever
-                </h3>
                 <div style={{
-                  fontSize: '3rem',
-                  fontWeight: '700',
-                  color: '#22c55e',
-                  margin: '0 0 20px 0'
+                  width: '64px',
+                  height: '64px',
+                  background: 'linear-gradient(135deg, #059669, #10b981)',
+                  borderRadius: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem',
+                  fontSize: '1.5rem'
                 }}>
-                  $0
+                  🔒
                 </div>
-                <ul style={{
-                  textAlign: 'left',
-                  margin: '0 0 30px 0',
-                  padding: '0',
-                  listStyle: 'none'
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>
+                  Local Processing Only
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
+                  All file processing happens in your browser. Your sensitive business data never touches our servers or any cloud infrastructure.
+                </p>
+              </div>
+
+              <div style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e5e7eb',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                  borderRadius: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem',
+                  fontSize: '1.5rem'
                 }}>
-                  <li style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px', 
-                    marginBottom: '10px',
-                    color: '#374151'
+                  📊
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>
+                  Try with Real Data
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
+                  Upload your actual confidential files to test VeriDiff's capabilities. No dummy data needed - your files stay completely private.
+                </p>
+              </div>
+
+              <div style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e5e7eb',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
+                  borderRadius: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem',
+                  fontSize: '1.5rem'
+                }}>
+                  ⚡
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>
+                  GDPR Compliant by Design
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>
+                  Zero data collection or sharing. Built for European privacy standards - perfect for finance teams handling sensitive information.
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+              padding: '2rem',
+              borderRadius: '1rem',
+              border: '1px solid #a7f3d0',
+              textAlign: 'center'
+            }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#065f46' }}>
+                Trusted by Finance Teams Worldwide
+              </h3>
+              <p style={{ color: '#047857', fontSize: '1.125rem', marginBottom: '1.5rem' }}>
+                "Finally, a file comparison tool we can use with client data without security concerns."
+              </p>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                gap: '1rem',
+                fontSize: '0.875rem',
+                color: '#065f46'
+              }}>
+                <div>✓ Used by accounting firms</div>
+                <div>✓ Trusted by banks</div>
+                <div>✓ Preferred by consultants</div>
+                <div>✓ Relied on by analysts</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Rest of the sections remain the same as before - Demo Section, Pricing, CTA, Footer */}
+        {/* Demo Section */}
+        <section id="features" style={{ ...sectionStyle, background: 'white' }} className="section-padding">
+          <div style={sectionContainerStyle} className="section-container">
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ 
+                fontSize: '2.25rem', 
+                fontWeight: '700', 
+                marginBottom: '1rem', 
+                color: '#1f2937' 
+              }} className="section-title">
+                See the Difference in Action
+              </h2>
+              <p style={{ fontSize: '1.25rem', color: '#6b7280' }}>
+                Compare real business data scenarios that other tools cannot handle
+              </p>
+            </div>
+
+            <div style={{ 
+              background: '#f9fafb', 
+              borderRadius: '1rem', 
+              padding: '2rem' 
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: '1rem', 
+                marginBottom: '2rem',
+                flexWrap: 'wrap'
+              }} className="demo-buttons">
+                <button onClick={() => setSelectedDemo('excel-csv')} style={{ 
+                  padding: '0.75rem 1.5rem', 
+                  borderRadius: '0.5rem', 
+                  fontWeight: '500', 
+                  cursor: 'pointer', 
+                  border: 'none', 
+                  background: selectedDemo === 'excel-csv' ? '#2563eb' : 'white', 
+                  color: selectedDemo === 'excel-csv' ? 'white' : '#374151',
+                  minWidth: '180px',
+                  transition: 'all 0.2s'
+                }}>
+                  Excel ↔ CSV Mapping
+                </button>
+                <button onClick={() => setSelectedDemo('tolerance')} style={{ 
+                  padding: '0.75rem 1.5rem', 
+                  borderRadius: '0.5rem', 
+                  fontWeight: '500', 
+                  cursor: 'pointer', 
+                  border: 'none', 
+                  background: selectedDemo === 'tolerance' ? '#2563eb' : 'white', 
+                  color: selectedDemo === 'tolerance' ? 'white' : '#374151',
+                  minWidth: '180px',
+                  transition: 'all 0.2s'
+                }}>
+                  Financial Tolerance
+                </button>
+              </div>
+
+              {selectedDemo === 'excel-csv' && (
+                <>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gap: '2rem', 
+                    marginBottom: '1.5rem' 
+                  }} className="demo-grid">
+                    <div style={{ 
+                      background: 'white', 
+                      padding: '1.5rem', 
+                      borderRadius: '0.5rem', 
+                      border: '1px solid #e5e7eb' 
+                    }}>
+                      <h4 style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '1rem', 
+                        color: '#1f2937' 
+                      }}>
+                        📊 Accounting_Export_Q4.xlsx
+                      </h4>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '0.5rem' 
+                      }}>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#ecfdf5', 
+                          color: '#065f46', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Client Company Name</span>
+                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#ecfdf5', 
+                          color: '#065f46', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Invoice Total Amount</span>
+                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>GBP CURRENCY</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#ecfdf5', 
+                          color: '#065f46', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Payment Due Date</span>
+                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>DATE</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#ecfdf5', 
+                          color: '#065f46', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Account Reference</span>
+                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                        </div>
+                      </div>
+                      <div style={{ 
+                        marginTop: '1rem', 
+                        padding: '0.75rem', 
+                        background: '#f0fdf4', 
+                        borderRadius: '0.5rem', 
+                        fontSize: '0.75rem', 
+                        color: '#166534' 
+                      }}>
+                        <strong>1,247 rows</strong> • Excel format with formulas
+                      </div>
+                    </div>
+
+                    <div style={{ 
+                      background: 'white', 
+                      padding: '1.5rem', 
+                      borderRadius: '0.5rem', 
+                      border: '1px solid #e5e7eb' 
+                    }}>
+                      <h4 style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '1rem', 
+                        color: '#1f2937' 
+                      }}>
+                        📄 payment_system_export.csv
+                      </h4>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '0.5rem' 
+                      }}>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#eff6ff', 
+                          color: '#1e40af', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>customer</span>
+                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#eff6ff', 
+                          color: '#1e40af', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>amount</span>
+                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>NUMBER</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#eff6ff', 
+                          color: '#1e40af', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>due_date</span>
+                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#eff6ff', 
+                          color: '#1e40af', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>ref_code</span>
+                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                        </div>
+                      </div>
+                      <div style={{ 
+                        marginTop: '1rem', 
+                        padding: '0.75rem', 
+                        background: '#eff6ff', 
+                        borderRadius: '0.5rem', 
+                        fontSize: '0.75rem', 
+                        color: '#1e40af' 
+                      }}>
+                        <strong>1,193 rows</strong> • CSV from payment processor
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ 
+                    background: '#dcfce7', 
+                    color: '#166534', 
+                    padding: '1rem', 
+                    borderRadius: '0.5rem', 
+                    textAlign: 'center' 
                   }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
-                    Unlimited Excel comparisons
-                  </li>
-                  <li style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px', 
-                    marginBottom: '10px',
-                    color: '#374151'
+                    <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                      ✨ Smart Mapping Results:
+                    </p>
+                    <div style={{ 
+                      fontSize: '0.875rem', 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr', 
+                      gap: '1rem', 
+                      textAlign: 'left' 
+                    }} className="tolerance-grid">
+                      <div>
+                        <strong>✓ Auto-mapped fields:</strong><br/>
+                        • Client Company Name → customer<br/>
+                        • Invoice Total Amount → amount<br/>  
+                        • Payment Due Date → due_date
+                      </div>
+                      <div>
+                        <strong>📊 Match Summary:</strong><br/>
+                        • 1,089 perfect matches<br/>
+                        • 54 tolerance matches<br/>
+                        • 50 discrepancies flagged
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {selectedDemo === 'tolerance' && (
+                <>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gap: '2rem', 
+                    marginBottom: '1.5rem' 
+                  }} className="demo-grid">
+                    <div style={{ 
+                      background: 'white', 
+                      padding: '1.5rem', 
+                      borderRadius: '0.5rem', 
+                      border: '1px solid #e5e7eb' 
+                    }}>
+                      <h4 style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '1rem', 
+                        color: '#1f2937' 
+                      }}>
+                        💰 Budget_2024.xlsx
+                      </h4>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '0.5rem' 
+                      }}>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#fef3c7', 
+                          color: '#92400e', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Marketing Budget</span>
+                          <span style={{ fontWeight: 'bold' }}>GBP 85,000</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#fef3c7', 
+                          color: '#92400e', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Operations Budget</span>
+                          <span style={{ fontWeight: 'bold' }}>GBP 120,000</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#fef3c7', 
+                          color: '#92400e', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Software Licenses</span>
+                          <span style={{ fontWeight: 'bold' }}>GBP 45,000</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ 
+                      background: 'white', 
+                      padding: '1.5rem', 
+                      borderRadius: '0.5rem', 
+                      border: '1px solid #e5e7eb' 
+                    }}>
+                      <h4 style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '1rem', 
+                        color: '#1f2937' 
+                      }}>
+                        📈 Actual_Spend_Q1.csv
+                      </h4>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '0.5rem' 
+                      }}>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#f0f9ff', 
+                          color: '#0369a1', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Marketing Actual</span>
+                          <span style={{ fontWeight: 'bold' }}>GBP 87,230</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#f0f9ff', 
+                          color: '#0369a1', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Operations Actual</span>
+                          <span style={{ fontWeight: 'bold' }}>GBP 118,450</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          borderRadius: '0.25rem', 
+                          fontSize: '0.875rem', 
+                          background: '#f0f9ff', 
+                          color: '#0369a1', 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap'
+                        }}>
+                          <span>Software Actual</span>
+                          <span style={{ fontWeight: 'bold' }}>GBP 46,180</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ 
+                    background: '#dcfce7', 
+                    color: '#166534', 
+                    padding: '1rem', 
+                    borderRadius: '0.5rem' 
                   }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
-                    Text file comparisons
-                  </li>
-                  <li style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px', 
-                    marginBottom: '10px',
-                    color: '#374151'
-                  }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
-                    Header mapping
-                  </li>
-                  <li style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px', 
-                    marginBottom: '10px',
-                    color: '#374151'
-                  }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold' }}>✓</span>
-                    Basic support
-                  </li>
-                </ul>
-                <button style={{
-                  background: '#22c55e',
-                  color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
+                    <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                      💡 Tolerance Analysis (±3% acceptable variance):
+                    </p>
+                    <div style={{ 
+                      fontSize: '0.875rem', 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr 1fr', 
+                      gap: '1rem', 
+                      textAlign: 'center' 
+                    }} className="tolerance-grid">
+                      <div style={{ 
+                        padding: '0.5rem', 
+                        background: '#fef2f2', 
+                        color: '#dc2626', 
+                        borderRadius: '0.25rem' 
+                      }}>
+                        <strong>Marketing</strong><br/>
+                        +2.6% over budget<br/>
+                        <span style={{ fontSize: '0.75rem' }}>❌ Outside tolerance</span>
+                      </div>
+                      <div style={{ 
+                        padding: '0.5rem', 
+                        background: '#f0fdf4', 
+                        color: '#16a34a', 
+                        borderRadius: '0.25rem' 
+                      }}>
+                        <strong>Operations</strong><br/>
+                        -1.3% under budget<br/>
+                        <span style={{ fontSize: '0.75rem' }}>✅ Within tolerance</span>
+                      </div>
+                      <div style={{ 
+                        padding: '0.5rem', 
+                        background: '#f0fdf4', 
+                        color: '#16a34a', 
+                        borderRadius: '0.25rem' 
+                      }}>
+                        <strong>Software</strong><br/>
+                        +2.6% over budget<br/>
+                        <span style={{ fontSize: '0.75rem' }}>✅ Within tolerance</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ✅ UPDATED Pricing Section - Simplified Free vs Premium */}
+        <section id="pricing" style={{ ...sectionStyle, background: '#f9fafb' }} className="section-padding">
+          <div style={sectionContainerStyle} className="section-container">
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ 
+                fontSize: '2.25rem', 
+                fontWeight: '700', 
+                marginBottom: '1rem', 
+                color: '#1f2937' 
+              }} className="section-title">
+                Simple, Transparent Pricing
+              </h2>
+              <p style={{ fontSize: '1.25rem', color: '#6b7280' }}>
+                Excel-Excel comparisons free forever • Premium unlocks all formats
+              </p>
+            </div>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
+              gap: '2rem', 
+              maxWidth: '900px', 
+              margin: '0 auto' 
+            }} className="pricing-grid">
+              
+              {/* Free Plan */}
+              <div style={{ 
+                background: 'white', 
+                padding: '2.5rem', 
+                borderRadius: '1rem', 
+                border: '3px solid #22c55e',
+                boxShadow: '0 4px 20px rgba(34, 197, 94, 0.1)'
+              }} className="pricing-card">
+                <div style={{ 
+                  background: '#22c55e', 
+                  color: 'white', 
+                  padding: '0.5rem 1rem', 
+                  borderRadius: '2rem', 
+                  fontSize: '0.875rem', 
                   fontWeight: '600',
-                  cursor: 'pointer',
-                  width: '100%'
+                  textAlign: 'center',
+                  marginBottom: '1.5rem'
                 }}>
-                  Get Started Free
+                  Always Free for Signed-In Users
+                </div>
+                <h3 style={{ 
+                  fontSize: '1.75rem', 
+                  fontWeight: '700', 
+                  marginBottom: '0.5rem', 
+                  color: '#1f2937' 
+                }}>
+                  Free
+                </h3>
+                <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+                  Perfect for Excel comparisons
+                </p>
+                <div style={{ marginBottom: '2rem' }}>
+                  <span style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: '#22c55e' 
+                  }}>
+                    £0
+                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '1.1rem' }}>/month</span>
+                </div>
+                <div style={{ marginBottom: '2.5rem' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
+                  }}>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span><strong>Unlimited Excel-Excel comparisons</strong></span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
+                  }}>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span>Smart header mapping & tolerance settings</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
+                  }}>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span>Local processing - files never leave your browser</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
+                  }}>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span>GDPR compliant by design</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
+                  }}>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span>Download results as Excel or CSV</span>
+                  </div>
+                </div>
+                <button onClick={handleTryDemo} style={{ 
+                  width: '100%', 
+                  padding: '1rem', 
+                  borderRadius: '0.75rem', 
+                  fontWeight: '600', 
+                  cursor: 'pointer', 
+                  border: 'none', 
+                  background: '#22c55e', 
+                  color: 'white',
+                  fontSize: '1.1rem',
+                  transition: 'all 0.2s'
+                }}>
+                  🎉 Start Free Now
                 </button>
               </div>
 
               {/* Premium Plan */}
-              <div style={{
-                background: 'white',
-                borderRadius: '16px',
-                padding: '40px 30px',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-                border: '2px solid #2563eb',
+              <div style={{ 
+                background: 'white', 
+                padding: '2.5rem', 
+                borderRadius: '1rem', 
+                border: '3px solid #2563eb',
+                boxShadow: '0 4px 20px rgba(37, 99, 235, 0.1)',
                 position: 'relative'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '-12px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: '#2563eb',
-                  color: 'white',
-                  padding: '6px 20px',
-                  borderRadius: '20px',
-                  fontSize: '0.85rem',
-                  fontWeight: '600'
+              }} className="pricing-card">
+                <div style={{ 
+                  background: '#2563eb', 
+                  color: 'white', 
+                  padding: '0.5rem 1rem', 
+                  borderRadius: '2rem', 
+                  fontSize: '0.875rem', 
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  marginBottom: '1.5rem'
                 }}>
-                  MOST POPULAR
+                  All Formats + Advanced Features
                 </div>
-                
-                <h3 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: '700',
-                  color: '#1f2937',
-                  margin: '0 0 10px 0'
+                <h3 style={{ 
+                  fontSize: '1.75rem', 
+                  fontWeight: '700', 
+                  marginBottom: '0.5rem', 
+                  color: '#1f2937' 
                 }}>
                   Premium
                 </h3>
-                <div style={{
-                  fontSize: '3rem',
-                  fontWeight: '700',
-                  color: '#2563eb',
-                  margin: '0 0 20px 0'
-                }}>
-                  $9<span style={{ fontSize: '1rem', color: '#6b7280' }}>/month</span>
+                <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+                  For professional data analysis
+                </p>
+                <div style={{ marginBottom: '2rem' }}>
+                  <span style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: '#2563eb' 
+                  }}>
+                    £19
+                  </span>
+                  <span style={{ color: '#6b7280', fontSize: '1.1rem' }}>/month</span>
                 </div>
-                <ul style={{
-                  textAlign: 'left',
-                  margin: '0 0 30px 0',
-                  padding: '0',
-                  listStyle: 'none'
-                }}>
-                  <li style={{ 
+                <div style={{ marginBottom: '2.5rem' }}>
+                  <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: '8px', 
-                    marginBottom: '10px',
-                    color: '#374151'
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#2563eb', fontWeight: 'bold' }}>✓</span>
-                    Everything in Free
-                  </li>
-                  <li style={{ 
+                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
+                    <span><strong>Everything in Free, plus:</strong></span>
+                  </div>
+                  <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: '8px', 
-                    marginBottom: '10px',
-                    color: '#374151'
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#2563eb', fontWeight: 'bold' }}>✓</span>
-                    PDF comparisons
-                  </li>
-                  <li style={{ 
+                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>🚀</span>
+                    <span><strong>Excel-CSV, CSV-CSV comparisons</strong></span>
+                  </div>
+                  <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: '8px', 
-                    marginBottom: '10px',
-                    color: '#374151'
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#2563eb', fontWeight: 'bold' }}>✓</span>
-                    JSON & XML comparisons
-                  </li>
-                  <li style={{ 
+                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>📄</span>
+                    <span>PDF, JSON, XML, TXT comparisons</span>
+                  </div>
+                  <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: '8px', 
-                    marginBottom: '10px',
-                    color: '#374151'
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
                   }}>
-                    <span style={{ color: '#2563eb', fontWeight: 'bold' }}>✓</span>
-                    Priority support
-                  </li>
-                </ul>
-                <button style={{
-                  background: '#2563eb',
+                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>⚡</span>
+                    <span>Advanced tolerance & precision controls</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem', 
+                    marginBottom: '1rem',
+                    fontSize: '1rem'
+                  }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>📊</span>
+                    <span>Priority support & feature requests</span>
+                  </div>
+                </div>
+                <button onClick={handleProTrial} style={{ 
+                  width: '100%', 
+                  padding: '1rem', 
+                  borderRadius: '0.75rem', 
+                  fontWeight: '600', 
+                  cursor: 'pointer', 
+                  border: 'none', 
+                  background: '#2563eb', 
                   color: 'white',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  width: '100%'
+                  fontSize: '1.1rem',
+                  transition: 'all 0.2s'
                 }}>
-                  Upgrade to Premium
+                  🚀 Start Premium Trial
                 </button>
+                <p style={{ 
+                  textAlign: 'center', 
+                  color: '#6b7280', 
+                  fontSize: '0.875rem', 
+                  marginTop: '1rem' 
+                }}>
+                  Cancel anytime • 30-day money-back guarantee
+                </p>
+              </div>
+            </div>
+
+            {/* Security guarantee */}
+            <div style={{
+              background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+              padding: '2rem',
+              borderRadius: '1rem',
+              border: '1px solid #a7f3d0',
+              textAlign: 'center',
+              marginTop: '3rem'
+            }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#065f46' }}>
+                🔒 Security Promise: Both Plans Include
+              </h3>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                gap: '1rem',
+                fontSize: '1rem',
+                color: '#047857'
+              }}>
+                <div>✓ <strong>100% local processing</strong> - files never uploaded</div>
+                <div>✓ <strong>Zero data collection</strong> - GDPR compliant</div>
+                <div>✓ <strong>Bank-level privacy</strong> - perfect for confidential data</div>
+                <div>✓ <strong>No registration required</strong> to test with real files</div>
               </div>
             </div>
           </div>
         </section>
-      </main>
 
-      {/* Footer */}
-      <footer style={{
-        background: '#1f2937',
-        color: 'white',
-        padding: '40px 20px',
-        textAlign: 'center'
-      }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto'
+        {/* CTA Section */}
+        <section style={{ 
+          padding: '5rem 0', 
+          background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
+          color: 'white', 
+          textAlign: 'center' 
+        }} className="section-padding">
+          <div style={sectionContainerStyle} className="section-container">
+            <h2 style={{ 
+              fontSize: '2.25rem', 
+              fontWeight: '700', 
+              marginBottom: '1rem' 
+            }} className="section-title">
+              Ready to Stop Wrestling with Data?
+            </h2>
+            <p style={{ 
+              fontSize: '1.25rem', 
+              color: '#bfdbfe', 
+              marginBottom: '2rem' 
+            }}>
+              Join forward-thinking professionals using business-intelligent data reconciliation - with complete privacy
+            </p>
+            
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: '1rem', 
+              justifyContent: 'center', 
+              marginBottom: '2rem' 
+            }} className="button-group">
+              <button onClick={handleTryDemo} style={{ 
+                background: 'white', 
+                color: '#2563eb', 
+                padding: '1rem 2rem', 
+                borderRadius: '0.5rem', 
+                fontWeight: '500', 
+                border: 'none', 
+                cursor: 'pointer',
+                minWidth: '250px',
+                transition: 'all 0.2s'
+              }}>
+                ▶ Try Full Demo - No Signup Required
+              </button>
+              <button onClick={handleProTrial} style={{ 
+                background: '#1e40af', 
+                color: 'white', 
+                padding: '1rem 2rem', 
+                borderRadius: '0.5rem', 
+                fontWeight: '500', 
+                border: '1px solid #3b82f6', 
+                cursor: 'pointer',
+                minWidth: '180px',
+                transition: 'all 0.2s'
+              }}>
+                Start Premium - £19/month
+              </button>
+            </div>
+            
+            <p style={{ color: '#bfdbfe', fontSize: '0.875rem' }}>
+              ✓ No registration required for demo • ✓ Your files never leave your browser • ✓ 30-day money-back guarantee
+            </p>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer style={{ 
+          background: '#111827', 
+          color: 'white', 
+          padding: '3rem 0' 
         }}>
-          <div style={{
-            fontSize: '1.3rem',
-            fontWeight: '700',
-            marginBottom: '20px'
-          }}>
-            VeriDiff
+          <div style={sectionContainerStyle} className="section-container">
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '2rem', 
+              marginBottom: '2rem' 
+            }} className="footer-grid">
+              <div>
+                <span style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: '700', 
+                  background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', 
+                  WebkitBackgroundClip: 'text', 
+                  WebkitTextFillColor: 'transparent', 
+                  backgroundClip: 'text', 
+                  marginBottom: '1rem', 
+                  display: 'block' 
+                }}>
+                  VeriDiff
+                </span>
+                <p style={{ color: '#d1d5db', fontSize: '0.875rem' }}>
+                  Precision-engineered in London for global business professionals. Your data never leaves your browser.
+                </p>
+              </div>
+              
+              <div>
+                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Product</h4>
+                <div>
+                  <button onClick={() => scrollToSection('features')} style={{ 
+                    color: '#d1d5db', 
+                    fontSize: '0.875rem', 
+                    cursor: 'pointer', 
+                    background: 'none', 
+                    border: 'none', 
+                    padding: '0.25rem 0', 
+                    textAlign: 'left', 
+                    display: 'block', 
+                    marginBottom: '0.5rem',
+                    width: '100%'
+                  }}>
+                    Features
+                  </button>
+                  <button onClick={() => scrollToSection('pricing')} style={{ 
+                    color: '#d1d5db', 
+                    fontSize: '0.875rem', 
+                    cursor: 'pointer', 
+                    background: 'none', 
+                    border: 'none', 
+                    padding: '0.25rem 0', 
+                    textAlign: 'left', 
+                    display: 'block', 
+                    marginBottom: '0.5rem',
+                    width: '100%'
+                  }}>
+                    Pricing
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
+                <div>
+                  <a href="mailto:sales@veridiff.com" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    Contact Us
+                  </a>
+                </div>
+              </div>
+              
+              <div>
+                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Legal</h4>
+                <div>
+                  <a href="/privacy" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    Privacy Policy
+                  </a>
+                  <a href="/terms" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    Terms of Service
+                  </a>
+                  <a href="/cookies" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    Cookie Policy
+                  </a>
+                  <a href="/gdpr" style={{ 
+                    color: '#d1d5db', 
+                    textDecoration: 'none', 
+                    fontSize: '0.875rem', 
+                    display: 'block', 
+                    padding: '0.25rem 0', 
+                    marginBottom: '0.5rem' 
+                  }}>
+                    GDPR Rights
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ 
+              borderTop: '1px solid #374151', 
+              paddingTop: '2rem', 
+              textAlign: 'center', 
+              color: '#9ca3af', 
+              fontSize: '0.875rem' 
+            }}>
+              <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
+            </div>
           </div>
-          <p style={{
-            color: '#9ca3af',
-            margin: '0 0 20px 0'
-          }}>
-            Professional file comparison tools for every use case
-          </p>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '2rem',
-            flexWrap: 'wrap'
-          }}>
-            <Link href="/compare" style={{ color: '#9ca3af', textDecoration: 'none' }}>
-              Spreadsheets
-            </Link>
-            <Link href="/compare/pdf" style={{ color: '#9ca3af', textDecoration: 'none' }}>
-              PDFs
-            </Link>
-            <Link href="/compare/documents" style={{ color: '#9ca3af', textDecoration: 'none' }}>
-              Technical Files
-            </Link>
-          </div>
-          <div style={{
-            marginTop: '30px',
-            paddingTop: '20px',
-            borderTop: '1px solid #374151',
-            color: '#9ca3af',
-            fontSize: '0.9rem'
-          }}>
-            © 2025 VeriDiff. All rights reserved.
-          </div>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </>
   );
 }
