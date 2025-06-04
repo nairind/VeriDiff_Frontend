@@ -450,7 +450,7 @@ function PdfComparePage() {
     }
   }, [session]);
 
-  // ✅ UPDATED: Premium upgrade handlers to match index.js
+  // ✅ UPDATED: Premium upgrade handlers to match index.js exactly
   const handlePremiumUpgrade = async () => {
     try {
       const response = await fetch('/api/stripe/create-checkout-session', {
@@ -476,11 +476,6 @@ function PdfComparePage() {
       console.error('Stripe checkout error:', error);
       alert('Sorry, there was an error starting your premium trial. Please try again or contact support.');
     }
-  };
-
-  const handleModalUpgrade = async () => {
-    setShowPremiumModal(false);
-    await handlePremiumUpgrade();
   };
 
   const handleModalDismiss = () => {
@@ -752,7 +747,7 @@ function PdfComparePage() {
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
-              onClick={handleModalUpgrade}
+              onClick={handlePremiumUpgrade}
               style={{
                 background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
                 color: 'white',
