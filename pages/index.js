@@ -9,6 +9,7 @@ export default function Home() {
   const [selectedDemo, setSelectedDemo] = useState('excel-csv');
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [pendingPremiumUpgrade, setPendingPremiumUpgrade] = useState(false);
   
   // Auto-cycling demo state
   const [isAutoCycling, setIsAutoCycling] = useState(true);
@@ -25,6 +26,17 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [isAutoCycling, isPaused]);
 
+  // ✅ NEW: Handle premium upgrade after successful registration
+  useEffect(() => {
+    if (session && pendingPremiumUpgrade) {
+      // User just signed in and was waiting for premium upgrade
+      setPendingPremiumUpgrade(false);
+      setShowRegistrationModal(false);
+      // Trigger premium upgrade automatically
+      handlePremiumUpgradeFlow();
+    }
+  }, [session, pendingPremiumUpgrade]);
+
   const handleDemoSelect = (demo) => {
     setSelectedDemo(demo);
     setIsAutoCycling(false); // Stop auto-cycling when user interacts
@@ -39,8 +51,22 @@ export default function Home() {
     window.location.href = '/compare';
   };
 
-  // ✅ UPDATED: Premium trial with Stripe integration
+  // ✅ UPDATED: Two-step premium trial flow
   const handleProTrial = async () => {
+    // Step 1: Check if user is signed in
+    if (!session) {
+      console.log('User not signed in, showing registration modal first');
+      setPendingPremiumUpgrade(true); // Flag that user wants premium after sign-up
+      setShowRegistrationModal(true);
+      return;
+    }
+
+    // Step 2: User is signed in, proceed with premium upgrade
+    await handlePremiumUpgradeFlow();
+  };
+
+  // ✅ NEW: Separate function for the actual premium upgrade flow
+  const handlePremiumUpgradeFlow = async () => {
     try {
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
@@ -73,6 +99,12 @@ export default function Home() {
 
   const handleWatchVideo = () => {
     alert('Demo video coming soon! Click Try Live Demo above to test VeriDiff now.');
+  };
+
+  // ✅ NEW: Handle registration modal close
+  const handleRegistrationModalClose = () => {
+    setShowRegistrationModal(false);
+    setPendingPremiumUpgrade(false); // Clear pending upgrade if user cancels
   };
 
   // Responsive styles
@@ -189,6 +221,117 @@ export default function Home() {
       }
     }
   `;
+
+  // ✅ NEW: Registration Modal Component
+  const RegistrationModal = () => {
+    if (!showRegistrationModal) return null;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: '20px'
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '30px',
+          maxWidth: '500px',
+          width: '100%',
+          textAlign: 'center'
+        }}>
+          <h3 style={{ 
+            margin: '0 0 15px 0', 
+            fontSize: '1.5rem', 
+            fontWeight: '600',
+            color: '#1f2937'
+          }}>
+            🚀 Start Your Premium Trial
+          </h3>
+          
+          <p style={{ 
+            marginBottom: '20px',
+            color: '#6b7280',
+            fontSize: '1rem',
+            lineHeight: '1.5'
+          }}>
+            {pendingPremiumUpgrade ? 
+              "Great choice! Just sign up first, then we'll start your premium trial automatically." :
+              "Sign up to unlock premium features and start your free trial."
+            }
+          </p>
+
+          <div style={{
+            background: '#eff6ff',
+            border: '1px solid #2563eb',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '25px',
+            textAlign: 'left'
+          }}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#1e40af', fontSize: '0.95rem' }}>
+              ✨ What you get with Premium:
+            </h4>
+            <ul style={{ margin: 0, paddingLeft: '20px', color: '#1e40af', fontSize: '0.9rem' }}>
+              <li>Excel-CSV, CSV-CSV, PDF comparisons</li>
+              <li>Advanced tolerance & precision controls</li>
+              <li>Priority support & feature requests</li>
+              <li>30-day money-back guarantee</li>
+            </ul>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button
+              onClick={() => window.location.href = '/api/auth/signin'}
+              style={{
+                background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '1rem'
+              }}
+            >
+              {pendingPremiumUpgrade ? 'Sign Up & Start Trial' : 'Sign Up'}
+            </button>
+            <button
+              onClick={handleRegistrationModalClose}
+              style={{
+                background: '#f3f4f6',
+                color: '#374151',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+
+          <p style={{
+            fontSize: '0.8rem',
+            color: '#9ca3af',
+            marginTop: '15px',
+            marginBottom: 0
+          }}>
+            Your files stay private and secure - processed locally in your browser
+          </p>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -1300,7 +1443,7 @@ export default function Home() {
                   fontSize: '1.1rem',
                   transition: 'all 0.2s'
                 }}>
-                  🚀 Start Premium Trial
+                  {session ? '🚀 Start Premium Trial' : '🚀 Sign Up & Start Trial'}
                 </button>
                 <p style={{ 
                   textAlign: 'center', 
@@ -1395,7 +1538,7 @@ export default function Home() {
                 minWidth: '180px',
                 transition: 'all 0.2s'
               }}>
-                Start Premium - £19/month
+                {session ? 'Start Premium - £19/month' : 'Sign Up & Start Premium'}
               </button>
             </div>
             
@@ -1406,6 +1549,9 @@ export default function Home() {
         </section>
 
         <Footer />
+
+        {/* ✅ NEW: Registration Modal */}
+        <RegistrationModal />
       </div>
     </>
   );
