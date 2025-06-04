@@ -1020,23 +1020,25 @@ function PdfComparePage() {
             {/* Load Files Button */}
             <div style={{ textAlign: 'center' }}>
               <button 
-                onClick={handleLoadPdfs} 
-                disabled={loading || !file1 || !file2 || userTier !== 'premium'}
+                onClick={userTier !== 'premium' ? handlePremiumUpgrade : handleLoadPdfs} 
+                disabled={loading || (!file1 || !file2) && userTier === 'premium'}
                 style={{
-                  background: loading || !file1 || !file2 || userTier !== 'premium'
-                    ? '#9ca3af' 
-                    : 'linear-gradient(135deg, #dc2626, #ea580c)',
+                  background: loading ? '#9ca3af' : userTier !== 'premium'
+                    ? 'linear-gradient(135deg, #2563eb, #7c3aed)'
+                    : (!file1 || !file2) 
+                      ? '#9ca3af'
+                      : 'linear-gradient(135deg, #dc2626, #ea580c)',
                   color: 'white',
                   border: 'none',
                   padding: '16px 32px',
                   borderRadius: '12px',
                   fontSize: '1.1rem',
                   fontWeight: '700',
-                  cursor: loading || !file1 || !file2 || userTier !== 'premium' ? 'not-allowed' : 'pointer',
+                  cursor: loading || ((!file1 || !file2) && userTier === 'premium') ? 'not-allowed' : 'pointer',
                   minWidth: '200px'
                 }}
               >
-                {loading ? 'Loading...' : userTier !== 'premium' ? '🔒 Premium Required' : '📑 Load PDF Files'}
+                {loading ? 'Loading...' : userTier !== 'premium' ? '🚀 Start Premium Trial' : '📑 Load PDF Files'}
               </button>
             </div>
           </div>
