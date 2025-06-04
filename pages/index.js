@@ -1,79 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
+import { useSession } from 'next-auth/react';
+import Header from '../components/layout/Header';
+import Footer from '../components/layout/Footer';
 
 export default function Home() {
+  const { data: session } = useSession();
   const [selectedDemo, setSelectedDemo] = useState('excel-csv');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-
-  // Check for logged in user on component mount
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const token = localStorage.getItem('veridiff_token');
-      if (token) {
-        const response = await fetch('/api/auth/verify', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        } else {
-          localStorage.removeItem('veridiff_token');
-        }
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    }
-  };
 
   const handleTryDemo = () => {
     // In a real Next.js app, this would be: router.push('/compare');
     window.location.href = '/compare';
-  };
-
-  const handleSignIn = () => {
-    // ✅ FIXED: Now redirects to NextAuth signin page
-    window.location.href = '/api/auth/signin';
-  };
-
-  const handleSignOut = () => {
-    localStorage.removeItem('veridiff_token');
-    setUser(null);
-    setUserMenuOpen(false);
-  };
-
-  // ✅ NEW: Handle dashboard navigation
-  const handleDashboard = () => {
-    // TODO: Create /dashboard page
-    window.location.href = '/dashboard';
-  };
-
-  // ✅ NEW: Handle account settings navigation
-  const handleAccountSettings = () => {
-    // TODO: Create /account page
-    window.location.href = '/account';
-  };
-
-  // ✅ NEW: Handle FAQ navigation
-  const handleFAQ = () => {
-    // TODO: Create /faq page
-    window.location.href = '/faq';
-  };
-
-  // ✅ NEW: Handle legal page navigation
-  const handleLegalPage = (page) => {
-    // TODO: Create legal pages
-    window.location.href = `/${page}`;
-  };
-
-  const handleWatchVideo = () => {
-    alert('Demo video coming soon! Click Try Live Demo above to test VeriDiff now.');
   };
 
   // ✅ UPDATED: Premium trial with Stripe integration
@@ -108,90 +47,17 @@ export default function Home() {
     alert('Enterprise contact form coming soon! Email us at hello@veridiff.com');
   };
 
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-    setMobileMenuOpen(false);
+  const handleWatchVideo = () => {
+    alert('Demo video coming soon! Click Try Live Demo above to test VeriDiff now.');
   };
 
-  // Responsive styles (same as before)
+  // Responsive styles
   const containerStyle = {
     minHeight: '100vh',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     margin: 0,
     padding: 0,
     color: '#1f2937'
-  };
-
-  const headerStyle = {
-    background: 'white',
-    borderBottom: '1px solid #e5e7eb',
-    position: 'sticky',
-    top: 0,
-    zIndex: 1000,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-  };
-
-  const headerContainerStyle = {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 20px'
-  };
-
-  const headerContentStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: '64px'
-  };
-
-  const logoStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    cursor: 'pointer'
-  };
-
-  const desktopNavStyle = {
-    display: 'flex',
-    gap: '2rem',
-    alignItems: 'center'
-  };
-
-  const navButtonStyle = {
-    background: 'none',
-    border: 'none',
-    color: '#374151',
-    fontWeight: '500',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    padding: '0.5rem',
-    borderRadius: '0.25rem',
-    transition: 'color 0.2s'
-  };
-
-  const navLinkStyle = {
-    textDecoration: 'none',
-    color: '#374151',
-    fontWeight: '500',
-    padding: '0.5rem',
-    borderRadius: '0.25rem',
-    transition: 'color 0.2s',
-    display: 'block'
-  };
-
-  const mobileNavButtonStyle = {
-    display: 'none',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '8px',
-    color: '#374151'
   };
 
   const heroStyle = {
@@ -216,11 +82,9 @@ export default function Home() {
     padding: '0 20px'
   };
 
-  // Media queries (same as before)
+  // Media queries
   const mediaQueries = `
     @media (max-width: 768px) {
-      .desktop-nav { display: none !important; }
-      .mobile-nav-button { display: block !important; }
       .hero-title { font-size: 2.5rem !important; }
       .hero-subtitle { font-size: 1.1rem !important; }
       .section-title { font-size: 1.8rem !important; }
@@ -228,7 +92,6 @@ export default function Home() {
       .demo-grid { grid-template-columns: 1fr !important; }
       .pricing-grid { grid-template-columns: 1fr !important; }
       .feature-grid { grid-template-columns: 1fr !important; }
-      .footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
       .button-group { flex-direction: column !important; align-items: center !important; }
       .demo-buttons { flex-direction: column !important; gap: 0.5rem !important; }
       .tolerance-grid { grid-template-columns: 1fr !important; }
@@ -250,213 +113,15 @@ export default function Home() {
 
   return (
     <>
-      <style>{mediaQueries}</style>
+      <Head>
+        <title>VeriDiff - What Excel Comparison Should Have Been</title>
+        <meta name="description" content="British-engineered smart file comparison with tolerance settings for business data. Local processing, enterprise-grade privacy." />
+        <style>{mediaQueries}</style>
+      </Head>
+      
       <div style={containerStyle}>
         
-        {/* Header */}
-        <header style={headerStyle}>
-          <div style={headerContainerStyle}>
-            <div style={headerContentStyle}>
-              <div style={logoStyle}>
-                VeriDiff
-              </div>
-              
-              <nav style={desktopNavStyle} className="desktop-nav">
-                <button onClick={() => scrollToSection('features')} style={navButtonStyle}>
-                  Features
-                </button>
-                <button onClick={() => scrollToSection('pricing')} style={navButtonStyle}>
-                  Pricing
-                </button>
-                <a href="/faq" style={navLinkStyle}>
-                  FAQ
-                </a>
-                
-                {user ? (
-                  <div style={{ position: 'relative' }}>
-                    <button 
-                      onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      style={{ 
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.5rem',
-                        border: 'none',
-                        background: 'none',
-                        cursor: 'pointer',
-                        borderRadius: '0.25rem',
-                        transition: 'background 0.2s'
-                      }}
-                    >
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: '#2563eb',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.875rem',
-                        fontWeight: '500'
-                      }}>
-                        {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    
-                    {userMenuOpen && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        right: 0,
-                        background: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '0.5rem',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                        minWidth: '200px',
-                        marginTop: '0.5rem',
-                        zIndex: 1000
-                      }}>
-                        <div style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>
-                          <div style={{ fontWeight: '500', fontSize: '0.875rem' }}>{user.full_name}</div>
-                          <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>{user.email}</div>
-                        </div>
-                        <div style={{ padding: '0.5rem' }}>
-                          {/* ✅ UPDATED: Now uses handleDashboard function */}
-                          <button onClick={handleDashboard} style={{ 
-                            width: '100%',
-                            textAlign: 'left',
-                            display: 'block',
-                            padding: '0.5rem',
-                            color: '#374151',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            borderRadius: '0.25rem',
-                            transition: 'background 0.2s'
-                          }}>
-                            Dashboard
-                          </button>
-                          {/* ✅ UPDATED: Now uses handleAccountSettings function */}
-                          <button onClick={handleAccountSettings} style={{ 
-                            width: '100%',
-                            textAlign: 'left',
-                            display: 'block',
-                            padding: '0.5rem',
-                            color: '#374151',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            borderRadius: '0.25rem',
-                            transition: 'background 0.2s'
-                          }}>
-                            Account Settings
-                          </button>
-                          <button onClick={handleSignOut} style={{ 
-                            width: '100%',
-                            textAlign: 'left',
-                            padding: '0.5rem',
-                            background: 'none',
-                            border: 'none',
-                            color: '#dc2626',
-                            cursor: 'pointer',
-                            borderRadius: '0.25rem',
-                            transition: 'background 0.2s'
-                          }}>
-                            Sign Out
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <button onClick={handleSignIn} style={{ ...navButtonStyle, background: 'transparent' }}>
-                      Sign In
-                    </button>
-                    <button onClick={handleTryDemo} style={{ 
-                      padding: '0.5rem 1rem', 
-                      border: 'none', 
-                      borderRadius: '0.5rem', 
-                      fontWeight: '500', 
-                      cursor: 'pointer', 
-                      background: '#2563eb', 
-                      color: 'white',
-                      transition: 'all 0.2s'
-                    }}>
-                      Try Free Demo
-                    </button>
-                  </>
-                )}
-              </nav>
-
-              <button 
-                style={mobileNavButtonStyle}
-                className="mobile-nav-button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                </svg>
-              </button>
-            </div>
-
-            {/* Mobile Navigation Menu */}
-            {mobileMenuOpen && (
-              <div style={{
-                borderTop: '1px solid #e5e7eb',
-                padding: '1rem 0',
-                background: 'white'
-              }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <button onClick={() => scrollToSection('features')} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                    Features
-                  </button>
-                  <button onClick={() => scrollToSection('pricing')} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                    Pricing
-                  </button>
-                  <a href="/faq" style={{ ...navLinkStyle, textAlign: 'left' }}>
-                    FAQ
-                  </a>
-                  {user ? (
-                    <>
-                      {/* ✅ UPDATED: Mobile dashboard uses handleDashboard function */}
-                      <button onClick={handleDashboard} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                        Dashboard
-                      </button>
-                      <button onClick={handleSignOut} style={{ ...navButtonStyle, textAlign: 'left', color: '#dc2626' }}>
-                        Sign Out
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={handleSignIn} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                        Sign In
-                      </button>
-                      <button onClick={handleTryDemo} style={{ 
-                        padding: '0.75rem 1rem', 
-                        border: 'none', 
-                        borderRadius: '0.5rem', 
-                        fontWeight: '500', 
-                        cursor: 'pointer', 
-                        background: '#2563eb', 
-                        color: 'white',
-                        width: '100%',
-                        textAlign: 'center'
-                      }}>
-                        Try Free Demo
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </header>
+        <Header />
 
         {/* Security Trust Banner */}
         <div style={{
@@ -465,7 +130,11 @@ export default function Home() {
           padding: '0.75rem 0',
           textAlign: 'center'
         }}>
-          <div style={headerContainerStyle}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }}>
             <p style={{
               margin: 0,
               fontSize: '0.875rem',
@@ -755,7 +424,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Rest of the sections remain the same as before - Demo Section, Pricing, CTA, Footer */}
         {/* Demo Section */}
         <section id="features" style={{ ...sectionStyle, background: 'white' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
@@ -1550,145 +1218,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer style={{ 
-          background: '#111827', 
-          color: 'white', 
-          padding: '3rem 0' 
-        }}>
-          <div style={sectionContainerStyle} className="section-container">
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '2rem', 
-              marginBottom: '2rem' 
-            }} className="footer-grid">
-              <div>
-                <span style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: '700', 
-                  background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', 
-                  WebkitBackgroundClip: 'text', 
-                  WebkitTextFillColor: 'transparent', 
-                  backgroundClip: 'text', 
-                  marginBottom: '1rem', 
-                  display: 'block' 
-                }}>
-                  VeriDiff
-                </span>
-                <p style={{ color: '#d1d5db', fontSize: '0.875rem' }}>
-                  Precision-engineered in London for global business professionals. Your data never leaves your browser.
-                </p>
-              </div>
-              
-              <div>
-                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Product</h4>
-                <div>
-                  <button onClick={() => scrollToSection('features')} style={{ 
-                    color: '#d1d5db', 
-                    fontSize: '0.875rem', 
-                    cursor: 'pointer', 
-                    background: 'none', 
-                    border: 'none', 
-                    padding: '0.25rem 0', 
-                    textAlign: 'left', 
-                    display: 'block', 
-                    marginBottom: '0.5rem',
-                    width: '100%'
-                  }}>
-                    Features
-                  </button>
-                  <button onClick={() => scrollToSection('pricing')} style={{ 
-                    color: '#d1d5db', 
-                    fontSize: '0.875rem', 
-                    cursor: 'pointer', 
-                    background: 'none', 
-                    border: 'none', 
-                    padding: '0.25rem 0', 
-                    textAlign: 'left', 
-                    display: 'block', 
-                    marginBottom: '0.5rem',
-                    width: '100%'
-                  }}>
-                    Pricing
-                  </button>
-                </div>
-              </div>
-              
-              <div>
-                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
-                <div>
-                  <a href="mailto:sales@veridiff.com" style={{ 
-                    color: '#d1d5db', 
-                    textDecoration: 'none', 
-                    fontSize: '0.875rem', 
-                    display: 'block', 
-                    padding: '0.25rem 0', 
-                    marginBottom: '0.5rem' 
-                  }}>
-                    Contact Us
-                  </a>
-                </div>
-              </div>
-              
-              <div>
-                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Legal</h4>
-                <div>
-                  <a href="/privacy" style={{ 
-                    color: '#d1d5db', 
-                    textDecoration: 'none', 
-                    fontSize: '0.875rem', 
-                    display: 'block', 
-                    padding: '0.25rem 0', 
-                    marginBottom: '0.5rem' 
-                  }}>
-                    Privacy Policy
-                  </a>
-                  <a href="/terms" style={{ 
-                    color: '#d1d5db', 
-                    textDecoration: 'none', 
-                    fontSize: '0.875rem', 
-                    display: 'block', 
-                    padding: '0.25rem 0', 
-                    marginBottom: '0.5rem' 
-                  }}>
-                    Terms of Service
-                  </a>
-                  <a href="/cookies" style={{ 
-                    color: '#d1d5db', 
-                    textDecoration: 'none', 
-                    fontSize: '0.875rem', 
-                    display: 'block', 
-                    padding: '0.25rem 0', 
-                    marginBottom: '0.5rem' 
-                  }}>
-                    Cookie Policy
-                  </a>
-                  <a href="/gdpr" style={{ 
-                    color: '#d1d5db', 
-                    textDecoration: 'none', 
-                    fontSize: '0.875rem', 
-                    display: 'block', 
-                    padding: '0.25rem 0', 
-                    marginBottom: '0.5rem' 
-                  }}>
-                    GDPR Rights
-                  </a>
-                </div>
-              </div>
-            </div>
-            
-            <div style={{ 
-              borderTop: '1px solid #374151', 
-              paddingTop: '2rem', 
-              textAlign: 'center', 
-              color: '#9ca3af', 
-              fontSize: '0.875rem' 
-            }}>
-              <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );
