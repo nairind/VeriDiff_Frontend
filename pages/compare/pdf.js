@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import AuthGuard from '../../components/auth/AuthGuard';
+import Header from '../../components/layout/Header';
+import Footer from '../../components/layout/Footer';
 
 // Import PDF-specific utilities
 import { parsePDFFile, comparePDFFiles } from '../../utils/pdfFileComparison1';
@@ -376,8 +377,6 @@ function PdfComparePage() {
   const [pdfLoadingStatus, setPdfLoadingStatus] = useState('checking'); // checking, loaded, failed
   
   // UI states
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [userTier, setUserTier] = useState('free');
   const [showPdfOptions, setShowPdfOptions] = useState(false);
@@ -450,16 +449,6 @@ function PdfComparePage() {
       }, 1000);
     }
   }, [session]);
-
-  // Navigation handlers
-  const handleSignIn = () => {
-    window.location.href = '/api/auth/signin';
-  };
-
-  const handleSignOut = () => {
-    signOut();
-    setUserMenuOpen(false);
-  };
 
   // Premium upgrade handlers
   const handlePremiumUpgrade = async () => {
@@ -881,131 +870,30 @@ function PdfComparePage() {
           }} />
         </Head>
 
-        {/* Header */}
-        <header style={{
-          background: 'white',
-          borderBottom: '1px solid #e5e7eb',
-          position: 'sticky',
-          top: 0,
-          zIndex: 1000,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        <Header />
+
+        {/* Security Trust Banner */}
+        <div style={{
+          background: '#dcfce7',
+          borderBottom: '1px solid #bbf7d0',
+          padding: '0.75rem 0',
+          textAlign: 'center'
         }}>
           <div style={{
             maxWidth: '1200px',
             margin: '0 auto',
-            padding: '0 20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            height: '64px'
+            padding: '0 20px'
           }}>
-            <Link href="/" style={{ textDecoration: 'none' }}>
-              <span style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}>
-                VeriDiff
-              </span>
-            </Link>
-            
-            <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-              <Link href="/compare" style={{
-                color: '#374151',
-                textDecoration: 'none',
-                fontWeight: '500'
-              }}>
-                📊 Spreadsheets
-              </Link>
-              
-              <Link href="/compare/documents" style={{
-                color: '#374151',
-                textDecoration: 'none',
-                fontWeight: '500'
-              }}>
-                ⚙️ Technical Files
-              </Link>
-              
-              {session ? (
-                <div style={{ position: 'relative' }}>
-                  <button 
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    style={{ 
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem',
-                      border: 'none',
-                      background: 'none',
-                      cursor: 'pointer',
-                      borderRadius: '0.25rem'
-                    }}
-                  >
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: '#2563eb',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.875rem',
-                      fontWeight: '500'
-                    }}>
-                      {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </div>
-                  </button>
-                  
-                  {userMenuOpen && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      right: 0,
-                      background: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '0.5rem',
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                      minWidth: '200px',
-                      marginTop: '0.5rem',
-                      zIndex: 1000
-                    }}>
-                      <div style={{ padding: '0.5rem' }}>
-                        <button onClick={handleSignOut} style={{ 
-                          width: '100%',
-                          textAlign: 'left',
-                          padding: '0.5rem',
-                          background: 'none',
-                          border: 'none',
-                          color: '#dc2626',
-                          cursor: 'pointer',
-                          borderRadius: '0.25rem'
-                        }}>
-                          Sign Out
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button onClick={handleSignIn} style={{
-                  background: '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.5rem',
-                  fontWeight: '500',
-                  cursor: 'pointer'
-                }}>
-                  Sign In
-                </button>
-              )}
-            </nav>
+            <p style={{
+              margin: 0,
+              fontSize: '0.875rem',
+              color: '#166534',
+              fontWeight: '500'
+            }}>
+              🔒 Enterprise-Grade Privacy: All file processing happens in your browser. We never see, store, or access your data.
+            </p>
           </div>
-        </header>
+        </div>
 
         {/* Main Content */}
         <main style={{
@@ -1169,6 +1057,8 @@ function PdfComparePage() {
 
         {/* Premium Modal */}
         <PremiumModal />
+
+        <Footer />
       </div>
     </AuthGuard>
   );
