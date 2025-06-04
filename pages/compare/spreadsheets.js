@@ -1988,7 +1988,6 @@ function ComparePage() {
                   display: 'flex',
                   gap: '15px',
                   justifyContent: 'center',
-                  flexWrap: 'wrap'
                 }}>
                   <button
                     onClick={handleDownloadExcel}
