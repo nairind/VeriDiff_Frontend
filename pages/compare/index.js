@@ -1,40 +1,16 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import AuthGuard from '../../components/auth/AuthGuard';
+import Header from '../../components/layout/Header';
+import Footer from '../../components/layout/Footer';
 
 function ComparisonEngineHub() {
   const { data: session } = useSession();
   
   // UI states
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [userTier, setUserTier] = useState('free');
-
-  // Navigation handlers
-  const handleSignIn = () => {
-    window.location.href = '/api/auth/signin';
-  };
-
-  const handleSignOut = () => {
-    signOut();
-    setUserMenuOpen(false);
-  };
-
-  const handleDashboard = () => {
-    window.location.href = '/dashboard';
-  };
-
-  const handleAccountSettings = () => {
-    window.location.href = '/account';
-  };
-
-  const scrollToSection = (sectionId) => {
-    // Redirect to homepage with section
-    window.location.href = `/#${sectionId}`;
-    setMobileMenuOpen(false);
-  };
 
   // Fetch user data
   const fetchUserData = async () => {
@@ -288,76 +264,6 @@ function ComparisonEngineHub() {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   };
 
-  const headerStyle = {
-    background: 'white',
-    borderBottom: '1px solid #e5e7eb',
-    position: 'sticky',
-    top: 0,
-    zIndex: 1000,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-  };
-
-  const headerContainerStyle = {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 20px'
-  };
-
-  const headerContentStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: '64px'
-  };
-
-  const logoStyle = {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    cursor: 'pointer',
-    textDecoration: 'none'
-  };
-
-  const desktopNavStyle = {
-    display: 'flex',
-    gap: '2rem',
-    alignItems: 'center'
-  };
-
-  const navButtonStyle = {
-    background: 'none',
-    border: 'none',
-    color: '#374151',
-    fontWeight: '500',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    padding: '0.5rem',
-    borderRadius: '0.25rem',
-    transition: 'color 0.2s'
-  };
-
-  const navLinkStyle = {
-    textDecoration: 'none',
-    color: '#374151',
-    fontWeight: '500',
-    padding: '0.5rem',
-    borderRadius: '0.25rem',
-    transition: 'color 0.2s',
-    display: 'block'
-  };
-
-  const mobileNavButtonStyle = {
-    display: 'none',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    padding: '8px',
-    color: '#374151'
-  };
-
   const mainStyle = {
     maxWidth: '1200px',
     margin: '0 auto',
@@ -377,20 +283,16 @@ function ComparisonEngineHub() {
   // Media query styles
   const mediaQueries = `
     @media (max-width: 768px) {
-      .desktop-nav { display: none !important; }
-      .mobile-nav-button { display: block !important; }
       .tools-grid { grid-template-columns: 1fr !important; }
       .hero-title { font-size: 2.5rem !important; }
       .hero-section { padding: 40px 20px !important; }
       .main-container { padding: 20px 15px !important; }
-      .footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
     }
     
     @media (max-width: 480px) {
       .hero-title { font-size: 2rem !important; }
       .hero-section { padding: 30px 15px !important; }
       .main-container { padding: 15px 10px !important; }
-      .footer-grid { grid-template-columns: 1fr !important; }
     }
   `;
 
@@ -402,204 +304,7 @@ function ComparisonEngineHub() {
           <style>{mediaQueries}</style>
         </Head>
 
-        {/* Header */}
-        <header style={headerStyle}>
-          <div style={headerContainerStyle}>
-            <div style={headerContentStyle}>
-              <Link href="/" style={{ textDecoration: 'none' }}>
-                <span style={logoStyle}>VeriDiff</span>
-              </Link>
-              
-              <nav style={desktopNavStyle} className="desktop-nav">
-                <button onClick={() => scrollToSection('features')} style={navButtonStyle}>
-                  Features
-                </button>
-                <button onClick={() => scrollToSection('pricing')} style={navButtonStyle}>
-                  Pricing
-                </button>
-                <a href="/faq" style={navLinkStyle}>
-                  FAQ
-                </a>
-                
-                <Link href="/" style={{ ...navLinkStyle, textDecoration: 'none' }}>
-                  ← Back to Home
-                </Link>
-                
-                {session ? (
-                  <div style={{ position: 'relative' }}>
-                    <button 
-                      onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      style={{ 
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.5rem',
-                        border: 'none',
-                        background: 'none',
-                        cursor: 'pointer',
-                        borderRadius: '0.25rem'
-                      }}
-                    >
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: '#2563eb',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.875rem',
-                        fontWeight: '500'
-                      }}>
-                        {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    
-                    {userMenuOpen && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        right: 0,
-                        background: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '0.5rem',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                        minWidth: '200px',
-                        marginTop: '0.5rem',
-                        zIndex: 1000
-                      }}>
-                        <div style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>
-                          <div style={{ fontWeight: '500', fontSize: '0.875rem' }}>{session.user?.name}</div>
-                          <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>{session.user?.email}</div>
-                        </div>
-                        <div style={{ padding: '0.5rem' }}>
-                          <button onClick={handleDashboard} style={{ 
-                            width: '100%',
-                            textAlign: 'left',
-                            display: 'block',
-                            padding: '0.5rem',
-                            color: '#374151',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            borderRadius: '0.25rem'
-                          }}>
-                            Dashboard
-                          </button>
-                          <button onClick={handleAccountSettings} style={{ 
-                            width: '100%',
-                            textAlign: 'left',
-                            display: 'block',
-                            padding: '0.5rem',
-                            color: '#374151',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            borderRadius: '0.25rem'
-                          }}>
-                            Account Settings
-                          </button>
-                          <button onClick={handleSignOut} style={{ 
-                            width: '100%',
-                            textAlign: 'left',
-                            padding: '0.5rem',
-                            background: 'none',
-                            border: 'none',
-                            color: '#dc2626',
-                            cursor: 'pointer',
-                            borderRadius: '0.25rem'
-                          }}>
-                            Sign Out
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <button onClick={handleSignIn} style={{ ...navButtonStyle, background: 'transparent' }}>
-                      Sign In
-                    </button>
-                    <Link href="/" style={{ 
-                      padding: '0.5rem 1rem', 
-                      borderRadius: '0.5rem', 
-                      fontWeight: '500',
-                      background: '#2563eb', 
-                      color: 'white',
-                      textDecoration: 'none'
-                    }}>
-                      Try Free Demo
-                    </Link>
-                  </>
-                )}
-              </nav>
-
-              <button 
-                style={mobileNavButtonStyle}
-                className="mobile-nav-button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                </svg>
-              </button>
-            </div>
-
-            {/* Mobile Navigation Menu */}
-            {mobileMenuOpen && (
-              <div style={{
-                borderTop: '1px solid #e5e7eb',
-                padding: '1rem 0',
-                background: 'white'
-              }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <button onClick={() => scrollToSection('features')} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                    Features
-                  </button>
-                  <button onClick={() => scrollToSection('pricing')} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                    Pricing
-                  </button>
-                  <a href="/faq" style={{ ...navLinkStyle, textAlign: 'left' }}>
-                    FAQ
-                  </a>
-                  {session ? (
-                    <>
-                      <button onClick={handleDashboard} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                        Dashboard
-                      </button>
-                      <button onClick={handleSignOut} style={{ ...navButtonStyle, textAlign: 'left', color: '#dc2626' }}>
-                        Sign Out
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={handleSignIn} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                        Sign In
-                      </button>
-                      <Link href="/" style={{ 
-                        padding: '0.75rem 1rem', 
-                        borderRadius: '0.5rem', 
-                        fontWeight: '500',
-                        background: '#2563eb', 
-                        color: 'white',
-                        textDecoration: 'none',
-                        textAlign: 'center',
-                        display: 'block'
-                      }}>
-                        Try Free Demo
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </header>
+        <Header />
 
         {/* Security Trust Banner */}
         <div style={{
@@ -608,7 +313,11 @@ function ComparisonEngineHub() {
           padding: '0.75rem 0',
           textAlign: 'center'
         }}>
-          <div style={headerContainerStyle}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }}>
             <p style={{
               margin: 0,
               fontSize: '0.875rem',
@@ -729,129 +438,7 @@ function ComparisonEngineHub() {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer style={{ 
-          background: '#111827', 
-          color: 'white', 
-          padding: '3rem 0' 
-        }}>
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: '0 20px'
-          }}>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '2rem', 
-              marginBottom: '2rem' 
-            }} className="footer-grid">
-              <div>
-                <span style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: '700', 
-                  background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', 
-                  WebkitBackgroundClip: 'text', 
-                  WebkitTextFillColor: 'transparent', 
-                  backgroundClip: 'text', 
-                  marginBottom: '1rem', 
-                  display: 'block' 
-                }}>
-                  VeriDiff
-                </span>
-                <p style={{ color: '#d1d5db', fontSize: '0.875rem' }}>
-                  Precision-engineered in London for global business professionals. Your data never leaves your browser.
-                </p>
-              </div>
-              
-              <div>
-                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Product</h4>
-                <div>
-                  <button onClick={() => scrollToSection('features')} style={{ 
-                    color: '#d1d5db', 
-                    fontSize: '0.875rem', 
-                    cursor: 'pointer', 
-                    background: 'none', 
-                    border: 'none', 
-                    padding: '0.25rem 0', 
-                    textAlign: 'left', 
-                    display: 'block', 
-                    marginBottom: '0.5rem',
-                    width: '100%'
-                  }}>
-                    Features
-                  </button>
-                  <button onClick={() => scrollToSection('pricing')} style={{ 
-                    color: '#d1d5db', 
-                    fontSize: '0.875rem', 
-                    cursor: 'pointer', 
-                    background: 'none', 
-                    border: 'none', 
-                    padding: '0.25rem 0', 
-                    textAlign: 'left', 
-                    display: 'block', 
-                    marginBottom: '0.5rem',
-                    width: '100%'
-                  }}>
-                    Pricing
-                  </button>
-                </div>
-              </div>
-              
-              <div>
-                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
-                <div>
-                  <a href="mailto:sales@veridiff.com" style={{ 
-                    color: '#d1d5db', 
-                    textDecoration: 'none', 
-                    fontSize: '0.875rem', 
-                    display: 'block', 
-                    padding: '0.25rem 0', 
-                    marginBottom: '0.5rem' 
-                  }}>
-                    Contact Us
-                  </a>
-                </div>
-              </div>
-              
-              <div>
-                <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Legal</h4>
-                <div>
-                  <a href="/privacy" style={{ 
-                    color: '#d1d5db', 
-                    textDecoration: 'none', 
-                    fontSize: '0.875rem', 
-                    display: 'block', 
-                    padding: '0.25rem 0', 
-                    marginBottom: '0.5rem' 
-                  }}>
-                    Privacy Policy
-                  </a>
-                  <a href="/terms" style={{ 
-                    color: '#d1d5db', 
-                    textDecoration: 'none', 
-                    fontSize: '0.875rem', 
-                    display: 'block', 
-                    padding: '0.25rem 0', 
-                    marginBottom: '0.5rem' 
-                  }}>
-                    Terms of Service
-                  </a>
-                </div>
-              </div>
-            </div>
-            
-            <div style={{ 
-              borderTop: '1px solid #374151', 
-              paddingTop: '2rem', 
-              textAlign: 'center', 
-              color: '#9ca3af', 
-              fontSize: '0.875rem' 
-            }}>
-              <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </AuthGuard>
   );
