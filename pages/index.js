@@ -9,9 +9,33 @@ export default function Home() {
   const [selectedDemo, setSelectedDemo] = useState('excel-csv');
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  
+  // Auto-cycling demo state
+  const [isAutoCycling, setIsAutoCycling] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Auto-cycling effect
+  useEffect(() => {
+    if (!isAutoCycling || isPaused) return;
+
+    const interval = setInterval(() => {
+      setSelectedDemo(prev => prev === 'excel-csv' ? 'tolerance' : 'excel-csv');
+    }, 6000); // Change every 6 seconds
+
+    return () => clearInterval(interval);
+  }, [isAutoCycling, isPaused]);
+
+  const handleDemoSelect = (demo) => {
+    setSelectedDemo(demo);
+    setIsAutoCycling(false); // Stop auto-cycling when user interacts
+  };
+
+  const toggleAutoCycle = () => {
+    setIsAutoCycling(!isAutoCycling);
+    setIsPaused(false);
+  };
 
   const handleTryDemo = () => {
-    // In a real Next.js app, this would be: router.push('/compare');
     window.location.href = '/compare';
   };
 
@@ -82,7 +106,7 @@ export default function Home() {
     padding: '0 20px'
   };
 
-  // Media queries
+  // Media queries with enhanced animations
   const mediaQueries = `
     @media (max-width: 768px) {
       .hero-title { font-size: 2.5rem !important; }
@@ -93,9 +117,10 @@ export default function Home() {
       .pricing-grid { grid-template-columns: 1fr !important; }
       .feature-grid { grid-template-columns: 1fr !important; }
       .button-group { flex-direction: column !important; align-items: center !important; }
-      .demo-buttons { flex-direction: column !important; gap: 0.5rem !important; }
+      .demo-tabs { flex-direction: column !important; gap: 0.5rem !important; }
       .tolerance-grid { grid-template-columns: 1fr !important; }
       .security-grid { grid-template-columns: 1fr !important; }
+      .tab-slider { display: none !important; }
     }
     
     @media (max-width: 480px) {
@@ -108,6 +133,60 @@ export default function Home() {
     @media (min-width: 769px) and (max-width: 1024px) {
       .pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
       .demo-grid { grid-template-columns: 1fr !important; }
+    }
+
+    /* Enhanced Demo Tab Animations */
+    .demo-tab {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateY(0);
+    }
+    
+    .demo-tab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+    }
+    
+    .demo-tab.active {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.2);
+    }
+    
+    .tab-slider {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .progress-indicator {
+      animation: progressFill 6s linear infinite;
+      animation-play-state: ${isAutoCycling && !isPaused ? 'running' : 'paused'};
+    }
+    
+    @keyframes progressFill {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+    
+    .auto-cycle-pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .demo-content {
+      animation: fadeInUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   `;
 
@@ -424,7 +503,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Demo Section */}
+        {/* Enhanced Demo Section */}
         <section id="features" style={{ ...sectionStyle, background: 'white' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -446,429 +525,537 @@ export default function Home() {
               borderRadius: '1rem', 
               padding: '2rem' 
             }}>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                gap: '1rem', 
+              {/* Enhanced Tab Controls */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '1rem',
                 marginBottom: '2rem',
                 flexWrap: 'wrap'
-              }} className="demo-buttons">
-                <button onClick={() => setSelectedDemo('excel-csv')} style={{ 
-                  padding: '0.75rem 1.5rem', 
-                  borderRadius: '0.5rem', 
-                  fontWeight: '500', 
-                  cursor: 'pointer', 
-                  border: 'none', 
-                  background: selectedDemo === 'excel-csv' ? '#2563eb' : 'white', 
-                  color: selectedDemo === 'excel-csv' ? 'white' : '#374151',
-                  minWidth: '180px',
-                  transition: 'all 0.2s'
+              }}>
+                {/* Tab Container with Slider */}
+                <div style={{
+                  position: 'relative',
+                  display: 'flex',
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '6px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  border: '1px solid #e5e7eb'
+                }} className="demo-tabs">
+                  
+                  {/* Animated Background Slider */}
+                  <div 
+                    className="tab-slider"
+                    style={{
+                      position: 'absolute',
+                      top: '6px',
+                      left: selectedDemo === 'excel-csv' ? '6px' : 'calc(50% - 3px)',
+                      width: 'calc(50% - 6px)',
+                      height: 'calc(100% - 12px)',
+                      background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
+                      zIndex: 1
+                    }}
+                  />
+                  
+                  {/* Tab Buttons */}
+                  <button 
+                    onClick={() => handleDemoSelect('excel-csv')}
+                    onMouseEnter={() => setIsPaused(true)}
+                    onMouseLeave={() => setIsPaused(false)}
+                    className="demo-tab"
+                    style={{ 
+                      position: 'relative',
+                      zIndex: 2,
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      border: 'none',
+                      background: 'transparent',
+                      color: selectedDemo === 'excel-csv' ? 'white' : '#374151',
+                      minWidth: '180px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontSize: '0.95rem'
+                    }}
+                  >
+                    📊 Excel ↔ CSV Mapping
+                  </button>
+                  
+                  <button 
+                    onClick={() => handleDemoSelect('tolerance')}
+                    onMouseEnter={() => setIsPaused(true)}
+                    onMouseLeave={() => setIsPaused(false)}
+                    className="demo-tab"
+                    style={{ 
+                      position: 'relative',
+                      zIndex: 2,
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      border: 'none',
+                      background: 'transparent',
+                      color: selectedDemo === 'tolerance' ? 'white' : '#374151',
+                      minWidth: '180px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontSize: '0.95rem'
+                    }}
+                  >
+                    💰 Financial Tolerance
+                  </button>
+                </div>
+
+                {/* Auto-cycle Controls */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginLeft: '1rem'
                 }}>
-                  Excel ↔ CSV Mapping
-                </button>
-                <button onClick={() => setSelectedDemo('tolerance')} style={{ 
-                  padding: '0.75rem 1.5rem', 
-                  borderRadius: '0.5rem', 
-                  fontWeight: '500', 
-                  cursor: 'pointer', 
-                  border: 'none', 
-                  background: selectedDemo === 'tolerance' ? '#2563eb' : 'white', 
-                  color: selectedDemo === 'tolerance' ? 'white' : '#374151',
-                  minWidth: '180px',
-                  transition: 'all 0.2s'
-                }}>
-                  Financial Tolerance
-                </button>
+                  <button
+                    onClick={toggleAutoCycle}
+                    style={{
+                      background: isAutoCycling ? '#22c55e' : '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '6px 12px',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s'
+                    }}
+                    className={isAutoCycling ? 'auto-cycle-pulse' : ''}
+                  >
+                    {isAutoCycling ? '⏸️' : '▶️'} {isAutoCycling ? 'Auto' : 'Manual'}
+                  </button>
+                  
+                  {/* Progress Indicator */}
+                  {isAutoCycling && (
+                    <div style={{
+                      width: '40px',
+                      height: '4px',
+                      background: '#e5e7eb',
+                      borderRadius: '2px',
+                      overflow: 'hidden'
+                    }}>
+                      <div 
+                        className="progress-indicator"
+                        style={{
+                          height: '100%',
+                          background: '#2563eb',
+                          borderRadius: '2px'
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {selectedDemo === 'excel-csv' && (
-                <>
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr', 
-                    gap: '2rem', 
-                    marginBottom: '1.5rem' 
-                  }} className="demo-grid">
+              {/* Demo Content with Animation */}
+              <div className="demo-content" key={selectedDemo}>
+                {selectedDemo === 'excel-csv' && (
+                  <>
                     <div style={{ 
-                      background: 'white', 
-                      padding: '1.5rem', 
-                      borderRadius: '0.5rem', 
-                      border: '1px solid #e5e7eb' 
-                    }}>
-                      <h4 style={{ 
-                        fontWeight: '600', 
-                        marginBottom: '1rem', 
-                        color: '#1f2937' 
-                      }}>
-                        📊 Accounting_Export_Q4.xlsx
-                      </h4>
-                      <div style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: '0.5rem' 
-                      }}>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#ecfdf5', 
-                          color: '#065f46', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>Client Company Name</span>
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
-                        </div>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#ecfdf5', 
-                          color: '#065f46', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>Invoice Total Amount</span>
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>GBP CURRENCY</span>
-                        </div>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#ecfdf5', 
-                          color: '#065f46', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>Payment Due Date</span>
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>DATE</span>
-                        </div>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#ecfdf5', 
-                          color: '#065f46', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>Account Reference</span>
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
-                        </div>
-                      </div>
-                      <div style={{ 
-                        marginTop: '1rem', 
-                        padding: '0.75rem', 
-                        background: '#f0fdf4', 
-                        borderRadius: '0.5rem', 
-                        fontSize: '0.75rem', 
-                        color: '#166534' 
-                      }}>
-                        <strong>1,247 rows</strong> • Excel format with formulas
-                      </div>
-                    </div>
-
-                    <div style={{ 
-                      background: 'white', 
-                      padding: '1.5rem', 
-                      borderRadius: '0.5rem', 
-                      border: '1px solid #e5e7eb' 
-                    }}>
-                      <h4 style={{ 
-                        fontWeight: '600', 
-                        marginBottom: '1rem', 
-                        color: '#1f2937' 
-                      }}>
-                        📄 payment_system_export.csv
-                      </h4>
-                      <div style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: '0.5rem' 
-                      }}>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#eff6ff', 
-                          color: '#1e40af', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>customer</span>
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
-                        </div>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#eff6ff', 
-                          color: '#1e40af', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>amount</span>
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>NUMBER</span>
-                        </div>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#eff6ff', 
-                          color: '#1e40af', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>due_date</span>
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
-                        </div>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#eff6ff', 
-                          color: '#1e40af', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>ref_code</span>
-                          <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
-                        </div>
-                      </div>
-                      <div style={{ 
-                        marginTop: '1rem', 
-                        padding: '0.75rem', 
-                        background: '#eff6ff', 
-                        borderRadius: '0.5rem', 
-                        fontSize: '0.75rem', 
-                        color: '#1e40af' 
-                      }}>
-                        <strong>1,193 rows</strong> • CSV from payment processor
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ 
-                    background: '#dcfce7', 
-                    color: '#166534', 
-                    padding: '1rem', 
-                    borderRadius: '0.5rem', 
-                    textAlign: 'center' 
-                  }}>
-                    <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
-                      ✨ Smart Mapping Results:
-                    </p>
-                    <div style={{ 
-                      fontSize: '0.875rem', 
                       display: 'grid', 
                       gridTemplateColumns: '1fr 1fr', 
-                      gap: '1rem', 
-                      textAlign: 'left' 
-                    }} className="tolerance-grid">
-                      <div>
-                        <strong>✓ Auto-mapped fields:</strong><br/>
-                        • Client Company Name → customer<br/>
-                        • Invoice Total Amount → amount<br/>  
-                        • Payment Due Date → due_date
-                      </div>
-                      <div>
-                        <strong>📊 Match Summary:</strong><br/>
-                        • 1,089 perfect matches<br/>
-                        • 54 tolerance matches<br/>
-                        • 50 discrepancies flagged
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {selectedDemo === 'tolerance' && (
-                <>
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr', 
-                    gap: '2rem', 
-                    marginBottom: '1.5rem' 
-                  }} className="demo-grid">
-                    <div style={{ 
-                      background: 'white', 
-                      padding: '1.5rem', 
-                      borderRadius: '0.5rem', 
-                      border: '1px solid #e5e7eb' 
-                    }}>
-                      <h4 style={{ 
-                        fontWeight: '600', 
-                        marginBottom: '1rem', 
-                        color: '#1f2937' 
-                      }}>
-                        💰 Budget_2024.xlsx
-                      </h4>
+                      gap: '2rem', 
+                      marginBottom: '1.5rem' 
+                    }} className="demo-grid">
                       <div style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: '0.5rem' 
+                        background: 'white', 
+                        padding: '1.5rem', 
+                        borderRadius: '0.5rem', 
+                        border: '1px solid #e5e7eb' 
                       }}>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#fef3c7', 
-                          color: '#92400e', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
+                        <h4 style={{ 
+                          fontWeight: '600', 
+                          marginBottom: '1rem', 
+                          color: '#1f2937' 
                         }}>
-                          <span>Marketing Budget</span>
-                          <span style={{ fontWeight: 'bold' }}>GBP 85,000</span>
+                          📊 Accounting_Export_Q4.xlsx
+                        </h4>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '0.5rem' 
+                        }}>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#ecfdf5', 
+                            color: '#065f46', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Client Company Name</span>
+                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#ecfdf5', 
+                            color: '#065f46', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Invoice Total Amount</span>
+                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>GBP CURRENCY</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#ecfdf5', 
+                            color: '#065f46', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Payment Due Date</span>
+                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>DATE</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#ecfdf5', 
+                            color: '#065f46', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Account Reference</span>
+                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                          </div>
                         </div>
                         <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#fef3c7', 
-                          color: '#92400e', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
+                          marginTop: '1rem', 
+                          padding: '0.75rem', 
+                          background: '#f0fdf4', 
+                          borderRadius: '0.5rem', 
+                          fontSize: '0.75rem', 
+                          color: '#166534' 
                         }}>
-                          <span>Operations Budget</span>
-                          <span style={{ fontWeight: 'bold' }}>GBP 120,000</span>
-                        </div>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#fef3c7', 
-                          color: '#92400e', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>Software Licenses</span>
-                          <span style={{ fontWeight: 'bold' }}>GBP 45,000</span>
+                          <strong>1,247 rows</strong> • Excel format with formulas
                         </div>
                       </div>
-                    </div>
 
-                    <div style={{ 
-                      background: 'white', 
-                      padding: '1.5rem', 
-                      borderRadius: '0.5rem', 
-                      border: '1px solid #e5e7eb' 
-                    }}>
-                      <h4 style={{ 
-                        fontWeight: '600', 
-                        marginBottom: '1rem', 
-                        color: '#1f2937' 
-                      }}>
-                        📈 Actual_Spend_Q1.csv
-                      </h4>
                       <div style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: '0.5rem' 
+                        background: 'white', 
+                        padding: '1.5rem', 
+                        borderRadius: '0.5rem', 
+                        border: '1px solid #e5e7eb' 
                       }}>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#f0f9ff', 
-                          color: '#0369a1', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
+                        <h4 style={{ 
+                          fontWeight: '600', 
+                          marginBottom: '1rem', 
+                          color: '#1f2937' 
                         }}>
-                          <span>Marketing Actual</span>
-                          <span style={{ fontWeight: 'bold' }}>GBP 87,230</span>
+                          📄 payment_system_export.csv
+                        </h4>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '0.5rem' 
+                        }}>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#eff6ff', 
+                            color: '#1e40af', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>customer</span>
+                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#eff6ff', 
+                            color: '#1e40af', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>amount</span>
+                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>NUMBER</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#eff6ff', 
+                            color: '#1e40af', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>due_date</span>
+                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#eff6ff', 
+                            color: '#1e40af', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>ref_code</span>
+                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
+                          </div>
                         </div>
                         <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#f0f9ff', 
-                          color: '#0369a1', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
+                          marginTop: '1rem', 
+                          padding: '0.75rem', 
+                          background: '#eff6ff', 
+                          borderRadius: '0.5rem', 
+                          fontSize: '0.75rem', 
+                          color: '#1e40af' 
                         }}>
-                          <span>Operations Actual</span>
-                          <span style={{ fontWeight: 'bold' }}>GBP 118,450</span>
-                        </div>
-                        <div style={{ 
-                          padding: '0.5rem', 
-                          borderRadius: '0.25rem', 
-                          fontSize: '0.875rem', 
-                          background: '#f0f9ff', 
-                          color: '#0369a1', 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap'
-                        }}>
-                          <span>Software Actual</span>
-                          <span style={{ fontWeight: 'bold' }}>GBP 46,180</span>
+                          <strong>1,193 rows</strong> • CSV from payment processor
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div style={{ 
-                    background: '#dcfce7', 
-                    color: '#166534', 
-                    padding: '1rem', 
-                    borderRadius: '0.5rem' 
-                  }}>
-                    <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
-                      💡 Tolerance Analysis (±3% acceptable variance):
-                    </p>
                     <div style={{ 
-                      fontSize: '0.875rem', 
-                      display: 'grid', 
-                      gridTemplateColumns: '1fr 1fr 1fr', 
-                      gap: '1rem', 
+                      background: '#dcfce7', 
+                      color: '#166534', 
+                      padding: '1rem', 
+                      borderRadius: '0.5rem', 
                       textAlign: 'center' 
-                    }} className="tolerance-grid">
+                    }}>
+                      <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                        ✨ Smart Mapping Results:
+                      </p>
                       <div style={{ 
-                        padding: '0.5rem', 
-                        background: '#fef2f2', 
-                        color: '#dc2626', 
-                        borderRadius: '0.25rem' 
-                      }}>
-                        <strong>Marketing</strong><br/>
-                        +2.6% over budget<br/>
-                        <span style={{ fontSize: '0.75rem' }}>❌ Outside tolerance</span>
-                      </div>
-                      <div style={{ 
-                        padding: '0.5rem', 
-                        background: '#f0fdf4', 
-                        color: '#16a34a', 
-                        borderRadius: '0.25rem' 
-                      }}>
-                        <strong>Operations</strong><br/>
-                        -1.3% under budget<br/>
-                        <span style={{ fontSize: '0.75rem' }}>✅ Within tolerance</span>
-                      </div>
-                      <div style={{ 
-                        padding: '0.5rem', 
-                        background: '#f0fdf4', 
-                        color: '#16a34a', 
-                        borderRadius: '0.25rem' 
-                      }}>
-                        <strong>Software</strong><br/>
-                        +2.6% over budget<br/>
-                        <span style={{ fontSize: '0.75rem' }}>✅ Within tolerance</span>
+                        fontSize: '0.875rem', 
+                        display: 'grid', 
+                        gridTemplateColumns: '1fr 1fr', 
+                        gap: '1rem', 
+                        textAlign: 'left' 
+                      }} className="tolerance-grid">
+                        <div>
+                          <strong>✓ Auto-mapped fields:</strong><br/>
+                          • Client Company Name → customer<br/>
+                          • Invoice Total Amount → amount<br/>  
+                          • Payment Due Date → due_date
+                        </div>
+                        <div>
+                          <strong>📊 Match Summary:</strong><br/>
+                          • 1,089 perfect matches<br/>
+                          • 54 tolerance matches<br/>
+                          • 50 discrepancies flagged
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
+
+                {selectedDemo === 'tolerance' && (
+                  <>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr', 
+                      gap: '2rem', 
+                      marginBottom: '1.5rem' 
+                    }} className="demo-grid">
+                      <div style={{ 
+                        background: 'white', 
+                        padding: '1.5rem', 
+                        borderRadius: '0.5rem', 
+                        border: '1px solid #e5e7eb' 
+                      }}>
+                        <h4 style={{ 
+                          fontWeight: '600', 
+                          marginBottom: '1rem', 
+                          color: '#1f2937' 
+                        }}>
+                          💰 Budget_2024.xlsx
+                        </h4>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '0.5rem' 
+                        }}>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#fef3c7', 
+                            color: '#92400e', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Marketing Budget</span>
+                            <span style={{ fontWeight: 'bold' }}>GBP 85,000</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#fef3c7', 
+                            color: '#92400e', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Operations Budget</span>
+                            <span style={{ fontWeight: 'bold' }}>GBP 120,000</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#fef3c7', 
+                            color: '#92400e', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Software Licenses</span>
+                            <span style={{ fontWeight: 'bold' }}>GBP 45,000</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ 
+                        background: 'white', 
+                        padding: '1.5rem', 
+                        borderRadius: '0.5rem', 
+                        border: '1px solid #e5e7eb' 
+                      }}>
+                        <h4 style={{ 
+                          fontWeight: '600', 
+                          marginBottom: '1rem', 
+                          color: '#1f2937' 
+                        }}>
+                          📈 Actual_Spend_Q1.csv
+                        </h4>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '0.5rem' 
+                        }}>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#f0f9ff', 
+                            color: '#0369a1', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Marketing Actual</span>
+                            <span style={{ fontWeight: 'bold' }}>GBP 87,230</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#f0f9ff', 
+                            color: '#0369a1', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Operations Actual</span>
+                            <span style={{ fontWeight: 'bold' }}>GBP 118,450</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#f0f9ff', 
+                            color: '#0369a1', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>Software Actual</span>
+                            <span style={{ fontWeight: 'bold' }}>GBP 46,180</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ 
+                      background: '#dcfce7', 
+                      color: '#166534', 
+                      padding: '1rem', 
+                      borderRadius: '0.5rem' 
+                    }}>
+                      <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                        💡 Tolerance Analysis (±3% acceptable variance):
+                      </p>
+                      <div style={{ 
+                        fontSize: '0.875rem', 
+                        display: 'grid', 
+                        gridTemplateColumns: '1fr 1fr 1fr', 
+                        gap: '1rem', 
+                        textAlign: 'center' 
+                      }} className="tolerance-grid">
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          background: '#fef2f2', 
+                          color: '#dc2626', 
+                          borderRadius: '0.25rem' 
+                        }}>
+                          <strong>Marketing</strong><br/>
+                          +2.6% over budget<br/>
+                          <span style={{ fontSize: '0.75rem' }}>❌ Outside tolerance</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          background: '#f0fdf4', 
+                          color: '#16a34a', 
+                          borderRadius: '0.25rem' 
+                        }}>
+                          <strong>Operations</strong><br/>
+                          -1.3% under budget<br/>
+                          <span style={{ fontSize: '0.75rem' }}>✅ Within tolerance</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          background: '#f0fdf4', 
+                          color: '#16a34a', 
+                          borderRadius: '0.25rem' 
+                        }}>
+                          <strong>Software</strong><br/>
+                          +2.6% over budget<br/>
+                          <span style={{ fontSize: '0.75rem' }}>✅ Within tolerance</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </section>
