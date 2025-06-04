@@ -4,19 +4,17 @@ import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import AuthGuard from '../../components/auth/AuthGuard';
 
-// Import document-specific utilities
+// Import document-specific utilities (PDF removed)
 import { compareTextFiles_main } from '../../utils/textFileComparison';
 import { parseJSONFile, compareJSONFiles } from '../../utils/jsonFileComparison1';
 import { parseXMLFile, compareXMLFiles } from '../../utils/xmlFileComparison1';
-import { parsePDFFile, comparePDFFiles } from '../../utils/pdfFileComparison1';
 
-// Import format-specific result components
+// Import format-specific result components (PDF removed)
 import TextResults from '../../components/TextResults';
 import JsonResults from '../../components/JsonResults';
 import XmlResults from '../../components/XmlResults';
-import PdfResults from '../../components/PdfResults';
 
-// ===== UPDATED FILE SIZE LIMITS =====
+// ===== UPDATED FILE SIZE LIMITS (PDF removed) =====
 const getFileSizeLimit = (fileType) => {
   switch (fileType) {
     case 'text':
@@ -25,8 +23,6 @@ const getFileSizeLimit = (fileType) => {
       return 25 * 1024 * 1024; // 25MB - JSON can be large datasets
     case 'xml': 
       return 25 * 1024 * 1024; // 25MB - XML documents can be substantial
-    case 'pdf':
-      return 100 * 1024 * 1024; // 100MB - PDFs can be very large
     default:
       return 10 * 1024 * 1024;
   }
@@ -37,12 +33,11 @@ const getFileSizeLimitText = (fileType) => {
     case 'text': return '10MB';
     case 'json': return '25MB';
     case 'xml': return '25MB';
-    case 'pdf': return '100MB';
     default: return '10MB';
   }
 };
 
-// ===== DYNAMIC USER GUIDANCE COMPONENTS =====
+// ===== DYNAMIC USER GUIDANCE COMPONENTS (PDF removed) =====
 
 // Dynamic File Requirements Info Component
 const FileRequirementsInfo = ({ fileType }) => {
@@ -92,22 +87,6 @@ const FileRequirementsInfo = ({ fileType }) => {
             'Maximum size: 25MB',
             'Well-formed XML required',
             'UTF-8 encoding preferred'
-          ]
-        };
-      
-      case 'pdf':
-        return {
-          title: '📑 Supported PDF Files',
-          supported: [
-            '.pdf files with extractable text',
-            'Multi-page documents',
-            'Text-based content',
-            'Standard PDF formats'
-          ],
-          requirements: [
-            'Maximum size: 100MB',
-            'Text-extractable PDFs only',
-            'No password-protected files'
           ]
         };
       
@@ -180,14 +159,6 @@ const SuccessTips = ({ fileType }) => {
           { label: 'Comments preserved:', tip: 'XML comments included in comparison' }
         ];
       
-      case 'pdf':
-        return [
-          { label: 'Text-based PDFs work best:', tip: 'Avoid image-only PDF files' },
-          { label: 'Page-by-page analysis:', tip: 'Each page compared individually' },
-          { label: 'Large files supported:', tip: 'Up to 100MB for comprehensive documents' },
-          { label: 'Real text extraction:', tip: 'Uses PDF.js for accurate text analysis' }
-        ];
-      
       default:
         return [
           { label: 'Select file type above:', tip: 'Choose your document format first' }
@@ -220,7 +191,7 @@ const SuccessTips = ({ fileType }) => {
   );
 };
 
-// Enhanced Error Messages with Solutions
+// Enhanced Error Messages with Solutions (PDF-specific cases removed)
 const getHelpfulErrorMessage = (error, fileName) => {
   const errorMsg = error.message.toLowerCase();
   
@@ -231,23 +202,8 @@ const getHelpfulErrorMessage = (error, fileName) => {
       solutions: [
         "Text files: Maximum 10MB",
         "JSON/XML files: Maximum 25MB", 
-        "PDF files: Maximum 100MB",
         "Try splitting large files into smaller sections",
         "For large datasets, consider our Premium bulk comparison tools"
-      ]
-    };
-  }
-  
-  if (errorMsg.includes('pdf.js') || errorMsg.includes('pdfjslib') || errorMsg.includes('pdf processing')) {
-    return {
-      title: "📚 PDF Processing Error",
-      message: `PDF processing service issue.`,
-      solutions: [
-        "Refresh the page and try again",
-        "Check your internet connection is stable",
-        "Disable ad blockers temporarily",
-        "Try a different PDF file to test",
-        "Contact support if the issue persists"
       ]
     };
   }
@@ -257,7 +213,6 @@ const getHelpfulErrorMessage = (error, fileName) => {
       title: "🚫 Binary File Detected",
       message: `"${fileName}" appears to be a binary file.`,
       solutions: [
-        "For PDF files, use the PDF comparison tool",
         "For images, convert to text first",
         "Save files as plain text (.txt) format",
         "Use appropriate file type selector"
@@ -273,18 +228,6 @@ const getHelpfulErrorMessage = (error, fileName) => {
         "Check if the file contains text content",
         "Try opening the file in a text editor first",
         "Ensure the file finished uploading completely"
-      ]
-    };
-  }
-  
-  if (errorMsg.includes('password') || errorMsg.includes('encrypted')) {
-    return {
-      title: "🔒 Protected PDF File",
-      message: `"${fileName}" is password-protected.`,
-      solutions: [
-        "Remove password protection from the PDF",
-        "Use an unprotected version of the document",
-        "Contact the document owner for an unlocked version"
       ]
     };
   }
@@ -466,7 +409,7 @@ const adaptTextComparisonResults = (rawResults, file1Content, file2Content, file
   return adaptedResults;
 };
 
-// ===== ENHANCED FILE READING UTILITY =====
+// ===== ENHANCED FILE READING UTILITY (PDF removed) =====
 const readFileContent = (file, fileType = 'text') => {
   return new Promise((resolve, reject) => {
     console.log('🐛 DEBUG: Reading file:', file.name, 'Size:', file.size, 'Type:', file.type, 'Expected:', fileType);
@@ -484,30 +427,6 @@ const readFileContent = (file, fileType = 'text') => {
     const sizeLimit = getFileSizeLimit(fileType);
     if (file.size > sizeLimit) {
       reject(new Error(`File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size for ${fileType.toUpperCase()} files is ${getFileSizeLimitText(fileType)}.`));
-      return;
-    }
-
-    // For PDF files, use ArrayBuffer reading (not text)
-    if (fileType === 'pdf') {
-      const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        try {
-          const arrayBuffer = e.target.result;
-          console.log('✅ PDF file read as ArrayBuffer, size:', arrayBuffer.byteLength);
-          resolve(arrayBuffer);
-        } catch (error) {
-          console.error('❌ PDF file reading error:', error);
-          reject(new Error('Failed to process PDF file content'));
-        }
-      };
-      
-      reader.onerror = (e) => {
-        console.error('❌ FileReader error:', e);
-        reject(new Error(`Failed to read PDF file "${file.name}". The file may be corrupted.`));
-      };
-      
-      reader.readAsArrayBuffer(file);
       return;
     }
 
@@ -558,7 +477,7 @@ const readFileContent = (file, fileType = 'text') => {
   });
 };
 
-// ===== ENHANCED FILE UPLOAD COMPONENT =====
+// ===== ENHANCED FILE UPLOAD COMPONENT (PDF removed) =====
 const FileUploadWithValidation = ({ fileNum, file, onChange, fileType }) => {
   const [validationWarning, setValidationWarning] = useState(null);
   
@@ -570,8 +489,6 @@ const FileUploadWithValidation = ({ fileNum, file, onChange, fileType }) => {
         return ".json,application/json";
       case 'xml':
         return ".xml,application/xml,text/xml";
-      case 'pdf':
-        return ".pdf,application/pdf";
       default:
         return "*";
     }
@@ -618,9 +535,6 @@ const FileUploadWithValidation = ({ fileNum, file, onChange, fileType }) => {
           break;
         case 'xml':
           isValidType = fileName.endsWith('.xml') || selectedFile.type.includes('xml');
-          break;
-        case 'pdf':
-          isValidType = fileName.endsWith('.pdf') || selectedFile.type === 'application/pdf';
           break;
         default:
           isValidType = true;
@@ -710,7 +624,6 @@ function DocumentComparePage() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [pdfLoadingStatus, setPdfLoadingStatus] = useState('checking'); // checking, loaded, failed
   
   // UI states
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -718,13 +631,12 @@ function DocumentComparePage() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [userTier, setUserTier] = useState('free');
 
-  // Document-specific option states
+  // Document-specific option states (PDF removed)
   const [showTextOptions, setShowTextOptions] = useState(false);
   const [showJsonOptions, setShowJsonOptions] = useState(false);
   const [showXmlOptions, setShowXmlOptions] = useState(false);
-  const [showPdfOptions, setShowPdfOptions] = useState(false);
 
-  // Comparison options
+  // Comparison options (PDF removed)
   const [textOptions, setTextOptions] = useState({
     compareMode: 'line',
     caseSensitive: true,
@@ -748,45 +660,6 @@ function DocumentComparePage() {
     compareAttributes: true
   });
 
-  const [pdfOptions, setPdfOptions] = useState({
-    compareMode: 'text',
-    ignoreFormatting: true,
-    pageByPage: true,
-    includeImages: false
-  });
-
-  // Enhanced PDF.js loading check
-  const checkPDFJSLoading = () => {
-    let attempts = 0;
-    const maxAttempts = 30; // 30 seconds total
-    
-    const checkInterval = setInterval(() => {
-      attempts++;
-      console.log(`📚 PDF.js loading check attempt ${attempts}/${maxAttempts}`);
-      
-      if (typeof window !== 'undefined' && window.pdfjsLib && window.pdfJsReady) {
-        console.log('✅ PDF.js successfully loaded and ready');
-        setPdfLoadingStatus('loaded');
-        clearInterval(checkInterval);
-        return;
-      }
-      
-      if (window.pdfJsError) {
-        console.error('❌ PDF.js loading error detected');
-        setPdfLoadingStatus('failed');
-        clearInterval(checkInterval);
-        return;
-      }
-      
-      if (attempts >= maxAttempts) {
-        console.error('❌ PDF.js loading timeout after 30 seconds');
-        setPdfLoadingStatus('failed');
-        clearInterval(checkInterval);
-        return;
-      }
-    }, 1000); // Check every second
-  };
-
   // Fetch user data
   const fetchUserData = async () => {
     if (!session) return;
@@ -805,14 +678,6 @@ function DocumentComparePage() {
   useEffect(() => {
     if (session) {
       fetchUserData();
-    }
-    
-    // Start checking PDF.js loading after component mounts
-    if (typeof window !== 'undefined') {
-      // Small delay to let the scripts load
-      setTimeout(() => {
-        checkPDFJSLoading();
-      }, 1000);
     }
   }, [session]);
 
@@ -898,10 +763,9 @@ function DocumentComparePage() {
     setShowTextOptions(false);
     setShowJsonOptions(false);
     setShowXmlOptions(false);
-    setShowPdfOptions(false);
   };
 
-  // ===== ENHANCED MAIN COMPARISON HANDLER =====
+  // ===== ENHANCED MAIN COMPARISON HANDLER (PDF removed) =====
   const handleCompareFiles = async () => {
     if (!file1 || !file2) {
       setError('Please select two files.');
@@ -910,12 +774,6 @@ function DocumentComparePage() {
 
     if (!session) {
       alert('Please sign in to compare documents.');
-      return;
-    }
-
-    // Special check for PDF files
-    if (fileType === 'pdf' && pdfLoadingStatus !== 'loaded') {
-      setError('PDF processing library is not ready. Please refresh the page and try again.');
       return;
     }
 
@@ -996,12 +854,6 @@ function DocumentComparePage() {
           result = await compareXMLFiles(file1, file2, xmlOptions);
           break;
           
-        case 'pdf':
-          console.log('🐛 DEBUG: Processing PDF files...');
-          // PDFs are handled differently - pass file objects directly
-          result = await comparePDFFiles(file1, file2, pdfOptions);
-          break;
-          
         default:
           throw new Error('Unsupported file type');
       }
@@ -1041,15 +893,12 @@ function DocumentComparePage() {
       case 'xml':
         setShowXmlOptions(true);
         break;
-      case 'pdf':
-        setShowPdfOptions(true);
-        break;
       default:
         setError('Unsupported file type');
     }
   };
 
-  // Format-specific results rendering
+  // Format-specific results rendering (PDF removed)
   const renderResults = () => {
     if (!results) return null;
 
@@ -1060,8 +909,6 @@ function DocumentComparePage() {
         return <JsonResults results={results} file1Name={file1?.name} file2Name={file2?.name} />;
       case 'xml':
         return <XmlResults results={results} file1Name={file1?.name} file2Name={file2?.name} />;
-      case 'pdf':
-        return <PdfResults results={results} file1Name={file1?.name} file2Name={file2?.name} />;
       default:
         return null;
     }
@@ -1348,141 +1195,6 @@ function DocumentComparePage() {
     </div>
   );
 
-  // PDF Options Component with Loading Status
-  const PdfOptionsComponent = () => (
-    <div style={{
-      background: 'white',
-      borderRadius: '16px',
-      padding: '30px',
-      marginBottom: '30px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-      border: '1px solid #e5e7eb'
-    }}>
-      <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '20px', color: '#1f2937' }}>
-        📑 PDF Comparison Options
-      </h3>
-
-      {/* PDF.js Loading Status */}
-      {pdfLoadingStatus === 'checking' && (
-        <div style={{
-          background: '#fffbeb',
-          border: '2px solid #f59e0b',
-          borderRadius: '8px',
-          padding: '15px',
-          marginBottom: '20px',
-          color: '#92400e'
-        }}>
-          ⏳ Loading PDF processing engine... Please wait.
-        </div>
-      )}
-
-      {pdfLoadingStatus === 'failed' && (
-        <div style={{
-          background: '#fef2f2',
-          border: '2px solid #dc2626',
-          borderRadius: '8px',
-          padding: '15px',
-          marginBottom: '20px',
-          color: '#dc2626'
-        }}>
-          ❌ PDF processing engine failed to load. Please refresh the page and try again.
-        </div>
-      )}
-
-      {pdfLoadingStatus === 'loaded' && (
-        <div style={{
-          background: '#f0fdf4',
-          border: '2px solid #22c55e',
-          borderRadius: '8px',
-          padding: '15px',
-          marginBottom: '20px',
-          color: '#166534'
-        }}>
-          ✅ PDF processing engine ready!
-        </div>
-      )}
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '20px',
-        marginBottom: '25px'
-      }}>
-        <div>
-          <label style={{ fontWeight: '500', color: '#374151', marginBottom: '8px', display: 'block' }}>
-            Comparison Mode
-          </label>
-          <select
-            value={pdfOptions.compareMode}
-            onChange={(e) => setPdfOptions({...pdfOptions, compareMode: e.target.value})}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: '1px solid #e5e7eb',
-              borderRadius: '6px'
-            }}
-            disabled={pdfLoadingStatus !== 'loaded'}
-          >
-            <option value="text">Text content</option>
-            <option value="visual">Visual appearance</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: pdfLoadingStatus === 'loaded' ? 'pointer' : 'not-allowed' }}>
-            <input
-              type="checkbox"
-              checked={pdfOptions.ignoreFormatting}
-              onChange={(e) => setPdfOptions({...pdfOptions, ignoreFormatting: e.target.checked})}
-              style={{ accentColor: '#2563eb' }}
-              disabled={pdfLoadingStatus !== 'loaded'}
-            />
-            <span>Ignore formatting</span>
-          </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: pdfLoadingStatus === 'loaded' ? 'pointer' : 'not-allowed' }}>
-            <input
-              type="checkbox"
-              checked={pdfOptions.pageByPage}
-              onChange={(e) => setPdfOptions({...pdfOptions, pageByPage: e.target.checked})}
-              style={{ accentColor: '#2563eb' }}
-              disabled={pdfLoadingStatus !== 'loaded'}
-            />
-            <span>Page-by-page comparison</span>
-          </label>
-
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: pdfLoadingStatus === 'loaded' ? 'pointer' : 'not-allowed' }}>
-            <input
-              type="checkbox"
-              checked={pdfOptions.includeImages}
-              onChange={(e) => setPdfOptions({...pdfOptions, includeImages: e.target.checked})}
-              style={{ accentColor: '#2563eb' }}
-              disabled={pdfLoadingStatus !== 'loaded'}
-            />
-            <span>Include images</span>
-          </label>
-        </div>
-      </div>
-
-      <button
-        onClick={handleCompareFiles}
-        disabled={loading || pdfLoadingStatus !== 'loaded'}
-        style={{
-          background: loading || pdfLoadingStatus !== 'loaded' ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
-          color: 'white',
-          border: 'none',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          fontSize: '1rem',
-          fontWeight: '600',
-          cursor: loading || pdfLoadingStatus !== 'loaded' ? 'not-allowed' : 'pointer'
-        }}
-      >
-        {loading ? 'Comparing...' : pdfLoadingStatus !== 'loaded' ? 'PDF Engine Loading...' : '🚀 Compare PDF Files'}
-      </button>
-    </div>
-  );
-
   // Premium Modal Component
   const PremiumModal = () => {
     if (!showPremiumModal) return null;
@@ -1512,7 +1224,7 @@ function DocumentComparePage() {
             🚀 Upgrade to Premium
           </h3>
           <p style={{ marginBottom: '20px' }}>
-            Document comparison (JSON, XML, PDF) requires premium access. 
+            Advanced file comparison (JSON, XML) requires premium access. 
             Text file comparison is FREE forever!
           </p>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -1557,85 +1269,7 @@ function DocumentComparePage() {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}>
         <Head>
-          <title>VeriDiff - Document Comparison</title>
-          
-          {/* IMPROVED PDF.js Loading with Multiple CDN Fallbacks */}
-          <script dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                console.log('🔧 Starting enhanced PDF.js loading process...');
-                
-                // Try multiple CDN sources
-                const pdfSources = [
-                  {
-                    lib: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
-                    worker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
-                  },
-                  {
-                    lib: 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js',
-                    worker: 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
-                  },
-                  {
-                    lib: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
-                    worker: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
-                  }
-                ];
-                
-                let currentSourceIndex = 0;
-                
-                function loadPDFJS() {
-                  if (currentSourceIndex >= pdfSources.length) {
-                    console.error('❌ All PDF.js sources failed to load');
-                    window.pdfJsError = true;
-                    return;
-                  }
-                  
-                  const source = pdfSources[currentSourceIndex];
-                  console.log(\`📚 Attempting to load PDF.js from source \${currentSourceIndex + 1}/\${pdfSources.length}\`);
-                  
-                  const script = document.createElement('script');
-                  script.src = source.lib;
-                  
-                  script.onload = function() {
-                    console.log(\`✅ PDF.js library loaded from source \${currentSourceIndex + 1}\`);
-                    
-                    // Wait a bit for pdfjsLib to be available
-                    setTimeout(function() {
-                      if (typeof window.pdfjsLib !== 'undefined') {
-                        try {
-                          window.pdfjsLib.GlobalWorkerOptions.workerSrc = source.worker;
-                          window.pdfJsReady = true;
-                          console.log('✅ PDF.js worker configured and ready');
-                        } catch (error) {
-                          console.error('❌ PDF.js worker configuration failed:', error);
-                          window.pdfJsError = true;
-                        }
-                      } else {
-                        console.error('❌ PDF.js library object not available');
-                        currentSourceIndex++;
-                        loadPDFJS();
-                      }
-                    }, 500);
-                  };
-                  
-                  script.onerror = function() {
-                    console.warn(\`⚠️ PDF.js source \${currentSourceIndex + 1} failed, trying next...\`);
-                    currentSourceIndex++;
-                    loadPDFJS();
-                  };
-                  
-                  document.head.appendChild(script);
-                }
-                
-                // Start loading process when DOM is ready
-                if (document.readyState === 'loading') {
-                  document.addEventListener('DOMContentLoaded', loadPDFJS);
-                } else {
-                  loadPDFJS();
-                }
-              })();
-            `
-          }} />
+          <title>VeriDiff - Technical File Comparison</title>
         </Head>
 
         {/* Header */}
@@ -1675,7 +1309,7 @@ function DocumentComparePage() {
                 textDecoration: 'none',
                 fontWeight: '500'
               }}>
-                ← Back to Spreadsheet Compare
+                ← Back to Comparison Engine
               </Link>
               
               {session ? (
@@ -1776,7 +1410,7 @@ function DocumentComparePage() {
               fontWeight: '700',
               margin: '0 0 15px 0'
             }}>
-              Document Compare
+              Technical File Comparison
             </h1>
             <p style={{
               fontSize: '1.1rem',
@@ -1784,7 +1418,7 @@ function DocumentComparePage() {
               maxWidth: '600px',
               margin: '0 auto'
             }}>
-              Compare text files, JSON, XML, and PDF documents with format-specific analysis tools. 
+              Compare text files, JSON, and XML documents with format-specific analysis tools. 
               Text comparisons are free forever!
             </p>
           </div>
@@ -1808,7 +1442,7 @@ function DocumentComparePage() {
               textAlign: 'center',
               fontWeight: '700'
             }}>
-              Choose Document Type
+              Choose File Type
             </h2>
             
             <div style={{
@@ -1821,8 +1455,7 @@ function DocumentComparePage() {
               {[
                 { value: 'text', label: 'Text Files (.txt)', free: true },
                 { value: 'json', label: 'JSON Files (.json)', free: false },
-                { value: 'xml', label: 'XML Files (.xml)', free: false },
-                { value: 'pdf', label: 'PDF Files (.pdf)', free: false }
+                { value: 'xml', label: 'XML Files (.xml)', free: false }
               ].map((option) => (
                 <label
                   key={option.value}
@@ -1943,11 +1576,10 @@ function DocumentComparePage() {
             </div>
           )}
 
-          {/* Format-Specific Options */}
+          {/* Format-Specific Options (PDF removed) */}
           {showTextOptions && <TextOptionsComponent />}
           {showJsonOptions && <JsonOptionsComponent />}
           {showXmlOptions && <XmlOptionsComponent />}
-          {showPdfOptions && <PdfOptionsComponent />}
 
           {/* Enhanced Error Display */}
           {error && (
