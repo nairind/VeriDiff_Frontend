@@ -701,20 +701,42 @@ function PdfComparePage() {
   const PremiumModal = () => {
     if (!showPremiumModal) return null;
     
+    const handleBackdropClick = (e) => {
+      // Close modal only if clicking the backdrop, not the modal content
+      if (e.target === e.currentTarget) {
+        setShowPremiumModal(false);
+      }
+    };
+
+    const handleUpgradeClick = async (e) => {
+      e.stopPropagation();
+      console.log('Upgrade button clicked!');
+      setShowPremiumModal(false); // Close modal first
+      await handlePremiumUpgrade();
+    };
+
+    const handleCancelClick = (e) => {
+      e.stopPropagation();
+      setShowPremiumModal(false);
+    };
+    
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: '20px'
-      }}>
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}
+        onClick={handleBackdropClick}
+      >
         <div style={{
           backgroundColor: 'white',
           borderRadius: '16px',
@@ -747,7 +769,7 @@ function PdfComparePage() {
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
-              onClick={handlePremiumUpgrade}
+              onClick={handleUpgradeClick}
               style={{
                 background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
                 color: 'white',
@@ -755,20 +777,24 @@ function PdfComparePage() {
                 padding: '10px 20px',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                fontWeight: '500'
+                fontWeight: '500',
+                position: 'relative',
+                zIndex: 10000
               }}
             >
               Upgrade to Premium
             </button>
             <button
-              onClick={handleModalDismiss}
+              onClick={handleCancelClick}
               style={{
                 background: '#f3f4f6',
                 color: '#374151',
                 border: 'none',
                 padding: '10px 20px',
                 borderRadius: '6px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                position: 'relative',
+                zIndex: 10000
               }}
             >
               Cancel
