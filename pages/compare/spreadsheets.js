@@ -1436,7 +1436,6 @@ function ComparePage() {
             <div style={{
               display: 'flex',
               justifyContent: 'center',
-              flexWrap: 'wrap',
               gap: '15px',
               maxWidth: '900px',
               margin: '0 auto'
