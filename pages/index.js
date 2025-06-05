@@ -10,10 +10,19 @@ export default function Home() {
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [pendingPremiumUpgrade, setPendingPremiumUpgrade] = useState(false);
+  const [showCookieBanner, setShowCookieBanner] = useState(true);
   
   // Auto-cycling demo state
   const [isAutoCycling, setIsAutoCycling] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Check if user has already accepted cookies
+  useEffect(() => {
+    const cookieConsent = localStorage.getItem('veridiff-cookie-consent');
+    if (cookieConsent === 'accepted') {
+      setShowCookieBanner(false);
+    }
+  }, []);
 
   // Auto-cycling effect
   useEffect(() => {
@@ -112,6 +121,11 @@ export default function Home() {
   const handleRegistrationModalClose = () => {
     setShowRegistrationModal(false);
     setPendingPremiumUpgrade(false);
+  };
+
+  const handleCookieAccept = () => {
+    localStorage.setItem('veridiff-cookie-consent', 'accepted');
+    setShowCookieBanner(false);
   };
 
   // Responsive styles
@@ -319,6 +333,36 @@ export default function Home() {
         text-align: center !important;
         padding: 0.5rem !important;
       }
+      .cookie-banner {
+        padding: 1rem !important;
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 0.75rem !important;
+      }
+      .cookie-banner p {
+        font-size: 0.85rem !important;
+        margin-bottom: 0.5rem !important;
+      }
+      .cookie-banner button {
+        width: 100% !important;
+        max-width: 200px !important;
+      }
+    }
+
+    /* Cookie banner animations */
+    .cookie-banner {
+      animation: slideUpFade 0.5s ease-out;
+    }
+    
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   `;
 
@@ -428,6 +472,89 @@ export default function Home() {
           }}>
             Your files stay private and secure - processed locally in your browser
           </p>
+        </div>
+      </div>
+    );
+  };
+
+  // Privacy-First Cookie Banner Component
+  const CookieBanner = () => {
+    if (!showCookieBanner) return null;
+
+    return (
+      <div className="cookie-banner" style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: 'linear-gradient(135deg, #1e40af, #3730a3)',
+        color: 'white',
+        padding: '1.25rem 1.5rem',
+        zIndex: 9998,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '1rem',
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        <div style={{ flex: 1 }}>
+          <h4 style={{ 
+            margin: '0 0 0.5rem 0', 
+            fontSize: '1rem', 
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            🔒 Privacy-First Cookies
+          </h4>
+          <p style={{ 
+            margin: 0, 
+            fontSize: '0.9rem', 
+            color: '#bfdbfe',
+            lineHeight: '1.4'
+          }}>
+            We only use essential cookies for login and preferences. <strong>No tracking, no analytics, no data collection.</strong>
+            <span style={{ marginLeft: '0.5rem' }}>
+              <a 
+                href="/cookie-policy" 
+                style={{ 
+                  color: '#fbbf24', 
+                  textDecoration: 'underline',
+                  fontWeight: '500'
+                }}
+              >
+                View Policy
+              </a>
+            </span>
+          </p>
+        </div>
+        <div style={{ 
+          display: 'flex', 
+          gap: '0.75rem', 
+          alignItems: 'center',
+          flexShrink: 0
+        }}>
+          <button
+            onClick={handleCookieAccept}
+            style={{
+              background: '#10b981',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseOver={(e) => e.target.style.background = '#059669'}
+            onMouseOut={(e) => e.target.style.background = '#10b981'}
+          >
+            Accept Essential Only
+          </button>
         </div>
       </div>
     );
@@ -2369,6 +2496,9 @@ export default function Home() {
         </section>
 
         <Footer />
+
+        {/* Privacy-First Cookie Banner */}
+        <CookieBanner />
 
         {/* Registration Modal */}
         <RegistrationModal />
