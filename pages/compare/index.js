@@ -132,7 +132,7 @@ function ComparisonEngineHub() {
             alignItems: 'flex-start',
             gap: '1rem',
             marginBottom: '1.5rem'
-          }}>
+          }} className="tool-header">
             <div style={{
               width: '70px',
               height: '70px',
@@ -146,6 +146,139 @@ function ComparisonEngineHub() {
               flexShrink: 0
             }}>
               {tool.icon}
+            </div>
+
+            {/* FAQ Section with Schema */}
+            <div style={{
+              background: 'white',
+              borderRadius: '24px',
+              padding: '3rem',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+              border: '1px solid #e5e7eb',
+              marginBottom: '3rem'
+            }}>
+              <h2 style={{
+                fontSize: '2rem',
+                fontWeight: '700',
+                textAlign: 'center',
+                marginBottom: '2.5rem',
+                color: '#1f2937'
+              }}>
+                Frequently Asked Questions About File Comparison
+              </h2>
+              
+              <div style={{
+                maxWidth: '800px',
+                margin: '0 auto'
+              }}>
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    What file formats can VeriDiff compare?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    VeriDiff supports Excel (.xlsx, .xls), CSV files, PDF documents, JSON data files, XML configuration files, and plain text documents. Excel-to-Excel comparison is free forever, while cross-format comparison (Excel-to-CSV) and other formats require our premium plan at £19/month.
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    How secure is VeriDiff's file comparison process?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    VeriDiff processes all files locally in your browser - your files never leave your device. Unlike cloud-based comparison tools that upload sensitive business data to remote servers, VeriDiff ensures complete privacy and security for confidential documents, financial data, and proprietary information.
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    Can VeriDiff handle large Excel files and complex spreadsheets?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    Yes, VeriDiff is designed for professional use and can handle large Excel files with thousands of rows, complex formulas, and multiple worksheets. Our smart header mapping technology automatically matches columns even when header names differ between files, making it perfect for financial reconciliation and business data analysis.
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    What's the difference between free Excel comparison and premium features?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    Free Excel comparison includes smart mapping, basic tolerance settings, and detailed difference reporting for Excel-to-Excel comparisons. Premium features (£19/month) add PDF document comparison, JSON/XML analysis, cross-format comparison (Excel-to-CSV), advanced tolerance controls, and priority support. This saves £312/year compared to buying separate comparison tools.
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    How does VeriDiff compare to Excel's built-in compare feature?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    Excel's built-in compare is basic and only works within Excel. VeriDiff offers intelligent header mapping for mismatched column names, configurable tolerance settings for numerical differences, cross-format comparison capabilities, detailed reporting with exportable results, and the ability to compare files from different systems or departments.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    Which teams typically use VeriDiff's comparison tools?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    Finance teams use VeriDiff for budget variance analysis and financial reconciliation. Legal departments compare contract versions and compliance documents. IT teams analyze configuration files and technical documentation. Business analysts reconcile data from different systems. Any team that needs to identify differences between important business files benefits from VeriDiff's precision and security.
+                  </p>
+                </div>
+              </div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
@@ -223,7 +356,7 @@ function ComparisonEngineHub() {
             borderRadius: '16px',
             marginBottom: '1.5rem',
             border: '1px solid #e2e8f0'
-          }}>
+          }} className="scenario-showcase">
             <h4 style={{
               fontSize: '0.9rem',
               fontWeight: '600',
@@ -249,7 +382,7 @@ function ComparisonEngineHub() {
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '0.75rem'
-            }}>
+            }} className="stats-grid">
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#059669' }}>{tool.stats.accuracy}</div>
                 <div style={{ fontSize: '0.7rem', color: '#6b7280' }}>Accuracy</div>
@@ -278,9 +411,9 @@ function ComparisonEngineHub() {
             </h4>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-              gap: '0.5rem'
-            }}>
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '0.75rem'
+            }} className="capabilities-grid">
               {tool.features.map((feature, index) => (
                 <div key={index} style={{
                   fontSize: '0.8rem',
@@ -340,29 +473,79 @@ function ComparisonEngineHub() {
     overflow: 'hidden'
   };
 
-  // Enhanced media queries
+  // Enhanced media queries with better responsive design
   const mediaQueries = `
+    @media (max-width: 1200px) {
+      .tools-grid { 
+        grid-template-columns: 1fr !important; 
+        gap: 2rem !important;
+        max-width: 600px !important;
+        margin: 0 auto 4rem auto !important;
+      }
+    }
+    
     @media (max-width: 768px) {
-      .tools-grid { grid-template-columns: 1fr !important; }
+      .tools-grid { 
+        grid-template-columns: 1fr !important; 
+        gap: 1.5rem !important;
+        padding: 0 1rem !important;
+      }
       .hero-title { font-size: 2.5rem !important; }
       .hero-section { padding: 3rem 0 !important; }
       .main-container { padding: 2rem 1rem !important; }
       .scenario-stats { grid-template-columns: 1fr !important; gap: 0.5rem !important; }
-      .feature-grid { grid-template-columns: 1fr !important; }
-      .trust-indicators { flex-direction: column !important; gap: 1rem !important; }
+      .feature-grid { grid-template-columns: 1fr !important; gap: 0.5rem !important; }
+      .trust-indicators { 
+        flex-direction: column !important; 
+        gap: 1rem !important;
+        align-items: center !important;
+      }
       .value-props { grid-template-columns: 1fr !important; }
+      .tool-card { 
+        padding: 1.5rem !important;
+        margin-bottom: 1rem !important;
+      }
+      .tool-header {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 1rem !important;
+      }
+      .capabilities-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+      }
     }
     
     @media (max-width: 480px) {
       .hero-title { font-size: 2rem !important; }
       .hero-section { padding: 2.5rem 0 !important; }
       .main-container { padding: 1.5rem 0.75rem !important; }
-      .tool-card { padding: 1.5rem !important; }
+      .tool-card { 
+        padding: 1.25rem !important;
+        border-radius: 16px !important;
+      }
+      .trust-indicators {
+        gap: 0.75rem !important;
+      }
+      .trust-indicators > div {
+        font-size: 0.85rem !important;
+      }
+      .scenario-showcase {
+        padding: 1rem !important;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+        text-align: center !important;
+      }
     }
     
-    @media (min-width: 769px) and (max-width: 1024px) {
-      .tools-grid { grid-template-columns: repeat(2, 1fr) !important; }
-      .hero-title { font-size: 3rem !important; }
+    @media (min-width: 1201px) {
+      .tools-grid { 
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 2.5rem !important;
+      }
     }
 
     /* Enhanced animations */
@@ -408,68 +591,197 @@ function ComparisonEngineHub() {
     <AuthGuard>
       <div style={containerStyle}>
         <Head>
-          <title>VeriDiff Comparison Engine - Choose Your Professional Tool | Excel, PDF, JSON Comparison</title>
-          <meta name="description" content="Professional file comparison tools for business teams. Excel comparison free forever, PDF and technical formats £19/month. Built by London security experts for global professionals." />
-          <meta name="keywords" content="excel comparison tool, pdf comparison, json xml comparison, file diff tool, business document comparison, secure file comparison" />
+          <title>File Comparison Tools | Excel, PDF, JSON, XML Comparison Software | VeriDiff</title>
+          <meta name="description" content="Professional file comparison software for business teams. Compare Excel spreadsheets (free), PDF documents, JSON/XML files. Secure browser-based processing. Save £312/year vs separate tools." />
+          <meta name="keywords" content="file comparison tool, excel comparison software, pdf document comparison, json xml diff tool, spreadsheet comparison, document diff, business file analysis, secure file comparison, data reconciliation tool" />
           <meta name="robots" content="index, follow" />
-          <meta property="og:title" content="VeriDiff Comparison Engine - Professional File Comparison Tools" />
-          <meta property="og:description" content="Choose your specialized comparison tool. Excel free forever, all formats £19/month. Enterprise-grade privacy, locally processed." />
+          <meta property="og:title" content="Professional File Comparison Tools - Excel, PDF, JSON, XML | VeriDiff" />
+          <meta property="og:description" content="Compare business files securely in your browser. Excel comparison free forever. PDF, JSON, XML tools £19/month. Save £312/year vs separate subscriptions." />
           <meta property="og:type" content="website" />
           <meta property="og:url" content="https://veridiff.com/compare" />
+          <link rel="canonical" href="https://veridiff.com/compare" />
           
-          {/* Schema.org structured data */}
+          {/* Enhanced Schema.org structured data */}
           <script type="application/ld+json">
             {JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              "name": "VeriDiff Comparison Engine",
-              "description": "Professional file comparison tools for Excel, PDF, JSON, XML and other business formats",
-              "url": "https://veridiff.com/compare",
-              "applicationCategory": "BusinessApplication",
-              "operatingSystem": "Web Browser",
-              "hasOfferCatalog": {
-                "@type": "OfferCatalog",
-                "name": "Comparison Tools",
-                "itemListElement": [
-                  {
-                    "@type": "Offer",
-                    "itemOffered": {
-                      "@type": "SoftwareApplication",
-                      "name": "Business Spreadsheets Tool",
-                      "description": "Excel and CSV comparison with smart mapping"
-                    },
-                    "price": "0",
-                    "priceCurrency": "GBP"
-                  },
-                  {
-                    "@type": "Offer",
-                    "itemOffered": {
-                      "@type": "SoftwareApplication", 
-                      "name": "Professional Documents Tool",
-                      "description": "PDF and document comparison"
-                    },
-                    "price": "19",
-                    "priceCurrency": "GBP"
-                  },
-                  {
-                    "@type": "Offer",
-                    "itemOffered": {
-                      "@type": "SoftwareApplication",
-                      "name": "Technical Data Formats Tool", 
-                      "description": "JSON, XML and configuration file comparison"
-                    },
-                    "price": "19",
-                    "priceCurrency": "GBP"
+              "@graph": [
+                {
+                  "@type": "WebPage",
+                  "@id": "https://veridiff.com/compare",
+                  "url": "https://veridiff.com/compare",
+                  "name": "File Comparison Tools | Excel, PDF, JSON, XML Comparison Software",
+                  "description": "Professional file comparison software for business teams. Compare Excel spreadsheets (free), PDF documents, JSON/XML files.",
+                  "breadcrumb": {
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [
+                      {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "item": {
+                          "@type": "WebPage",
+                          "@id": "https://veridiff.com",
+                          "name": "VeriDiff Home"
+                        }
+                      },
+                      {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "item": {
+                          "@type": "WebPage",
+                          "@id": "https://veridiff.com/compare",
+                          "name": "Comparison Tools"
+                        }
+                      }
+                    ]
                   }
-                ]
-              }
+                },
+                {
+                  "@type": "SoftwareApplication",
+                  "name": "VeriDiff File Comparison Platform",
+                  "description": "Professional file comparison tools for Excel, PDF, JSON, XML and other business formats with enterprise-grade security",
+                  "url": "https://veridiff.com/compare",
+                  "applicationCategory": "BusinessApplication",
+                  "operatingSystem": "Web Browser",
+                  "softwareVersion": "2.0",
+                  "offers": [
+                    {
+                      "@type": "Offer",
+                      "name": "Excel Comparison Tool - Free",
+                      "description": "Free Excel spreadsheet comparison with smart mapping and tolerance settings",
+                      "price": "0",
+                      "priceCurrency": "GBP",
+                      "availability": "https://schema.org/InStock",
+                      "itemOffered": {
+                        "@type": "SoftwareApplication",
+                        "name": "Excel Comparison Tool",
+                        "applicationSubCategory": "Spreadsheet Comparison Software",
+                        "featureList": ["Excel file comparison", "Smart header mapping", "Tolerance controls", "Cross-format comparison"]
+                      }
+                    },
+                    {
+                      "@type": "Offer", 
+                      "name": "Premium Comparison Tools",
+                      "description": "PDF, JSON, XML comparison tools with advanced features for professional teams",
+                      "price": "19",
+                      "priceCurrency": "GBP",
+                      "billingIncrement": "P1M",
+                      "availability": "https://schema.org/InStock",
+                      "itemOffered": {
+                        "@type": "SoftwareApplication",
+                        "name": "Premium File Comparison Suite",
+                        "applicationSubCategory": "Document Comparison Software",
+                        "featureList": ["PDF comparison", "JSON comparison", "XML comparison", "Technical file analysis", "Advanced tolerance settings"]
+                      }
+                    }
+                  ],
+                  "featureList": [
+                    "Excel spreadsheet comparison",
+                    "PDF document comparison", 
+                    "JSON data comparison",
+                    "XML file comparison",
+                    "Local browser processing",
+                    "Enterprise-grade security",
+                    "Smart header mapping",
+                    "Configurable tolerance settings",
+                    "Cross-format file comparison",
+                    "Business data reconciliation"
+                  ]
+                }
+              ]
             })}
           </script>
+          
+            {/* Enhanced FAQ Schema */}
+            <script type="application/ld+json">
+              {JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": [
+                  {
+                    "@type": "Question",
+                    "name": "What file formats can VeriDiff compare?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "VeriDiff supports Excel (.xlsx, .xls), CSV files, PDF documents, JSON data files, XML configuration files, and plain text documents. Excel-to-Excel comparison is free forever, while cross-format comparison and other formats require premium."
+                    }
+                  },
+                  {
+                    "@type": "Question", 
+                    "name": "How secure is VeriDiff's file comparison process?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "VeriDiff processes all files locally in your browser - your files never leave your device. Unlike cloud-based tools, VeriDiff ensures complete privacy for confidential business documents."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "Can VeriDiff handle large Excel files and complex spreadsheets?", 
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Yes, VeriDiff handles large Excel files with thousands of rows, complex formulas, and multiple worksheets. Smart header mapping automatically matches columns even when names differ."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "What's the difference between free and premium features?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Free includes Excel-to-Excel comparison with smart mapping. Premium (£19/month) adds PDF, JSON/XML comparison, cross-format capabilities, and advanced controls - saving £312/year vs separate tools."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "How does VeriDiff compare to Excel's built-in feature?",
+                    "acceptedAnswer": {
+                      "@type": "Answer", 
+                      "text": "VeriDiff offers intelligent header mapping, configurable tolerance settings, cross-format comparison, detailed reporting, and works with files from different systems - beyond Excel's basic capabilities."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "Which teams typically use VeriDiff?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Finance teams for budget analysis, legal departments for contract comparison, IT teams for configuration analysis, and business analysts for data reconciliation from different systems."
+                    }
+                  }
+                ]
+              })}
+            </script>
           
           <style>{mediaQueries}</style>
         </Head>
 
         <Header />
+
+        {/* Breadcrumb Navigation */}
+        <div style={{
+          background: '#f8fafc',
+          borderBottom: '1px solid #e2e8f0',
+          padding: '0.75rem 0'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }}>
+            <nav style={{
+              fontSize: '0.875rem',
+              color: '#6b7280'
+            }}>
+              <Link href="/" style={{ 
+                color: '#2563eb', 
+                textDecoration: 'none',
+                fontWeight: '500'
+              }}>
+                Home
+              </Link>
+              <span style={{ margin: '0 0.5rem', color: '#9ca3af' }}>›</span>
+              <span style={{ color: '#374151', fontWeight: '500' }}>File Comparison Tools</span>
+            </nav>
+          </div>
+        </div>
 
         {/* Security Trust Banner */}
         <div style={{
@@ -543,7 +855,7 @@ function ComparisonEngineHub() {
                 lineHeight: '1.2',
                 textShadow: '0 4px 20px rgba(0,0,0,0.1)'
               }} className="hero-title fade-in-up">
-                Choose Your Specialized
+                Professional File Comparison Tools
                 <span style={{ 
                   display: 'block',
                   background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
@@ -551,7 +863,7 @@ function ComparisonEngineHub() {
                   WebkitTextFillColor: 'transparent', 
                   backgroundClip: 'text'
                 }}>
-                  Comparison Engine
+                  for Business Teams
                 </span>
               </h1>
               
@@ -562,9 +874,9 @@ function ComparisonEngineHub() {
                 maxWidth: '700px',
                 margin: '0 auto 2.5rem auto'
               }}>
-                Each tool is precision-engineered for specific file types and professional use cases.
+                Compare Excel spreadsheets, PDF documents, JSON files, and XML data with enterprise-grade security.
                 <span style={{ display: 'block', marginTop: '0.5rem', fontSize: '1.1rem', opacity: '0.8' }}>
-                  Start free with Excel • Upgrade to save £26/month vs separate tools
+                  Excel comparison free forever • All formats £19/month • Save £312/year vs separate tools
                 </span>
               </p>
 
@@ -614,10 +926,28 @@ function ComparisonEngineHub() {
 
           {/* Enhanced Tools Grid */}
           <section style={{ padding: '4rem 2rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{
+                fontSize: '2.5rem',
+                fontWeight: '700',
+                marginBottom: '1rem',
+                color: '#1f2937'
+              }}>
+                Choose Your File Comparison Tool
+              </h2>
+              <p style={{
+                fontSize: '1.2rem',
+                color: '#6b7280',
+                maxWidth: '600px',
+                margin: '0 auto'
+              }}>
+                Professional-grade comparison tools designed for specific file types and business use cases
+              </p>
+            </div>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-              gap: '2.5rem',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '2rem',
               marginBottom: '4rem'
             }} className="tools-grid">
               {tools.map((tool) => (
@@ -648,7 +978,7 @@ function ComparisonEngineHub() {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
               }}>
-                Why Choose VeriDiff?
+                Why Choose VeriDiff File Comparison Software?
               </h2>
               
               <div style={{
@@ -750,7 +1080,7 @@ function ComparisonEngineHub() {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
               }}>
-                Ready to Stop Overpaying?
+                Start Comparing Files Today
               </h2>
               <p style={{
                 fontSize: '1.1rem',
@@ -760,7 +1090,9 @@ function ComparisonEngineHub() {
                 marginLeft: 'auto',
                 marginRight: 'auto'
               }}>
-                Start with Excel comparison (free forever), then upgrade to unlock all file formats and save £26/month vs buying tools separately.
+                Join professionals who switched from expensive separate tools to VeriDiff's all-in-one platform. 
+                Excel spreadsheet comparison free forever, then upgrade to unlock PDF document comparison, 
+                JSON data analysis, and XML configuration comparison for just £19/month.
               </p>
               <div style={{
                 display: 'flex',
@@ -805,6 +1137,17 @@ function ComparisonEngineHub() {
                 color: '#9ca3af'
               }}>
                 ✓ No credit card required for Excel comparison • ✓ 30-day money-back guarantee on premium
+                <div style={{ marginTop: '0.5rem' }}>
+                  <Link href="/features" style={{ color: '#2563eb', textDecoration: 'none', marginRight: '1rem' }}>
+                    View All Features
+                  </Link>
+                  <Link href="/security" style={{ color: '#2563eb', textDecoration: 'none', marginRight: '1rem' }}>
+                    Security Details
+                  </Link>
+                  <Link href="/support" style={{ color: '#2563eb', textDecoration: 'none' }}>
+                    Get Support
+                  </Link>
+                </div>
               </div>
             </div>
           </section>
