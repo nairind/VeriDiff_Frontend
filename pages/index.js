@@ -162,6 +162,7 @@ export default function Home() {
       .tolerance-grid { grid-template-columns: 1fr !important; }
       .security-grid { grid-template-columns: 1fr !important; }
       .tab-slider { display: none !important; }
+      .cta-benefits { flex-direction: column !important; gap: 1rem !important; }
     }
     
     @media (max-width: 480px) {
