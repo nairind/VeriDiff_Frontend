@@ -102,7 +102,7 @@ export default function Home() {
   };
 
   const handleContactSales = () => {
-    alert('Enterprise contact form coming soon! Email us at hello@veridiff.com');
+    alert('Enterprise contact form coming soon! Email us at sales@veridiff.com');
   };
 
   const handleWatchVideo = () => {
@@ -170,6 +170,24 @@ export default function Home() {
       }
       .try-demo-section { padding: 3rem 0 !important; }
       .market-comparison-grid { grid-template-columns: 1fr !important; }
+      .roi-calculator { 
+        padding: 1rem !important;
+        margin-bottom: 1.5rem !important;
+      }
+      .roi-calculator h2 { 
+        font-size: 1.4rem !important; 
+      }
+      .roi-comparison { 
+        grid-template-columns: 1fr auto 1fr !important;
+        gap: 0.8rem !important;
+      }
+      .roi-comparison > div {
+        font-size: 1.5rem !important;
+      }
+      .roi-savings {
+        padding: 0.5rem !important;
+        font-size: 0.9rem !important;
+      }
     }
     
     @media (max-width: 480px) {
@@ -186,6 +204,32 @@ export default function Home() {
       }
       .try-demo-section { padding: 2rem 0 !important; }
       .market-comparison-grid { grid-template-columns: 1fr !important; }
+      .roi-calculator { 
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+        maxWidth: '95%' !important;
+      }
+      .roi-calculator h2 { 
+        font-size: 1.2rem !important;
+        line-height: 1.3 !important;
+      }
+      .roi-comparison { 
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+        text-align: center !important;
+      }
+      .roi-comparison > div {
+        font-size: 1.3rem !important;
+        margin-bottom: 0.5rem !important;
+      }
+      .roi-savings {
+        padding: 0.5rem !important;
+        font-size: 0.85rem !important;
+      }
+      .tolerance-grid { 
+        grid-template-columns: 1fr !important; 
+        gap: 1rem !important;
+      }
     }
     
     @media (min-width: 769px) and (max-width: 1024px) {
@@ -194,6 +238,14 @@ export default function Home() {
       .file-types-grid { grid-template-columns: repeat(2, 1fr) !important; }
       .use-cases-grid { grid-template-columns: repeat(3, 1fr) !important; }
       .market-comparison-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .roi-calculator { 
+        max-width: 90% !important;
+        padding: 1.2rem !important;
+      }
+      .tolerance-grid { 
+        grid-template-columns: 1fr 1fr !important; 
+        gap: 1.2rem !important;
+      }
     }
 
     /* Enhanced animations */
@@ -484,13 +536,13 @@ export default function Home() {
             </div>
             
             {/* ROI Calculator Highlight */}
-            <div style={{
+            <div className="roi-calculator" style={{
               background: 'linear-gradient(135deg, #fef3c7, #fed7aa)',
               border: '2px solid #f59e0b',
               borderRadius: '1rem',
               padding: '1.5rem',
               marginBottom: '2rem',
-              maxWidth: '600px',
+              maxWidth: '650px',
               marginLeft: 'auto',
               marginRight: 'auto'
             }}>
@@ -499,16 +551,18 @@ export default function Home() {
                 fontWeight: '700',
                 color: '#92400e',
                 marginBottom: '1rem',
-                textAlign: 'center'
+                textAlign: 'center',
+                lineHeight: '1.3'
               }}>
                 💰 Stop Paying £45/Month for Multiple Tools
               </h2>
-              <div style={{
+              <div className="roi-comparison" style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr auto 1fr',
                 alignItems: 'center',
                 gap: '1rem',
-                textAlign: 'center'
+                textAlign: 'center',
+                marginBottom: '1rem'
               }}>
                 <div>
                   <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626', textDecoration: 'line-through' }}>
@@ -524,9 +578,8 @@ export default function Home() {
                   <div style={{ fontSize: '0.9rem', color: '#065f46' }}>VeriDiff All-in-One</div>
                 </div>
               </div>
-              <div style={{
+              <div className="roi-savings" style={{
                 textAlign: 'center',
-                marginTop: '1rem',
                 padding: '0.75rem',
                 background: 'rgba(16, 185, 129, 0.1)',
                 borderRadius: '0.5rem',
@@ -1019,33 +1072,77 @@ export default function Home() {
                     <div style={{ 
                       background: '#dcfce7', 
                       color: '#166534', 
-                      padding: '1rem', 
-                      borderRadius: '0.5rem', 
-                      textAlign: 'center',
+                      padding: '1.5rem', 
+                      borderRadius: '0.75rem', 
                       fontFamily: 'inherit'
                     }}>
-                      <p style={{ fontWeight: '500', marginBottom: '0.5rem', fontFamily: 'inherit' }}>
+                      <h4 style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '1.2rem', 
+                        fontFamily: 'inherit',
+                        textAlign: 'center',
+                        fontSize: '1rem',
+                        color: '#166534'
+                      }}>
                         ✨ Smart Mapping & Tolerance Results:
-                      </p>
+                      </h4>
                       <div style={{ 
-                        fontSize: '0.875rem', 
                         display: 'grid', 
                         gridTemplateColumns: '1fr 1fr', 
-                        gap: '1rem', 
-                        textAlign: 'left',
+                        gap: '1.5rem',
                         fontFamily: 'inherit'
                       }} className="tolerance-grid">
-                        <div>
-                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem', color: '#166534' }}>✓ Auto-mapped fields:</strong><br/>
-                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>• Department → dept_name<br/>
-                          • Budgeted Amount → actual_amount<br/>  
-                          • Cost Centre Code → cost_centre</span>
+                        <div style={{ 
+                          background: 'rgba(255, 255, 255, 0.6)',
+                          padding: '1rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid rgba(22, 101, 52, 0.2)'
+                        }}>
+                          <div style={{ 
+                            fontWeight: '600', 
+                            marginBottom: '0.75rem',
+                            fontSize: '0.9rem', 
+                            color: '#166534',
+                            fontFamily: 'inherit'
+                          }}>
+                            ✓ Auto-mapped fields:
+                          </div>
+                          <div style={{ 
+                            fontSize: '0.85rem', 
+                            lineHeight: '1.6',
+                            color: '#065f46',
+                            fontFamily: 'inherit'
+                          }}>
+                            • Department → dept_name<br/>
+                            • Budgeted Amount → actual_amount<br/>  
+                            • Cost Centre Code → cost_centre
+                          </div>
                         </div>
-                        <div>
-                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem', color: '#166534' }}>📊 Variance Analysis (±3%):</strong><br/>
-                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>• 127 departments within tolerance<br/>
-                          • 15 over-budget flagged for review<br/>
-                          • 3 missing departments identified</span>
+                        <div style={{ 
+                          background: 'rgba(255, 255, 255, 0.6)',
+                          padding: '1rem',
+                          borderRadius: '0.5rem',
+                          border: '1px solid rgba(22, 101, 52, 0.2)'
+                        }}>
+                          <div style={{ 
+                            fontWeight: '600', 
+                            marginBottom: '0.75rem',
+                            fontSize: '0.9rem', 
+                            color: '#166534',
+                            fontFamily: 'inherit'
+                          }}>
+                            📊 Variance Analysis (±3%):
+                          </div>
+                          <div style={{ 
+                            fontSize: '0.85rem', 
+                            lineHeight: '1.6',
+                            color: '#065f46',
+                            fontFamily: 'inherit'
+                          }}>
+                            • 127 departments within tolerance<br/>
+                            • 15 over-budget flagged for review<br/>
+                            • 3 missing departments identified
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1192,53 +1289,61 @@ export default function Home() {
                     <div style={{ 
                       background: '#fef3c7', 
                       color: '#92400e', 
-                      padding: '1rem', 
-                      borderRadius: '0.5rem',
+                      padding: '1.5rem', 
+                      borderRadius: '0.75rem',
                       fontFamily: 'inherit'
                     }}>
-                      <p style={{ fontWeight: '500', marginBottom: '0.5rem', fontFamily: 'inherit' }}>
+                      <h4 style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '1.2rem', 
+                        fontFamily: 'inherit',
+                        textAlign: 'center',
+                        fontSize: '1rem',
+                        color: '#92400e'
+                      }}>
                         📄 Document Analysis Results:
-                      </p>
+                      </h4>
                       <div style={{ 
-                        fontSize: '0.875rem', 
                         display: 'grid', 
                         gridTemplateColumns: '1fr 1fr 1fr', 
-                        gap: '1rem', 
-                        textAlign: 'center',
+                        gap: '1rem',
                         fontFamily: 'inherit'
                       }} className="tolerance-grid">
                         <div style={{ 
-                          padding: '0.5rem', 
+                          padding: '1rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
-                          borderRadius: '0.25rem',
-                          fontFamily: 'inherit'
+                          borderRadius: '0.5rem',
+                          fontFamily: 'inherit',
+                          textAlign: 'center'
                         }}>
-                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>Payment Terms</strong><br/>
-                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>30 days → 15 days</span><br/>
-                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>🔥 Critical change</span>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Payment Terms</div>
+                          <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>30 days → 15 days</div>
+                          <div style={{ fontSize: '0.75rem' }}>🔥 Critical change</div>
                         </div>
                         <div style={{ 
-                          padding: '0.5rem', 
+                          padding: '1rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
-                          borderRadius: '0.25rem',
-                          fontFamily: 'inherit'
+                          borderRadius: '0.5rem',
+                          fontFamily: 'inherit',
+                          textAlign: 'center'
                         }}>
-                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>Liability Cap</strong><br/>
-                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>£100k → £250k</span><br/>
-                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>🔥 Major increase</span>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Liability Cap</div>
+                          <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>£100k → £250k</div>
+                          <div style={{ fontSize: '0.75rem' }}>🔥 Major increase</div>
                         </div>
                         <div style={{ 
-                          padding: '0.5rem', 
+                          padding: '1rem', 
                           background: '#f0fdf4', 
                           color: '#16a34a', 
-                          borderRadius: '0.25rem',
-                          fontFamily: 'inherit'
+                          borderRadius: '0.5rem',
+                          fontFamily: 'inherit',
+                          textAlign: 'center'
                         }}>
-                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>New Content</strong><br/>
-                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>+1 page added</span><br/>
-                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>✅ Additional clauses</span>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>New Content</div>
+                          <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>+1 page added</div>
+                          <div style={{ fontSize: '0.75rem' }}>✅ Additional clauses</div>
                         </div>
                       </div>
                     </div>
@@ -1407,53 +1512,61 @@ export default function Home() {
                     <div style={{ 
                       background: '#eff6ff', 
                       color: '#1e40af', 
-                      padding: '1rem', 
-                      borderRadius: '0.5rem',
+                      padding: '1.5rem', 
+                      borderRadius: '0.75rem',
                       fontFamily: 'inherit'
                     }}>
-                      <p style={{ fontWeight: '500', marginBottom: '0.5rem', fontFamily: 'inherit' }}>
+                      <h4 style={{ 
+                        fontWeight: '600', 
+                        marginBottom: '1.2rem', 
+                        fontFamily: 'inherit',
+                        textAlign: 'center',
+                        fontSize: '1rem',
+                        color: '#1e40af'
+                      }}>
                         🔧 Structure-Aware Configuration Analysis:
-                      </p>
+                      </h4>
                       <div style={{ 
-                        fontSize: '0.875rem', 
                         display: 'grid', 
                         gridTemplateColumns: '1fr 1fr 1fr', 
-                        gap: '1rem', 
-                        textAlign: 'center',
+                        gap: '1rem',
                         fontFamily: 'inherit'
                       }} className="tolerance-grid">
                         <div style={{ 
-                          padding: '0.5rem', 
+                          padding: '1rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
-                          borderRadius: '0.25rem',
-                          fontFamily: 'inherit'
+                          borderRadius: '0.5rem',
+                          fontFamily: 'inherit',
+                          textAlign: 'center'
                         }}>
-                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>Performance Settings</strong><br/>
-                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>timeout: 5s → 10s</span><br/>
-                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>⚠️ Environment drift</span>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Performance Settings</div>
+                          <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>timeout: 5s → 10s</div>
+                          <div style={{ fontSize: '0.75rem' }}>⚠️ Environment drift</div>
                         </div>
                         <div style={{ 
-                          padding: '0.5rem', 
+                          padding: '1rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
-                          borderRadius: '0.25rem',
-                          fontFamily: 'inherit'
+                          borderRadius: '0.5rem',
+                          fontFamily: 'inherit',
+                          textAlign: 'center'
                         }}>
-                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>Debug Settings</strong><br/>
-                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>debug: false → true</span><br/>
-                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>⚠️ Should be disabled</span>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Debug Settings</div>
+                          <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>debug: false → true</div>
+                          <div style={{ fontSize: '0.75rem' }}>⚠️ Should be disabled</div>
                         </div>
                         <div style={{ 
-                          padding: '0.5rem', 
+                          padding: '1rem', 
                           background: '#fff7ed', 
                           color: '#ea580c', 
-                          borderRadius: '0.25rem',
-                          fontFamily: 'inherit'
+                          borderRadius: '0.5rem',
+                          fontFamily: 'inherit',
+                          textAlign: 'center'
                         }}>
-                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>New Keys</strong><br/>
-                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>+4 additional settings</span><br/>
-                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>📋 Needs review</span>
+                          <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>New Keys</div>
+                          <div style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>+4 additional settings</div>
+                          <div style={{ fontSize: '0.75rem' }}>📋 Needs review</div>
                         </div>
                       </div>
                     </div>
@@ -2070,7 +2183,7 @@ export default function Home() {
                 We're here to help! Get in touch and we'll respond within 24 hours.
               </p>
               <button 
-                onClick={() => window.location.href = 'mailto:hello@veridiff.com?subject=Question about VeriDiff'}
+                onClick={() => window.location.href = 'mailto:sales@veridiff.com?subject=Question about VeriDiff'}
                 style={{
                   background: '#2563eb',
                   color: 'white',
@@ -2082,7 +2195,7 @@ export default function Home() {
                   fontSize: '1rem'
                 }}
               >
-                📧 Contact Us - hello@veridiff.com
+                📧 Contact Us - sales@veridiff.com
               </button>
             </div>
           </div>
