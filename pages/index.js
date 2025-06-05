@@ -168,8 +168,8 @@ export default function Home() {
         align-items: center !important;
         text-align: center !important;
       }
-      #pricing { padding-top: 2rem !important; }
       .try-demo-section { padding: 3rem 0 !important; }
+      .market-comparison-grid { grid-template-columns: 1fr !important; }
     }
     
     @media (max-width: 480px) {
@@ -185,6 +185,7 @@ export default function Home() {
         justify-content: center !important;
       }
       .try-demo-section { padding: 2rem 0 !important; }
+      .market-comparison-grid { grid-template-columns: 1fr !important; }
     }
     
     @media (min-width: 769px) and (max-width: 1024px) {
@@ -192,20 +193,10 @@ export default function Home() {
       .demo-grid { grid-template-columns: 1fr !important; }
       .file-types-grid { grid-template-columns: repeat(2, 1fr) !important; }
       .use-cases-grid { grid-template-columns: repeat(3, 1fr) !important; }
+      .market-comparison-grid { grid-template-columns: repeat(2, 1fr) !important; }
     }
 
-    /* Enhanced animations for file type cards */
-    .file-type-card {
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      transform: translateY(0);
-    }
-    
-    .file-type-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
-    }
-
-    /* Demo tab animations */
+    /* Enhanced animations */
     .demo-tab {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       transform: translateY(0);
@@ -259,23 +250,14 @@ export default function Home() {
       }
     }
 
-    /* Use case hover animations */
-    .use-case-card {
-      transition: all 0.3s ease;
+    /* Value card animations */
+    .value-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    .use-case-card:hover {
-      transform: translateY(-3px);
-    }
-
-    /* Security section enhanced animations */
-    .security-feature-card {
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .security-feature-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 16px 32px rgba(0,0,0,0.12) !important;
+    .value-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important;
     }
 
     /* Mobile-specific benefit item styling */
@@ -501,6 +483,60 @@ export default function Home() {
               ⚡ Precision-Engineered in London for Global Professionals
             </div>
             
+            {/* ROI Calculator Highlight */}
+            <div style={{
+              background: 'linear-gradient(135deg, #fef3c7, #fed7aa)',
+              border: '2px solid #f59e0b',
+              borderRadius: '1rem',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              maxWidth: '600px',
+              marginLeft: 'auto',
+              marginRight: 'auto'
+            }}>
+              <h2 style={{
+                fontSize: '1.8rem',
+                fontWeight: '700',
+                color: '#92400e',
+                marginBottom: '1rem',
+                textAlign: 'center'
+              }}>
+                💰 Stop Paying £45/Month for Multiple Tools
+              </h2>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto 1fr',
+                alignItems: 'center',
+                gap: '1rem',
+                textAlign: 'center'
+              }}>
+                <div>
+                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626', textDecoration: 'line-through' }}>
+                    £45/month
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: '#7c2d12' }}>Separate tools</div>
+                </div>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#92400e' }}>VS</div>
+                <div>
+                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#059669' }}>
+                    £19/month
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: '#065f46' }}>VeriDiff All-in-One</div>
+                </div>
+              </div>
+              <div style={{
+                textAlign: 'center',
+                marginTop: '1rem',
+                padding: '0.75rem',
+                background: 'rgba(16, 185, 129, 0.1)',
+                borderRadius: '0.5rem',
+                fontWeight: '600',
+                color: '#065f46'
+              }}>
+                🎯 Save £312/year starting today
+              </div>
+            </div>
+
             <h1 style={{ 
               fontSize: '3.5rem', 
               fontWeight: '700', 
@@ -550,9 +586,9 @@ export default function Home() {
                 fontWeight: '500', 
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                minWidth: '250px'
+                minWidth: '280px'
               }}>
-                ▶ Try Full Demo - No Signup Required
+                🎯 Start Free Excel Comparison
               </button>
               <button onClick={handleWatchVideo} style={{ 
                 background: 'white', 
@@ -564,9 +600,9 @@ export default function Home() {
                 fontWeight: '500', 
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                minWidth: '200px'
+                minWidth: '220px'
               }}>
-                Watch 2-Min Video
+                Watch 2-Min Demo
               </button>
             </div>
 
@@ -588,8 +624,8 @@ export default function Home() {
                 background: 'rgba(255,255,255,0.7)',
                 borderRadius: '0.5rem'
               }}>
-                <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>🚫</span>
-                <span><strong>No registration required</strong> to test with your real files</span>
+                <span style={{ color: '#059669', fontWeight: 'bold', fontSize: '1.2rem' }}>🎯</span>
+                <span><strong>Excel comparison free</strong> after signup - no credit card</span>
               </div>
               <div style={{ 
                 display: 'flex', 
@@ -602,8 +638,8 @@ export default function Home() {
                 background: 'rgba(255,255,255,0.7)',
                 borderRadius: '0.5rem'
               }}>
-                <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>🔒</span>
-                <span><strong>Your files never leave your browser</strong> - processed locally</span>
+                <span style={{ color: '#059669', fontWeight: 'bold', fontSize: '1.2rem' }}>💰</span>
+                <span><strong>All file types for £19/month</strong> - save £26/month vs competitors</span>
               </div>
               <div style={{ 
                 display: 'flex', 
@@ -616,14 +652,14 @@ export default function Home() {
                 background: 'rgba(255,255,255,0.7)',
                 borderRadius: '0.5rem'
               }}>
-                <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>⚡</span>
-                <span><strong>Smart mapping</strong> when columns don't match perfectly</span>
+                <span style={{ color: '#059669', fontWeight: 'bold', fontSize: '1.2rem' }}>🔒</span>
+                <span><strong>Complete privacy</strong> - files processed locally in your browser</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Enhanced Demo Section - NOW SECOND */}
+        {/* Enhanced Demo Section - SECOND */}
         <section id="features" style={{ ...sectionStyle, background: 'white' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -839,7 +875,7 @@ export default function Home() {
                           fontWeight: '600', 
                           marginBottom: '1rem', 
                           color: '#1f2937',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           📊 Budget_2024_Final.xlsx
                         </h4>
@@ -857,7 +893,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>Department</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
@@ -871,7 +907,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>Budgeted Amount (£)</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>CURRENCY</span>
@@ -885,7 +921,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>Cost Centre Code</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
@@ -898,7 +934,7 @@ export default function Home() {
                           borderRadius: '0.5rem', 
                           fontSize: '0.75rem', 
                           color: '#166534',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           <strong>145 departments</strong> • Excel with formulas
                         </div>
@@ -914,7 +950,7 @@ export default function Home() {
                           fontWeight: '600', 
                           marginBottom: '1rem', 
                           color: '#1f2937',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           📄 actual_spend_q1.csv
                         </h4>
@@ -932,7 +968,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>dept_name</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
@@ -946,7 +982,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>actual_amount</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>NUMBER</span>
@@ -960,7 +996,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>cost_centre</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
@@ -973,7 +1009,7 @@ export default function Home() {
                           borderRadius: '0.5rem', 
                           fontSize: '0.75rem', 
                           color: '#1e40af',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           <strong>142 departments</strong> • CSV export from finance system
                         </div>
@@ -986,7 +1022,7 @@ export default function Home() {
                       padding: '1rem', 
                       borderRadius: '0.5rem', 
                       textAlign: 'center',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                      fontFamily: 'inherit'
                     }}>
                       <p style={{ fontWeight: '500', marginBottom: '0.5rem', fontFamily: 'inherit' }}>
                         ✨ Smart Mapping & Tolerance Results:
@@ -1034,7 +1070,7 @@ export default function Home() {
                           fontWeight: '600', 
                           marginBottom: '1rem', 
                           color: '#1f2937',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           📄 Service_Agreement_v2.1.pdf
                         </h4>
@@ -1052,7 +1088,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>Pages</span>
                             <span style={{ fontWeight: 'bold' }}>23 pages</span>
@@ -1066,7 +1102,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>Payment Terms</span>
                             <span style={{ fontWeight: 'bold' }}>Net 30 days</span>
@@ -1080,7 +1116,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>Liability Cap</span>
                             <span style={{ fontWeight: 'bold' }}>£100,000</span>
@@ -1098,7 +1134,7 @@ export default function Home() {
                           fontWeight: '600', 
                           marginBottom: '1rem', 
                           color: '#1f2937',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           📄 Service_Agreement_v2.2.pdf
                         </h4>
@@ -1116,7 +1152,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>Pages</span>
                             <span style={{ fontWeight: 'bold' }}>24 pages</span>
@@ -1130,7 +1166,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>Payment Terms</span>
                             <span style={{ fontWeight: 'bold' }}>Net 15 days</span>
@@ -1144,7 +1180,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>Liability Cap</span>
                             <span style={{ fontWeight: 'bold' }}>£250,000</span>
@@ -1158,7 +1194,7 @@ export default function Home() {
                       color: '#92400e', 
                       padding: '1rem', 
                       borderRadius: '0.5rem',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                      fontFamily: 'inherit'
                     }}>
                       <p style={{ fontWeight: '500', marginBottom: '0.5rem', fontFamily: 'inherit' }}>
                         📄 Document Analysis Results:
@@ -1227,7 +1263,7 @@ export default function Home() {
                           fontWeight: '600', 
                           marginBottom: '1rem', 
                           color: '#1f2937',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           🔧 api_config_prod.json
                         </h4>
@@ -1245,7 +1281,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>"timeout"</span>
                             <span style={{ fontWeight: 'bold' }}>5000</span>
@@ -1259,7 +1295,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>"max_retries"</span>
                             <span style={{ fontWeight: 'bold' }}>3</span>
@@ -1273,7 +1309,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>"debug_mode"</span>
                             <span style={{ fontWeight: 'bold' }}>false</span>
@@ -1286,7 +1322,7 @@ export default function Home() {
                           borderRadius: '0.5rem', 
                           fontSize: '0.75rem', 
                           color: '#6b21a8',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           <strong>Production environment</strong> • 47 configuration keys
                         </div>
@@ -1302,7 +1338,7 @@ export default function Home() {
                           fontWeight: '600', 
                           marginBottom: '1rem', 
                           color: '#1f2937',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           🔧 api_config_staging.json
                         </h4>
@@ -1320,7 +1356,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>"timeout"</span>
                             <span style={{ fontWeight: 'bold' }}>10000</span>
@@ -1334,7 +1370,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>"max_retries"</span>
                             <span style={{ fontWeight: 'bold' }}>5</span>
@@ -1348,7 +1384,7 @@ export default function Home() {
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            fontFamily: 'inherit'
                           }}>
                             <span>"debug_mode"</span>
                             <span style={{ fontWeight: 'bold' }}>true</span>
@@ -1361,7 +1397,7 @@ export default function Home() {
                           borderRadius: '0.5rem', 
                           fontSize: '0.75rem', 
                           color: '#1e40af',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          fontFamily: 'inherit'
                         }}>
                           <strong>Staging environment</strong> • 51 configuration keys
                         </div>
@@ -1373,7 +1409,7 @@ export default function Home() {
                       color: '#1e40af', 
                       padding: '1rem', 
                       borderRadius: '0.5rem',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                      fontFamily: 'inherit'
                     }}>
                       <p style={{ fontWeight: '500', marginBottom: '0.5rem', fontFamily: 'inherit' }}>
                         🔧 Structure-Aware Configuration Analysis:
@@ -1428,7 +1464,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Try Demo CTA Section - NEW POSITION */}
+        {/* Try Demo CTA Section - THIRD */}
         <section style={{ 
           background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
           padding: '4rem 0',
@@ -1497,7 +1533,7 @@ export default function Home() {
               boxShadow: '0 8px 32px rgba(255,255,255,0.3)',
               minWidth: '320px'
             }}>
-              🎯 Start Free Demo - No Signup Required
+              🎯 Start Free Excel Comparison Now
             </button>
             
             <div style={{ 
@@ -1517,7 +1553,7 @@ export default function Home() {
                 justifyContent: 'center'
               }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>Upload your real confidential files</span>
+                <span>No credit card required</span>
               </div>
               <div style={{ 
                 display: 'flex', 
@@ -1527,7 +1563,7 @@ export default function Home() {
                 justifyContent: 'center'
               }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>Files never leave your browser</span>
+                <span>Files stay on your device</span>
               </div>
               <div style={{ 
                 display: 'flex', 
@@ -1537,506 +1573,517 @@ export default function Home() {
                 justifyContent: 'center'
               }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>Test Excel comparisons for free</span>
+                <span>Upgrade to all formats for £19/month</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Security Section - NOW FOURTH */}
-        <section style={{ 
-          background: 'linear-gradient(135deg, #0c4a6e, #1e40af, #7c3aed)',
-          padding: '6rem 0',
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden'
-        }} className="section-padding">
-          {/* Background decoration */}
-          <div style={{
-            position: 'absolute',
-            top: '-50%',
-            right: '-20%',
-            width: '800px',
-            height: '800px',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-            borderRadius: '50%'
-          }} />
-          
+        {/* Market Comparison & Pricing Section - FOURTH */}
+        <section style={{ ...sectionStyle, background: '#f8fafc' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
-            <div style={{ textAlign: 'center', marginBottom: '4rem', position: 'relative', zIndex: 2 }}>
+            <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
               <div style={{ 
                 display: 'inline-flex', 
                 alignItems: 'center', 
-                background: 'rgba(255,255,255,0.2)', 
-                color: 'white', 
+                background: '#fef3c7', 
+                color: '#92400e', 
                 padding: '0.5rem 1rem', 
                 borderRadius: '2rem', 
                 fontSize: '0.875rem', 
                 fontWeight: '500', 
                 marginBottom: '2rem', 
-                gap: '0.5rem',
-                backdropFilter: 'blur(10px)'
+                gap: '0.5rem' 
               }}>
-                🛡️ Your Data Security is Our Foundation
+                💰 Why Pay for Multiple Tools When One Does It All?
               </div>
               
               <h2 style={{ 
-                fontSize: '3rem', 
+                fontSize: '2.75rem', 
                 fontWeight: '700', 
                 marginBottom: '1.5rem', 
+                color: '#1f2937',
                 lineHeight: '1.2'
               }} className="section-title">
-                Bank-Level Security
+                All-in-One vs
                 <span style={{ 
                   display: 'block',
-                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
+                  background: 'linear-gradient(135deg, #dc2626, #ea580c)', 
                   WebkitBackgroundClip: 'text', 
                   WebkitTextFillColor: 'transparent', 
                   backgroundClip: 'text'
                 }}>
-                  Without the Complexity
+                  Buying Separately
                 </span>
               </h2>
-              <p style={{ 
-                fontSize: '1.3rem', 
-                opacity: '0.9', 
-                lineHeight: '1.6',
-                maxWidth: '600px',
-                margin: '0 auto'
-              }}>
-                Perfect for confidential business data that can't be uploaded to third-party servers
+              <p style={{ fontSize: '1.3rem', color: '#6b7280', maxWidth: '600px', margin: '0 auto' }}>
+                Start with Excel, scale to everything. Save £26/month • £312/year
               </p>
             </div>
 
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-              gap: '2.5rem', 
-              marginBottom: '4rem',
-              position: 'relative',
-              zIndex: 2
-            }} className="security-grid">
+              gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+              gap: '3rem', 
+              marginBottom: '4rem'
+            }} className="market-comparison-grid">
               
-              <div className="security-feature-card" style={{
-                background: 'rgba(255,255,255,0.95)',
-                color: '#1f2937',
-                padding: '2.5rem',
+              {/* Separate Tools Cost */}
+              <div className="value-card" style={{
+                background: 'white',
+                padding: '3rem',
                 borderRadius: '1.5rem',
+                border: '3px solid #fca5a5',
+                boxShadow: '0 8px 32px rgba(220, 38, 38, 0.1)',
                 textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)'
+                position: 'relative'
               }}>
                 <div style={{
-                  width: '80px',
-                  height: '80px',
-                  background: 'linear-gradient(135deg, #059669, #10b981)',
-                  borderRadius: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem',
-                  fontSize: '2rem',
-                  boxShadow: '0 8px 24px rgba(5, 150, 105, 0.3)'
+                  position: 'absolute',
+                  top: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: '#dc2626',
+                  color: 'white',
+                  padding: '8px 20px',
+                  borderRadius: '20px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600'
                 }}>
-                  🔒
+                  Separate Tools
                 </div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>
-                  100% Local Processing
+                
+                <h3 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937', marginTop: '1rem' }}>
+                  The Expensive Way
                 </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                  All file processing happens in your browser. Your sensitive business data never touches our servers or any cloud infrastructure.
-                </p>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '1rem',
+                    marginBottom: '0.5rem',
+                    background: '#fef2f2',
+                    borderRadius: '8px'
+                  }}>
+                    <span style={{ color: '#374151', fontWeight: '500' }}>Professional Excel tool</span>
+                    <span style={{ color: '#dc2626', fontWeight: '700' }}>£15/month</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '1rem',
+                    marginBottom: '0.5rem',
+                    background: '#fef2f2',
+                    borderRadius: '8px'
+                  }}>
+                    <span style={{ color: '#374151', fontWeight: '500' }}>PDF comparison tool</span>
+                    <span style={{ color: '#dc2626', fontWeight: '700' }}>£12/month</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '1rem',
+                    marginBottom: '0.5rem',
+                    background: '#fef2f2',
+                    borderRadius: '8px'
+                  }}>
+                    <span style={{ color: '#374151', fontWeight: '500' }}>JSON/XML tools</span>
+                    <span style={{ color: '#dc2626', fontWeight: '700' }}>£8/month</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '1rem',
+                    marginBottom: '1.5rem',
+                    background: '#fef2f2',
+                    borderRadius: '8px'
+                  }}>
+                    <span style={{ color: '#374151', fontWeight: '500' }}>Advanced tolerance features</span>
+                    <span style={{ color: '#dc2626', fontWeight: '700' }}>£10/month</span>
+                  </div>
+                  
+                  <div style={{
+                    borderTop: '2px solid #dc2626',
+                    paddingTop: '1rem',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '2.5rem', fontWeight: '700', color: '#dc2626', marginBottom: '0.5rem' }}>
+                      £45/month
+                    </div>
+                    <div style={{ color: '#6b7280', fontSize: '1rem' }}>
+                      £540/year + multiple logins + security risks
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{
+                  background: '#fef2f2',
+                  padding: '1.5rem',
+                  borderRadius: '10px',
+                  border: '1px solid #fca5a5'
+                }}>
+                  <h4 style={{ color: '#dc2626', fontWeight: '600', marginBottom: '1rem' }}>❌ Downsides:</h4>
+                  <ul style={{ color: '#7f1d1d', fontSize: '0.9rem', textAlign: 'left', margin: 0, paddingLeft: '1.2rem' }}>
+                    <li>Multiple accounts to manage</li>
+                    <li>Data shared across vendors</li>
+                    <li>Inconsistent interfaces</li>
+                    <li>Separate support contacts</li>
+                  </ul>
+                </div>
               </div>
 
-              <div className="security-feature-card" style={{
-                background: 'rgba(255,255,255,0.95)',
-                color: '#1f2937',
-                padding: '2.5rem',
+              {/* VeriDiff All-in-One */}
+              <div className="value-card" style={{
+                background: 'white',
+                padding: '3rem',
                 borderRadius: '1.5rem',
+                border: '3px solid #10b981',
+                boxShadow: '0 8px 32px rgba(16, 185, 129, 0.1)',
                 textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)'
+                position: 'relative'
               }}>
                 <div style={{
-                  width: '80px',
-                  height: '80px',
-                  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-                  borderRadius: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem',
-                  fontSize: '2rem',
-                  boxShadow: '0 8px 24px rgba(37, 99, 235, 0.3)'
+                  position: 'absolute',
+                  top: '-15px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: '#10b981',
+                  color: 'white',
+                  padding: '8px 20px',
+                  borderRadius: '20px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600'
                 }}>
-                  📊
+                  VeriDiff All-in-One
                 </div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>
-                  Try with Real Data
+                
+                <h3 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937', marginTop: '1rem' }}>
+                  The Smart Way
                 </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                  Upload your actual confidential files to test VeriDiff's capabilities. No dummy data needed - your files stay completely private.
-                </p>
-              </div>
 
-              <div className="security-feature-card" style={{
-                background: 'rgba(255,255,255,0.95)',
-                color: '#1f2937',
-                padding: '2.5rem',
-                borderRadius: '1.5rem',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)'
-              }}>
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
-                  borderRadius: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem',
-                  fontSize: '2rem',
-                  boxShadow: '0 8px 24px rgba(124, 58, 237, 0.3)'
-                }}>
-                  ⚡
+                <div style={{ marginBottom: '2rem' }}>
+                  <div style={{ 
+                    padding: '1.5rem',
+                    marginBottom: '1.5rem',
+                    background: '#f0fdf4',
+                    borderRadius: '12px',
+                    border: '1px solid #bbf7d0'
+                  }}>
+                    <div style={{ fontSize: '0.9rem', color: '#166534', marginBottom: '1rem', fontWeight: '500' }}>
+                      ✅ Everything included:
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#065f46', lineHeight: '1.6' }}>
+                      • Excel, CSV, PDF, JSON, XML, TXT<br/>
+                      • Advanced tolerance & precision<br/>
+                      • Smart header mapping<br/>
+                      • Single secure platform<br/>
+                      • Priority support
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    borderTop: '2px solid #10b981',
+                    paddingTop: '1rem',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '2.5rem', fontWeight: '700', color: '#10b981', marginBottom: '0.5rem' }}>
+                      £19/month
+                    </div>
+                    <div style={{ color: '#6b7280', fontSize: '1rem', marginBottom: '1rem' }}>
+                      £228/year
+                    </div>
+                    <div style={{
+                      background: '#dcfce7',
+                      color: '#166534',
+                      padding: '10px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      fontSize: '1.1rem'
+                    }}>
+                      💰 Save £26/month • £312/year
+                    </div>
+                  </div>
                 </div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>
-                  GDPR Compliant by Design
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                  Zero data collection or sharing. Built for European privacy standards - perfect for teams handling sensitive information.
-                </p>
+
+                <div style={{
+                  background: '#f0fdf4',
+                  padding: '1.5rem',
+                  borderRadius: '10px',
+                  border: '1px solid #bbf7d0'
+                }}>
+                  <h4 style={{ color: '#166534', fontWeight: '600', marginBottom: '1rem' }}>✅ Benefits:</h4>
+                  <ul style={{ color: '#065f46', fontSize: '0.9rem', textAlign: 'left', margin: 0, paddingLeft: '1.2rem' }}>
+                    <li>One login for everything</li>
+                    <li>Complete data privacy</li>
+                    <li>Consistent interface</li>
+                    <li>Single support contact</li>
+                  </ul>
+                </div>
               </div>
             </div>
 
-            {/* Testimonial */}
+            {/* Future-Proof Value */}
             <div style={{
-              background: 'rgba(255,255,255,0.15)',
-              padding: '2.5rem',
+              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+              padding: '3rem',
               borderRadius: '1.5rem',
+              border: '1px solid #93c5fd',
               textAlign: 'center',
-              border: '1px solid rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(10px)',
-              position: 'relative',
-              zIndex: 2
+              marginBottom: '3rem'
             }}>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1.5rem', color: 'white' }}>
-                Trusted by Professional Teams Worldwide
+              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1e40af' }}>
+                🚀 Future-Proof Your Investment
               </h3>
-              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', marginBottom: '2rem', fontStyle: 'italic' }}>
-                "Finally, a file comparison tool we can use with client data without security concerns."
-              </p>
               <div style={{ 
                 display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                gap: '1.5rem',
-                fontSize: '1rem',
-                color: 'rgba(255,255,255,0.9)'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                gap: '2rem',
+                fontSize: '1.05rem',
+                color: '#1e40af'
               }}>
-                <div>✓ Used by accounting firms</div>
-                <div>✓ Trusted by banks</div>
-                <div>✓ Preferred by consultants</div>
-                <div>✓ Relied on by analysts</div>
+                <div style={{ textAlign: 'center' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '0.5rem' }}>📈 Today</h4>
+                  <p style={{ margin: 0, fontSize: '0.95rem' }}>Start with Excel comparison</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '0.5rem' }}>📄 Next Month</h4>
+                  <p style={{ margin: 0, fontSize: '0.95rem' }}>Client sends PDF changes</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '0.5rem' }}>🔧 Next Quarter</h4>
+                  <p style={{ margin: 0, fontSize: '0.95rem' }}>JSON API configurations</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '0.5rem' }}>💪 Result</h4>
+                  <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: '600' }}>You're ready for everything</p>
+                </div>
               </div>
+            </div>
+
+            {/* Upgrade CTA */}
+            <div style={{ textAlign: 'center' }}>
+              <button onClick={handleProTrial} style={{ 
+                background: 'linear-gradient(135deg, #dc2626, #ea580c)', 
+                color: 'white', 
+                padding: '1.5rem 3rem', 
+                borderRadius: '1rem', 
+                fontWeight: '700', 
+                border: 'none', 
+                cursor: 'pointer',
+                fontSize: '1.3rem',
+                transition: 'all 0.3s',
+                boxShadow: '0 8px 32px rgba(220, 38, 38, 0.3)',
+                minWidth: '380px'
+              }}>
+                🚀 Get All Tools for £19/Month - Save £26/Month!
+              </button>
+              <p style={{ 
+                color: '#6b7280', 
+                fontSize: '0.9rem', 
+                marginTop: '1rem' 
+              }}>
+                30-day money-back guarantee • Cancel anytime • Start saving immediately
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Simplified Pricing Section */}
-        <section id="pricing" style={{ ...sectionStyle, background: '#f9fafb', paddingTop: '3rem' }} className="section-padding">
+        {/* Objection-Handling FAQ Section */}
+        <section style={{ ...sectionStyle, background: 'white' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
               <h2 style={{ 
                 fontSize: '2.25rem', 
                 fontWeight: '700', 
                 marginBottom: '1rem', 
-                color: '#1f2937' 
+                color: '#1f2937'
               }} className="section-title">
-                Simple, Transparent Pricing
+                Questions? We've Got Answers
               </h2>
-              <p style={{ fontSize: '1.25rem', color: '#6b7280' }}>
-                Start free with Excel comparisons • Upgrade for all file formats
+              <p style={{ fontSize: '1.2rem', color: '#6b7280' }}>
+                Everything you need to know to get started confidently
               </p>
             </div>
 
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-              gap: '2rem', 
-              maxWidth: '900px', 
-              margin: '0 auto' 
-            }} className="pricing-grid">
-              
-              {/* Free Plan */}
-              <div style={{ 
-                background: 'white', 
-                padding: '2.5rem', 
-                borderRadius: '1rem', 
-                border: '3px solid #22c55e',
-                boxShadow: '0 4px 20px rgba(34, 197, 94, 0.1)'
-              }} className="pricing-card">
-                <div style={{ 
-                  background: '#22c55e', 
-                  color: 'white', 
-                  padding: '0.5rem 1rem', 
-                  borderRadius: '2rem', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '600',
-                  textAlign: 'center',
-                  marginBottom: '1.5rem'
-                }}>
-                  Always Free for Signed-In Users
-                </div>
+              gap: '2rem',
+              maxWidth: '1000px',
+              margin: '0 auto'
+            }}>
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
                 <h3 style={{ 
-                  fontSize: '1.75rem', 
-                  fontWeight: '700', 
-                  marginBottom: '0.5rem', 
-                  color: '#1f2937' 
-                }}>
-                  Free
-                </h3>
-                <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
-                  Perfect for spreadsheet comparisons
-                </p>
-                <div style={{ marginBottom: '2rem' }}>
-                  <span style={{ 
-                    fontSize: '3rem', 
-                    fontWeight: '700', 
-                    color: '#22c55e' 
-                  }}>
-                    £0
-                  </span>
-                  <span style={{ color: '#6b7280', fontSize: '1.1rem' }}>/month</span>
-                </div>
-                <div style={{ marginBottom: '2.5rem' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
-                    <span><strong>Unlimited Excel-Excel comparisons</strong></span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
-                    <span>Smart header mapping & tolerance settings</span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
-                    <span>Local processing - files never leave your browser</span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
-                    <span>GDPR compliant by design</span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
-                    <span>Download results as Excel or CSV</span>
-                  </div>
-                </div>
-                <button onClick={handleTryDemo} style={{ 
-                  width: '100%', 
-                  padding: '1rem', 
-                  borderRadius: '0.75rem', 
+                  fontSize: '1.3rem', 
                   fontWeight: '600', 
-                  cursor: 'pointer', 
-                  border: 'none', 
-                  background: '#22c55e', 
-                  color: 'white',
-                  fontSize: '1.1rem',
-                  transition: 'all 0.2s'
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}>
-                  🎉 Start Free Now
-                </button>
+                  🔒 "Is my data secure?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Absolutely. Unlike other tools that upload files to their servers, VeriDiff processes everything locally in your browser. Your files never leave your device, and we never see or store your data. It's the most secure way to compare sensitive business files.
+                </p>
               </div>
 
-              {/* Premium Plan */}
-              <div style={{ 
-                background: 'white', 
-                padding: '2.5rem', 
-                borderRadius: '1rem', 
-                border: '3px solid #2563eb',
-                boxShadow: '0 4px 20px rgba(37, 99, 235, 0.1)',
-                position: 'relative'
-              }} className="pricing-card">
-                <div style={{ 
-                  background: '#2563eb', 
-                  color: 'white', 
-                  padding: '0.5rem 1rem', 
-                  borderRadius: '2rem', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '600',
-                  textAlign: 'center',
-                  marginBottom: '1.5rem'
-                }}>
-                  All File Formats + Advanced Features
-                </div>
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
                 <h3 style={{ 
-                  fontSize: '1.75rem', 
-                  fontWeight: '700', 
-                  marginBottom: '0.5rem', 
-                  color: '#1f2937' 
-                }}>
-                  Premium
-                </h3>
-                <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
-                  For professional data analysis
-                </p>
-                <div style={{ marginBottom: '2rem' }}>
-                  <span style={{ 
-                    fontSize: '3rem', 
-                    fontWeight: '700', 
-                    color: '#2563eb' 
-                  }}>
-                    £19
-                  </span>
-                  <span style={{ color: '#6b7280', fontSize: '1.1rem' }}>/month</span>
-                </div>
-                <div style={{ marginBottom: '2.5rem' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1.2rem' }}>✓</span>
-                    <span><strong>Everything in Free, plus:</strong></span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>🚀</span>
-                    <span><strong>Excel-CSV, CSV-CSV comparisons</strong></span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>📄</span>
-                    <span>PDF, JSON, XML, Text file comparisons</span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>⚡</span>
-                    <span>Advanced tolerance & precision controls</span>
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginBottom: '1rem',
-                    fontSize: '1rem'
-                  }}>
-                    <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>📊</span>
-                    <span>Priority support & feature requests</span>
-                  </div>
-                </div>
-                <button onClick={handleProTrial} style={{ 
-                  width: '100%', 
-                  padding: '1rem', 
-                  borderRadius: '0.75rem', 
+                  fontSize: '1.3rem', 
                   fontWeight: '600', 
-                  cursor: 'pointer', 
-                  border: 'none', 
-                  background: '#2563eb', 
-                  color: 'white',
-                  fontSize: '1.1rem',
-                  transition: 'all 0.2s'
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}>
-                  {session ? '🚀 Start Premium Trial' : '🚀 Sign Up & Start Trial'}
-                </button>
-                <p style={{ 
-                  textAlign: 'center', 
-                  color: '#6b7280', 
-                  fontSize: '0.875rem', 
-                  marginTop: '1rem' 
+                  📊 "I only need Excel comparison"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Perfect! Start free with Excel comparison after signup. No credit card required. When you need PDF, CSV, or other formats later (and you probably will), upgrade for £19/month instead of buying separate tools for £45/month.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}>
-                  Cancel anytime • 30-day money-back guarantee
+                  💳 "Can I cancel anytime?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Yes, cancel your premium subscription anytime with one click. No contracts, no commitments. Plus, we offer a 30-day money-back guarantee if you're not completely satisfied with the premium features.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  ⚡ "How is this different from Excel's built-in compare?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Excel's compare is basic and only works within Excel. VeriDiff offers smart mapping for mismatched headers, tolerance settings for numerical differences, cross-format comparison (Excel vs CSV), and detailed reporting that Excel simply can't provide.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  🚀 "What happens after I sign up?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Immediate access to Excel comparison features. Upload two Excel files and see the magic happen. When you're ready to compare other file types or need advanced features, upgrade to premium for £19/month.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  💰 "Why is this cheaper than competitors?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  We're pre-launch and focused on building a loyal user base. By processing files locally, we have lower server costs than competitors. Our all-in-one approach means you pay for one tool instead of multiple specialized ones.
                 </p>
               </div>
             </div>
 
-            {/* Security Promise - Moved Higher */}
             <div style={{
-              background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
-              padding: '2.5rem',
-              borderRadius: '1.5rem',
-              border: '1px solid #a7f3d0',
               textAlign: 'center',
               marginTop: '3rem',
-              boxShadow: '0 8px 32px rgba(16, 185, 129, 0.1)'
+              padding: '2rem',
+              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+              borderRadius: '1rem',
+              border: '1px solid #93c5fd'
             }}>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1.5rem', color: '#065f46' }}>
-                🔒 Security Promise: Both Plans Include
-              </h3>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-                gap: '1.5rem',
-                fontSize: '1.1rem',
-                color: '#047857'
+              <h3 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: '600', 
+                color: '#1e40af', 
+                marginBottom: '1rem' 
               }}>
-                <div style={{ padding: '1rem' }}>
-                  <strong>✓ 100% local processing</strong><br/>
-                  <span style={{ fontSize: '0.95rem', opacity: '0.9' }}>Files never uploaded to our servers</span>
-                </div>
-                <div style={{ padding: '1rem' }}>
-                  <strong>✓ Zero data collection</strong><br/>
-                  <span style={{ fontSize: '0.95rem', opacity: '0.9' }}>GDPR compliant by design</span>
-                </div>
-                <div style={{ padding: '1rem' }}>
-                  <strong>✓ Bank-level privacy</strong><br/>
-                  <span style={{ fontSize: '0.95rem', opacity: '0.9' }}>Perfect for confidential business data</span>
-                </div>
-                <div style={{ padding: '1rem' }}>
-                  <strong>✓ No registration required</strong><br/>
-                  <span style={{ fontSize: '0.95rem', opacity: '0.9' }}>Test with real files immediately</span>
-                </div>
-              </div>
+                Still Have Questions?
+              </h3>
+              <p style={{ color: '#1e40af', marginBottom: '1.5rem' }}>
+                We're here to help! Get in touch and we'll respond within 24 hours.
+              </p>
+              <button 
+                onClick={() => window.location.href = 'mailto:hello@veridiff.com?subject=Question about VeriDiff'}
+                style={{
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}
+              >
+                📧 Contact Us - hello@veridiff.com
+              </button>
             </div>
           </div>
         </section>
@@ -2093,7 +2140,7 @@ export default function Home() {
               marginBottom: '1.5rem',
               lineHeight: '1.2'
             }} className="section-title">
-              Ready to Transform Your
+              Ready to Save £26/Month on
               <span style={{ 
                 display: 'block',
                 background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
@@ -2101,7 +2148,7 @@ export default function Home() {
                 WebkitTextFillColor: 'transparent', 
                 backgroundClip: 'text'
               }}>
-                File Comparison Workflow?
+                File Comparison Tools?
               </span>
             </h2>
             <p style={{ 
@@ -2112,7 +2159,7 @@ export default function Home() {
               margin: '0 auto 3rem auto',
               lineHeight: '1.6'
             }}>
-              Join forward-thinking professionals using secure, intelligent file comparison with complete privacy
+              Join smart professionals who stopped overpaying for multiple tools. Get everything you need in one secure platform.
             </p>
             
             <div style={{ 
@@ -2130,12 +2177,12 @@ export default function Home() {
                 fontWeight: '600', 
                 border: 'none', 
                 cursor: 'pointer',
-                minWidth: '280px',
+                minWidth: '300px',
                 transition: 'all 0.3s',
                 fontSize: '1.1rem',
                 boxShadow: '0 8px 24px rgba(255,255,255,0.2)'
               }}>
-                ▶ Try Full Demo - No Signup Required
+                🎯 Start Free Excel Comparison Now
               </button>
               <button onClick={handleProTrial} style={{ 
                 background: 'rgba(255,255,255,0.1)', 
@@ -2145,12 +2192,12 @@ export default function Home() {
                 fontWeight: '600', 
                 border: '2px solid rgba(255,255,255,0.3)', 
                 cursor: 'pointer',
-                minWidth: '220px',
+                minWidth: '280px',
                 transition: 'all 0.3s',
                 fontSize: '1.1rem',
                 backdropFilter: 'blur(10px)'
               }}>
-                {session ? 'Start Premium - £19/month' : 'Sign Up & Start Premium'}
+                🚀 Get All Tools - £19/Month
               </button>
             </div>
             
@@ -2172,7 +2219,7 @@ export default function Home() {
                 justifyContent: 'center'
               }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>No registration required for demo</span>
+                <span>No credit card for Excel comparison</span>
               </div>
               <div style={{ 
                 display: 'flex', 
@@ -2182,7 +2229,17 @@ export default function Home() {
                 justifyContent: 'center'
               }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>Your files never leave your browser</span>
+                <span>Save £312/year vs buying separately</span>
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                whiteSpace: 'nowrap',
+                justifyContent: 'center'
+              }}>
+                <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
+                <span>Files never leave your device</span>
               </div>
               <div style={{ 
                 display: 'flex', 
@@ -2193,16 +2250,6 @@ export default function Home() {
               }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
                 <span>30-day money-back guarantee</span>
-              </div>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.5rem',
-                whiteSpace: 'nowrap',
-                justifyContent: 'center'
-              }}>
-                <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>Cancel anytime, no commitments</span>
               </div>
             </div>
           </div>
