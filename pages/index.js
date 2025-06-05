@@ -28,10 +28,22 @@ export default function Home() {
 
   // ✅ NEW: Handle premium upgrade after successful registration
   useEffect(() => {
-    if (session && pendingPremiumUpgrade) {
+    // Check if user just returned from sign-in with premium intent
+    const urlParams = new URLSearchParams(window.location.search);
+    const premiumIntent = urlParams.get('premium') === 'true';
+    
+    if (session && (pendingPremiumUpgrade || premiumIntent)) {
       // User just signed in and was waiting for premium upgrade
       setPendingPremiumUpgrade(false);
       setShowRegistrationModal(false);
+      
+      // Clean up URL parameter
+      if (premiumIntent) {
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.delete('premium');
+        window.history.replaceState({}, '', newUrl);
+      }
+      
       // Trigger premium upgrade automatically
       handlePremiumUpgradeFlow();
     }
@@ -290,7 +302,7 @@ export default function Home() {
 
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
             <button
-              onClick={() => window.location.href = '/api/auth/signin'}
+              onClick={() => window.location.href = '/api/auth/signin?callbackUrl=' + encodeURIComponent(window.location.origin + '/?premium=true')}
               style={{
                 background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
                 color: 'white',
