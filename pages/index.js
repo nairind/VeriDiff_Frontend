@@ -169,6 +169,7 @@ export default function Home() {
         text-align: center !important;
       }
       #pricing { padding-top: 2rem !important; }
+      .try-demo-section { padding: 3rem 0 !important; }
     }
     
     @media (max-width: 480px) {
@@ -183,6 +184,7 @@ export default function Home() {
       .cta-benefits > div {
         justify-content: center !important;
       }
+      .try-demo-section { padding: 2rem 0 !important; }
     }
     
     @media (min-width: 769px) and (max-width: 1024px) {
@@ -266,15 +268,6 @@ export default function Home() {
       transform: translateY(-3px);
     }
 
-    /* Mobile-specific benefit item styling */
-    @media (max-width: 768px) {
-      .cta-benefits > div {
-        justify-content: center !important;
-        text-align: center !important;
-        padding: 0.5rem !important;
-      }
-    }
-
     /* Security section enhanced animations */
     .security-feature-card {
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -283,6 +276,15 @@ export default function Home() {
     .security-feature-card:hover {
       transform: translateY(-6px);
       box-shadow: 0 16px 32px rgba(0,0,0,0.12) !important;
+    }
+
+    /* Mobile-specific benefit item styling */
+    @media (max-width: 768px) {
+      .cta-benefits > div {
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 0.5rem !important;
+      }
     }
   `;
 
@@ -621,517 +623,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Security Section - HERO TREATMENT */}
-        <section style={{ 
-          background: 'linear-gradient(135deg, #0c4a6e, #1e40af, #7c3aed)',
-          padding: '6rem 0',
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden'
-        }} className="section-padding">
-          {/* Background decoration */}
-          <div style={{
-            position: 'absolute',
-            top: '-50%',
-            right: '-20%',
-            width: '800px',
-            height: '800px',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-            borderRadius: '50%'
-          }} />
-          
-          <div style={sectionContainerStyle} className="section-container">
-            <div style={{ textAlign: 'center', marginBottom: '4rem', position: 'relative', zIndex: 2 }}>
-              <div style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                background: 'rgba(255,255,255,0.2)', 
-                color: 'white', 
-                padding: '0.5rem 1rem', 
-                borderRadius: '2rem', 
-                fontSize: '0.875rem', 
-                fontWeight: '500', 
-                marginBottom: '2rem', 
-                gap: '0.5rem',
-                backdropFilter: 'blur(10px)'
-              }}>
-                🛡️ Your Data Security is Our Foundation
-              </div>
-              
-              <h2 style={{ 
-                fontSize: '3rem', 
-                fontWeight: '700', 
-                marginBottom: '1.5rem', 
-                lineHeight: '1.2'
-              }} className="section-title">
-                Bank-Level Security
-                <span style={{ 
-                  display: 'block',
-                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
-                  WebkitBackgroundClip: 'text', 
-                  WebkitTextFillColor: 'transparent', 
-                  backgroundClip: 'text'
-                }}>
-                  Without the Complexity
-                </span>
-              </h2>
-              <p style={{ 
-                fontSize: '1.3rem', 
-                opacity: '0.9', 
-                lineHeight: '1.6',
-                maxWidth: '600px',
-                margin: '0 auto'
-              }}>
-                Perfect for confidential business data that can't be uploaded to third-party servers
-              </p>
-            </div>
-
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-              gap: '2.5rem', 
-              marginBottom: '4rem',
-              position: 'relative',
-              zIndex: 2
-            }} className="security-grid">
-              
-              <div className="security-feature-card" style={{
-                background: 'rgba(255,255,255,0.95)',
-                color: '#1f2937',
-                padding: '2.5rem',
-                borderRadius: '1.5rem',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)'
-              }}>
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  background: 'linear-gradient(135deg, #059669, #10b981)',
-                  borderRadius: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem',
-                  fontSize: '2rem',
-                  boxShadow: '0 8px 24px rgba(5, 150, 105, 0.3)'
-                }}>
-                  🔒
-                </div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>
-                  100% Local Processing
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                  All file processing happens in your browser. Your sensitive business data never touches our servers or any cloud infrastructure.
-                </p>
-              </div>
-
-              <div className="security-feature-card" style={{
-                background: 'rgba(255,255,255,0.95)',
-                color: '#1f2937',
-                padding: '2.5rem',
-                borderRadius: '1.5rem',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)'
-              }}>
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-                  borderRadius: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem',
-                  fontSize: '2rem',
-                  boxShadow: '0 8px 24px rgba(37, 99, 235, 0.3)'
-                }}>
-                  📊
-                </div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>
-                  Try with Real Data
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                  Upload your actual confidential files to test VeriDiff's capabilities. No dummy data needed - your files stay completely private.
-                </p>
-              </div>
-
-              <div className="security-feature-card" style={{
-                background: 'rgba(255,255,255,0.95)',
-                color: '#1f2937',
-                padding: '2.5rem',
-                borderRadius: '1.5rem',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.2)'
-              }}>
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
-                  borderRadius: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem',
-                  fontSize: '2rem',
-                  boxShadow: '0 8px 24px rgba(124, 58, 237, 0.3)'
-                }}>
-                  ⚡
-                </div>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>
-                  GDPR Compliant by Design
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.7', fontSize: '1.05rem' }}>
-                  Zero data collection or sharing. Built for European privacy standards - perfect for teams handling sensitive information.
-                </p>
-              </div>
-            </div>
-
-            {/* Testimonial */}
-            <div style={{
-              background: 'rgba(255,255,255,0.15)',
-              padding: '2.5rem',
-              borderRadius: '1.5rem',
-              textAlign: 'center',
-              border: '1px solid rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(10px)',
-              position: 'relative',
-              zIndex: 2
-            }}>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1.5rem', color: 'white' }}>
-                Trusted by Professional Teams Worldwide
-              </h3>
-              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', marginBottom: '2rem', fontStyle: 'italic' }}>
-                "Finally, a file comparison tool we can use with client data without security concerns."
-              </p>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                gap: '1.5rem',
-                fontSize: '1rem',
-                color: 'rgba(255,255,255,0.9)'
-              }}>
-                <div>✓ Used by accounting firms</div>
-                <div>✓ Trusted by banks</div>
-                <div>✓ Preferred by consultants</div>
-                <div>✓ Relied on by analysts</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* File Types Section - Enhanced Engagement */}
-        <section style={{ 
-          ...sectionStyle, 
-          background: 'linear-gradient(135deg, #f8fafc, #eff6ff)', 
-          position: 'relative',
-          overflow: 'hidden'
-        }} className="section-padding">
-          {/* Background decoration */}
-          <div style={{
-            position: 'absolute',
-            top: '-30%',
-            left: '-10%',
-            width: '600px',
-            height: '600px',
-            background: 'radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 70%)',
-            borderRadius: '50%'
-          }} />
-          
-          <div style={sectionContainerStyle} className="section-container">
-            <div style={{ textAlign: 'center', marginBottom: '4rem', position: 'relative', zIndex: 2 }}>
-              <div style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                background: '#dbeafe', 
-                color: '#1e40af', 
-                padding: '0.5rem 1rem', 
-                borderRadius: '2rem', 
-                fontSize: '0.875rem', 
-                fontWeight: '500', 
-                marginBottom: '2rem', 
-                gap: '0.5rem' 
-              }}>
-                🎯 Precision Tools for Every File Type
-              </div>
-              
-              <h2 style={{ 
-                fontSize: '2.75rem', 
-                fontWeight: '700', 
-                marginBottom: '1.5rem', 
-                color: '#1f2937',
-                lineHeight: '1.2'
-              }} className="section-title">
-                Professional File Comparison
-                <span style={{ 
-                  display: 'block',
-                  background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
-                  WebkitBackgroundClip: 'text', 
-                  WebkitTextFillColor: 'transparent', 
-                  backgroundClip: 'text'
-                }}>
-                  for Every Business Need
-                </span>
-              </h2>
-              <p style={{ fontSize: '1.3rem', color: '#6b7280', maxWidth: '700px', margin: '0 auto' }}>
-                From spreadsheets to documents to technical data formats - we handle them all with precision and security
-              </p>
-            </div>
-
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-              gap: '2.5rem', 
-              marginBottom: '4rem',
-              position: 'relative',
-              zIndex: 2
-            }} className="file-types-grid">
-              
-              {/* Spreadsheets */}
-              <div className="file-type-card" style={{
-                background: 'white',
-                padding: '2.5rem',
-                borderRadius: '1.5rem',
-                border: '2px solid transparent',
-                backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #059669, #10b981)',
-                backgroundOrigin: 'border-box',
-                backgroundClip: 'content-box, border-box',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                {/* Subtle background pattern */}
-                <div style={{
-                  position: 'absolute',
-                  top: '-50%',
-                  right: '-50%',
-                  width: '200px',
-                  height: '200px',
-                  background: 'radial-gradient(circle, rgba(5, 150, 105, 0.05) 0%, transparent 70%)',
-                  borderRadius: '50%'
-                }} />
-                
-                <div style={{
-                  width: '90px',
-                  height: '90px',
-                  background: 'linear-gradient(135deg, #059669, #10b981)',
-                  borderRadius: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem',
-                  fontSize: '2.2rem',
-                  boxShadow: '0 12px 28px rgba(5, 150, 105, 0.25)',
-                  position: 'relative',
-                  zIndex: 2
-                }}>
-                  📊
-                </div>
-                <h3 style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', position: 'relative', zIndex: 2 }}>
-                  Business Spreadsheets
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.7', marginBottom: '1.5rem', fontSize: '1.05rem', position: 'relative', zIndex: 2 }}>
-                  Smart mapping and tolerance settings for Excel, CSV files. Perfect for financial reconciliation and data validation.
-                </p>
-                <div style={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: '0.5rem', 
-                  justifyContent: 'center',
-                  marginBottom: '1.5rem',
-                  position: 'relative',
-                  zIndex: 2
-                }}>
-                  <span style={{ background: '#f0fdf4', color: '#166534', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '500' }}>Excel (.xlsx)</span>
-                  <span style={{ background: '#f0fdf4', color: '#166534', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '500' }}>CSV</span>
-                  <span style={{ background: '#f0fdf4', color: '#166534', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '500' }}>Excel-CSV</span>
-                </div>
-                <div style={{ background: '#dcfce7', color: '#166534', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '600', position: 'relative', zIndex: 2 }}>
-                  ✅ Excel-Excel comparisons always FREE
-                </div>
-              </div>
-
-              {/* Documents */}
-              <div className="file-type-card" style={{
-                background: 'white',
-                padding: '2.5rem',
-                borderRadius: '1.5rem',
-                border: '2px solid transparent',
-                backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #dc2626, #ea580c)',
-                backgroundOrigin: 'border-box',
-                backgroundClip: 'content-box, border-box',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '-50%',
-                  left: '-50%',
-                  width: '200px',
-                  height: '200px',
-                  background: 'radial-gradient(circle, rgba(220, 38, 38, 0.05) 0%, transparent 70%)',
-                  borderRadius: '50%'
-                }} />
-                
-                <div style={{
-                  width: '90px',
-                  height: '90px',
-                  background: 'linear-gradient(135deg, #dc2626, #ea580c)',
-                  borderRadius: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem',
-                  fontSize: '2.2rem',
-                  boxShadow: '0 12px 28px rgba(220, 38, 38, 0.25)',
-                  position: 'relative',
-                  zIndex: 2
-                }}>
-                  📄
-                </div>
-                <h3 style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', position: 'relative', zIndex: 2 }}>
-                  Professional Documents
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.7', marginBottom: '1.5rem', fontSize: '1.05rem', position: 'relative', zIndex: 2 }}>
-                  Advanced text extraction and page-by-page analysis for contracts, reports, and legal documents up to 100MB.
-                </p>
-                <div style={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: '0.5rem', 
-                  justifyContent: 'center',
-                  marginBottom: '1.5rem',
-                  position: 'relative',
-                  zIndex: 2
-                }}>
-                  <span style={{ background: '#fef2f2', color: '#dc2626', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '500' }}>PDF</span>
-                  <span style={{ background: '#fef2f2', color: '#dc2626', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '500' }}>Text (.txt)</span>
-                </div>
-                <div style={{ background: '#fef3c7', color: '#92400e', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '600', position: 'relative', zIndex: 2 }}>
-                  💎 Premium Feature
-                </div>
-              </div>
-
-              {/* Technical Files */}
-              <div className="file-type-card" style={{
-                background: 'white',
-                padding: '2.5rem',
-                borderRadius: '1.5rem',
-                border: '2px solid transparent',
-                backgroundImage: 'linear-gradient(white, white), linear-gradient(135deg, #2563eb, #7c3aed)',
-                backgroundOrigin: 'border-box',
-                backgroundClip: 'content-box, border-box',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-50%',
-                  right: '-50%',
-                  width: '200px',
-                  height: '200px',
-                  background: 'radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 70%)',
-                  borderRadius: '50%'
-                }} />
-                
-                <div style={{
-                  width: '90px',
-                  height: '90px',
-                  background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-                  borderRadius: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 2rem',
-                  fontSize: '2.2rem',
-                  boxShadow: '0 12px 28px rgba(37, 99, 235, 0.25)',
-                  position: 'relative',
-                  zIndex: 2
-                }}>
-                  🔧
-                </div>
-                <h3 style={{ fontSize: '1.6rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', position: 'relative', zIndex: 2 }}>
-                  Technical Data Formats
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.7', marginBottom: '1.5rem', fontSize: '1.05rem', position: 'relative', zIndex: 2 }}>
-                  Format-specific analysis for developers and technical teams. Structure-aware comparison for complex data.
-                </p>
-                <div style={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: '0.5rem', 
-                  justifyContent: 'center',
-                  marginBottom: '1.5rem',
-                  position: 'relative',
-                  zIndex: 2
-                }}>
-                  <span style={{ background: '#eff6ff', color: '#2563eb', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '500' }}>JSON</span>
-                  <span style={{ background: '#eff6ff', color: '#2563eb', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '500' }}>XML</span>
-                </div>
-                <div style={{ background: '#f0f9ff', color: '#0369a1', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '600', position: 'relative', zIndex: 2 }}>
-                  🔄 TXT files FREE, JSON/XML Premium
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Use Cases - 6 cases for balance */}
-            <div style={{
-              background: 'white',
-              padding: '3rem',
-              borderRadius: '1.5rem',
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
-              position: 'relative',
-              zIndex: 2
-            }}>
-              <h3 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2.5rem', color: '#1f2937', textAlign: 'center' }}>
-                Built for Professional Use Cases
-              </h3>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-                gap: '2rem'
-              }} className="use-cases-grid">
-                <div className="use-case-card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-                  <h4 style={{ color: '#059669', fontWeight: '700', marginBottom: '0.8rem', fontSize: '1.1rem' }}>💰 Financial Services</h4>
-                  <p style={{ color: '#6b7280', fontSize: '1rem', lineHeight: '1.6' }}>Budget vs. actual reconciliation, transaction validation, audit trail creation</p>
-                </div>
-                <div className="use-case-card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-                  <h4 style={{ color: '#dc2626', fontWeight: '700', marginBottom: '0.8rem', fontSize: '1.1rem' }}>⚖️ Legal & Compliance</h4>
-                  <p style={{ color: '#6b7280', fontSize: '1rem', lineHeight: '1.6' }}>Contract versioning, policy updates, regulatory document comparison</p>
-                </div>
-                <div className="use-case-card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-                  <h4 style={{ color: '#2563eb', fontWeight: '700', marginBottom: '0.8rem', fontSize: '1.1rem' }}>🔧 Technical Teams</h4>
-                  <p style={{ color: '#6b7280', fontSize: '1rem', lineHeight: '1.6' }}>Configuration management, API response validation, data migration checks</p>
-                </div>
-                <div className="use-case-card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-                  <h4 style={{ color: '#7c3aed', fontWeight: '700', marginBottom: '0.8rem', fontSize: '1.1rem' }}>📊 Business Analysis</h4>
-                  <p style={{ color: '#6b7280', fontSize: '1rem', lineHeight: '1.6' }}>Report validation, data quality checks, multi-source data reconciliation</p>
-                </div>
-                <div className="use-case-card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-                  <h4 style={{ color: '#ea580c', fontWeight: '700', marginBottom: '0.8rem', fontSize: '1.1rem' }}>💼 Payroll & HR</h4>
-                  <p style={{ color: '#6b7280', fontSize: '1rem', lineHeight: '1.6' }}>Payroll reconciliation, employee data validation, benefits comparison</p>
-                </div>
-                <div className="use-case-card" style={{ textAlign: 'center', padding: '1.5rem' }}>
-                  <h4 style={{ color: '#059669', fontWeight: '700', marginBottom: '0.8rem', fontSize: '1.1rem' }}>🛒 Procurement</h4>
-                  <p style={{ color: '#6b7280', fontSize: '1rem', lineHeight: '1.6' }}>Purchase order verification, supplier invoice matching, expense validation</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Enhanced Demo Section */}
+        {/* Enhanced Demo Section - NOW SECOND */}
         <section id="features" style={{ ...sectionStyle, background: 'white' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -1936,6 +1428,325 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Try Demo CTA Section - NEW POSITION */}
+        <section style={{ 
+          background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
+          padding: '4rem 0',
+          color: 'white', 
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden'
+        }} className="section-padding try-demo-section">
+          {/* Background decoration */}
+          <div style={{
+            position: 'absolute',
+            top: '-50%',
+            left: '-20%',
+            width: '400px',
+            height: '400px',
+            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ ...sectionContainerStyle, position: 'relative', zIndex: 2 }} className="section-container">
+            <div style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              background: 'rgba(255,255,255,0.2)', 
+              color: 'white', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '2rem', 
+              fontSize: '0.875rem', 
+              fontWeight: '500', 
+              marginBottom: '2rem', 
+              gap: '0.5rem',
+              backdropFilter: 'blur(10px)'
+            }}>
+              🚀 Ready to Experience the Difference?
+            </div>
+            
+            <h2 style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: '700', 
+              marginBottom: '1rem',
+              lineHeight: '1.2'
+            }} className="section-title">
+              Try VeriDiff with Your Real Files
+            </h2>
+            <p style={{ 
+              fontSize: '1.2rem', 
+              color: '#bfdbfe', 
+              marginBottom: '2.5rem',
+              maxWidth: '600px',
+              margin: '0 auto 2.5rem auto',
+              lineHeight: '1.6'
+            }}>
+              See how VeriDiff handles your actual business data with complete privacy and precision
+            </p>
+            
+            <button onClick={handleTryDemo} style={{ 
+              background: 'white', 
+              color: '#2563eb', 
+              padding: '1.25rem 3rem', 
+              borderRadius: '0.75rem', 
+              fontWeight: '600', 
+              border: 'none', 
+              cursor: 'pointer',
+              fontSize: '1.2rem',
+              transition: 'all 0.3s',
+              boxShadow: '0 8px 32px rgba(255,255,255,0.3)',
+              minWidth: '320px'
+            }}>
+              🎯 Start Free Demo - No Signup Required
+            </button>
+            
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: '2rem',
+              color: '#bfdbfe', 
+              fontSize: '0.95rem',
+              marginTop: '2rem'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                whiteSpace: 'nowrap',
+                justifyContent: 'center'
+              }}>
+                <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
+                <span>Upload your real confidential files</span>
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                whiteSpace: 'nowrap',
+                justifyContent: 'center'
+              }}>
+                <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
+                <span>Files never leave your browser</span>
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                whiteSpace: 'nowrap',
+                justifyContent: 'center'
+              }}>
+                <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
+                <span>Test Excel comparisons for free</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Security Section - NOW FOURTH */}
+        <section style={{ 
+          background: 'linear-gradient(135deg, #0c4a6e, #1e40af, #7c3aed)',
+          padding: '6rem 0',
+          color: 'white',
+          position: 'relative',
+          overflow: 'hidden'
+        }} className="section-padding">
+          {/* Background decoration */}
+          <div style={{
+            position: 'absolute',
+            top: '-50%',
+            right: '-20%',
+            width: '800px',
+            height: '800px',
+            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={sectionContainerStyle} className="section-container">
+            <div style={{ textAlign: 'center', marginBottom: '4rem', position: 'relative', zIndex: 2 }}>
+              <div style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                background: 'rgba(255,255,255,0.2)', 
+                color: 'white', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '2rem', 
+                fontSize: '0.875rem', 
+                fontWeight: '500', 
+                marginBottom: '2rem', 
+                gap: '0.5rem',
+                backdropFilter: 'blur(10px)'
+              }}>
+                🛡️ Your Data Security is Our Foundation
+              </div>
+              
+              <h2 style={{ 
+                fontSize: '3rem', 
+                fontWeight: '700', 
+                marginBottom: '1.5rem', 
+                lineHeight: '1.2'
+              }} className="section-title">
+                Bank-Level Security
+                <span style={{ 
+                  display: 'block',
+                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
+                  WebkitBackgroundClip: 'text', 
+                  WebkitTextFillColor: 'transparent', 
+                  backgroundClip: 'text'
+                }}>
+                  Without the Complexity
+                </span>
+              </h2>
+              <p style={{ 
+                fontSize: '1.3rem', 
+                opacity: '0.9', 
+                lineHeight: '1.6',
+                maxWidth: '600px',
+                margin: '0 auto'
+              }}>
+                Perfect for confidential business data that can't be uploaded to third-party servers
+              </p>
+            </div>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '2.5rem', 
+              marginBottom: '4rem',
+              position: 'relative',
+              zIndex: 2
+            }} className="security-grid">
+              
+              <div className="security-feature-card" style={{
+                background: 'rgba(255,255,255,0.95)',
+                color: '#1f2937',
+                padding: '2.5rem',
+                borderRadius: '1.5rem',
+                textAlign: 'center',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  background: 'linear-gradient(135deg, #059669, #10b981)',
+                  borderRadius: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 2rem',
+                  fontSize: '2rem',
+                  boxShadow: '0 8px 24px rgba(5, 150, 105, 0.3)'
+                }}>
+                  🔒
+                </div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>
+                  100% Local Processing
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.7', fontSize: '1.05rem' }}>
+                  All file processing happens in your browser. Your sensitive business data never touches our servers or any cloud infrastructure.
+                </p>
+              </div>
+
+              <div className="security-feature-card" style={{
+                background: 'rgba(255,255,255,0.95)',
+                color: '#1f2937',
+                padding: '2.5rem',
+                borderRadius: '1.5rem',
+                textAlign: 'center',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                  borderRadius: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 2rem',
+                  fontSize: '2rem',
+                  boxShadow: '0 8px 24px rgba(37, 99, 235, 0.3)'
+                }}>
+                  📊
+                </div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>
+                  Try with Real Data
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.7', fontSize: '1.05rem' }}>
+                  Upload your actual confidential files to test VeriDiff's capabilities. No dummy data needed - your files stay completely private.
+                </p>
+              </div>
+
+              <div className="security-feature-card" style={{
+                background: 'rgba(255,255,255,0.95)',
+                color: '#1f2937',
+                padding: '2.5rem',
+                borderRadius: '1.5rem',
+                textAlign: 'center',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  background: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
+                  borderRadius: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 2rem',
+                  fontSize: '2rem',
+                  boxShadow: '0 8px 24px rgba(124, 58, 237, 0.3)'
+                }}>
+                  ⚡
+                </div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937' }}>
+                  GDPR Compliant by Design
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.7', fontSize: '1.05rem' }}>
+                  Zero data collection or sharing. Built for European privacy standards - perfect for teams handling sensitive information.
+                </p>
+              </div>
+            </div>
+
+            {/* Testimonial */}
+            <div style={{
+              background: 'rgba(255,255,255,0.15)',
+              padding: '2.5rem',
+              borderRadius: '1.5rem',
+              textAlign: 'center',
+              border: '1px solid rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(10px)',
+              position: 'relative',
+              zIndex: 2
+            }}>
+              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1.5rem', color: 'white' }}>
+                Trusted by Professional Teams Worldwide
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', marginBottom: '2rem', fontStyle: 'italic' }}>
+                "Finally, a file comparison tool we can use with client data without security concerns."
+              </p>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                gap: '1.5rem',
+                fontSize: '1rem',
+                color: 'rgba(255,255,255,0.9)'
+              }}>
+                <div>✓ Used by accounting firms</div>
+                <div>✓ Trusted by banks</div>
+                <div>✓ Preferred by consultants</div>
+                <div>✓ Relied on by analysts</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Simplified Pricing Section */}
         <section id="pricing" style={{ ...sectionStyle, background: '#f9fafb', paddingTop: '3rem' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
@@ -2230,7 +2041,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA Section */}
+        {/* Final CTA Section */}
         <section style={{ 
           padding: '6rem 0', 
           background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
@@ -2344,27 +2155,52 @@ export default function Home() {
             </div>
             
             <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '1.5rem',
+              display: 'flex', 
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: '2rem',
               color: '#bfdbfe', 
               fontSize: '0.95rem',
-              maxWidth: '800px',
+              maxWidth: '1000px',
               margin: '0 auto'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            }} className="cta-benefits">
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                whiteSpace: 'nowrap',
+                justifyContent: 'center'
+              }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
                 <span>No registration required for demo</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                whiteSpace: 'nowrap',
+                justifyContent: 'center'
+              }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
                 <span>Your files never leave your browser</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                whiteSpace: 'nowrap',
+                justifyContent: 'center'
+              }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
                 <span>30-day money-back guarantee</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                whiteSpace: 'nowrap',
+                justifyContent: 'center'
+              }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
                 <span>Cancel anytime, no commitments</span>
               </div>
