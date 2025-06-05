@@ -937,7 +937,7 @@ function ComparisonEngineHub() {
                   minWidth: '200px',
                   display: 'inline-block'
                 }}>
-                  🚀 View All Pricing
+                  View All Pricing
                 </Link>
               </div>
               
