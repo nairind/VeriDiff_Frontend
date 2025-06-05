@@ -1823,6 +1823,11 @@ function EnhancedPdfComparePage() {
   const [userTier, setUserTier] = useState('free');
   const [showPdfOptions, setShowPdfOptions] = useState(false);
   
+  // Feedback states
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const [hasUsedComparison, setHasUsedComparison] = useState(false);
+  
   // Navigation states for Quick Win #2
   const [selectedChangeIndex, setSelectedChangeIndex] = useState(0);
   const leftViewerRef = useRef(null);
@@ -1886,6 +1891,32 @@ function EnhancedPdfComparePage() {
       }, 1000);
     }
   }, [session]);
+
+  // Feedback popup on page leave
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // Only show feedback if user has used the comparison and hasn't given feedback yet
+      if (hasUsedComparison && !feedbackGiven && results) {
+        e.preventDefault();
+        setShowFeedbackModal(true);
+        return ''; // Required for some browsers
+      }
+    };
+
+    const handlePopState = () => {
+      if (hasUsedComparison && !feedbackGiven && results) {
+        setShowFeedbackModal(true);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [hasUsedComparison, feedbackGiven, results]);
 
   // Jump to change handler for Quick Win #2
   const handleJumpToChange = (change, index) => {
@@ -2481,6 +2512,7 @@ Using Advanced PDF.js Text Extraction
 
       console.log('✅ Enhanced comparison completed:', comparisonResult);
       setResults(comparisonResult);
+      setHasUsedComparison(true); // Mark that user has used the comparison feature
       
     } catch (err) {
       console.error('🚨 Enhanced PDF comparison error:', err);
@@ -2772,6 +2804,267 @@ Using Advanced PDF.js Text Extraction
     );
   };
 
+  // Feedback modal
+  const FeedbackModal = () => {
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState('');
+    const [hoveredStar, setHoveredStar] = useState(0);
+    const [submitting, setSubmitting] = useState(false);
+
+    if (!showFeedbackModal) return null;
+
+    const handleSubmitFeedback = async () => {
+      if (rating === 0) {
+        alert('Please select a rating before submitting.');
+        return;
+      }
+
+      setSubmitting(true);
+      
+      try {
+        // API call to save feedback
+        const feedbackData = {
+          rating: rating,
+          comment: comment.trim(),
+          page: 'pdf-comparison',
+          user_id: session?.user?.id,
+          timestamp: new Date().toISOString(),
+          comparison_results: {
+            total_changes: results?.differences_found,
+            similarity_score: results?.similarity_score,
+            files_compared: [file1?.name, file2?.name]
+          }
+        };
+
+        // TODO: Replace with your actual API endpoint
+        const response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(feedbackData)
+        });
+
+        if (response.ok) {
+          console.log('Feedback submitted successfully');
+        } else {
+          console.warn('Feedback submission failed, but continuing...');
+        }
+      } catch (error) {
+        console.warn('Feedback submission error:', error);
+        // Don't block user if feedback submission fails
+      }
+
+      setFeedbackGiven(true);
+      setShowFeedbackModal(false);
+      setSubmitting(false);
+    };
+
+    const handleSkipFeedback = () => {
+      setFeedbackGiven(true);
+      setShowFeedbackModal(false);
+    };
+
+    const StarRating = () => {
+      return (
+        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', margin: '16px 0' }}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              onMouseEnter={() => setHoveredStar(star)}
+              onMouseLeave={() => setHoveredStar(0)}
+              onClick={() => setRating(star)}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '2rem',
+                cursor: 'pointer',
+                color: (hoveredStar >= star || rating >= star) ? '#fbbf24' : '#d1d5db',
+                transition: 'color 0.2s',
+                padding: '4px'
+              }}
+            >
+              ⭐
+            </button>
+          ))}
+        </div>
+      );
+    };
+
+    return (
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }}
+        onClick={(e) => e.target === e.currentTarget && handleSkipFeedback()}
+      >
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '24px',
+          maxWidth: '450px',
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'auto'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <h3 style={{ 
+              margin: '0 0 8px 0', 
+              fontSize: '1.4rem', 
+              fontWeight: '600',
+              color: '#1f2937'
+            }}>
+              💬 How was your experience?
+            </h3>
+            <p style={{ 
+              margin: 0, 
+              fontSize: '0.95rem',
+              color: '#6b7280'
+            }}>
+              Help us improve our PDF comparison tool
+            </p>
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <p style={{ 
+              fontSize: '0.9rem', 
+              marginBottom: '8px',
+              color: '#374151',
+              fontWeight: '500'
+            }}>
+              Rate your experience:
+            </p>
+            <StarRating />
+            {rating > 0 && (
+              <p style={{
+                fontSize: '0.8rem',
+                color: '#6b7280',
+                margin: '8px 0 0 0'
+              }}>
+                {rating === 1 && "We're sorry to hear that. Your feedback helps us improve."}
+                {rating === 2 && "Thanks for the feedback. We'll work on making it better."}
+                {rating === 3 && "Good to know! Any suggestions for improvement?"}
+                {rating === 4 && "Great! We're glad you had a positive experience."}
+                {rating === 5 && "Awesome! We're thrilled you loved using our tool!"}
+              </p>
+            )}
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
+              Additional comments (optional):
+            </label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Tell us what you liked or how we can improve..."
+              style={{
+                width: '100%',
+                minHeight: '80px',
+                padding: '12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                resize: 'vertical',
+                fontFamily: 'inherit'
+              }}
+              maxLength={500}
+            />
+            <p style={{
+              fontSize: '0.75rem',
+              color: '#9ca3af',
+              margin: '4px 0 0 0',
+              textAlign: 'right'
+            }}>
+              {comment.length}/500 characters
+            </p>
+          </div>
+
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            justifyContent: 'space-between' 
+          }}>
+            <button
+              onClick={handleSkipFeedback}
+              style={{
+                background: '#f3f4f6',
+                color: '#6b7280',
+                border: 'none',
+                padding: '12px 20px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                flex: 1
+              }}
+            >
+              Skip
+            </button>
+            <button
+              onClick={handleSubmitFeedback}
+              disabled={rating === 0 || submitting}
+              style={{
+                background: rating === 0 || submitting ? '#9ca3af' : '#2563eb',
+                color: 'white',
+                border: 'none',
+                padding: '12px 20px',
+                borderRadius: '6px',
+                cursor: rating === 0 || submitting ? 'not-allowed' : 'pointer',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                flex: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              {submitting ? (
+                <>
+                  <span style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    border: '2px solid #ffffff40',
+                    borderTop: '2px solid #ffffff',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></span>
+                  Submitting...
+                </>
+              ) : (
+                '📤 Submit Feedback'
+              )}
+            </button>
+          </div>
+
+          <style jsx>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <AuthGuard>
       <div style={{
@@ -3018,6 +3311,7 @@ Using Advanced PDF.js Text Extraction
         </main>
 
         <PremiumModal />
+        <FeedbackModal />
         <Footer />
       </div>
     </AuthGuard>
