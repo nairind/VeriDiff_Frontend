@@ -147,139 +147,6 @@ function ComparisonEngineHub() {
             }}>
               {tool.icon}
             </div>
-
-            {/* FAQ Section with Schema */}
-            <div style={{
-              background: 'white',
-              borderRadius: '24px',
-              padding: '3rem',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-              border: '1px solid #e5e7eb',
-              marginBottom: '3rem'
-            }}>
-              <h2 style={{
-                fontSize: '2rem',
-                fontWeight: '700',
-                textAlign: 'center',
-                marginBottom: '2.5rem',
-                color: '#1f2937'
-              }}>
-                Frequently Asked Questions About File Comparison
-              </h2>
-              
-              <div style={{
-                maxWidth: '800px',
-                margin: '0 auto'
-              }}>
-                <div style={{ marginBottom: '2rem' }}>
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '600',
-                    color: '#1f2937',
-                    marginBottom: '0.75rem'
-                  }}>
-                    What file formats can VeriDiff compare?
-                  </h3>
-                  <p style={{
-                    color: '#4b5563',
-                    lineHeight: '1.6',
-                    fontSize: '1rem'
-                  }}>
-                    VeriDiff supports Excel (.xlsx, .xls), CSV files, PDF documents, JSON data files, XML configuration files, and plain text documents. Excel-to-Excel comparison is free forever, while cross-format comparison (Excel-to-CSV) and other formats require our premium plan at £19/month.
-                  </p>
-                </div>
-
-                <div style={{ marginBottom: '2rem' }}>
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '600',
-                    color: '#1f2937',
-                    marginBottom: '0.75rem'
-                  }}>
-                    How secure is VeriDiff's file comparison process?
-                  </h3>
-                  <p style={{
-                    color: '#4b5563',
-                    lineHeight: '1.6',
-                    fontSize: '1rem'
-                  }}>
-                    VeriDiff processes all files locally in your browser - your files never leave your device. Unlike cloud-based comparison tools that upload sensitive business data to remote servers, VeriDiff ensures complete privacy and security for confidential documents, financial data, and proprietary information.
-                  </p>
-                </div>
-
-                <div style={{ marginBottom: '2rem' }}>
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '600',
-                    color: '#1f2937',
-                    marginBottom: '0.75rem'
-                  }}>
-                    Can VeriDiff handle large Excel files and complex spreadsheets?
-                  </h3>
-                  <p style={{
-                    color: '#4b5563',
-                    lineHeight: '1.6',
-                    fontSize: '1rem'
-                  }}>
-                    Yes, VeriDiff is designed for professional use and can handle large Excel files with thousands of rows, complex formulas, and multiple worksheets. Our smart header mapping technology automatically matches columns even when header names differ between files, making it perfect for financial reconciliation and business data analysis.
-                  </p>
-                </div>
-
-                <div style={{ marginBottom: '2rem' }}>
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '600',
-                    color: '#1f2937',
-                    marginBottom: '0.75rem'
-                  }}>
-                    What's the difference between free Excel comparison and premium features?
-                  </h3>
-                  <p style={{
-                    color: '#4b5563',
-                    lineHeight: '1.6',
-                    fontSize: '1rem'
-                  }}>
-                    Free Excel comparison includes smart mapping, basic tolerance settings, and detailed difference reporting for Excel-to-Excel comparisons. Premium features (£19/month) add PDF document comparison, JSON/XML analysis, cross-format comparison (Excel-to-CSV), advanced tolerance controls, and priority support. This saves £312/year compared to buying separate comparison tools.
-                  </p>
-                </div>
-
-                <div style={{ marginBottom: '2rem' }}>
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '600',
-                    color: '#1f2937',
-                    marginBottom: '0.75rem'
-                  }}>
-                    How does VeriDiff compare to Excel's built-in compare feature?
-                  </h3>
-                  <p style={{
-                    color: '#4b5563',
-                    lineHeight: '1.6',
-                    fontSize: '1rem'
-                  }}>
-                    Excel's built-in compare is basic and only works within Excel. VeriDiff offers intelligent header mapping for mismatched column names, configurable tolerance settings for numerical differences, cross-format comparison capabilities, detailed reporting with exportable results, and the ability to compare files from different systems or departments.
-                  </p>
-                </div>
-
-                <div>
-                  <h3 style={{
-                    fontSize: '1.3rem',
-                    fontWeight: '600',
-                    color: '#1f2937',
-                    marginBottom: '0.75rem'
-                  }}>
-                    Which teams typically use VeriDiff's comparison tools?
-                  </h3>
-                  <p style={{
-                    color: '#4b5563',
-                    lineHeight: '1.6',
-                    fontSize: '1rem'
-                  }}>
-                    Finance teams use VeriDiff for budget variance analysis and financial reconciliation. Legal departments compare contract versions and compliance documents. IT teams analyze configuration files and technical documentation. Business analysts reconcile data from different systems. Any team that needs to identify differences between important business files benefits from VeriDiff's precision and security.
-                  </p>
-                </div>
-              </div>
-            </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                 <h3 style={{
@@ -692,64 +559,6 @@ function ComparisonEngineHub() {
             })}
           </script>
           
-            {/* Enhanced FAQ Schema */}
-            <script type="application/ld+json">
-              {JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "FAQPage",
-                "mainEntity": [
-                  {
-                    "@type": "Question",
-                    "name": "What file formats can VeriDiff compare?",
-                    "acceptedAnswer": {
-                      "@type": "Answer",
-                      "text": "VeriDiff supports Excel (.xlsx, .xls), CSV files, PDF documents, JSON data files, XML configuration files, and plain text documents. Excel-to-Excel comparison is free forever, while cross-format comparison and other formats require premium."
-                    }
-                  },
-                  {
-                    "@type": "Question", 
-                    "name": "How secure is VeriDiff's file comparison process?",
-                    "acceptedAnswer": {
-                      "@type": "Answer",
-                      "text": "VeriDiff processes all files locally in your browser - your files never leave your device. Unlike cloud-based tools, VeriDiff ensures complete privacy for confidential business documents."
-                    }
-                  },
-                  {
-                    "@type": "Question",
-                    "name": "Can VeriDiff handle large Excel files and complex spreadsheets?", 
-                    "acceptedAnswer": {
-                      "@type": "Answer",
-                      "text": "Yes, VeriDiff handles large Excel files with thousands of rows, complex formulas, and multiple worksheets. Smart header mapping automatically matches columns even when names differ."
-                    }
-                  },
-                  {
-                    "@type": "Question",
-                    "name": "What's the difference between free and premium features?",
-                    "acceptedAnswer": {
-                      "@type": "Answer",
-                      "text": "Free includes Excel-to-Excel comparison with smart mapping. Premium (£19/month) adds PDF, JSON/XML comparison, cross-format capabilities, and advanced controls - saving £312/year vs separate tools."
-                    }
-                  },
-                  {
-                    "@type": "Question",
-                    "name": "How does VeriDiff compare to Excel's built-in feature?",
-                    "acceptedAnswer": {
-                      "@type": "Answer", 
-                      "text": "VeriDiff offers intelligent header mapping, configurable tolerance settings, cross-format comparison, detailed reporting, and works with files from different systems - beyond Excel's basic capabilities."
-                    }
-                  },
-                  {
-                    "@type": "Question",
-                    "name": "Which teams typically use VeriDiff?",
-                    "acceptedAnswer": {
-                      "@type": "Answer",
-                      "text": "Finance teams for budget analysis, legal departments for contract comparison, IT teams for configuration analysis, and business analysts for data reconciliation from different systems."
-                    }
-                  }
-                ]
-              })}
-            </script>
-          
           <style>{mediaQueries}</style>
         </Head>
 
@@ -944,6 +753,7 @@ function ComparisonEngineHub() {
                 Professional-grade comparison tools designed for specific file types and business use cases
               </p>
             </div>
+
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -1152,6 +962,200 @@ function ComparisonEngineHub() {
             </div>
           </section>
         </main>
+
+        {/* FAQ Section - Moved to Bottom */}
+        <section style={{ background: 'white', padding: '4rem 0' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '24px',
+              padding: '3rem',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+              border: '1px solid #e5e7eb'
+            }}>
+              <h2 style={{
+                fontSize: '2rem',
+                fontWeight: '700',
+                textAlign: 'center',
+                marginBottom: '2.5rem',
+                color: '#1f2937'
+              }}>
+                Frequently Asked Questions About File Comparison
+              </h2>
+              
+              <div style={{
+                maxWidth: '800px',
+                margin: '0 auto'
+              }}>
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    What file formats can VeriDiff compare?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    VeriDiff supports Excel (.xlsx, .xls), CSV files, PDF documents, JSON data files, XML configuration files, and plain text documents. Excel-to-Excel comparison is free forever, while cross-format comparison (Excel-to-CSV) and other formats require our premium plan at £19/month.
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    How secure is VeriDiff's file comparison process?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    VeriDiff processes all files locally in your browser - your files never leave your device. Unlike cloud-based comparison tools that upload sensitive business data to remote servers, VeriDiff ensures complete privacy and security for confidential documents, financial data, and proprietary information.
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    Can VeriDiff handle large Excel files and complex spreadsheets?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    Yes, VeriDiff is designed for professional use and can handle large Excel files with thousands of rows, complex formulas, and multiple worksheets. Our smart header mapping technology automatically matches columns even when header names differ between files, making it perfect for financial reconciliation and business data analysis.
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    What's the difference between free Excel comparison and premium features?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    Free Excel comparison includes smart mapping, basic tolerance settings, and detailed difference reporting for Excel-to-Excel comparisons. Premium features (£19/month) add PDF document comparison, JSON/XML analysis, cross-format comparison (Excel-to-CSV), advanced tolerance controls, and priority support. This saves £312/year compared to buying separate comparison tools.
+                  </p>
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    How does VeriDiff compare to Excel's built-in compare feature?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    Excel's built-in compare is basic and only works within Excel. VeriDiff offers intelligent header mapping for mismatched column names, configurable tolerance settings for numerical differences, cross-format comparison capabilities, detailed reporting with exportable results, and the ability to compare files from different systems or departments.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>
+                    Which teams typically use VeriDiff's comparison tools?
+                  </h3>
+                  <p style={{
+                    color: '#4b5563',
+                    lineHeight: '1.6',
+                    fontSize: '1rem'
+                  }}>
+                    Finance teams use VeriDiff for budget variance analysis and financial reconciliation. Legal departments compare contract versions and compliance documents. IT teams analyze configuration files and technical documentation. Business analysts reconcile data from different systems. Any team that needs to identify differences between important business files benefits from VeriDiff's precision and security.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Enhanced FAQ Schema */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What file formats can VeriDiff compare?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "VeriDiff supports Excel (.xlsx, .xls), CSV files, PDF documents, JSON data files, XML configuration files, and plain text documents. Excel-to-Excel comparison is free forever, while cross-format comparison and other formats require premium."
+                }
+              },
+              {
+                "@type": "Question", 
+                "name": "How secure is VeriDiff's file comparison process?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "VeriDiff processes all files locally in your browser - your files never leave your device. Unlike cloud-based tools, VeriDiff ensures complete privacy for confidential business documents."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can VeriDiff handle large Excel files and complex spreadsheets?", 
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, VeriDiff handles large Excel files with thousands of rows, complex formulas, and multiple worksheets. Smart header mapping automatically matches columns even when names differ."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What's the difference between free and premium features?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Free includes Excel-to-Excel comparison with smart mapping. Premium (£19/month) adds PDF, JSON/XML comparison, cross-format capabilities, and advanced controls - saving £312/year vs separate tools."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does VeriDiff compare to Excel's built-in feature?",
+                "acceptedAnswer": {
+                  "@type": "Answer", 
+                  "text": "VeriDiff offers intelligent header mapping, configurable tolerance settings, cross-format comparison, detailed reporting, and works with files from different systems - beyond Excel's basic capabilities."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Which teams typically use VeriDiff?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Finance teams for budget analysis, legal departments for contract comparison, IT teams for configuration analysis, and business analysts for data reconciliation from different systems."
+                }
+              }
+            ]
+          })}
+        </script>
 
         <Footer />
       </div>
