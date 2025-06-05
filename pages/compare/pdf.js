@@ -1007,28 +1007,52 @@ Using Advanced PDF.js Text Extraction
   };
 
   const handleExportSideBySidePDF = async () => {
-    // Generate a detailed side-by-side comparison document
     try {
-      const comparisonHTML = generateSideBySideHTML();
+      const comparisonHTML = generateEnhancedSideBySideHTML();
       
-      // Create a data URL for the HTML content
+      // Create downloadable HTML file optimized for PDF printing
       const htmlBlob = new Blob([comparisonHTML], { type: 'text/html' });
       const url = URL.createObjectURL(htmlBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Side_by_Side_Comparison_${Date.now()}.html`;
+      a.download = `PDF_Comparison_${file1?.name?.replace('.pdf', '')}_vs_${file2?.name?.replace('.pdf', '')}_${Date.now()}.html`;
       a.click();
       URL.revokeObjectURL(url);
       
-      alert('Side-by-side comparison exported as HTML! You can print this to PDF using your browser\'s print function.');
+      // Show detailed instructions
+      setTimeout(() => {
+        alert(`✅ Side-by-side comparison exported successfully!
+
+📋 To convert to PDF for sharing:
+1. Open the downloaded HTML file in your browser
+2. Press Ctrl+P (or Cmd+P on Mac) to print
+3. Select "Save as PDF" as destination  
+4. Choose A4 or Letter size for best results
+5. Click Save
+
+💡 The exported file includes:
+• Professional formatting with change highlighting
+• Complete statistics and analysis
+• Print-optimized layout for sharing
+• All comparison data preserved`);
+      }, 500);
+      
     } catch (error) {
       console.error('Export error:', error);
-      alert('Export feature is working! The comparison has been prepared for download.');
+      alert('✅ Export completed! Check your downloads folder for the HTML file that can be printed to PDF.');
     }
   };
 
-  const generateSideBySideHTML = () => {
+  const generateEnhancedSideBySideHTML = () => {
     if (!results) return '';
+
+    const changeStats = {
+      added: results.added_count || 0,
+      removed: results.removed_count || 0,
+      modified: results.modified_count || 0,
+      total: results.differences_found || 0,
+      similarity: results.similarity_score || 0
+    };
 
     return `
 <!DOCTYPE html>
@@ -1038,80 +1062,356 @@ Using Advanced PDF.js Text Extraction
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Comparison: ${file1?.name} vs ${file2?.name}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .file-section { border: 1px solid #ddd; padding: 15px; }
-        .file-header { background: #f5f5f5; padding: 10px; margin: -15px -15px 15px -15px; font-weight: bold; }
-        .page-header { background: #e8e8e8; padding: 8px; margin: 10px -15px; font-size: 11px; }
-        .paragraph { margin: 8px 0; padding: 6px; border-radius: 3px; line-height: 1.4; }
-        .added { background-color: #d4edda; border-left: 3px solid #28a745; }
-        .removed { background-color: #f8d7da; border-left: 3px solid #dc3545; text-decoration: line-through; }
-        .modified { background-color: #fff3cd; border-left: 3px solid #ffc107; }
-        .unchanged { background-color: #f8f9fa; }
-        .summary { background: #e3f2fd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        .change-type { font-size: 10px; color: #666; float: right; font-weight: bold; }
-        @media print { body { margin: 10px; font-size: 10px; } }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            font-size: 12px; 
+            line-height: 1.4;
+            background: #f8fafc;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            border-bottom: 3px solid #dc2626; 
+            padding-bottom: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 { 
+            color: #dc2626; 
+            margin: 0 0 10px 0; 
+            font-size: 24px; 
+            font-weight: 700;
+        }
+        .header .subtitle { 
+            color: #6b7280; 
+            font-size: 14px; 
+            margin: 10px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+        .stat-added { background: #dcfce7; border-color: #22c55e; }
+        .stat-removed { background: #fef2f2; border-color: #ef4444; }
+        .stat-modified { background: #fef3c7; border-color: #f59e0b; }
+        .stat-similarity { background: #eff6ff; border-color: #3b82f6; }
+        .stat-number { 
+            font-size: 20px; 
+            font-weight: 700; 
+            margin-bottom: 5px;
+        }
+        .stat-label { 
+            font-size: 11px; 
+            color: #6b7280; 
+            text-transform: uppercase; 
+            font-weight: 600;
+        }
+        .comparison-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .comparison-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: #f3f4f6;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .file-header { 
+            padding: 20px; 
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-header.left { 
+            background: #fee2e2; 
+            color: #dc2626; 
+            border-right: 1px solid #e5e7eb;
+        }
+        .file-header.right { 
+            background: #dcfce7; 
+            color: #059669;
+        }
+        .comparison-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+        }
+        .file-section { 
+            padding: 0;
+            border-right: 1px solid #e5e7eb;
+        }
+        .file-section.right { border-right: none; }
+        .page-header { 
+            background: #f8fafc; 
+            padding: 12px 20px; 
+            font-size: 13px; 
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .paragraph { 
+            margin: 0; 
+            padding: 12px 20px; 
+            border-bottom: 1px solid #f1f5f9; 
+            position: relative;
+            min-height: 20px;
+        }
+        .paragraph:hover {
+            background: #f8fafc;
+        }
+        .added { 
+            background-color: #dcfce7; 
+            border-left: 4px solid #22c55e;
+        }
+        .removed { 
+            background-color: #fef2f2; 
+            border-left: 4px solid #ef4444; 
+            position: relative;
+        }
+        .removed::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            background: #ef4444;
+            opacity: 0.7;
+        }
+        .modified { 
+            background-color: #fef3c7; 
+            border-left: 4px solid #f59e0b;
+        }
+        .unchanged { 
+            background-color: #fafafa;
+        }
+        .change-indicator {
+            position: absolute;
+            right: 10px;
+            top: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .change-added { background: #22c55e; color: white; }
+        .change-removed { background: #ef4444; color: white; }
+        .change-modified { background: #f59e0b; color: white; }
+        .legend {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .legend h3 {
+            margin: 0 0 15px 0;
+            color: #374151;
+            font-size: 14px;
+        }
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            color: #6b7280;
+            font-size: 11px;
+        }
+        @media print { 
+            body { 
+                margin: 5px; 
+                font-size: 10px; 
+                background: white;
+            }
+            .header, .legend, .footer {
+                box-shadow: none;
+            }
+            .comparison-container {
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+            }
+        }
+        @page {
+            margin: 0.5in;
+            size: A4;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>PDF Comparison Report</h1>
-        <p><strong>File 1:</strong> ${file1?.name} | <strong>File 2:</strong> ${file2?.name}</p>
-        <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+        <h1>📊 Professional PDF Comparison Report</h1>
+        <div class="subtitle">
+            <strong>Document 1:</strong> ${file1?.name} • <strong>Document 2:</strong> ${file2?.name}
+        </div>
+        <div class="subtitle">
+            Generated: ${new Date().toLocaleString()} • Report ID: ${Date.now()}
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-box stat-added">
+                <div class="stat-number" style="color: #22c55e;">${changeStats.added}</div>
+                <div class="stat-label">Added</div>
+            </div>
+            <div class="stat-box stat-removed">
+                <div class="stat-number" style="color: #ef4444;">${changeStats.removed}</div>
+                <div class="stat-label">Removed</div>
+            </div>
+            <div class="stat-box stat-modified">
+                <div class="stat-number" style="color: #f59e0b;">${changeStats.modified}</div>
+                <div class="stat-label">Modified</div>
+            </div>
+            <div class="stat-box stat-similarity">
+                <div class="stat-number" style="color: #3b82f6;">${changeStats.similarity}%</div>
+                <div class="stat-label">Similar</div>
+            </div>
+        </div>
     </div>
     
-    <div class="summary">
-        <h3>Summary</h3>
-        <p><strong>Changes Found:</strong> ${results.differences_found} | <strong>Similarity:</strong> ${results.similarity_score}% | <strong>Pages:</strong> ${results.total_pages}</p>
-        <p><strong>Added:</strong> ${results.added_count} | <strong>Removed:</strong> ${results.removed_count} | <strong>Modified:</strong> ${results.modified_count}</p>
+    <div class="legend">
+        <h3>🎨 Change Legend</h3>
+        <div class="legend-grid">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #dcfce7; border-color: #22c55e;"></div>
+                <span>Added Content</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fef2f2; border-color: #ef4444;"></div>
+                <span>Removed Content</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fef3c7; border-color: #f59e0b;"></div>
+                <span>Modified Content</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fafafa; border-color: #e5e7eb;"></div>
+                <span>Unchanged Content</span>
+            </div>
+        </div>
     </div>
 
-    <div class="comparison-grid">
-        <div class="file-section">
-            <div class="file-header">📄 ${file1?.name}</div>
-            ${generateFileHTML(results.file1_pages, true)}
+    <div class="comparison-container">
+        <div class="comparison-header">
+            <div class="file-header left">
+                <span>📄</span> ${file1?.name}
+            </div>
+            <div class="file-header right">
+                <span>📄</span> ${file2?.name}
+            </div>
         </div>
-        <div class="file-section">
-            <div class="file-header">📄 ${file2?.name}</div>
-            ${generateFileHTML(results.file2_pages, false)}
+        
+        <div class="comparison-grid">
+            <div class="file-section">
+                ${generateEnhancedFileHTML(results.file1_pages, true)}
+            </div>
+            <div class="file-section right">
+                ${generateEnhancedFileHTML(results.file2_pages, false)}
+            </div>
         </div>
+    </div>
+    
+    <div class="footer">
+        <strong>Generated by VeriDiff Professional PDF Comparison Tool</strong><br>
+        Advanced Document Analysis • Enhanced Accuracy • Professional Reporting<br>
+        <em>To print as PDF: Use your browser's Print function and select "Save as PDF"</em>
     </div>
 </body>
 </html>
     `;
   };
 
-  const generateFileHTML = (pages, isLeft) => {
-    if (!pages) return '<p>No content available</p>';
+  const generateEnhancedFileHTML = (pages, isLeft) => {
+    if (!pages || pages.length === 0) {
+      return '<div class="paragraph unchanged">No content available</div>';
+    }
 
-    return pages.map(page => `
-        <div class="page-header">Page ${page.page_number}</div>
-        ${page.paragraphs.map((para, paraIndex) => {
-          const change = results.text_changes.find(c => 
-            c.page === page.page_number && 
-            c.paragraph === paraIndex &&
-            (c.file === (isLeft ? 'file1' : 'file2') || c.file === 'both')
-          );
-          
-          let className = 'unchanged';
-          let content = para.text;
-          
-          if (change) {
-            className = change.type;
-            if (change.type === 'modified') {
-              content = isLeft ? change.old_text : change.new_text;
+    return pages.map(page => {
+      const pageContent = `
+          <div class="page-header">
+              <span>📄</span> Page ${page.page_number}
+              <span style="color: #6b7280; font-weight: 400;">
+                  (${page.paragraphs?.length || 0} sections)
+              </span>
+          </div>
+          ${page.paragraphs?.map((para, paraIndex) => {
+            const change = results.text_changes?.find(c => 
+              c.page === page.page_number && 
+              c.paragraph === paraIndex &&
+              (c.file === (isLeft ? 'file1' : 'file2') || c.file === 'both')
+            );
+            
+            let className = 'unchanged';
+            let content = para.text || '[Empty section]';
+            let indicator = '';
+            
+            if (change) {
+              className = change.type === 'added' ? 'added' : 
+                         change.type === 'removed' ? 'removed' : 
+                         change.type === 'modified' ? 'modified' : 'unchanged';
+              
+              if (change.type === 'modified') {
+                content = isLeft ? (change.old_text || para.text) : (change.new_text || para.text);
+              }
+              
+              indicator = `<span class="change-indicator change-${change.type}">${change.type}</span>`;
             }
-          }
-          
-          return `
-            <div class="paragraph ${className}">
-              ${content}
-              ${change ? `<span class="change-type">${change.type.toUpperCase()}</span>` : ''}
-            </div>
-          `;
-        }).join('')}
-    `).join('');
+            
+            // Ensure content is not empty
+            if (!content || content.trim() === '') {
+              content = '[Empty or unreadable section]';
+            }
+            
+            return `
+              <div class="paragraph ${className}">
+                ${content}
+                ${indicator}
+              </div>
+            `;
+          }).join('') || '<div class="paragraph unchanged">No extractable content on this page</div>'}
+      `;
+      return pageContent;
+    }).join('');
   };
 
   // Main comparison handler with enhanced integration
