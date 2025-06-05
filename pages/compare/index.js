@@ -924,7 +924,7 @@ function ComparisonEngineHub() {
                 }}>
                   🎯 Start Free with Excel
                 </Link>
-                <Link href="/pricing" style={{
+                <Link href="/" style={{
                   background: 'white',
                   color: '#374151',
                   padding: '1rem 2rem',
@@ -937,7 +937,7 @@ function ComparisonEngineHub() {
                   minWidth: '200px',
                   display: 'inline-block'
                 }}>
-                  View All Pricing
+                  View Pricing
                 </Link>
               </div>
               
