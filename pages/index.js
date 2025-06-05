@@ -168,6 +168,7 @@ export default function Home() {
         align-items: center !important;
         text-align: center !important;
       }
+      #pricing { padding-top: 2rem !important; }
     }
     
     @media (max-width: 480px) {
@@ -1507,16 +1508,16 @@ export default function Home() {
                         fontFamily: 'inherit'
                       }} className="tolerance-grid">
                         <div>
-                          <strong>✓ Auto-mapped fields:</strong><br/>
-                          • Department → dept_name<br/>
+                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem', color: '#166534' }}>✓ Auto-mapped fields:</strong><br/>
+                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>• Department → dept_name<br/>
                           • Budgeted Amount → actual_amount<br/>  
-                          • Cost Centre Code → cost_centre
+                          • Cost Centre Code → cost_centre</span>
                         </div>
                         <div>
-                          <strong>📊 Variance Analysis (±3%):</strong><br/>
-                          • 127 departments within tolerance<br/>
+                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem', color: '#166534' }}>📊 Variance Analysis (±3%):</strong><br/>
+                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>• 127 departments within tolerance<br/>
                           • 15 over-budget flagged for review<br/>
-                          • 3 missing departments identified
+                          • 3 missing departments identified</span>
                         </div>
                       </div>
                     </div>
@@ -1682,31 +1683,34 @@ export default function Home() {
                           padding: '0.5rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
-                          borderRadius: '0.25rem' 
+                          borderRadius: '0.25rem',
+                          fontFamily: 'inherit'
                         }}>
-                          <strong>Payment Terms</strong><br/>
-                          30 days → 15 days<br/>
-                          <span style={{ fontSize: '0.75rem' }}>🔥 Critical change</span>
+                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>Payment Terms</strong><br/>
+                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>30 days → 15 days</span><br/>
+                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>🔥 Critical change</span>
                         </div>
                         <div style={{ 
                           padding: '0.5rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
-                          borderRadius: '0.25rem' 
+                          borderRadius: '0.25rem',
+                          fontFamily: 'inherit'
                         }}>
-                          <strong>Liability Cap</strong><br/>
-                          £100k → £250k<br/>
-                          <span style={{ fontSize: '0.75rem' }}>🔥 Major increase</span>
+                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>Liability Cap</strong><br/>
+                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>£100k → £250k</span><br/>
+                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>🔥 Major increase</span>
                         </div>
                         <div style={{ 
                           padding: '0.5rem', 
                           background: '#f0fdf4', 
                           color: '#16a34a', 
-                          borderRadius: '0.25rem' 
+                          borderRadius: '0.25rem',
+                          fontFamily: 'inherit'
                         }}>
-                          <strong>New Content</strong><br/>
-                          +1 page added<br/>
-                          <span style={{ fontSize: '0.75rem' }}>✅ Additional clauses</span>
+                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>New Content</strong><br/>
+                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>+1 page added</span><br/>
+                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>✅ Additional clauses</span>
                         </div>
                       </div>
                     </div>
@@ -1894,31 +1898,34 @@ export default function Home() {
                           padding: '0.5rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
-                          borderRadius: '0.25rem' 
+                          borderRadius: '0.25rem',
+                          fontFamily: 'inherit'
                         }}>
-                          <strong>Performance Settings</strong><br/>
-                          timeout: 5s → 10s<br/>
-                          <span style={{ fontSize: '0.75rem' }}>⚠️ Environment drift</span>
+                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>Performance Settings</strong><br/>
+                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>timeout: 5s → 10s</span><br/>
+                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>⚠️ Environment drift</span>
                         </div>
                         <div style={{ 
                           padding: '0.5rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
-                          borderRadius: '0.25rem' 
+                          borderRadius: '0.25rem',
+                          fontFamily: 'inherit'
                         }}>
-                          <strong>Debug Settings</strong><br/>
-                          debug: false → true<br/>
-                          <span style={{ fontSize: '0.75rem' }}>⚠️ Should be disabled</span>
+                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>Debug Settings</strong><br/>
+                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>debug: false → true</span><br/>
+                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>⚠️ Should be disabled</span>
                         </div>
                         <div style={{ 
                           padding: '0.5rem', 
                           background: '#fff7ed', 
                           color: '#ea580c', 
-                          borderRadius: '0.25rem' 
+                          borderRadius: '0.25rem',
+                          fontFamily: 'inherit'
                         }}>
-                          <strong>New Keys</strong><br/>
-                          +4 additional settings<br/>
-                          <span style={{ fontSize: '0.75rem' }}>📋 Needs review</span>
+                          <strong style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>New Keys</strong><br/>
+                          <span style={{ fontFamily: 'inherit', fontSize: '0.875rem' }}>+4 additional settings</span><br/>
+                          <span style={{ fontSize: '0.75rem', fontFamily: 'inherit' }}>📋 Needs review</span>
                         </div>
                       </div>
                     </div>
@@ -1930,7 +1937,7 @@ export default function Home() {
         </section>
 
         {/* Simplified Pricing Section */}
-        <section id="pricing" style={{ ...sectionStyle, background: '#f9fafb' }} className="section-padding">
+        <section id="pricing" style={{ ...sectionStyle, background: '#f9fafb', paddingTop: '3rem' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
               <h2 style={{ 
