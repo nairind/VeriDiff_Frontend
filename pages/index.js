@@ -162,7 +162,12 @@ export default function Home() {
       .tolerance-grid { grid-template-columns: 1fr !important; }
       .security-grid { grid-template-columns: 1fr !important; }
       .tab-slider { display: none !important; }
-      .cta-benefits { flex-direction: column !important; gap: 1rem !important; }
+      .cta-benefits { 
+        flex-direction: column !important; 
+        gap: 1.2rem !important; 
+        align-items: center !important;
+        text-align: center !important;
+      }
     }
     
     @media (max-width: 480px) {
@@ -171,6 +176,12 @@ export default function Home() {
       .section-container { padding: 0 15px !important; }
       .pricing-card { margin-bottom: 1rem !important; }
       .use-cases-grid { grid-template-columns: 1fr !important; }
+      .cta-benefits {
+        padding: 0 1rem !important;
+      }
+      .cta-benefits > div {
+        justify-content: center !important;
+      }
     }
     
     @media (min-width: 769px) and (max-width: 1024px) {
@@ -252,6 +263,15 @@ export default function Home() {
     
     .use-case-card:hover {
       transform: translateY(-3px);
+    }
+
+    /* Mobile-specific benefit item styling */
+    @media (max-width: 768px) {
+      .cta-benefits > div {
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 0.5rem !important;
+      }
     }
 
     /* Security section enhanced animations */
@@ -1475,7 +1495,7 @@ export default function Home() {
                       textAlign: 'center',
                       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                     }}>
-                      <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                      <p style={{ fontWeight: '500', marginBottom: '0.5rem', fontFamily: 'inherit' }}>
                         ✨ Smart Mapping & Tolerance Results:
                       </p>
                       <div style={{ 
@@ -1483,7 +1503,8 @@ export default function Home() {
                         display: 'grid', 
                         gridTemplateColumns: '1fr 1fr', 
                         gap: '1rem', 
-                        textAlign: 'left' 
+                        textAlign: 'left',
+                        fontFamily: 'inherit'
                       }} className="tolerance-grid">
                         <div>
                           <strong>✓ Auto-mapped fields:</strong><br/>
@@ -1646,7 +1667,7 @@ export default function Home() {
                       borderRadius: '0.5rem',
                       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                     }}>
-                      <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                      <p style={{ fontWeight: '500', marginBottom: '0.5rem', fontFamily: 'inherit' }}>
                         📄 Document Analysis Results:
                       </p>
                       <div style={{ 
@@ -1654,7 +1675,8 @@ export default function Home() {
                         display: 'grid', 
                         gridTemplateColumns: '1fr 1fr 1fr', 
                         gap: '1rem', 
-                        textAlign: 'center' 
+                        textAlign: 'center',
+                        fontFamily: 'inherit'
                       }} className="tolerance-grid">
                         <div style={{ 
                           padding: '0.5rem', 
@@ -1857,7 +1879,7 @@ export default function Home() {
                       borderRadius: '0.5rem',
                       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                     }}>
-                      <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                      <p style={{ fontWeight: '500', marginBottom: '0.5rem', fontFamily: 'inherit' }}>
                         🔧 Structure-Aware Configuration Analysis:
                       </p>
                       <div style={{ 
@@ -1865,7 +1887,8 @@ export default function Home() {
                         display: 'grid', 
                         gridTemplateColumns: '1fr 1fr 1fr', 
                         gap: '1rem', 
-                        textAlign: 'center' 
+                        textAlign: 'center',
+                        fontFamily: 'inherit'
                       }} className="tolerance-grid">
                         <div style={{ 
                           padding: '0.5rem', 
