@@ -6,7 +6,7 @@ import Footer from '../components/layout/Footer';
 
 export default function Home() {
   const { data: session } = useSession();
-  const [selectedDemo, setSelectedDemo] = useState('excel-csv');
+  const [selectedDemo, setSelectedDemo] = useState('spreadsheets');
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [pendingPremiumUpgrade, setPendingPremiumUpgrade] = useState(false);
@@ -20,8 +20,12 @@ export default function Home() {
     if (!isAutoCycling || isPaused) return;
 
     const interval = setInterval(() => {
-      setSelectedDemo(prev => prev === 'excel-csv' ? 'tolerance' : 'excel-csv');
-    }, 6000); // Change every 6 seconds
+      setSelectedDemo(prev => {
+        if (prev === 'spreadsheets') return 'documents';
+        if (prev === 'documents') return 'technical';
+        return 'spreadsheets';
+      });
+    }, 7000); // Change every 7 seconds for 3 demos
 
     return () => clearInterval(interval);
   }, [isAutoCycling, isPaused]);
@@ -160,6 +164,7 @@ export default function Home() {
       .demo-grid { grid-template-columns: 1fr !important; }
       .pricing-grid { grid-template-columns: 1fr !important; }
       .feature-grid { grid-template-columns: 1fr !important; }
+      .file-types-grid { grid-template-columns: 1fr !important; }
       .button-group { flex-direction: column !important; align-items: center !important; }
       .demo-tabs { flex-direction: column !important; gap: 0.5rem !important; }
       .tolerance-grid { grid-template-columns: 1fr !important; }
@@ -177,6 +182,7 @@ export default function Home() {
     @media (min-width: 769px) and (max-width: 1024px) {
       .pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
       .demo-grid { grid-template-columns: 1fr !important; }
+      .file-types-grid { grid-template-columns: repeat(2, 1fr) !important; }
     }
 
     /* Enhanced Demo Tab Animations */
@@ -200,7 +206,7 @@ export default function Home() {
     }
     
     .progress-indicator {
-      animation: progressFill 6s linear infinite;
+      animation: progressFill 7s linear infinite;
       animation-play-state: ${isAutoCycling && !isPaused ? 'running' : 'paused'};
     }
     
@@ -231,6 +237,15 @@ export default function Home() {
         opacity: 1;
         transform: translateY(0);
       }
+    }
+
+    .file-type-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .file-type-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
     }
   `;
 
@@ -293,7 +308,7 @@ export default function Home() {
               ✨ What you get with Premium:
             </h4>
             <ul style={{ margin: 0, paddingLeft: '20px', color: '#1e40af', fontSize: '0.9rem' }}>
-              <li>Excel-CSV, CSV-CSV, PDF comparisons</li>
+              <li>All file format comparisons (PDF, CSV, JSON, XML)</li>
               <li>Advanced tolerance & precision controls</li>
               <li>Priority support & feature requests</li>
               <li>30-day money-back guarantee</li>
@@ -348,8 +363,57 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>VeriDiff - What Excel Comparison Should Have Been</title>
-        <meta name="description" content="British-engineered smart file comparison with tolerance settings for business data. Local processing, enterprise-grade privacy." />
+        <title>VeriDiff - Secure File Comparison Platform for Business | Compare Excel, PDF, CSV Files Online</title>
+        <meta name="description" content="Professional file comparison tool with enterprise-grade privacy. Compare Excel, PDF, CSV, JSON, XML files locally in your browser. Smart mapping, tolerance settings, GDPR compliant. Try free - no signup required." />
+        <meta name="keywords" content="file comparison, document comparison, Excel comparison, PDF comparison, CSV comparison, data comparison tool, secure file diff, business file analysis, GDPR compliant" />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="VeriDiff - Secure File Comparison Platform for Business" />
+        <meta property="og:description" content="Compare Excel, PDF, CSV, and other business files with enterprise-grade privacy. Local processing, smart mapping, GDPR compliant." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://veridiff.com" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="VeriDiff - Secure File Comparison Platform" />
+        <meta name="twitter:description" content="Professional file comparison with local processing and smart mapping features." />
+        
+        {/* Schema.org structured data for software application */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "VeriDiff",
+            "description": "Secure file comparison platform for comparing Excel, PDF, CSV and other business files with local processing",
+            "url": "https://veridiff.com",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web Browser",
+            "offers": [
+              {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "GBP",
+                "name": "Free Plan",
+                "description": "Unlimited Excel-Excel comparisons"
+              },
+              {
+                "@type": "Offer", 
+                "price": "19",
+                "priceCurrency": "GBP",
+                "name": "Premium Plan",
+                "description": "All file format comparisons with advanced features"
+              }
+            ],
+            "featureList": [
+              "Excel file comparison",
+              "PDF document comparison", 
+              "CSV data comparison",
+              "JSON and XML comparison",
+              "Local browser processing",
+              "GDPR compliant",
+              "Smart header mapping",
+              "Tolerance settings"
+            ]
+          })}
+        </script>
+        
         <style>{mediaQueries}</style>
       </Head>
       
@@ -405,7 +469,7 @@ export default function Home() {
               lineHeight: '1.2', 
               color: '#1f2937' 
             }} className="hero-title">
-              What Excel Comparison
+              The Secure File Comparison
               <span style={{ 
                 display: 'block', 
                 background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
@@ -413,7 +477,7 @@ export default function Home() {
                 WebkitTextFillColor: 'transparent', 
                 backgroundClip: 'text' 
               }}>
-                Should Have Been
+                Platform Built for Business
               </span>
             </h1>
             
@@ -426,7 +490,7 @@ export default function Home() {
               marginRight: 'auto',
               lineHeight: '1.6'
             }} className="hero-subtitle">
-              British-engineered smart mapping + tolerance settings for business data that is never perfect. 
+              Compare Excel, PDF, CSV, and other business files with enterprise-grade privacy. 
               Unlike cloud-based tools that upload your sensitive data to remote servers, VeriDiff processes everything locally in your browser.
             </p>
 
@@ -515,6 +579,199 @@ export default function Home() {
               }}>
                 <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>⚡</span>
                 <span><strong>Smart mapping</strong> when columns don't match perfectly</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* File Types Section - NEW */}
+        <section style={{ ...sectionStyle, background: 'white' }} className="section-padding">
+          <div style={sectionContainerStyle} className="section-container">
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ 
+                fontSize: '2.25rem', 
+                fontWeight: '700', 
+                marginBottom: '1rem', 
+                color: '#1f2937' 
+              }} className="section-title">
+                Professional File Comparison for Every Business Need
+              </h2>
+              <p style={{ fontSize: '1.25rem', color: '#6b7280' }}>
+                From spreadsheets to documents to technical data formats - we handle them all
+              </p>
+            </div>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
+              gap: '2rem', 
+              marginBottom: '3rem' 
+            }} className="file-types-grid">
+              
+              {/* Spreadsheets */}
+              <div className="file-type-card" style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '2px solid #e5e7eb',
+                textAlign: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+              }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  background: 'linear-gradient(135deg, #059669, #10b981)',
+                  borderRadius: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem',
+                  fontSize: '2rem'
+                }}>
+                  📊
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>
+                  Business Spreadsheets
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+                  Smart mapping and tolerance settings for Excel, CSV, and OpenOffice files. Perfect for financial reconciliation and data validation.
+                </p>
+                <div style={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: '0.5rem', 
+                  justifyContent: 'center',
+                  marginBottom: '1.5rem'
+                }}>
+                  <span style={{ background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>Excel (.xlsx)</span>
+                  <span style={{ background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>CSV</span>
+                  <span style={{ background: '#f0fdf4', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>OpenOffice</span>
+                </div>
+                <div style={{ background: '#dcfce7', color: '#166534', padding: '8px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: '500' }}>
+                  ✅ Excel-Excel comparisons always FREE
+                </div>
+              </div>
+
+              {/* Documents */}
+              <div className="file-type-card" style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '2px solid #e5e7eb',
+                textAlign: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+              }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  background: 'linear-gradient(135deg, #dc2626, #ea580c)',
+                  borderRadius: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem',
+                  fontSize: '2rem'
+                }}>
+                  📄
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>
+                  Professional Documents
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+                  Advanced text extraction and page-by-page analysis for contracts, reports, and legal documents up to 100MB.
+                </p>
+                <div style={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: '0.5rem', 
+                  justifyContent: 'center',
+                  marginBottom: '1.5rem'
+                }}>
+                  <span style={{ background: '#fef2f2', color: '#dc2626', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>PDF</span>
+                  <span style={{ background: '#fef2f2', color: '#dc2626', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>Word (.docx)</span>
+                  <span style={{ background: '#fef2f2', color: '#dc2626', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>Text (.txt)</span>
+                </div>
+                <div style={{ background: '#fef3c7', color: '#92400e', padding: '8px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: '500' }}>
+                  💎 Premium Feature
+                </div>
+              </div>
+
+              {/* Technical Files */}
+              <div className="file-type-card" style={{
+                background: 'white',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '2px solid #e5e7eb',
+                textAlign: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+              }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                  borderRadius: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.5rem',
+                  fontSize: '2rem'
+                }}>
+                  🔧
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>
+                  Technical Data Formats
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+                  Format-specific analysis for developers and technical teams. Structure-aware comparison for complex data.
+                </p>
+                <div style={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: '0.5rem', 
+                  justifyContent: 'center',
+                  marginBottom: '1.5rem'
+                }}>
+                  <span style={{ background: '#eff6ff', color: '#2563eb', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>JSON</span>
+                  <span style={{ background: '#eff6ff', color: '#2563eb', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>XML</span>
+                  <span style={{ background: '#eff6ff', color: '#2563eb', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>YAML</span>
+                </div>
+                <div style={{ background: '#f0f9ff', color: '#0369a1', padding: '8px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: '500' }}>
+                  🔄 Text files FREE, advanced formats Premium
+                </div>
+              </div>
+            </div>
+
+            {/* Use Cases */}
+            <div style={{
+              background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+              padding: '2.5rem',
+              borderRadius: '1rem',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ fontSize: '1.75rem', fontWeight: '600', marginBottom: '2rem', color: '#1f2937', textAlign: 'center' }}>
+                Built for Professional Use Cases
+              </h3>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+                gap: '1.5rem'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <h4 style={{ color: '#059669', fontWeight: '600', marginBottom: '0.5rem' }}>💰 Financial Services</h4>
+                  <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>Budget vs. actual reconciliation, transaction validation, audit trail creation</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <h4 style={{ color: '#dc2626', fontWeight: '600', marginBottom: '0.5rem' }}>⚖️ Legal & Compliance</h4>
+                  <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>Contract versioning, policy updates, regulatory document comparison</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <h4 style={{ color: '#2563eb', fontWeight: '600', marginBottom: '0.5rem' }}>🔧 Technical Teams</h4>
+                  <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>Configuration management, API response validation, data migration checks</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <h4 style={{ color: '#7c3aed', fontWeight: '600', marginBottom: '0.5rem' }}>📊 Business Analysis</h4>
+                  <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>Report validation, data quality checks, multi-source data reconciliation</p>
+                </div>
               </div>
             </div>
           </div>
@@ -706,8 +963,9 @@ export default function Home() {
                     style={{
                       position: 'absolute',
                       top: '6px',
-                      left: selectedDemo === 'excel-csv' ? '6px' : 'calc(50% - 3px)',
-                      width: 'calc(50% - 6px)',
+                      left: selectedDemo === 'spreadsheets' ? '6px' : 
+                            selectedDemo === 'documents' ? '33.33%' : '66.66%',
+                      width: 'calc(33.33% - 4px)',
                       height: 'calc(100% - 12px)',
                       background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
                       borderRadius: '8px',
@@ -718,55 +976,81 @@ export default function Home() {
                   
                   {/* Tab Buttons */}
                   <button 
-                    onClick={() => handleDemoSelect('excel-csv')}
+                    onClick={() => handleDemoSelect('spreadsheets')}
                     onMouseEnter={() => setIsPaused(true)}
                     onMouseLeave={() => setIsPaused(false)}
                     className="demo-tab"
                     style={{ 
                       position: 'relative',
                       zIndex: 2,
-                      padding: '12px 24px',
+                      padding: '12px 16px',
                       borderRadius: '8px',
                       fontWeight: '600',
                       cursor: 'pointer',
                       border: 'none',
                       background: 'transparent',
-                      color: selectedDemo === 'excel-csv' ? 'white' : '#374151',
-                      minWidth: '180px',
+                      color: selectedDemo === 'spreadsheets' ? 'white' : '#374151',
+                      minWidth: '140px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '8px',
-                      fontSize: '0.95rem'
+                      gap: '6px',
+                      fontSize: '0.9rem'
                     }}
                   >
-                    📊 Excel ↔ CSV Mapping
+                    📊 Spreadsheets
                   </button>
                   
                   <button 
-                    onClick={() => handleDemoSelect('tolerance')}
+                    onClick={() => handleDemoSelect('documents')}
                     onMouseEnter={() => setIsPaused(true)}
                     onMouseLeave={() => setIsPaused(false)}
                     className="demo-tab"
                     style={{ 
                       position: 'relative',
                       zIndex: 2,
-                      padding: '12px 24px',
+                      padding: '12px 16px',
                       borderRadius: '8px',
                       fontWeight: '600',
                       cursor: 'pointer',
                       border: 'none',
                       background: 'transparent',
-                      color: selectedDemo === 'tolerance' ? 'white' : '#374151',
-                      minWidth: '180px',
+                      color: selectedDemo === 'documents' ? 'white' : '#374151',
+                      minWidth: '140px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '8px',
-                      fontSize: '0.95rem'
+                      gap: '6px',
+                      fontSize: '0.9rem'
                     }}
                   >
-                    💰 Financial Tolerance
+                    📄 Documents
+                  </button>
+
+                  <button 
+                    onClick={() => handleDemoSelect('technical')}
+                    onMouseEnter={() => setIsPaused(true)}
+                    onMouseLeave={() => setIsPaused(false)}
+                    className="demo-tab"
+                    style={{ 
+                      position: 'relative',
+                      zIndex: 2,
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      border: 'none',
+                      background: 'transparent',
+                      color: selectedDemo === 'technical' ? 'white' : '#374151',
+                      minWidth: '140px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    🔧 Technical
                   </button>
                 </div>
 
@@ -822,7 +1106,7 @@ export default function Home() {
 
               {/* Demo Content with Animation */}
               <div className="demo-content" key={selectedDemo}>
-                {selectedDemo === 'excel-csv' && (
+                {selectedDemo === 'spreadsheets' && (
                   <>
                     <div style={{ 
                       display: 'grid', 
@@ -841,7 +1125,7 @@ export default function Home() {
                           marginBottom: '1rem', 
                           color: '#1f2937' 
                         }}>
-                          📊 Accounting_Export_Q4.xlsx
+                          📊 Budget_2024_Final.xlsx
                         </h4>
                         <div style={{ 
                           display: 'flex', 
@@ -858,7 +1142,7 @@ export default function Home() {
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>Client Company Name</span>
+                            <span>Department</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
                           </div>
                           <div style={{ 
@@ -871,8 +1155,8 @@ export default function Home() {
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>Invoice Total Amount</span>
-                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>GBP CURRENCY</span>
+                            <span>Budgeted Amount (£)</span>
+                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>CURRENCY</span>
                           </div>
                           <div style={{ 
                             padding: '0.5rem', 
@@ -884,20 +1168,7 @@ export default function Home() {
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>Payment Due Date</span>
-                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>DATE</span>
-                          </div>
-                          <div style={{ 
-                            padding: '0.5rem', 
-                            borderRadius: '0.25rem', 
-                            fontSize: '0.875rem', 
-                            background: '#ecfdf5', 
-                            color: '#065f46', 
-                            display: 'flex', 
-                            justifyContent: 'space-between',
-                            flexWrap: 'wrap'
-                          }}>
-                            <span>Account Reference</span>
+                            <span>Cost Centre Code</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
                           </div>
                         </div>
@@ -909,7 +1180,7 @@ export default function Home() {
                           fontSize: '0.75rem', 
                           color: '#166534' 
                         }}>
-                          <strong>1,247 rows</strong> • Excel format with formulas
+                          <strong>145 departments</strong> • Excel with formulas
                         </div>
                       </div>
 
@@ -924,7 +1195,7 @@ export default function Home() {
                           marginBottom: '1rem', 
                           color: '#1f2937' 
                         }}>
-                          📄 payment_system_export.csv
+                          📄 actual_spend_q1.csv
                         </h4>
                         <div style={{ 
                           display: 'flex', 
@@ -941,7 +1212,7 @@ export default function Home() {
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>customer</span>
+                            <span>dept_name</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
                           </div>
                           <div style={{ 
@@ -954,7 +1225,7 @@ export default function Home() {
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>amount</span>
+                            <span>actual_amount</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>NUMBER</span>
                           </div>
                           <div style={{ 
@@ -967,20 +1238,7 @@ export default function Home() {
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>due_date</span>
-                            <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
-                          </div>
-                          <div style={{ 
-                            padding: '0.5rem', 
-                            borderRadius: '0.25rem', 
-                            fontSize: '0.875rem', 
-                            background: '#eff6ff', 
-                            color: '#1e40af', 
-                            display: 'flex', 
-                            justifyContent: 'space-between',
-                            flexWrap: 'wrap'
-                          }}>
-                            <span>ref_code</span>
+                            <span>cost_centre</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
                           </div>
                         </div>
@@ -992,7 +1250,7 @@ export default function Home() {
                           fontSize: '0.75rem', 
                           color: '#1e40af' 
                         }}>
-                          <strong>1,193 rows</strong> • CSV from payment processor
+                          <strong>142 departments</strong> • CSV export from finance system
                         </div>
                       </div>
                     </div>
@@ -1005,7 +1263,7 @@ export default function Home() {
                       textAlign: 'center' 
                     }}>
                       <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
-                        ✨ Smart Mapping Results:
+                        ✨ Smart Mapping & Tolerance Results:
                       </p>
                       <div style={{ 
                         fontSize: '0.875rem', 
@@ -1016,22 +1274,22 @@ export default function Home() {
                       }} className="tolerance-grid">
                         <div>
                           <strong>✓ Auto-mapped fields:</strong><br/>
-                          • Client Company Name → customer<br/>
-                          • Invoice Total Amount → amount<br/>  
-                          • Payment Due Date → due_date
+                          • Department → dept_name<br/>
+                          • Budgeted Amount → actual_amount<br/>  
+                          • Cost Centre Code → cost_centre
                         </div>
                         <div>
-                          <strong>📊 Match Summary:</strong><br/>
-                          • 1,089 perfect matches<br/>
-                          • 54 tolerance matches<br/>
-                          • 50 discrepancies flagged
+                          <strong>📊 Variance Analysis (±3%):</strong><br/>
+                          • 127 departments within tolerance<br/>
+                          • 15 over-budget flagged for review<br/>
+                          • 3 missing departments identified
                         </div>
                       </div>
                     </div>
                   </>
                 )}
 
-                {selectedDemo === 'tolerance' && (
+                {selectedDemo === 'documents' && (
                   <>
                     <div style={{ 
                       display: 'grid', 
@@ -1050,7 +1308,7 @@ export default function Home() {
                           marginBottom: '1rem', 
                           color: '#1f2937' 
                         }}>
-                          💰 Budget_2024.xlsx
+                          📄 Service_Agreement_v2.1.pdf
                         </h4>
                         <div style={{ 
                           display: 'flex', 
@@ -1061,40 +1319,40 @@ export default function Home() {
                             padding: '0.5rem', 
                             borderRadius: '0.25rem', 
                             fontSize: '0.875rem', 
-                            background: '#fef3c7', 
-                            color: '#92400e', 
+                            background: '#fef2f2', 
+                            color: '#991b1b', 
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>Marketing Budget</span>
-                            <span style={{ fontWeight: 'bold' }}>GBP 85,000</span>
+                            <span>Pages</span>
+                            <span style={{ fontWeight: 'bold' }}>23 pages</span>
                           </div>
                           <div style={{ 
                             padding: '0.5rem', 
                             borderRadius: '0.25rem', 
                             fontSize: '0.875rem', 
-                            background: '#fef3c7', 
-                            color: '#92400e', 
+                            background: '#fef2f2', 
+                            color: '#991b1b', 
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>Operations Budget</span>
-                            <span style={{ fontWeight: 'bold' }}>GBP 120,000</span>
+                            <span>Payment Terms</span>
+                            <span style={{ fontWeight: 'bold' }}>Net 30 days</span>
                           </div>
                           <div style={{ 
                             padding: '0.5rem', 
                             borderRadius: '0.25rem', 
                             fontSize: '0.875rem', 
-                            background: '#fef3c7', 
-                            color: '#92400e', 
+                            background: '#fef2f2', 
+                            color: '#991b1b', 
                             display: 'flex', 
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>Software Licenses</span>
-                            <span style={{ fontWeight: 'bold' }}>GBP 45,000</span>
+                            <span>Liability Cap</span>
+                            <span style={{ fontWeight: 'bold' }}>£100,000</span>
                           </div>
                         </div>
                       </div>
@@ -1110,7 +1368,7 @@ export default function Home() {
                           marginBottom: '1rem', 
                           color: '#1f2937' 
                         }}>
-                          📈 Actual_Spend_Q1.csv
+                          📄 Service_Agreement_v2.2.pdf
                         </h4>
                         <div style={{ 
                           display: 'flex', 
@@ -1127,8 +1385,8 @@ export default function Home() {
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>Marketing Actual</span>
-                            <span style={{ fontWeight: 'bold' }}>GBP 87,230</span>
+                            <span>Pages</span>
+                            <span style={{ fontWeight: 'bold' }}>24 pages</span>
                           </div>
                           <div style={{ 
                             padding: '0.5rem', 
@@ -1140,8 +1398,8 @@ export default function Home() {
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>Operations Actual</span>
-                            <span style={{ fontWeight: 'bold' }}>GBP 118,450</span>
+                            <span>Payment Terms</span>
+                            <span style={{ fontWeight: 'bold' }}>Net 15 days</span>
                           </div>
                           <div style={{ 
                             padding: '0.5rem', 
@@ -1153,21 +1411,21 @@ export default function Home() {
                             justifyContent: 'space-between',
                             flexWrap: 'wrap'
                           }}>
-                            <span>Software Actual</span>
-                            <span style={{ fontWeight: 'bold' }}>GBP 46,180</span>
+                            <span>Liability Cap</span>
+                            <span style={{ fontWeight: 'bold' }}>£250,000</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     <div style={{ 
-                      background: '#dcfce7', 
-                      color: '#166534', 
+                      background: '#fef3c7', 
+                      color: '#92400e', 
                       padding: '1rem', 
                       borderRadius: '0.5rem' 
                     }}>
                       <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
-                        💡 Tolerance Analysis (±3% acceptable variance):
+                        📄 Document Analysis Results:
                       </p>
                       <div style={{ 
                         fontSize: '0.875rem', 
@@ -1182,9 +1440,19 @@ export default function Home() {
                           color: '#dc2626', 
                           borderRadius: '0.25rem' 
                         }}>
-                          <strong>Marketing</strong><br/>
-                          +2.6% over budget<br/>
-                          <span style={{ fontSize: '0.75rem' }}>❌ Outside tolerance</span>
+                          <strong>Payment Terms</strong><br/>
+                          30 days → 15 days<br/>
+                          <span style={{ fontSize: '0.75rem' }}>🔥 Critical change</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          background: '#fef2f2', 
+                          color: '#dc2626', 
+                          borderRadius: '0.25rem' 
+                        }}>
+                          <strong>Liability Cap</strong><br/>
+                          £100k → £250k<br/>
+                          <span style={{ fontSize: '0.75rem' }}>🔥 Major increase</span>
                         </div>
                         <div style={{ 
                           padding: '0.5rem', 
@@ -1192,19 +1460,209 @@ export default function Home() {
                           color: '#16a34a', 
                           borderRadius: '0.25rem' 
                         }}>
-                          <strong>Operations</strong><br/>
-                          -1.3% under budget<br/>
-                          <span style={{ fontSize: '0.75rem' }}>✅ Within tolerance</span>
+                          <strong>New Content</strong><br/>
+                          +1 page added<br/>
+                          <span style={{ fontSize: '0.75rem' }}>✅ Additional clauses</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {selectedDemo === 'technical' && (
+                  <>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr', 
+                      gap: '2rem', 
+                      marginBottom: '1.5rem' 
+                    }} className="demo-grid">
+                      <div style={{ 
+                        background: 'white', 
+                        padding: '1.5rem', 
+                        borderRadius: '0.5rem', 
+                        border: '1px solid #e5e7eb' 
+                      }}>
+                        <h4 style={{ 
+                          fontWeight: '600', 
+                          marginBottom: '1rem', 
+                          color: '#1f2937' 
+                        }}>
+                          🔧 api_config_prod.json
+                        </h4>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '0.5rem' 
+                        }}>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#f3e8ff', 
+                            color: '#6b21a8', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>"timeout"</span>
+                            <span style={{ fontWeight: 'bold' }}>5000</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#f3e8ff', 
+                            color: '#6b21a8', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>"max_retries"</span>
+                            <span style={{ fontWeight: 'bold' }}>3</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#f3e8ff', 
+                            color: '#6b21a8', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>"debug_mode"</span>
+                            <span style={{ fontWeight: 'bold' }}>false</span>
+                          </div>
+                        </div>
+                        <div style={{ 
+                          marginTop: '1rem', 
+                          padding: '0.75rem', 
+                          background: '#faf5ff', 
+                          borderRadius: '0.5rem', 
+                          fontSize: '0.75rem', 
+                          color: '#6b21a8' 
+                        }}>
+                          <strong>Production environment</strong> • 47 configuration keys
+                        </div>
+                      </div>
+
+                      <div style={{ 
+                        background: 'white', 
+                        padding: '1.5rem', 
+                        borderRadius: '0.5rem', 
+                        border: '1px solid #e5e7eb' 
+                      }}>
+                        <h4 style={{ 
+                          fontWeight: '600', 
+                          marginBottom: '1rem', 
+                          color: '#1f2937' 
+                        }}>
+                          🔧 api_config_staging.json
+                        </h4>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          gap: '0.5rem' 
+                        }}>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#eff6ff', 
+                            color: '#1e40af', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>"timeout"</span>
+                            <span style={{ fontWeight: 'bold' }}>10000</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#eff6ff', 
+                            color: '#1e40af', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>"max_retries"</span>
+                            <span style={{ fontWeight: 'bold' }}>5</span>
+                          </div>
+                          <div style={{ 
+                            padding: '0.5rem', 
+                            borderRadius: '0.25rem', 
+                            fontSize: '0.875rem', 
+                            background: '#eff6ff', 
+                            color: '#1e40af', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap'
+                          }}>
+                            <span>"debug_mode"</span>
+                            <span style={{ fontWeight: 'bold' }}>true</span>
+                          </div>
+                        </div>
+                        <div style={{ 
+                          marginTop: '1rem', 
+                          padding: '0.75rem', 
+                          background: '#eff6ff', 
+                          borderRadius: '0.5rem', 
+                          fontSize: '0.75rem', 
+                          color: '#1e40af' 
+                        }}>
+                          <strong>Staging environment</strong> • 51 configuration keys
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ 
+                      background: '#eff6ff', 
+                      color: '#1e40af', 
+                      padding: '1rem', 
+                      borderRadius: '0.5rem' 
+                    }}>
+                      <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+                        🔧 Structure-Aware Configuration Analysis:
+                      </p>
+                      <div style={{ 
+                        fontSize: '0.875rem', 
+                        display: 'grid', 
+                        gridTemplateColumns: '1fr 1fr 1fr', 
+                        gap: '1rem', 
+                        textAlign: 'center' 
+                      }} className="tolerance-grid">
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          background: '#fef2f2', 
+                          color: '#dc2626', 
+                          borderRadius: '0.25rem' 
+                        }}>
+                          <strong>Performance Settings</strong><br/>
+                          timeout: 5s → 10s<br/>
+                          <span style={{ fontSize: '0.75rem' }}>⚠️ Environment drift</span>
                         </div>
                         <div style={{ 
                           padding: '0.5rem', 
-                          background: '#f0fdf4', 
-                          color: '#16a34a', 
+                          background: '#fef2f2', 
+                          color: '#dc2626', 
                           borderRadius: '0.25rem' 
                         }}>
-                          <strong>Software</strong><br/>
-                          +2.6% over budget<br/>
-                          <span style={{ fontSize: '0.75rem' }}>✅ Within tolerance</span>
+                          <strong>Debug Settings</strong><br/>
+                          debug: false → true<br/>
+                          <span style={{ fontSize: '0.75rem' }}>⚠️ Should be disabled</span>
+                        </div>
+                        <div style={{ 
+                          padding: '0.5rem', 
+                          background: '#fff7ed', 
+                          color: '#ea580c', 
+                          borderRadius: '0.25rem' 
+                        }}>
+                          <strong>New Keys</strong><br/>
+                          +4 additional settings<br/>
+                          <span style={{ fontSize: '0.75rem' }}>📋 Needs review</span>
                         </div>
                       </div>
                     </div>
@@ -1215,7 +1673,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ✅ UPDATED Pricing Section - Simplified Free vs Premium */}
+        {/* Simplified Pricing Section */}
         <section id="pricing" style={{ ...sectionStyle, background: '#f9fafb' }} className="section-padding">
           <div style={sectionContainerStyle} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -1228,7 +1686,7 @@ export default function Home() {
                 Simple, Transparent Pricing
               </h2>
               <p style={{ fontSize: '1.25rem', color: '#6b7280' }}>
-                Excel-Excel comparisons free forever • Premium unlocks all formats
+                Start free with Excel comparisons • Upgrade for all file formats
               </p>
             </div>
 
@@ -1269,7 +1727,7 @@ export default function Home() {
                   Free
                 </h3>
                 <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
-                  Perfect for Excel comparisons
+                  Perfect for spreadsheet comparisons
                 </p>
                 <div style={{ marginBottom: '2rem' }}>
                   <span style={{ 
@@ -1368,7 +1826,7 @@ export default function Home() {
                   textAlign: 'center',
                   marginBottom: '1.5rem'
                 }}>
-                  All Formats + Advanced Features
+                  All File Formats + Advanced Features
                 </div>
                 <h3 style={{ 
                   fontSize: '1.75rem', 
@@ -1420,7 +1878,7 @@ export default function Home() {
                     fontSize: '1rem'
                   }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.2rem' }}>📄</span>
-                    <span>PDF, JSON, XML, TXT comparisons</span>
+                    <span>PDF, JSON, XML, Text file comparisons</span>
                   </div>
                   <div style={{ 
                     display: 'flex', 
@@ -1509,14 +1967,14 @@ export default function Home() {
               fontWeight: '700', 
               marginBottom: '1rem' 
             }} className="section-title">
-              Ready to Stop Wrestling with Data?
+              Ready to Transform Your File Comparison Workflow?
             </h2>
             <p style={{ 
               fontSize: '1.25rem', 
               color: '#bfdbfe', 
               marginBottom: '2rem' 
             }}>
-              Join forward-thinking professionals using business-intelligent data reconciliation - with complete privacy
+              Join forward-thinking professionals using secure, intelligent file comparison with complete privacy
             </p>
             
             <div style={{ 
@@ -1562,7 +2020,7 @@ export default function Home() {
 
         <Footer />
 
-        {/* ✅ NEW: Registration Modal */}
+        {/* Registration Modal */}
         <RegistrationModal />
       </div>
     </>
