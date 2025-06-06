@@ -1349,7 +1349,7 @@ function ComparePage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>Used by 500+ Finance Teams</span>
+                <span>Enterprise-Grade Security</span>
               </div>
             </div>
           </div>
@@ -1370,7 +1370,7 @@ function ComparePage() {
             
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '25px',
               marginBottom: '30px'
             }} className="spreadsheet-benefits">
