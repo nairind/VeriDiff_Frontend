@@ -29,6 +29,10 @@ const Header = () => {
     window.location.href = '/compare';
   };
 
+  const handleContact = () => {
+    window.location.href = 'mailto:sales@veridiff.com';
+  };
+
   const scrollToSection = (sectionId) => {
     // If we're on the homepage, scroll to section
     if (window.location.pathname === '/') {
@@ -139,6 +143,9 @@ const Header = () => {
               <a href="/faq" style={navLinkStyle}>
                 FAQ
               </a>
+              <button onClick={handleContact} style={navButtonStyle}>
+                Contact
+              </button>
               
               {session ? (
                 <div style={{ position: 'relative' }}>
@@ -292,6 +299,9 @@ const Header = () => {
                 <a href="/faq" style={{ ...navLinkStyle, textAlign: 'left' }}>
                   FAQ
                 </a>
+                <button onClick={handleContact} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                  Contact
+                </button>
                 {session ? (
                   <>
                     <button onClick={handleDashboard} style={{ ...navButtonStyle, textAlign: 'left' }}>
