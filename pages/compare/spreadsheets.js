@@ -1450,6 +1450,399 @@ function ComparePage() {
             </div>
           </div>
 
+          {/* File Type Selection - NOW POSITIONED AFTER USE CASES */}
+          <div style={sectionStyle} className="section-padding">
+            <h2 style={sectionTitleStyle} className="section-title">
+              Choose Your Comparison Type
+            </h2>
+            <p style={{
+              fontSize: '1.1rem',
+              color: '#6b7280',
+              textAlign: 'center',
+              margin: '0 0 35px 0'
+            }}>
+              Excel-Excel is free for all signed-in users • Excel-CSV requires premium
+            </p>
+            
+            <div style={fileTypeGridStyle} className="file-type-grid">
+              {[
+                { value: 'excel', label: 'Excel–Excel', featured: false, free: true },
+                { value: 'excel_csv', label: 'Excel–CSV', featured: true, free: false },
+                { value: 'csv', label: 'CSV–CSV', featured: false, free: false }
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '15px',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    background: option.free
+                      ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                      : option.featured 
+                        ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+                        : 'white',
+                    border: option.free
+                      ? '2px solid #22c55e'
+                      : option.featured 
+                        ? '2px solid #f59e0b' 
+                        : fileType === option.value 
+                          ? '2px solid #2563eb' 
+                          : '2px solid #e5e7eb',
+                    fontWeight: option.featured ? '600' : '500',
+                    fontSize: '1rem',
+                    minHeight: '60px'
+                  }}
+                  onMouseOver={(e) => {
+                    if (fileType !== option.value) {
+                      e.target.style.borderColor = option.free ? '#16a34a' : '#2563eb';
+                      e.target.style.background = option.free 
+                        ? 'linear-gradient(135deg, #d1fae5, #bbf7d0)'
+                        : option.featured 
+                          ? 'linear-gradient(135deg, #fde68a, #fcd34d)' 
+                          : '#f0f4ff';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (fileType !== option.value) {
+                      e.target.style.borderColor = option.free 
+                        ? '#22c55e'
+                        : option.featured 
+                          ? '#f59e0b' 
+                          : '#e5e7eb';
+                      e.target.style.background = option.free
+                        ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                        : option.featured 
+                          ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+                          : 'white';
+                      e.target.style.transform = 'none';
+                    }
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="fileType"
+                    value={option.value}
+                    checked={fileType === option.value}
+                    onChange={handleFileTypeChange}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      accentColor: option.free ? '#22c55e' : '#2563eb'
+                    }}
+                  />
+                  <span style={{ flex: 1 }}>
+                    {option.label}
+                    {option.free && (
+                      <span style={{
+                        marginLeft: '8px',
+                        fontSize: '0.75em',
+                        background: '#dcfce7',
+                        color: '#166534',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        fontWeight: '600'
+                      }}>
+                        FREE for signed-in users ✨
+                      </span>
+                    )}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* File Upload Section - NOW POSITIONED AFTER COMPARISON TYPE */}
+          {(fileType === 'excel' || userTier === 'premium') && (
+            <div style={sectionStyle} className="section-padding">
+              <h2 style={sectionTitleStyle} className="section-title">
+                Upload Your Spreadsheet Files
+              </h2>
+              <p style={{
+                fontSize: '1.1rem',
+                color: '#6b7280',
+                textAlign: 'center',
+                margin: '0 0 35px 0'
+              }}>
+                {fileType === 'excel' 
+                  ? '🎉 Free Excel comparison for signed-in users!' 
+                  : '✅ Premium format - advanced comparison features'
+                }
+              </p>
+
+              <div style={fileUploadGridStyle} className="file-upload-grid">
+                {/* File 1 Upload */}
+                <div style={{
+                  background: fileType === 'excel'
+                    ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                    : fileType === 'excel_csv' 
+                      ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
+                      : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                  padding: '25px',
+                  borderRadius: '16px',
+                  border: fileType === 'excel'
+                    ? '2px solid #22c55e'
+                    : fileType === 'excel_csv' 
+                      ? '2px solid #f59e0b' 
+                      : '2px solid #0ea5e9',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '15px'
+                  }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: fileType === 'excel'
+                        ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                        : fileType === 'excel_csv' 
+                          ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
+                          : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '1.2rem'
+                    }}>
+                      1
+                    </div>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontWeight: '700',
+                        color: '#1f2937',
+                        fontSize: '1.1rem',
+                        margin: '0'
+                      }}>
+                        {fileType === 'excel_csv' 
+                          ? 'Excel File (.xlsx, .xls, .xlsm)' 
+                          : 'First Excel File'}
+                      </label>
+                      {fileType === 'excel' && (
+                        <small style={{
+                          color: '#166534',
+                          fontSize: '0.85rem',
+                          fontWeight: '500'
+                        }}>
+                          🎉 FREE Excel comparison for signed-in users!
+                        </small>
+                      )}
+                      {fileType === 'excel_csv' && (
+                        <small style={{
+                          color: '#92400e',
+                          fontSize: '0.85rem',
+                          fontWeight: '500'
+                        }}>
+                          📊 Upload your Excel spreadsheet first
+                        </small>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <input
+                    type="file"
+                    onChange={(e) => handleFileChange(e, 1)}
+                    accept={fileType === 'excel_csv' ? '.xlsx,.xls,.xlsm' : '.xlsx,.xls,.xlsm'}
+                    disabled={isProcessing}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      border: '2px solid rgba(255,255,255,0.8)',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      background: 'rgba(255,255,255,0.9)',
+                      fontWeight: '500',
+                      opacity: isProcessing ? 0.7 : 1
+                    }}
+                  />
+                  {file1 && (
+                    <div style={{
+                      marginTop: '15px',
+                      padding: '12px',
+                      background: 'rgba(34, 197, 94, 0.1)',
+                      border: '2px solid #22c55e',
+                      borderRadius: '8px',
+                      fontSize: '0.95rem',
+                      color: '#166534',
+                      fontWeight: '600'
+                    }}>
+                      ✅ {file1.name}
+                    </div>
+                  )}
+                </div>
+                
+                {/* File 2 Upload */}
+                <div style={{
+                  background: fileType === 'excel'
+                    ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                    : fileType === 'excel_csv' 
+                      ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' 
+                      : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                  padding: '25px',
+                  borderRadius: '16px',
+                  border: fileType === 'excel'
+                    ? '2px solid #22c55e'
+                    : fileType === 'excel_csv' 
+                      ? '2px solid #22c55e' 
+                      : '2px solid #0ea5e9',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '15px'
+                  }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: fileType === 'excel'
+                        ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                        : fileType === 'excel_csv' 
+                          ? 'linear-gradient(135deg, #22c55e, #16a34a)' 
+                          : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '1.2rem'
+                    }}>
+                      2
+                    </div>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontWeight: '700',
+                        color: '#1f2937',
+                        fontSize: '1.1rem',
+                        margin: '0'
+                      }}>
+                        {fileType === 'excel_csv' 
+                          ? 'CSV File (.csv)' 
+                          : 'Second Excel File'}
+                      </label>
+                      {fileType === 'excel' && (
+                        <small style={{
+                          color: '#166534',
+                          fontSize: '0.85rem',
+                          fontWeight: '500'
+                        }}>
+                          🎉 FREE Excel comparison for signed-in users!
+                        </small>
+                      )}
+                      {fileType === 'excel_csv' && (
+                        <small style={{
+                          color: '#166534',
+                          fontSize: '0.85rem',
+                          fontWeight: '500'
+                        }}>
+                          📄 Upload your CSV data file second
+                        </small>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <input
+                    type="file"
+                    onChange={(e) => handleFileChange(e, 2)}
+                    accept={fileType === 'excel_csv' ? '.csv' : '.xlsx,.xls,.xlsm'}
+                    disabled={isProcessing}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      border: '2px solid rgba(255,255,255,0.8)',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      background: 'rgba(255,255,255,0.9)',
+                      fontWeight: '500',
+                      opacity: isProcessing ? 0.7 : 1
+                    }}
+                  />
+                  {file2 && (
+                    <div style={{
+                      marginTop: '15px',
+                      padding: '12px',
+                      background: 'rgba(34, 197, 94, 0.1)',
+                      border: '2px solid #22c55e',
+                      borderRadius: '8px',
+                      fontSize: '0.95rem',
+                      color: '#166534',
+                      fontWeight: '600'
+                    }}>
+                      ✅ {file2.name}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Load Button */}
+              <div style={{ textAlign: 'center', position: 'relative' }}>
+                <button 
+                  onClick={handleLoadFiles} 
+                  disabled={loading || !file1 || !file2 || isProcessing}
+                  style={loadButtonStyle}
+                  className="load-button"
+                  onMouseOver={(e) => {
+                    if (!loading && file1 && file2 && !isProcessing) {
+                      e.target.style.transform = 'translateY(-4px) scale(1.03)';
+                      e.target.style.boxShadow = '0 15px 40px rgba(37, 99, 235, 0.6)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (!loading && file1 && file2 && !isProcessing) {
+                      e.target.style.transform = 'none';
+                      e.target.style.boxShadow = '0 10px 30px rgba(37, 99, 235, 0.4)';
+                    }
+                  }}
+                >
+                  {loading || isProcessing ? (
+                    <>
+                      <span style={{ 
+                        marginRight: '12px',
+                        display: 'inline-block',
+                        animation: 'spin 1s linear infinite'
+                      }}>⏳</span>
+                      {loading ? 'Processing Spreadsheets...' : 'Running Comparison...'}
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ 
+                        marginRight: '12px',
+                        fontSize: '1.6rem',
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                      }}>{fileType === 'excel' ? '🎉' : '🚀'}</span>
+                      <span style={{
+                        background: 'linear-gradient(45deg, #ffffff, #f0f9ff)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                      }}>
+                        {fileType === 'excel' 
+                          ? 'Start Free Excel Comparison' 
+                          : 'Load Files & Start Comparison'
+                        }
+                      </span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Sheet Selector */}
           {FEATURES.SHEET_SELECTION && showSheetSelector && (
             <div style={sectionStyle}>
