@@ -477,6 +477,11 @@ function EnhancedPdfComparePage() {
 
   // Main comparison handler
   const handleComparePdfs = async () => {
+    console.log('🔥 Button clicked - handleComparePdfs called');
+    console.log('Files:', { file1: file1?.name, file2: file2?.name });
+    console.log('PDF Status:', pdfLoadingStatus);
+    console.log('User Tier:', userTier);
+    
     if (!file1 || !file2) {
       setError('Please select two PDF files.');
       return;
