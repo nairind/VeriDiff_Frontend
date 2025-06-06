@@ -2172,358 +2172,6 @@ export default function Home() {
                   alignItems: 'center',
                   gap: '0.5rem'
                 }}>
-                  🚀 "What happens after I sign up?"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Immediate access to Excel comparison features. Upload two Excel files and see the magic happen. When you're ready to compare other file types or need advanced features, upgrade to premium for £19/month.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  💰 "Why is this cheaper than competitors?"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  We're pre-launch and focused on building a loyal user base. By processing files locally, we have lower server costs than competitors. Our all-in-one approach means you pay for one tool instead of multiple specialized ones.
-                </p>
-              </div>
-            </div>
-
-            <div style={{
-              textAlign: 'center',
-              marginTop: '3rem',
-              padding: '2rem',
-              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-              borderRadius: '1rem',
-              border: '1px solid #93c5fd'
-            }}>
-              <h3 style={{ 
-                fontSize: '1.5rem', 
-                fontWeight: '600', 
-                color: '#1e40af', 
-                marginBottom: '1rem' 
-              }}>
-                Still Have Questions?
-              </h3>
-              <p style={{ color: '#1e40af', marginBottom: '1.5rem' }}>
-                We're here to help! Get in touch and we'll respond within 24 hours.
-              </p>
-              <button 
-                onClick={() => window.location.href = 'mailto:sales@veridiff.com?subject=Question about VeriDiff'}
-                style={{
-                  background: '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}
-              >
-                📧 Contact Us - sales@veridiff.com
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA Section */}
-        {/* Final CTA Section */}
-        <section style={{ 
-          padding: '6rem 0', 
-          background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
-          color: 'white', 
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden'
-        }} className="section-padding">
-          {/* Background decoration */}
-          <div style={{
-            position: 'absolute',
-            top: '-30%',
-            left: '-20%',
-            width: '600px',
-            height: '600px',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-            borderRadius: '50%'
-          }} />
-          <div style={{
-            position: 'absolute',
-            bottom: '-30%',
-            right: '-20%',
-            width: '800px',
-            height: '800px',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
-            borderRadius: '50%'
-          }} />
-          
-          <div style={{ ...sectionContainerStyle, position: 'relative', zIndex: 2 }} className="section-container">
-            <div style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              background: 'rgba(255,255,255,0.2)', 
-              color: 'white', 
-              padding: '0.5rem 1rem', 
-              borderRadius: '2rem', 
-              fontSize: '0.875rem', 
-              fontWeight: '500', 
-              marginBottom: '2rem', 
-              gap: '0.5rem',
-              backdropFilter: 'blur(10px)'
-            }}>
-              🚀 Join Thousands of Professional Teams
-            </div>
-            
-            <h2 style={{ 
-              fontSize: '3rem', 
-              fontWeight: '700', 
-              marginBottom: '1.5rem',
-              lineHeight: '1.2'
-            }} className="section-title">
-              Ready to Save £26/Month on
-              <span style={{ 
-                display: 'block',
-                background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
-                WebkitBackgroundClip: 'text', 
-                WebkitTextFillColor: 'transparent', 
-                backgroundClip: 'text'
-              }}>
-                File Comparison Tools?
-              </span>
-            </h2>
-            <p style={{ 
-              fontSize: '1.3rem', 
-              color: '#bfdbfe', 
-              marginBottom: '3rem',
-              maxWidth: '700px',
-              margin: '0 auto 3rem auto',
-              lineHeight: '1.6'
-            }}>
-              Join smart professionals who stopped overpaying for multiple tools. Get everything you need in one secure platform.
-            </p>
-            
-            <div style={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: '1.5rem', 
-              justifyContent: 'center', 
-              marginBottom: '3rem' 
-            }} className="button-group">
-              <button onClick={handleTryDemo} style={{ 
-                background: 'white', 
-                color: '#2563eb', 
-                padding: '1.2rem 2.5rem', 
-                borderRadius: '0.75rem', 
-                fontWeight: '600', 
-                border: 'none', 
-                cursor: 'pointer',
-                minWidth: '300px',
-                transition: 'all 0.3s',
-                fontSize: '1.1rem',
-                boxShadow: '0 8px 24px rgba(255,255,255,0.2)'
-              }}>
-                🎯 Start Free Excel Comparison Now
-              </button>
-              <button onClick={handleProTrial} style={{ 
-                background: 'rgba(255,255,255,0.1)', 
-                color: 'white', 
-                padding: '1.2rem 2.5rem', 
-                borderRadius: '0.75rem', 
-                fontWeight: '600', 
-                border: '2px solid rgba(255,255,255,0.3)', 
-                cursor: 'pointer',
-                minWidth: '280px',
-                transition: 'all 0.3s',
-                fontSize: '1.1rem',
-                backdropFilter: 'blur(10px)'
-              }}>
-                🚀 Get All Tools - £19/Month
-              </button>
-            </div>
-            
-            <div style={{ 
-              display: 'flex', 
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: '2rem',
-              color: '#bfdbfe', 
-              fontSize: '0.95rem',
-              maxWidth: '1000px',
-              margin: '0 auto'
-            }} className="cta-benefits">
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.5rem',
-                whiteSpace: 'nowrap',
-                justifyContent: 'center'
-              }}>
-                <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>No credit card for Excel comparison</span>
-              </div>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.5rem',
-                whiteSpace: 'nowrap',
-                justifyContent: 'center'
-              }}>
-                <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>Save £312/year vs buying separately</span>
-              </div>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.5rem',
-                whiteSpace: 'nowrap',
-                justifyContent: 'center'
-              }}>
-                <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>Files never leave your device</span>
-              </div>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.5rem',
-                whiteSpace: 'nowrap',
-                justifyContent: 'center'
-              }}>
-                <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>Cancel anytime - no commitment</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-
-        <Footer />
-
-        {/* Privacy-First Cookie Banner */}
-        <CookieBanner />
-
-        {/* Registration Modal */}
-        <RegistrationModal />
-      </div>
-    </>
-  );
-{/* Objection-Handling FAQ Section */}
-        <section style={{ ...sectionStyle, background: 'white' }} className="section-padding">
-          <div style={sectionContainerStyle} className="section-container">
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 style={{ 
-                fontSize: '2.25rem', 
-                fontWeight: '700', 
-                marginBottom: '1rem', 
-                color: '#1f2937'
-              }} className="section-title">
-                Questions? We've Got Answers
-              </h2>
-              <p style={{ fontSize: '1.2rem', color: '#6b7280' }}>
-                Everything you need to know to get started confidently
-              </p>
-            </div>
-
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-              gap: '2rem',
-              maxWidth: '1000px',
-              margin: '0 auto'
-            }}>
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  🔒 "Is my data secure?"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Absolutely. Unlike other tools that upload files to their servers, VeriDiff processes everything locally in your browser. Your files never leave your device, and we never see or store your data. It's the most secure way to compare sensitive business files.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  📊 "I only need Excel comparison"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Perfect! Start free with Excel comparison after signup. No credit card required. When you need PDF, CSV, or other formats later (and you probably will), upgrade for £19/month instead of buying separate tools for £45/month.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  💳 "Can I cancel anytime?"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Yes, cancel your premium subscription anytime with one click. Cancellation takes effect at your next renewal date, so you keep access until then. No contracts, no commitments - simple and straightforward.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
                   ⚡ "How is this different from Excel's built-in compare?"
                 </h3>
                 <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
@@ -2792,3 +2440,69 @@ export default function Home() {
     </>
   );
 }
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  🔒 "Is my data secure?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Absolutely. Unlike other tools that upload files to their servers, VeriDiff processes everything locally in your browser. Your files never leave your device, and we never see or store your data. It's the most secure way to compare sensitive business files.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  📊 "I only need Excel comparison"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Perfect! Start free with Excel comparison after signup. No credit card required. When you need PDF, CSV, or other formats later (and you probably will), upgrade for £19/month instead of buying separate tools for £45/month.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  💳 "Can I cancel anytime?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Yes, cancel your premium subscription anytime with one click. Cancellation takes effect at your next renewal date, so you keep access until then. No contracts, no commitments - simple and straightforward.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
