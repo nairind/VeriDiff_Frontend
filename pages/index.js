@@ -428,7 +428,7 @@ export default function Home() {
               <li>All file format comparisons (PDF, CSV, JSON, XML, TXT)</li>
               <li>Advanced tolerance & precision controls</li>
               <li>Priority support & feature requests</li>
-              <li>30-day money-back guarantee</li>
+              <li>Cancel anytime - no long-term commitment</li>
             </ul>
           </div>
 
@@ -518,7 +518,7 @@ export default function Home() {
             We only use essential cookies for login and preferences. <strong>No tracking, no analytics, no data collection.</strong>
             <span style={{ marginLeft: '0.5rem' }}>
               <a 
-                href="/cookie-policy" 
+                href="/cookies" 
                 style={{ 
                   color: '#fbbf24', 
                   textDecoration: 'underline',
@@ -2127,7 +2127,7 @@ export default function Home() {
                 fontSize: '0.9rem', 
                 marginTop: '1rem' 
               }}>
-                30-day money-back guarantee • Cancel anytime • Start saving immediately
+                Cancel anytime (takes effect at next renewal) • No long-term commitment • Start saving immediately
               </p>
             </div>
           </div>
@@ -2157,94 +2157,6 @@ export default function Home() {
               maxWidth: '1000px',
               margin: '0 auto'
             }}>
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  🔒 "Is my data secure?"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Absolutely. Unlike other tools that upload files to their servers, VeriDiff processes everything locally in your browser. Your files never leave your device, and we never see or store your data. It's the most secure way to compare sensitive business files.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  📊 "I only need Excel comparison"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Perfect! Start free with Excel comparison after signup. No credit card required. When you need PDF, CSV, or other formats later (and you probably will), upgrade for £19/month instead of buying separate tools for £45/month.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  💳 "Can I cancel anytime?"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Yes, cancel your premium subscription anytime with one click. No contracts, no commitments. Plus, we offer a 30-day money-back guarantee if you're not completely satisfied with the premium features.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  ⚡ "How is this different from Excel's built-in compare?"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Excel's compare is basic and only works within Excel. VeriDiff offers smart mapping for mismatched headers, tolerance settings for numerical differences, cross-format comparison (Excel vs CSV), and detailed reporting that Excel simply can't provide.
-                </p>
-              </div>
-
               <div style={{
                 background: '#f8fafc',
                 padding: '2rem',
@@ -2489,7 +2401,7 @@ export default function Home() {
                 justifyContent: 'center'
               }}>
                 <span style={{ color: '#fbbf24', fontSize: '1.2rem' }}>✓</span>
-                <span>30-day money-back guarantee</span>
+                <span>Cancel anytime - no commitment</span>
               </div>
             </div>
           </div>
@@ -2505,4 +2417,92 @@ export default function Home() {
       </div>
     </>
   );
-}
+} 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  🔒 "Is my data secure?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Absolutely. Unlike other tools that upload files to their servers, VeriDiff processes everything locally in your browser. Your files never leave your device, and we never see or store your data. It's the most secure way to compare sensitive business files.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  📊 "I only need Excel comparison"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Perfect! Start free with Excel comparison after signup. No credit card required. When you need PDF, CSV, or other formats later (and you probably will), upgrade for £19/month instead of buying separate tools for £45/month.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  💳 "Can I cancel anytime?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Yes, cancel your premium subscription anytime with one click. Cancellation takes effect at your next renewal date, so you keep access until then. No contracts, no commitments - simple and straightforward.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  ⚡ "How is this different from Excel's built-in compare?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Excel's compare is basic and only works within Excel. VeriDiff offers smart mapping for mismatched headers, tolerance settings for numerical differences, cross-format comparison (Excel vs CSV), and detailed reporting that Excel simply can't provide.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display:
