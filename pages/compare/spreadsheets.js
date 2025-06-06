@@ -1034,7 +1034,7 @@ function ComparePage() {
       .hero-title { font-size: 2.5rem !important; }
       .section-title { font-size: 1.5rem !important; }
       .section-padding { padding: 25px !important; }
-      .spreadsheet-benefits { grid-template-columns: 1fr !important; }
+      .spreadsheet-benefits { grid-template-columns: repeat(2, 1fr) !important; }
       .use-case-grid { grid-template-columns: 1fr !important; }
     }
     
@@ -1046,7 +1046,10 @@ function ComparePage() {
         font-size: 1.1rem !important;
         padding: 14px 30px !important;
       }
-      .spreadsheet-benefits { gap: 1rem !important; }
+      .spreadsheet-benefits { 
+        grid-template-columns: 1fr !important; 
+        gap: 1rem !important;
+      }
     }
   `;
 
@@ -1354,7 +1357,133 @@ function ComparePage() {
             </div>
           </div>
 
-          {/* NEW: Spreadsheet-Specific Benefits Section */}
+          {/* NEW: Common Use Cases Section - MOVED TO TOP */}
+          <div style={sectionStyle} className="section-padding">
+            <h2 style={sectionTitleStyle} className="section-title">
+              Common Spreadsheet Comparison Scenarios
+            </h2>
+            <p style={{
+              fontSize: '1.1rem',
+              color: '#6b7280',
+              textAlign: 'center',
+              margin: '0 0 35px 0'
+            }}>
+              Real situations where VeriDiff's Excel comparison saves hours of manual work
+            </p>
+            
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+              gap: '25px'
+            }} className="use-case-grid">
+              <div style={{
+                background: 'white',
+                padding: '25px',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+              }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '15px', color: '#1f2937' }}>
+                  📊 Budget vs Actual Analysis
+                </h3>
+                <p style={{ color: '#4b5563', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '15px' }}>
+                  Compare Q4_Budget.xlsx with Actual_Expenses.csv from your accounting system. Automatically identify departments over-budget by more than 5%.
+                </p>
+                <div style={{
+                  background: '#f0fdf4',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  color: '#166534'
+                }}>
+                  <strong>Result:</strong> 15 departments flagged for review, 3 with variance {'>'}10%
+                </div>
+              </div>
+
+              <div style={{
+                background: 'white',
+                padding: '25px',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+              }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '15px', color: '#1f2937' }}>
+                  🔍 Invoice Reconciliation
+                </h3>
+                <p style={{ color: '#4b5563', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '15px' }}>
+                  Match invoices_sent.xlsx with payments_received.csv. Tolerance of ±£0.01 handles rounding differences while flagging true discrepancies.
+                </p>
+                <div style={{
+                  background: '#eff6ff',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  color: '#1e40af'
+                }}>
+                  <strong>Result:</strong> 2,847 matched, 23 outstanding payments identified
+                </div>
+              </div>
+
+              <div style={{
+                background: 'white',
+                padding: '25px',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+              }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '15px', color: '#1f2937' }}>
+                  📋 Data Migration Validation
+                </h3>
+                <p style={{ color: '#4b5563', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '15px' }}>
+                  Verify old_system_export.xlsx matches new_system_data.csv after migration. Ensure no data loss during system transition.
+                </p>
+                <div style={{
+                  background: '#fefce8',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  color: '#92400e'
+                }}>
+                  <strong>Result:</strong> 99.8% match rate, 12 records need manual review
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sheet Selector */}
+          {FEATURES.SHEET_SELECTION && showSheetSelector && (
+            <div style={sectionStyle}>
+              <SheetSelector
+                file1Info={file1Info}
+                file2Info={file2Info}
+                onSheetSelect={handleSheetSelect}
+                fileType={fileType}
+              />
+              <div style={{ textAlign: 'center', marginTop: '25px' }}>
+                <button 
+                  onClick={handleProceedWithSheets} 
+                  disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) || isProcessing}
+                  style={{
+                    background: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) || isProcessing
+                      ? '#9ca3af' 
+                      : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '14px 30px',
+                    borderRadius: '8px',
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    cursor: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) || isProcessing ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {loading || isProcessing ? 'Processing...' : 'Proceed with Selected Sheets'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* NEW: Spreadsheet-Specific Benefits Section - MOVED AFTER UPLOAD */}
           <div style={sectionStyle} className="section-padding">
             <h2 style={sectionTitleStyle} className="section-title">
               Why Finance Teams Choose VeriDiff for Excel Comparison
@@ -1491,525 +1620,6 @@ function ComparePage() {
               </div>
             </div>
           </div>
-
-          {/* NEW: Common Use Cases Section */}
-          <div style={sectionStyle} className="section-padding">
-            <h2 style={sectionTitleStyle} className="section-title">
-              Common Spreadsheet Comparison Scenarios
-            </h2>
-            <p style={{
-              fontSize: '1.1rem',
-              color: '#6b7280',
-              textAlign: 'center',
-              margin: '0 0 35px 0'
-            }}>
-              Real situations where VeriDiff's Excel comparison saves hours of manual work
-            </p>
-            
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-              gap: '25px'
-            }} className="use-case-grid">
-              <div style={{
-                background: 'white',
-                padding: '25px',
-                borderRadius: '12px',
-                border: '1px solid #e5e7eb',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
-              }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '15px', color: '#1f2937' }}>
-                  📊 Budget vs Actual Analysis
-                </h3>
-                <p style={{ color: '#4b5563', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '15px' }}>
-                  Compare Q4_Budget.xlsx with Actual_Expenses.csv from your accounting system. Automatically identify departments over-budget by more than 5%.
-                </p>
-                <div style={{
-                  background: '#f0fdf4',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontSize: '0.85rem',
-                  color: '#166534'
-                }}>
-                  <strong>Result:</strong> 15 departments flagged for review, 3 with variance {'>'}10%
-                </div>
-              </div>
-
-              <div style={{
-                background: 'white',
-                padding: '25px',
-                borderRadius: '12px',
-                border: '1px solid #e5e7eb',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
-              }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '15px', color: '#1f2937' }}>
-                  🔍 Invoice Reconciliation
-                </h3>
-                <p style={{ color: '#4b5563', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '15px' }}>
-                  Match invoices_sent.xlsx with payments_received.csv. Tolerance of ±£0.01 handles rounding differences while flagging true discrepancies.
-                </p>
-                <div style={{
-                  background: '#eff6ff',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontSize: '0.85rem',
-                  color: '#1e40af'
-                }}>
-                  <strong>Result:</strong> 2,847 matched, 23 outstanding payments identified
-                </div>
-              </div>
-
-              <div style={{
-                background: 'white',
-                padding: '25px',
-                borderRadius: '12px',
-                border: '1px solid #e5e7eb',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
-              }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '15px', color: '#1f2937' }}>
-                  📋 Data Migration Validation
-                </h3>
-                <p style={{ color: '#4b5563', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '15px' }}>
-                  Verify old_system_export.xlsx matches new_system_data.csv after migration. Ensure no data loss during system transition.
-                </p>
-                <div style={{
-                  background: '#fefce8',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  fontSize: '0.85rem',
-                  color: '#92400e'
-                }}>
-                  <strong>Result:</strong> 99.8% match rate, 12 records need manual review
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* File Type Selection */}
-          <div style={sectionStyle} className="section-padding">
-            <h2 style={sectionTitleStyle} className="section-title">
-              Choose Your Comparison Type
-            </h2>
-            <p style={{
-              fontSize: '1.1rem',
-              color: '#6b7280',
-              textAlign: 'center',
-              margin: '0 0 35px 0'
-            }}>
-              Excel-Excel is free for all signed-in users • Excel-CSV requires premium
-            </p>
-            
-            <div style={fileTypeGridStyle} className="file-type-grid">
-              {[
-                { value: 'excel', label: 'Excel–Excel', featured: false, free: true },
-                { value: 'excel_csv', label: 'Excel–CSV', featured: true, free: false },
-                { value: 'csv', label: 'CSV–CSV', featured: false, free: false }
-              ].map((option) => (
-                <label
-                  key={option.value}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '15px',
-                    padding: '20px',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    background: option.free
-                      ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
-                      : option.featured 
-                        ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                        : 'white',
-                    border: option.free
-                      ? '2px solid #22c55e'
-                      : option.featured 
-                        ? '2px solid #f59e0b' 
-                        : fileType === option.value 
-                          ? '2px solid #2563eb' 
-                          : '2px solid #e5e7eb',
-                    fontWeight: option.featured ? '600' : '500',
-                    fontSize: '1rem',
-                    minHeight: '60px'
-                  }}
-                  onMouseOver={(e) => {
-                    if (fileType !== option.value) {
-                      e.target.style.borderColor = option.free ? '#16a34a' : '#2563eb';
-                      e.target.style.background = option.free 
-                        ? 'linear-gradient(135deg, #d1fae5, #bbf7d0)'
-                        : option.featured 
-                          ? 'linear-gradient(135deg, #fde68a, #fcd34d)' 
-                          : '#f0f4ff';
-                      e.target.style.transform = 'translateY(-2px)';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (fileType !== option.value) {
-                      e.target.style.borderColor = option.free 
-                        ? '#22c55e'
-                        : option.featured 
-                          ? '#f59e0b' 
-                          : '#e5e7eb';
-                      e.target.style.background = option.free
-                        ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
-                        : option.featured 
-                          ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                          : 'white';
-                      e.target.style.transform = 'none';
-                    }
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="fileType"
-                    value={option.value}
-                    checked={fileType === option.value}
-                    onChange={handleFileTypeChange}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      accentColor: option.free ? '#22c55e' : '#2563eb'
-                    }}
-                  />
-                  <span style={{ flex: 1 }}>
-                    {option.label}
-                    {option.free && (
-                      <span style={{
-                        marginLeft: '8px',
-                        fontSize: '0.75em',
-                        background: '#dcfce7',
-                        color: '#166534',
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        fontWeight: '600'
-                      }}>
-                        FREE for signed-in users ✨
-                      </span>
-                    )}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* File Upload Section - Show for all allowed formats */}
-          {(fileType === 'excel' || userTier === 'premium') && (
-            <div style={sectionStyle} className="section-padding">
-              <h2 style={sectionTitleStyle} className="section-title">
-                Upload Your Spreadsheet Files
-              </h2>
-              <p style={{
-                fontSize: '1.1rem',
-                color: '#6b7280',
-                textAlign: 'center',
-                margin: '0 0 35px 0'
-              }}>
-                {fileType === 'excel' 
-                  ? '🎉 Free Excel comparison for signed-in users!' 
-                  : '✅ Premium format - advanced comparison features'
-                }
-              </p>
-
-              <div style={fileUploadGridStyle} className="file-upload-grid">
-                {/* File 1 Upload */}
-                <div style={{
-                  background: fileType === 'excel'
-                    ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
-                    : fileType === 'excel_csv' 
-                      ? 'linear-gradient(135deg, #fef3c7, #fde68a)' 
-                      : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
-                  padding: '25px',
-                  borderRadius: '16px',
-                  border: fileType === 'excel'
-                    ? '2px solid #22c55e'
-                    : fileType === 'excel_csv' 
-                      ? '2px solid #f59e0b' 
-                      : '2px solid #0ea5e9',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                  transition: 'all 0.3s ease'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '15px'
-                  }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      background: fileType === 'excel'
-                        ? 'linear-gradient(135deg, #22c55e, #16a34a)'
-                        : fileType === 'excel_csv' 
-                          ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
-                          : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: '1.2rem'
-                    }}>
-                      1
-                    </div>
-                    <div>
-                      <label style={{
-                        display: 'block',
-                        fontWeight: '700',
-                        color: '#1f2937',
-                        fontSize: '1.1rem',
-                        margin: '0'
-                      }}>
-                        {fileType === 'excel_csv' 
-                          ? 'Excel File (.xlsx, .xls, .xlsm)' 
-                          : 'First Excel File'}
-                      </label>
-                      {fileType === 'excel' && (
-                        <small style={{
-                          color: '#166534',
-                          fontSize: '0.85rem',
-                          fontWeight: '500'
-                        }}>
-                          🎉 FREE Excel comparison for signed-in users!
-                        </small>
-                      )}
-                      {fileType === 'excel_csv' && (
-                        <small style={{
-                          color: '#92400e',
-                          fontSize: '0.85rem',
-                          fontWeight: '500'
-                        }}>
-                          📊 Upload your Excel spreadsheet first
-                        </small>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(e, 1)}
-                    accept={fileType === 'excel_csv' ? '.xlsx,.xls,.xlsm' : '.xlsx,.xls,.xlsm'}
-                    disabled={isProcessing}
-                    style={{
-                      width: '100%',
-                      padding: '14px',
-                      border: '2px solid rgba(255,255,255,0.8)',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      background: 'rgba(255,255,255,0.9)',
-                      fontWeight: '500',
-                      opacity: isProcessing ? 0.7 : 1
-                    }}
-                  />
-                  {file1 && (
-                    <div style={{
-                      marginTop: '15px',
-                      padding: '12px',
-                      background: 'rgba(34, 197, 94, 0.1)',
-                      border: '2px solid #22c55e',
-                      borderRadius: '8px',
-                      fontSize: '0.95rem',
-                      color: '#166534',
-                      fontWeight: '600'
-                    }}>
-                      ✅ {file1.name}
-                    </div>
-                  )}
-                </div>
-                
-                {/* File 2 Upload */}
-                <div style={{
-                  background: fileType === 'excel'
-                    ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
-                    : fileType === 'excel_csv' 
-                      ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' 
-                      : 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
-                  padding: '25px',
-                  borderRadius: '16px',
-                  border: fileType === 'excel'
-                    ? '2px solid #22c55e'
-                    : fileType === 'excel_csv' 
-                      ? '2px solid #22c55e' 
-                      : '2px solid #0ea5e9',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                  transition: 'all 0.3s ease'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '15px'
-                  }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      background: fileType === 'excel'
-                        ? 'linear-gradient(135deg, #22c55e, #16a34a)'
-                        : fileType === 'excel_csv' 
-                          ? 'linear-gradient(135deg, #22c55e, #16a34a)' 
-                          : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: '1.2rem'
-                    }}>
-                      2
-                    </div>
-                    <div>
-                      <label style={{
-                        display: 'block',
-                        fontWeight: '700',
-                        color: '#1f2937',
-                        fontSize: '1.1rem',
-                        margin: '0'
-                      }}>
-                        {fileType === 'excel_csv' 
-                          ? 'CSV File (.csv)' 
-                          : 'Second Excel File'}
-                      </label>
-                      {fileType === 'excel' && (
-                        <small style={{
-                          color: '#166534',
-                          fontSize: '0.85rem',
-                          fontWeight: '500'
-                        }}>
-                          🎉 FREE Excel comparison for signed-in users!
-                        </small>
-                      )}
-                      {fileType === 'excel_csv' && (
-                        <small style={{
-                          color: '#166534',
-                          fontSize: '0.85rem',
-                          fontWeight: '500'
-                        }}>
-                          📄 Upload your CSV data file second
-                        </small>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <input
-                    type="file"
-                    onChange={(e) => handleFileChange(e, 2)}
-                    accept={fileType === 'excel_csv' ? '.csv' : '.xlsx,.xls,.xlsm'}
-                    disabled={isProcessing}
-                    style={{
-                      width: '100%',
-                      padding: '14px',
-                      border: '2px solid rgba(255,255,255,0.8)',
-                      borderRadius: '10px',
-                      fontSize: '1rem',
-                      background: 'rgba(255,255,255,0.9)',
-                      fontWeight: '500',
-                      opacity: isProcessing ? 0.7 : 1
-                    }}
-                  />
-                  {file2 && (
-                    <div style={{
-                      marginTop: '15px',
-                      padding: '12px',
-                      background: 'rgba(34, 197, 94, 0.1)',
-                      border: '2px solid #22c55e',
-                      borderRadius: '8px',
-                      fontSize: '0.95rem',
-                      color: '#166534',
-                      fontWeight: '600'
-                    }}>
-                      ✅ {file2.name}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Load Button */}
-              <div style={{ textAlign: 'center', position: 'relative' }}>
-                <button 
-                  onClick={handleLoadFiles} 
-                  disabled={loading || !file1 || !file2 || isProcessing}
-                  style={loadButtonStyle}
-                  className="load-button"
-                  onMouseOver={(e) => {
-                    if (!loading && file1 && file2 && !isProcessing) {
-                      e.target.style.transform = 'translateY(-4px) scale(1.03)';
-                      e.target.style.boxShadow = '0 15px 40px rgba(37, 99, 235, 0.6)';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (!loading && file1 && file2 && !isProcessing) {
-                      e.target.style.transform = 'none';
-                      e.target.style.boxShadow = '0 10px 30px rgba(37, 99, 235, 0.4)';
-                    }
-                  }}
-                >
-                  {loading || isProcessing ? (
-                    <>
-                      <span style={{ 
-                        marginRight: '12px',
-                        display: 'inline-block',
-                        animation: 'spin 1s linear infinite'
-                      }}>⏳</span>
-                      {loading ? 'Processing Spreadsheets...' : 'Running Comparison...'}
-                    </>
-                  ) : (
-                    <>
-                      <span style={{ 
-                        marginRight: '12px',
-                        fontSize: '1.6rem',
-                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-                      }}>{fileType === 'excel' ? '🎉' : '🚀'}</span>
-                      <span style={{
-                        background: 'linear-gradient(45deg, #ffffff, #f0f9ff)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                      }}>
-                        {fileType === 'excel' 
-                          ? 'Start Free Excel Comparison' 
-                          : 'Load Files & Start Comparison'
-                        }
-                      </span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Sheet Selector */}
-          {FEATURES.SHEET_SELECTION && showSheetSelector && (
-            <div style={sectionStyle}>
-              <SheetSelector
-                file1Info={file1Info}
-                file2Info={file2Info}
-                onSheetSelect={handleSheetSelect}
-                fileType={fileType}
-              />
-              <div style={{ textAlign: 'center', marginTop: '25px' }}>
-                <button 
-                  onClick={handleProceedWithSheets} 
-                  disabled={loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) || isProcessing}
-                  style={{
-                    background: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) || isProcessing
-                      ? '#9ca3af' 
-                      : 'linear-gradient(135deg, #2563eb, #7c3aed)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '14px 30px',
-                    borderRadius: '8px',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    cursor: loading || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) || isProcessing ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  {loading || isProcessing ? 'Processing...' : 'Proceed with Selected Sheets'}
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Header Mapper */}
           {showMapper && (
