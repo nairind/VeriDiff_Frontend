@@ -1531,7 +1531,7 @@ function ComparePage() {
                   fontSize: '0.85rem',
                   color: '#166534'
                 }}>
-                  <strong>Result:</strong> 15 departments flagged for review, 3 with variance >10%
+                  <strong>Result:</strong> 15 departments flagged for review, 3 with variance {'>'}10%
                 </div>
               </div>
 
