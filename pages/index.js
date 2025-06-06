@@ -2419,7 +2419,31 @@ export default function Home() {
       </div>
     </>
   );
-<div style={{
+{/* Objection-Handling FAQ Section */}
+        <section style={{ ...sectionStyle, background: 'white' }} className="section-padding">
+          <div style={sectionContainerStyle} className="section-container">
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ 
+                fontSize: '2.25rem', 
+                fontWeight: '700', 
+                marginBottom: '1rem', 
+                color: '#1f2937'
+              }} className="section-title">
+                Questions? We've Got Answers
+              </h2>
+              <p style={{ fontSize: '1.2rem', color: '#6b7280' }}>
+                Everything you need to know to get started confidently
+              </p>
+            </div>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
+              gap: '2rem',
+              maxWidth: '1000px',
+              margin: '0 auto'
+            }}>
+              <div style={{
                 background: '#f8fafc',
                 padding: '2rem',
                 borderRadius: '1rem',
