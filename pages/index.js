@@ -2241,6 +2241,7 @@ export default function Home() {
         </section>
 
         {/* Final CTA Section */}
+        {/* Final CTA Section */}
         <section style={{ 
           padding: '6rem 0', 
           background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
@@ -2406,6 +2407,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+
 
         <Footer />
 
