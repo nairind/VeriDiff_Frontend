@@ -60,6 +60,13 @@ function ComparePage() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [userTier, setUserTier] = useState('free');
 
+  // ✅ NEW: Enhanced results display state variables
+  const [resultsFilter, setResultsFilter] = useState('all'); // 'all', 'differences', 'matches'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [expandedRows, setExpandedRows] = useState(new Set());
+
   // ✅ FIXED: Premium upgrade with simplified Stripe integration
   const handlePremiumUpgrade = async () => {
     console.log('=== FRONTEND STRIPE CHECKOUT START ===');
@@ -719,6 +726,84 @@ function ComparePage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ NEW: Enhanced results display helper functions
+  const getFilteredResults = () => {
+    if (!results?.results) return [];
+    
+    let filtered = results.results;
+    
+    // Apply filter
+    if (resultsFilter === 'differences') {
+      filtered = filtered.filter(row => 
+        Object.values(row.fields).some(field => field.status === 'difference')
+      );
+    } else if (resultsFilter === 'matches') {
+      filtered = filtered.filter(row => 
+        Object.values(row.fields).every(field => field.status === 'match')
+      );
+    }
+    
+    // Apply search
+    if (searchTerm) {
+      filtered = filtered.filter(row =>
+        Object.values(row.fields).some(field =>
+          String(field.val1).toLowerCase().includes(searchTerm.toLowerCase()) ||
+          String(field.val2).toLowerCase().includes(searchTerm.toLowerCase())
+        ) || String(row.ID).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Apply sorting
+    if (sortField) {
+      filtered.sort((a, b) => {
+        let aVal = sortField === 'ID' ? a.ID : a.fields[sortField]?.val1 || '';
+        let bVal = sortField === 'ID' ? b.ID : b.fields[sortField]?.val1 || '';
+        
+        // Convert to numbers if possible
+        const aNum = parseFloat(aVal);
+        const bNum = parseFloat(bVal);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          aVal = aNum;
+          bVal = bNum;
+        }
+        
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    
+    return filtered;
+  };
+
+  const toggleRowExpansion = (rowIndex) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(rowIndex)) {
+      newExpanded.delete(rowIndex);
+    } else {
+      newExpanded.add(rowIndex);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'match': return '✅';
+      case 'difference': return '❌';
+      case 'acceptable': return '⚠️';
+      default: return '❓';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'match': return { bg: '#f0fdf4', border: '#22c55e', text: '#166534' };
+      case 'difference': return { bg: '#fef2f2', border: '#ef4444', text: '#dc2626' };
+      case 'acceptable': return { bg: '#fefce8', border: '#f59e0b', text: '#92400e' };
+      default: return { bg: '#f8fafc', border: '#64748b', text: '#475569' };
     }
   };
 
@@ -2062,90 +2147,703 @@ function ComparePage() {
             </div>
           )}
 
-          {/* Results */}
+          {/* ✅ ENHANCED RESULTS SECTION - COMPLETELY REDESIGNED */}
           {results && (
             <div style={sectionStyle}>
-              <h2 style={{
-                background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontSize: '2rem',
-                fontWeight: '700',
-                margin: '0 0 25px 0',
-                textAlign: 'center'
+              {/* Enhanced Header */}
+              <div style={{ 
+                textAlign: 'center', 
+                marginBottom: '40px',
+                padding: '30px',
+                background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+                borderRadius: '20px',
+                border: '1px solid #cbd5e1'
               }}>
-                Spreadsheet Comparison Results
-              </h2>
-              
-              {fileType === 'excel' && (
+                <h2 style={{
+                  background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontSize: '2.5rem',
+                  fontWeight: '700',
+                  margin: '0 0 15px 0'
+                }}>
+                  Comparison Results ✨
+                </h2>
+                
+                {fileType === 'excel' && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+                    border: '2px solid #22c55e',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    marginBottom: '25px',
+                    display: 'inline-block'
+                  }}>
+                    <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🎉</div>
+                    <div style={{ color: '#166534', fontWeight: '600', fontSize: '1.1rem' }}>
+                      Free Excel Comparison Complete!
+                    </div>
+                    <div style={{ color: '#16a34a', fontSize: '0.95rem', marginTop: '5px' }}>
+                      No usage limits for signed-in users
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Enhanced Summary Dashboard */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '25px',
+                marginBottom: '40px'
+              }}>
+                {/* Total Records Card */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+                  background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                  border: '2px solid #0ea5e9',
+                  borderRadius: '20px',
+                  padding: '30px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '-20px',
+                    right: '-20px',
+                    width: '80px',
+                    height: '80px',
+                    background: 'rgba(14, 165, 233, 0.1)',
+                    borderRadius: '50%'
+                  }}></div>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>📊</div>
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: '#0369a1',
+                    marginBottom: '8px'
+                  }}>
+                    {results.total_records}
+                  </div>
+                  <div style={{ 
+                    color: '#0369a1', 
+                    fontSize: '1.1rem',
+                    fontWeight: '600'
+                  }}>
+                    Total Records
+                  </div>
+                  <div style={{
+                    fontSize: '0.9rem',
+                    color: '#0284c7',
+                    marginTop: '5px'
+                  }}>
+                    Analyzed & Compared
+                  </div>
+                </div>
+
+                {/* Differences Card */}
+                <div style={{
+                  background: results.differences_found > 0 
+                    ? 'linear-gradient(135deg, #fef2f2, #fee2e2)' 
+                    : 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                  border: results.differences_found > 0 
+                    ? '2px solid #ef4444' 
+                    : '2px solid #22c55e',
+                  borderRadius: '20px',
+                  padding: '30px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '-20px',
+                    right: '-20px',
+                    width: '80px',
+                    height: '80px',
+                    background: results.differences_found > 0 
+                      ? 'rgba(239, 68, 68, 0.1)' 
+                      : 'rgba(34, 197, 94, 0.1)',
+                    borderRadius: '50%'
+                  }}></div>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>
+                    {results.differences_found > 0 ? '⚠️' : '✅'}
+                  </div>
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: results.differences_found > 0 ? '#dc2626' : '#16a34a',
+                    marginBottom: '8px'
+                  }}>
+                    {results.differences_found}
+                  </div>
+                  <div style={{ 
+                    color: results.differences_found > 0 ? '#dc2626' : '#16a34a', 
+                    fontSize: '1.1rem',
+                    fontWeight: '600'
+                  }}>
+                    Differences Found
+                  </div>
+                  <div style={{
+                    fontSize: '0.9rem',
+                    color: results.differences_found > 0 ? '#b91c1c' : '#15803d',
+                    marginTop: '5px'
+                  }}>
+                    {results.differences_found > 0 ? 'Needs Review' : 'Perfect Match!'}
+                  </div>
+                </div>
+
+                {/* Matches Card */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
                   border: '2px solid #22c55e',
-                  borderRadius: '12px',
-                  padding: '15px',
-                  marginBottom: '20px',
+                  borderRadius: '20px',
+                  padding: '30px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '-20px',
+                    right: '-20px',
+                    width: '80px',
+                    height: '80px',
+                    background: 'rgba(34, 197, 94, 0.1)',
+                    borderRadius: '50%'
+                  }}></div>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>✨</div>
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: '#16a34a',
+                    marginBottom: '8px'
+                  }}>
+                    {results.matches_found}
+                  </div>
+                  <div style={{ 
+                    color: '#16a34a', 
+                    fontSize: '1.1rem',
+                    fontWeight: '600'
+                  }}>
+                    Matches Found
+                  </div>
+                  <div style={{
+                    fontSize: '0.9rem',
+                    color: '#15803d',
+                    marginTop: '5px'
+                  }}>
+                    {((results.matches_found / results.total_records) * 100).toFixed(1)}% Match Rate
+                  </div>
+                </div>
+
+                {/* Match Rate Percentage */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #fefce8, #fef3c7)',
+                  border: '2px solid #f59e0b',
+                  borderRadius: '20px',
+                  padding: '30px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '-20px',
+                    right: '-20px',
+                    width: '80px',
+                    height: '80px',
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    borderRadius: '50%'
+                  }}></div>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎯</div>
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: '#d97706',
+                    marginBottom: '8px'
+                  }}>
+                    {((results.matches_found / results.total_records) * 100).toFixed(1)}%
+                  </div>
+                  <div style={{ 
+                    color: '#d97706', 
+                    fontSize: '1.1rem',
+                    fontWeight: '600'
+                  }}>
+                    Match Rate
+                  </div>
+                  <div style={{
+                    fontSize: '0.9rem',
+                    color: '#b45309',
+                    marginTop: '5px'
+                  }}>
+                    Data Quality Score
+                  </div>
+                </div>
+              </div>
+
+              {/* Auto-detected Fields Banner */}
+              {FEATURES.AUTO_DETECTION && results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+                  border: '2px solid #22c55e',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  marginBottom: '30px',
                   textAlign: 'center'
                 }}>
-                  <strong style={{ color: '#166534' }}>🎉 Free Excel Comparison Complete!</strong>
-                  <span style={{ color: '#16a34a', marginLeft: '8px' }}>
-                    No usage limits for signed-in users. Enjoy unlimited Excel comparisons!
-                  </span>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🤖</div>
+                  <div style={{ color: '#166534', fontWeight: '600', fontSize: '1.1rem', marginBottom: '5px' }}>
+                    AI Auto-Detected Amount Fields
+                  </div>
+                  <div style={{ color: '#16a34a', fontSize: '1rem' }}>
+                    {results.autoDetectedFields.join(' • ')}
+                  </div>
                 </div>
               )}
-              
+
+              {/* Enhanced Controls Bar */}
               <div style={{
-                margin: '25px 0',
-                padding: '25px',
-                background: '#f8fafc',
+                background: 'white',
                 border: '1px solid #e5e7eb',
-                borderRadius: '12px'
+                borderRadius: '16px',
+                padding: '25px',
+                marginBottom: '30px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
               }}>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
                   gap: '20px',
-                  marginBottom: '25px'
+                  alignItems: 'center'
                 }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                      {results.total_records}
-                    </div>
-                    <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Total Records</div>
+                  {/* Filter Controls */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      📋 Filter Results
+                    </label>
+                    <select
+                      value={resultsFilter}
+                      onChange={(e) => setResultsFilter(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '10px',
+                        fontSize: '1rem',
+                        fontWeight: '500',
+                        background: 'white',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="all">Show All Records</option>
+                      <option value="differences">Differences Only</option>
+                      <option value="matches">Matches Only</option>
+                    </select>
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626' }}>
-                      {results.differences_found}
-                    </div>
-                    <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Differences Found</div>
+
+                  {/* Search */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      🔍 Search Records
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Search values, IDs..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '10px',
+                        fontSize: '1rem'
+                      }}
+                    />
                   </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#16a34a' }}>
-                      {results.matches_found}
+
+                  {/* Results Counter */}
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                    padding: '15px',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    border: '1px solid #0ea5e9'
+                  }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0369a1' }}>
+                      {getFilteredResults().length}
                     </div>
-                    <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>Matches Found</div>
+                    <div style={{ fontSize: '0.9rem', color: '#0284c7', fontWeight: '500' }}>
+                      Records Shown
+                    </div>
                   </div>
                 </div>
-                
-                {FEATURES.AUTO_DETECTION && results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
+              </div>
+
+              {/* Enhanced Results Display */}
+              {getFilteredResults().length > 0 ? (
+                <div style={{
+                  background: 'white',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+                }}>
+                  {/* Table Header */}
                   <div style={{
-                    background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
-                    border: '1px solid #22c55e',
-                    borderRadius: '8px',
-                    padding: '15px',
-                    marginBottom: '20px',
-                    textAlign: 'center'
+                    background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                    padding: '20px',
+                    borderBottom: '2px solid #e5e7eb'
                   }}>
-                    <strong style={{ color: '#166534' }}>🤖 Auto-detected Amount Fields:</strong>
-                    <span style={{ color: '#16a34a', marginLeft: '8px' }}>
-                      {results.autoDetectedFields.join(', ')}
-                    </span>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: `100px repeat(${Object.keys(results.results[0].fields).length}, 1fr) 60px`,
+                      gap: '15px',
+                      alignItems: 'center',
+                      fontWeight: '700',
+                      color: '#1f2937',
+                      fontSize: '1rem'
+                    }}>
+                      <div>Record ID</div>
+                      {Object.keys(results.results[0].fields).map((field, idx) => (
+                        <div 
+                          key={idx}
+                          style={{
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}
+                          onClick={() => {
+                            if (sortField === field) {
+                              setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setSortField(field);
+                              setSortDirection('asc');
+                            }
+                          }}
+                        >
+                          {field}
+                          {sortField === field && (
+                            <span style={{ fontSize: '0.8rem' }}>
+                              {sortDirection === 'asc' ? '↑' : '↓'}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                      <div>Details</div>
+                    </div>
                   </div>
-                )}
+
+                  {/* Table Body */}
+                  <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                    {getFilteredResults().map((row, rowIndex) => {
+                      const hasAnyDifference = Object.values(row.fields).some(field => field.status === 'difference');
+                      const isExpanded = expandedRows.has(rowIndex);
+                      
+                      return (
+                        <div key={rowIndex}>
+                          {/* Main Row */}
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: `100px repeat(${Object.keys(row.fields).length}, 1fr) 60px`,
+                            gap: '15px',
+                            alignItems: 'center',
+                            padding: '20px',
+                            background: rowIndex % 2 === 0 ? '#ffffff' : '#f9fafb',
+                            borderBottom: '1px solid #f3f4f6',
+                            transition: 'all 0.2s ease'
+                          }}>
+                            {/* Record ID */}
+                            <div style={{
+                              fontWeight: '600',
+                              color: '#1f2937',
+                              fontSize: '1rem'
+                            }}>
+                              {row.ID}
+                            </div>
+
+                            {/* Field Values */}
+                            {Object.entries(row.fields).map(([key, value], idx) => {
+                              const colors = getStatusColor(value.status);
+                              const isMatch = value.val1 === value.val2;
+                              
+                              return (
+                                <div key={idx} style={{
+                                  background: colors.bg,
+                                  border: `1px solid ${colors.border}`,
+                                  borderRadius: '8px',
+                                  padding: '12px',
+                                  fontSize: '0.95rem',
+                                  position: 'relative'
+                                }}>
+                                  {/* Status Icon */}
+                                  <div style={{
+                                    position: 'absolute',
+                                    top: '5px',
+                                    right: '5px',
+                                    fontSize: '0.8rem'
+                                  }}>
+                                    {getStatusIcon(value.status)}
+                                    {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
+                                      <span style={{ marginLeft: '2px' }}>🤖</span>
+                                    )}
+                                  </div>
+
+                                  {/* Values Display */}
+                                  {isMatch ? (
+                                    <div>
+                                      <div style={{
+                                        fontWeight: '600',
+                                        color: colors.text,
+                                        marginBottom: '4px'
+                                      }}>
+                                        {value.val1}
+                                      </div>
+                                      <div style={{
+                                        fontSize: '0.8rem',
+                                        color: '#16a34a',
+                                        fontWeight: '500'
+                                      }}>
+                                        Perfect Match ✓
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '6px'
+                                      }}>
+                                        <div style={{
+                                          background: 'rgba(59, 130, 246, 0.1)',
+                                          padding: '6px 8px',
+                                          borderRadius: '6px',
+                                          fontSize: '0.9rem',
+                                          fontWeight: '500'
+                                        }}>
+                                          File 1: {value.val1}
+                                        </div>
+                                        <div style={{
+                                          background: 'rgba(16, 185, 129, 0.1)',
+                                          padding: '6px 8px',
+                                          borderRadius: '6px',
+                                          fontSize: '0.9rem',
+                                          fontWeight: '500'
+                                        }}>
+                                          File 2: {value.val2}
+                                        </div>
+                                      </div>
+                                      {value.difference && (
+                                        <div style={{
+                                          fontSize: '0.8rem',
+                                          color: colors.text,
+                                          fontWeight: '600',
+                                          marginTop: '6px'
+                                        }}>
+                                          Δ {value.difference}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+
+                            {/* Expand Button */}
+                            <div style={{ textAlign: 'center' }}>
+                              <button
+                                onClick={() => toggleRowExpansion(rowIndex)}
+                                style={{
+                                  background: isExpanded ? '#f59e0b' : '#e5e7eb',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  padding: '6px 8px',
+                                  cursor: 'pointer',
+                                  fontSize: '0.8rem',
+                                  fontWeight: '600',
+                                  color: isExpanded ? 'white' : '#6b7280',
+                                  transition: 'all 0.2s ease'
+                                }}
+                              >
+                                {isExpanded ? '▲' : '▼'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Expanded Details */}
+                          {isExpanded && (
+                            <div style={{
+                              background: '#f8fafc',
+                              padding: '20px',
+                              borderBottom: '1px solid #e5e7eb'
+                            }}>
+                              <h4 style={{
+                                margin: '0 0 15px 0',
+                                color: '#374151',
+                                fontSize: '1.1rem',
+                                fontWeight: '600'
+                              }}>
+                                🔍 Detailed Analysis for Record {row.ID}
+                              </h4>
+                              
+                              <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                                gap: '15px'
+                              }}>
+                                {Object.entries(row.fields).map(([fieldName, fieldData], idx) => (
+                                  <div key={idx} style={{
+                                    background: 'white',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '8px',
+                                    padding: '15px'
+                                  }}>
+                                    <div style={{
+                                      fontWeight: '600',
+                                      color: '#1f2937',
+                                      marginBottom: '10px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '8px'
+                                    }}>
+                                      {getStatusIcon(fieldData.status)} {fieldName}
+                                    </div>
+                                    
+                                    <div style={{
+                                      display: 'grid',
+                                      gridTemplateColumns: '1fr 1fr',
+                                      gap: '10px',
+                                      fontSize: '0.9rem'
+                                    }}>
+                                      <div>
+                                        <div style={{ color: '#6b7280', fontSize: '0.8rem', marginBottom: '4px' }}>
+                                          File 1 Value:
+                                        </div>
+                                        <div style={{
+                                          background: '#f0f9ff',
+                                          padding: '8px',
+                                          borderRadius: '6px',
+                                          fontWeight: '500'
+                                        }}>
+                                          {fieldData.val1}
+                                        </div>
+                                      </div>
+                                      
+                                      <div>
+                                        <div style={{ color: '#6b7280', fontSize: '0.8rem', marginBottom: '4px' }}>
+                                          File 2 Value:
+                                        </div>
+                                        <div style={{
+                                          background: '#f0fdf4',
+                                          padding: '8px',
+                                          borderRadius: '6px',
+                                          fontWeight: '500'
+                                        }}>
+                                          {fieldData.val2}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div style={{
+                                      marginTop: '10px',
+                                      padding: '8px',
+                                      background: getStatusColor(fieldData.status).bg,
+                                      borderRadius: '6px',
+                                      fontSize: '0.85rem',
+                                      fontWeight: '500',
+                                      color: getStatusColor(fieldData.status).text
+                                    }}>
+                                      Status: {fieldData.status.charAt(0).toUpperCase() + fieldData.status.slice(1)}
+                                      {fieldData.difference && ` (${fieldData.difference})`}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  background: 'white',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '16px',
+                  padding: '60px',
+                  textAlign: 'center',
+                  color: '#6b7280'
+                }}>
+                  <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🔍</div>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '10px' }}>
+                    No Records Match Your Filter
+                  </h3>
+                  <p style={{ fontSize: '1.1rem', marginBottom: '20px' }}>
+                    Try adjusting your search terms or filter settings
+                  </p>
+                  <button
+                    onClick={() => {
+                      setResultsFilter('all');
+                      setSearchTerm('');
+                    }}
+                    style={{
+                      background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              )}
+
+              {/* Enhanced Download Section */}
+              <div style={{
+                background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+                borderRadius: '20px',
+                padding: '30px',
+                marginTop: '40px',
+                textAlign: 'center',
+                border: '1px solid #cbd5e1'
+              }}>
+                <h3 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  marginBottom: '15px'
+                }}>
+                  📥 Export Your Results
+                </h3>
+                <p style={{
+                  color: '#6b7280',
+                  marginBottom: '25px',
+                  fontSize: '1rem'
+                }}>
+                  Download detailed comparison results with all analysis data
+                </p>
                 
                 <div style={{
                   display: 'flex',
-                  gap: '15px',
+                  gap: '20px',
                   justifyContent: 'center',
                   flexWrap: 'wrap'
                 }}>
@@ -2155,140 +2853,63 @@ function ComparePage() {
                       background: 'linear-gradient(135deg, #10b981, #059669)',
                       color: 'white',
                       border: 'none',
-                      padding: '12px 24px',
-                      borderRadius: '8px',
+                      padding: '16px 32px',
+                      borderRadius: '12px',
                       cursor: 'pointer',
                       fontWeight: '600',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease'
+                      fontSize: '1.1rem',
+                      transition: 'all 0.3s ease',
+                      minWidth: '200px',
+                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
                     }}
                     onMouseOver={(e) => {
                       e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
+                      e.target.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.4)';
                     }}
                     onMouseOut={(e) => {
                       e.target.style.transform = 'none';
-                      e.target.style.boxShadow = 'none';
+                      e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
                     }}
                   >
-                    📊 Download Excel Results
+                    📊 Excel Report
                   </button>
+                  
                   <button
                     onClick={handleDownloadCSV}
                     style={{
                       background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
                       color: 'white',
                       border: 'none',
-                      padding: '12px 24px',
-                      borderRadius: '8px',
+                      padding: '16px 32px',
+                      borderRadius: '12px',
                       cursor: 'pointer',
                       fontWeight: '600',
-                      fontSize: '1rem',
-                      transition: 'all 0.3s ease'
+                      fontSize: '1.1rem',
+                      transition: 'all 0.3s ease',
+                      minWidth: '200px',
+                      boxShadow: '0 4px 15px rgba(14, 165, 233, 0.3)'
                     }}
                     onMouseOver={(e) => {
                       e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 4px 15px rgba(14, 165, 233, 0.3)';
+                      e.target.style.boxShadow = '0 8px 25px rgba(14, 165, 233, 0.4)';
                     }}
                     onMouseOut={(e) => {
                       e.target.style.transform = 'none';
-                      e.target.style.boxShadow = 'none';
+                      e.target.style.boxShadow = '0 4px 15px rgba(14, 165, 233, 0.3)';
                     }}
                   >
-                    📄 Download CSV Results
+                    📄 CSV Data
                   </button>
                 </div>
-              </div>
-              
-              {results.results && results.results.length > 0 && (
+                
                 <div style={{
-                  overflowX: 'auto',
-                  marginTop: '30px',
-                  borderRadius: '12px',
-                  border: '1px solid #e5e7eb'
+                  marginTop: '20px',
+                  fontSize: '0.9rem',
+                  color: '#6b7280'
                 }}>
-                  <table style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: '0.9rem',
-                    minWidth: '600px'
-                  }}>
-                    <thead>
-                      <tr style={{
-                        background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)'
-                      }}>
-                        <th style={{
-                          border: '1px solid #e5e7eb',
-                          padding: '16px 12px',
-                          textAlign: 'left',
-                          fontWeight: '600',
-                          color: '#1f2937'
-                        }}>
-                          ID
-                        </th>
-                        {Object.keys(results.results[0].fields).map((field, idx) => (
-                          <th key={idx} style={{
-                            border: '1px solid #e5e7eb',
-                            padding: '16px 12px',
-                            textAlign: 'left',
-                            fontWeight: '600',
-                            color: '#1f2937'
-                          }}>
-                            {field}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.results.map((row, rowIndex) => (
-                        <tr key={rowIndex}>
-                          <td style={{
-                            border: '1px solid #e5e7eb',
-                            padding: '12px',
-                            verticalAlign: 'top',
-                            background: 'white'
-                          }}>
-                            {row.ID}
-                          </td>
-                          {Object.entries(row.fields).map(([key, value], idx) => (
-                            <td
-                              key={idx}
-                              style={{
-                                border: '1px solid #e5e7eb',
-                                padding: '12px',
-                                verticalAlign: 'top',
-                                background: value.status === 'difference' ? '#fef2f2' 
-                                          : value.status === 'acceptable' ? '#fefce8' 
-                                          : '#f0fdf4'
-                              }}
-                            >
-                              <div>
-                                <strong>{value.val1} / {value.val2}</strong>
-                                {FEATURES.AUTO_DETECTION && value.isAutoDetectedAmount && (
-                                  <span style={{
-                                    marginLeft: '5px',
-                                    fontSize: '0.8em'
-                                  }}>
-                                    🤖
-                                  </span>
-                                )}
-                              </div>
-                              <small style={{
-                                color: '#6b7280',
-                                display: 'block',
-                                marginTop: '4px'
-                              }}>
-                                {value.status}
-                                {value.difference && ` (Δ ${value.difference})`}
-                              </small>
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  Includes: Summary statistics • Field-by-field comparison • Status indicators • Auto-detection results
                 </div>
-              )}
+              </div>
             </div>
           )}
 
