@@ -334,13 +334,20 @@ export default function Home() {
 
   // Run actual comparison
   const handleRunComparison = async () => {
-    if (!file1 || !file2 || finalMappings.length === 0) {
-      setError('Missing files or mappings.');
+    if (!file1 || !file2) {
+      setError('Missing files to compare.');
+      return;
+    }
+
+    // If no mappings yet, let HeaderMapper handle this
+    if (finalMappings.length === 0) {
+      console.log('No mappings yet, HeaderMapper will auto-run when ready');
       return;
     }
 
     setIsProcessing(true);
     setProcessingStep('Running comparison...');
+    setError(null); // Clear any previous errors
 
     try {
       let result;
@@ -379,6 +386,10 @@ export default function Home() {
     } catch (err) {
       console.error('Comparison error:', err);
       setError(err.message);
+      await trackAnalytics('comparison_error', {
+        error_message: err.message,
+        file_type: fileType
+      });
     } finally {
       setIsProcessing(false);
       setProcessingStep('');
