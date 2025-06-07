@@ -34,7 +34,7 @@ export default function Home() {
         if (prev === 'documents') return 'technical';
         return 'spreadsheets';
       });
-    }, 7000); // Change every 7 seconds for 3 demos
+    }, 7000);
 
     return () => clearInterval(interval);
   }, [isAutoCycling, isPaused]);
@@ -127,244 +127,6 @@ export default function Home() {
     localStorage.setItem('veridiff-cookie-consent', 'accepted');
     setShowCookieBanner(false);
   };
-
-  // Responsive styles
-  const containerStyle = {
-    minHeight: '100vh',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    margin: 0,
-    padding: 0,
-    color: '#1f2937'
-  };
-
-  const heroStyle = {
-    background: 'linear-gradient(135deg, #eff6ff, #f3e8ff)',
-    padding: '5rem 0',
-    textAlign: 'center'
-  };
-
-  const heroContainerStyle = {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 20px'
-  };
-
-  const sectionStyle = {
-    padding: '5rem 0'
-  };
-
-  const sectionContainerStyle = {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 20px'
-  };
-
-  // Enhanced media queries with more animations
-  const mediaQueries = `
-    @media (max-width: 768px) {
-      .hero-title { font-size: 2.5rem !important; }
-      .hero-subtitle { font-size: 1.1rem !important; }
-      .section-title { font-size: 1.8rem !important; }
-      .section-padding { padding: 3rem 0 !important; }
-      .demo-grid { grid-template-columns: 1fr !important; }
-      .pricing-grid { grid-template-columns: 1fr !important; }
-      .feature-grid { grid-template-columns: 1fr !important; }
-      .file-types-grid { grid-template-columns: 1fr !important; }
-      .use-cases-grid { grid-template-columns: repeat(2, 1fr) !important; }
-      .button-group { flex-direction: column !important; align-items: center !important; }
-      .demo-tabs { flex-direction: column !important; gap: 0.5rem !important; }
-      .tolerance-grid { grid-template-columns: 1fr !important; }
-      .security-grid { grid-template-columns: 1fr !important; }
-      .tab-slider { display: none !important; }
-      .cta-benefits { 
-        flex-direction: column !important; 
-        gap: 1.2rem !important; 
-        align-items: center !important;
-        text-align: center !important;
-      }
-      .try-demo-section { padding: 3rem 0 !important; }
-      .market-comparison-grid { grid-template-columns: 1fr !important; }
-      .roi-calculator { 
-        padding: 1rem !important;
-        margin-bottom: 1.5rem !important;
-      }
-      .roi-calculator h2 { 
-        font-size: 1.4rem !important; 
-      }
-      .roi-comparison { 
-        grid-template-columns: 1fr auto 1fr !important;
-        gap: 0.8rem !important;
-      }
-      .roi-comparison > div {
-        font-size: 1.5rem !important;
-      }
-      .roi-savings {
-        padding: 0.5rem !important;
-        font-size: 0.9rem !important;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .hero-section { padding: 3rem 0 !important; }
-      .hero-title { font-size: 2rem !important; }
-      .section-container { padding: 0 15px !important; }
-      .pricing-card { margin-bottom: 1rem !important; }
-      .use-cases-grid { grid-template-columns: 1fr !important; }
-      .cta-benefits {
-        padding: 0 1rem !important;
-      }
-      .cta-benefits > div {
-        justify-content: center !important;
-      }
-      .try-demo-section { padding: 2rem 0 !important; }
-      .market-comparison-grid { grid-template-columns: 1fr !important; }
-      .roi-calculator { 
-        padding: 1rem !important;
-        margin-bottom: 1rem !important;
-        maxWidth: '95%' !important;
-      }
-      .roi-calculator h2 { 
-        font-size: 1.2rem !important;
-        line-height: 1.3 !important;
-      }
-      .roi-comparison { 
-        grid-template-columns: 1fr !important;
-        gap: 0.5rem !important;
-        text-align: center !important;
-      }
-      .roi-comparison > div {
-        font-size: 1.3rem !important;
-        margin-bottom: 0.5rem !important;
-      }
-      .roi-savings {
-        padding: 0.5rem !important;
-        font-size: 0.85rem !important;
-      }
-      .tolerance-grid { 
-        grid-template-columns: 1fr !important; 
-        gap: 1rem !important;
-      }
-    }
-    
-    @media (min-width: 769px) and (max-width: 1024px) {
-      .pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
-      .demo-grid { grid-template-columns: 1fr !important; }
-      .file-types-grid { grid-template-columns: repeat(2, 1fr) !important; }
-      .use-cases-grid { grid-template-columns: repeat(3, 1fr) !important; }
-      .market-comparison-grid { grid-template-columns: repeat(2, 1fr) !important; }
-      .roi-calculator { 
-        max-width: 90% !important;
-        padding: 1.2rem !important;
-      }
-      .tolerance-grid { 
-        grid-template-columns: 1fr 1fr !important; 
-        gap: 1.2rem !important;
-      }
-    }
-
-    /* Enhanced animations */
-    .demo-tab {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      transform: translateY(0);
-    }
-    
-    .demo-tab:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
-    }
-    
-    .demo-tab.active {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.2);
-    }
-    
-    .tab-slider {
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .progress-indicator {
-      animation: progressFill 7s linear infinite;
-      animation-play-state: ${isAutoCycling && !isPaused ? 'running' : 'paused'};
-    }
-    
-    @keyframes progressFill {
-      0% { width: 0%; }
-      100% { width: 100%; }
-    }
-    
-    .auto-cycle-pulse {
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-    
-    .demo-content {
-      animation: fadeInUp 0.5s ease-out;
-    }
-    
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Value card animations */
-    .value-card {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .value-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important;
-    }
-
-    /* Mobile-specific benefit item styling */
-    @media (max-width: 768px) {
-      .cta-benefits > div {
-        justify-content: center !important;
-        text-align: center !important;
-        padding: 0.5rem !important;
-      }
-      .cookie-banner {
-        padding: 1rem !important;
-        flex-direction: column !important;
-        text-align: center !important;
-        gap: 0.75rem !important;
-      }
-      .cookie-banner p {
-        font-size: 0.85rem !important;
-        margin-bottom: 0.5rem !important;
-      }
-      .cookie-banner button {
-        width: 100% !important;
-        max-width: 200px !important;
-      }
-    }
-
-    /* Cookie banner animations */
-    .cookie-banner {
-      animation: slideUpFade 0.5s ease-out;
-    }
-    
-    @keyframes slideUpFade {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  `;
 
   // Registration Modal Component
   const RegistrationModal = () => {
@@ -575,7 +337,6 @@ export default function Home() {
         <meta name="twitter:title" content="VeriDiff - Secure File Comparison Platform" />
         <meta name="twitter:description" content="Professional file comparison with local processing and smart mapping features." />
         
-        {/* Schema.org structured data for software application */}
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
@@ -614,10 +375,183 @@ export default function Home() {
           })}
         </script>
         
-        <style>{mediaQueries}</style>
+        <style>{`
+          @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem !important; }
+            .hero-subtitle { font-size: 1.1rem !important; }
+            .section-title { font-size: 1.8rem !important; }
+            .section-padding { padding: 3rem 0 !important; }
+            .demo-grid { grid-template-columns: 1fr !important; }
+            .button-group { flex-direction: column !important; align-items: center !important; }
+            .demo-tabs { flex-direction: column !important; gap: 0.5rem !important; }
+            .tolerance-grid { grid-template-columns: 1fr !important; }
+            .security-grid { grid-template-columns: 1fr !important; }
+            .tab-slider { display: none !important; }
+            .cta-benefits { 
+              flex-direction: column !important; 
+              gap: 1.2rem !important; 
+              align-items: center !important;
+              text-align: center !important;
+            }
+            .try-demo-section { padding: 3rem 0 !important; }
+            .market-comparison-grid { grid-template-columns: 1fr !important; }
+            .roi-calculator { 
+              padding: 1rem !important;
+              margin-bottom: 1.5rem !important;
+            }
+            .roi-calculator h2 { 
+              font-size: 1.4rem !important; 
+            }
+            .roi-comparison { 
+              grid-template-columns: 1fr auto 1fr !important;
+              gap: 0.8rem !important;
+            }
+            .roi-comparison > div {
+              font-size: 1.5rem !important;
+            }
+            .roi-savings {
+              padding: 0.5rem !important;
+              font-size: 0.9rem !important;
+            }
+            .cta-benefits > div {
+              justify-content: center !important;
+              text-align: center !important;
+              padding: 0.5rem !important;
+            }
+            .cookie-banner {
+              padding: 1rem !important;
+              flex-direction: column !important;
+              text-align: center !important;
+              gap: 0.75rem !important;
+            }
+            .cookie-banner p {
+              font-size: 0.85rem !important;
+              margin-bottom: 0.5rem !important;
+            }
+            .cookie-banner button {
+              width: 100% !important;
+              max-width: 200px !important;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            .hero-section { padding: 3rem 0 !important; }
+            .hero-title { font-size: 2rem !important; }
+            .section-container { padding: 0 15px !important; }
+            .try-demo-section { padding: 2rem 0 !important; }
+            .roi-calculator { 
+              padding: 1rem !important;
+              margin-bottom: 1rem !important;
+            }
+            .roi-calculator h2 { 
+              font-size: 1.2rem !important;
+              line-height: 1.3 !important;
+            }
+            .roi-comparison { 
+              grid-template-columns: 1fr !important;
+              gap: 0.5rem !important;
+              text-align: center !important;
+            }
+            .roi-comparison > div {
+              font-size: 1.3rem !important;
+              margin-bottom: 0.5rem !important;
+            }
+            .roi-savings {
+              padding: 0.5rem !important;
+              font-size: 0.85rem !important;
+            }
+            .tolerance-grid { 
+              grid-template-columns: 1fr !important; 
+              gap: 1rem !important;
+            }
+          }
+          
+          .demo-tab {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(0);
+          }
+          
+          .demo-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+          }
+          
+          .demo-tab.active {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.2);
+          }
+          
+          .tab-slider {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          
+          .progress-indicator {
+            animation: progressFill 7s linear infinite;
+            animation-play-state: ${isAutoCycling && !isPaused ? 'running' : 'paused'};
+          }
+          
+          @keyframes progressFill {
+            0% { width: 0%; }
+            100% { width: 100%; }
+          }
+          
+          .auto-cycle-pulse {
+            animation: pulse 2s infinite;
+          }
+          
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+          }
+          
+          .demo-content {
+            animation: fadeInUp 0.5s ease-out;
+          }
+          
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .value-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          
+          .value-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important;
+          }
+
+          .cookie-banner {
+            animation: slideUpFade 0.5s ease-out;
+          }
+          
+          @keyframes slideUpFade {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
       </Head>
       
-      <div style={containerStyle}>
+      <div style={{
+        minHeight: '100vh',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        margin: 0,
+        padding: 0,
+        color: '#1f2937'
+      }}>
         
         <Header />
 
@@ -645,8 +579,16 @@ export default function Home() {
         </div>
 
         {/* Hero Section */}
-        <section style={heroStyle} className="hero-section">
-          <div style={heroContainerStyle} className="section-container">
+        <section style={{
+          background: 'linear-gradient(135deg, #eff6ff, #f3e8ff)',
+          padding: '5rem 0',
+          textAlign: 'center'
+        }} className="hero-section">
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }} className="section-container">
             <div style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
@@ -839,9 +781,16 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Enhanced Demo Section - SECOND */}
-        <section id="features" style={{ ...sectionStyle, background: 'white' }} className="section-padding">
-          <div style={sectionContainerStyle} className="section-container">
+        {/* Enhanced Demo Section */}
+        <section id="features" style={{ 
+          padding: '5rem 0',
+          background: 'white' 
+        }} className="section-padding">
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
               <h2 style={{ 
                 fontSize: '2.25rem', 
@@ -1033,12 +982,10 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Demo Content with Animation */}
-              <div className="demo-content" key={selectedDemo} style={{
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-              }}>
+              {/* Demo Content */}
+              <div className="demo-content" key={selectedDemo}>
                 {selectedDemo === 'spreadsheets' && (
-                  <>
+                  <div>
                     <div style={{ 
                       display: 'grid', 
                       gridTemplateColumns: '1fr 1fr', 
@@ -1054,8 +1001,7 @@ export default function Home() {
                         <h4 style={{ 
                           fontWeight: '600', 
                           marginBottom: '1rem', 
-                          color: '#1f2937',
-                          fontFamily: 'inherit'
+                          color: '#1f2937'
                         }}>
                           📊 Budget_2024_Final.xlsx
                         </h4>
@@ -1072,8 +1018,7 @@ export default function Home() {
                             color: '#065f46', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>Department</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
@@ -1086,8 +1031,7 @@ export default function Home() {
                             color: '#065f46', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>Budgeted Amount (£)</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>CURRENCY</span>
@@ -1100,8 +1044,7 @@ export default function Home() {
                             color: '#065f46', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>Cost Centre Code</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
@@ -1113,8 +1056,7 @@ export default function Home() {
                           background: '#f0fdf4', 
                           borderRadius: '0.5rem', 
                           fontSize: '0.75rem', 
-                          color: '#166534',
-                          fontFamily: 'inherit'
+                          color: '#166534'
                         }}>
                           <strong>145 departments</strong> • Excel with formulas
                         </div>
@@ -1129,8 +1071,7 @@ export default function Home() {
                         <h4 style={{ 
                           fontWeight: '600', 
                           marginBottom: '1rem', 
-                          color: '#1f2937',
-                          fontFamily: 'inherit'
+                          color: '#1f2937'
                         }}>
                           📄 actual_spend_q1.csv
                         </h4>
@@ -1147,8 +1088,7 @@ export default function Home() {
                             color: '#1e40af', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>dept_name</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
@@ -1161,8 +1101,7 @@ export default function Home() {
                             color: '#1e40af', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>actual_amount</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>NUMBER</span>
@@ -1175,8 +1114,7 @@ export default function Home() {
                             color: '#1e40af', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>cost_centre</span>
                             <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>TEXT</span>
@@ -1188,8 +1126,7 @@ export default function Home() {
                           background: '#eff6ff', 
                           borderRadius: '0.5rem', 
                           fontSize: '0.75rem', 
-                          color: '#1e40af',
-                          fontFamily: 'inherit'
+                          color: '#1e40af'
                         }}>
                           <strong>142 departments</strong> • CSV export from finance system
                         </div>
@@ -1200,13 +1137,11 @@ export default function Home() {
                       background: '#dcfce7', 
                       color: '#166534', 
                       padding: '1.5rem', 
-                      borderRadius: '0.75rem', 
-                      fontFamily: 'inherit'
+                      borderRadius: '0.75rem'
                     }}>
                       <h4 style={{ 
                         fontWeight: '600', 
-                        marginBottom: '1.2rem', 
-                        fontFamily: 'inherit',
+                        marginBottom: '1.2rem',
                         textAlign: 'center',
                         fontSize: '1rem',
                         color: '#166534'
@@ -1216,8 +1151,7 @@ export default function Home() {
                       <div style={{ 
                         display: 'grid', 
                         gridTemplateColumns: '1fr 1fr', 
-                        gap: '1.5rem',
-                        fontFamily: 'inherit'
+                        gap: '1.5rem'
                       }} className="tolerance-grid">
                         <div style={{ 
                           background: 'rgba(255, 255, 255, 0.6)',
@@ -1229,16 +1163,14 @@ export default function Home() {
                             fontWeight: '600', 
                             marginBottom: '0.75rem',
                             fontSize: '0.9rem', 
-                            color: '#166534',
-                            fontFamily: 'inherit'
+                            color: '#166534'
                           }}>
                             ✓ Auto-mapped fields:
                           </div>
                           <div style={{ 
                             fontSize: '0.85rem', 
                             lineHeight: '1.6',
-                            color: '#065f46',
-                            fontFamily: 'inherit'
+                            color: '#065f46'
                           }}>
                             • Department → dept_name<br/>
                             • Budgeted Amount → actual_amount<br/>  
@@ -1255,16 +1187,14 @@ export default function Home() {
                             fontWeight: '600', 
                             marginBottom: '0.75rem',
                             fontSize: '0.9rem', 
-                            color: '#166534',
-                            fontFamily: 'inherit'
+                            color: '#166534'
                           }}>
                             📊 Variance Analysis (±3%):
                           </div>
                           <div style={{ 
                             fontSize: '0.85rem', 
                             lineHeight: '1.6',
-                            color: '#065f46',
-                            fontFamily: 'inherit'
+                            color: '#065f46'
                           }}>
                             • 127 departments within tolerance<br/>
                             • 15 over-budget flagged for review<br/>
@@ -1273,11 +1203,11 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {selectedDemo === 'documents' && (
-                  <>
+                  <div>
                     <div style={{ 
                       display: 'grid', 
                       gridTemplateColumns: '1fr 1fr', 
@@ -1293,8 +1223,7 @@ export default function Home() {
                         <h4 style={{ 
                           fontWeight: '600', 
                           marginBottom: '1rem', 
-                          color: '#1f2937',
-                          fontFamily: 'inherit'
+                          color: '#1f2937'
                         }}>
                           📄 Service_Agreement_v2.1.pdf
                         </h4>
@@ -1311,8 +1240,7 @@ export default function Home() {
                             color: '#991b1b', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>Pages</span>
                             <span style={{ fontWeight: 'bold' }}>23 pages</span>
@@ -1325,8 +1253,7 @@ export default function Home() {
                             color: '#991b1b', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>Payment Terms</span>
                             <span style={{ fontWeight: 'bold' }}>Net 30 days</span>
@@ -1339,8 +1266,7 @@ export default function Home() {
                             color: '#991b1b', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>Liability Cap</span>
                             <span style={{ fontWeight: 'bold' }}>£100,000</span>
@@ -1357,8 +1283,7 @@ export default function Home() {
                         <h4 style={{ 
                           fontWeight: '600', 
                           marginBottom: '1rem', 
-                          color: '#1f2937',
-                          fontFamily: 'inherit'
+                          color: '#1f2937'
                         }}>
                           📄 Service_Agreement_v2.2.pdf
                         </h4>
@@ -1375,8 +1300,7 @@ export default function Home() {
                             color: '#0369a1', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>Pages</span>
                             <span style={{ fontWeight: 'bold' }}>24 pages</span>
@@ -1389,8 +1313,7 @@ export default function Home() {
                             color: '#0369a1', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>Payment Terms</span>
                             <span style={{ fontWeight: 'bold' }}>Net 15 days</span>
@@ -1403,8 +1326,7 @@ export default function Home() {
                             color: '#0369a1', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>Liability Cap</span>
                             <span style={{ fontWeight: 'bold' }}>£250,000</span>
@@ -1417,13 +1339,11 @@ export default function Home() {
                       background: '#fef3c7', 
                       color: '#92400e', 
                       padding: '1.5rem', 
-                      borderRadius: '0.75rem',
-                      fontFamily: 'inherit'
+                      borderRadius: '0.75rem'
                     }}>
                       <h4 style={{ 
                         fontWeight: '600', 
-                        marginBottom: '1.2rem', 
-                        fontFamily: 'inherit',
+                        marginBottom: '1.2rem',
                         textAlign: 'center',
                         fontSize: '1rem',
                         color: '#92400e'
@@ -1433,15 +1353,13 @@ export default function Home() {
                       <div style={{ 
                         display: 'grid', 
                         gridTemplateColumns: '1fr 1fr 1fr', 
-                        gap: '1rem',
-                        fontFamily: 'inherit'
+                        gap: '1rem'
                       }} className="tolerance-grid">
                         <div style={{ 
                           padding: '1rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
                           borderRadius: '0.5rem',
-                          fontFamily: 'inherit',
                           textAlign: 'center'
                         }}>
                           <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Payment Terms</div>
@@ -1453,7 +1371,6 @@ export default function Home() {
                           background: '#fef2f2', 
                           color: '#dc2626', 
                           borderRadius: '0.5rem',
-                          fontFamily: 'inherit',
                           textAlign: 'center'
                         }}>
                           <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Liability Cap</div>
@@ -1465,7 +1382,6 @@ export default function Home() {
                           background: '#f0fdf4', 
                           color: '#16a34a', 
                           borderRadius: '0.5rem',
-                          fontFamily: 'inherit',
                           textAlign: 'center'
                         }}>
                           <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>New Content</div>
@@ -1474,11 +1390,11 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {selectedDemo === 'technical' && (
-                  <>
+                  <div>
                     <div style={{ 
                       display: 'grid', 
                       gridTemplateColumns: '1fr 1fr', 
@@ -1494,8 +1410,7 @@ export default function Home() {
                         <h4 style={{ 
                           fontWeight: '600', 
                           marginBottom: '1rem', 
-                          color: '#1f2937',
-                          fontFamily: 'inherit'
+                          color: '#1f2937'
                         }}>
                           🔧 api_config_prod.json
                         </h4>
@@ -1512,8 +1427,7 @@ export default function Home() {
                             color: '#6b21a8', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>"timeout"</span>
                             <span style={{ fontWeight: 'bold' }}>5000</span>
@@ -1526,8 +1440,7 @@ export default function Home() {
                             color: '#6b21a8', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>"max_retries"</span>
                             <span style={{ fontWeight: 'bold' }}>3</span>
@@ -1540,8 +1453,7 @@ export default function Home() {
                             color: '#6b21a8', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>"debug_mode"</span>
                             <span style={{ fontWeight: 'bold' }}>false</span>
@@ -1553,8 +1465,7 @@ export default function Home() {
                           background: '#faf5ff', 
                           borderRadius: '0.5rem', 
                           fontSize: '0.75rem', 
-                          color: '#6b21a8',
-                          fontFamily: 'inherit'
+                          color: '#6b21a8'
                         }}>
                           <strong>Production environment</strong> • 47 configuration keys
                         </div>
@@ -1569,8 +1480,7 @@ export default function Home() {
                         <h4 style={{ 
                           fontWeight: '600', 
                           marginBottom: '1rem', 
-                          color: '#1f2937',
-                          fontFamily: 'inherit'
+                          color: '#1f2937'
                         }}>
                           🔧 api_config_staging.json
                         </h4>
@@ -1587,8 +1497,7 @@ export default function Home() {
                             color: '#1e40af', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>"timeout"</span>
                             <span style={{ fontWeight: 'bold' }}>10000</span>
@@ -1601,8 +1510,7 @@ export default function Home() {
                             color: '#1e40af', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>"max_retries"</span>
                             <span style={{ fontWeight: 'bold' }}>5</span>
@@ -1615,8 +1523,7 @@ export default function Home() {
                             color: '#1e40af', 
                             display: 'flex', 
                             justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            fontFamily: 'inherit'
+                            flexWrap: 'wrap'
                           }}>
                             <span>"debug_mode"</span>
                             <span style={{ fontWeight: 'bold' }}>true</span>
@@ -1628,8 +1535,7 @@ export default function Home() {
                           background: '#eff6ff', 
                           borderRadius: '0.5rem', 
                           fontSize: '0.75rem', 
-                          color: '#1e40af',
-                          fontFamily: 'inherit'
+                          color: '#1e40af'
                         }}>
                           <strong>Staging environment</strong> • 51 configuration keys
                         </div>
@@ -1640,13 +1546,11 @@ export default function Home() {
                       background: '#eff6ff', 
                       color: '#1e40af', 
                       padding: '1.5rem', 
-                      borderRadius: '0.75rem',
-                      fontFamily: 'inherit'
+                      borderRadius: '0.75rem'
                     }}>
                       <h4 style={{ 
                         fontWeight: '600', 
-                        marginBottom: '1.2rem', 
-                        fontFamily: 'inherit',
+                        marginBottom: '1.2rem',
                         textAlign: 'center',
                         fontSize: '1rem',
                         color: '#1e40af'
@@ -1656,15 +1560,13 @@ export default function Home() {
                       <div style={{ 
                         display: 'grid', 
                         gridTemplateColumns: '1fr 1fr 1fr', 
-                        gap: '1rem',
-                        fontFamily: 'inherit'
+                        gap: '1rem'
                       }} className="tolerance-grid">
                         <div style={{ 
                           padding: '1rem', 
                           background: '#fef2f2', 
                           color: '#dc2626', 
                           borderRadius: '0.5rem',
-                          fontFamily: 'inherit',
                           textAlign: 'center'
                         }}>
                           <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Performance Settings</div>
@@ -1676,7 +1578,6 @@ export default function Home() {
                           background: '#fef2f2', 
                           color: '#dc2626', 
                           borderRadius: '0.5rem',
-                          fontFamily: 'inherit',
                           textAlign: 'center'
                         }}>
                           <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Debug Settings</div>
@@ -1688,7 +1589,6 @@ export default function Home() {
                           background: '#fff7ed', 
                           color: '#ea580c', 
                           borderRadius: '0.5rem',
-                          fontFamily: 'inherit',
                           textAlign: 'center'
                         }}>
                           <div style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '0.5rem' }}>New Keys</div>
@@ -1697,14 +1597,14 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Try Demo CTA Section - THIRD */}
+        {/* Try Demo CTA Section */}
         <section style={{ 
           background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
           padding: '4rem 0',
@@ -1713,7 +1613,6 @@ export default function Home() {
           position: 'relative',
           overflow: 'hidden'
         }} className="section-padding try-demo-section">
-          {/* Background decoration */}
           <div style={{
             position: 'absolute',
             top: '-50%',
@@ -1724,7 +1623,13 @@ export default function Home() {
             borderRadius: '50%'
           }} />
           
-          <div style={{ ...sectionContainerStyle, position: 'relative', zIndex: 2 }} className="section-container">
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px',
+            position: 'relative',
+            zIndex: 2
+          }} className="section-container">
             <div style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
@@ -1819,9 +1724,16 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Market Comparison & Pricing Section - FOURTH */}
-        <section style={{ ...sectionStyle, background: '#f8fafc' }} className="section-padding">
-          <div style={sectionContainerStyle} className="section-container">
+        {/* Market Comparison & Pricing Section */}
+        <section style={{ 
+          padding: '5rem 0',
+          background: '#f8fafc' 
+        }} className="section-padding">
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
               <div style={{ 
                 display: 'inline-flex', 
@@ -2067,44 +1979,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Future-Proof Value */}
-            <div style={{
-              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-              padding: '3rem',
-              borderRadius: '1.5rem',
-              border: '1px solid #93c5fd',
-              textAlign: 'center',
-              marginBottom: '3rem'
-            }}>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1e40af' }}>
-                🚀 Future-Proof Your Investment
-              </h3>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-                gap: '2rem',
-                fontSize: '1.05rem',
-                color: '#1e40af'
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <h4 style={{ fontWeight: '600', marginBottom: '0.5rem' }}>📈 Today</h4>
-                  <p style={{ margin: 0, fontSize: '0.95rem' }}>Start with Excel comparison</p>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <h4 style={{ fontWeight: '600', marginBottom: '0.5rem' }}>📄 Next Month</h4>
-                  <p style={{ margin: 0, fontSize: '0.95rem' }}>Client sends PDF changes</p>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <h4 style={{ fontWeight: '600', marginBottom: '0.5rem' }}>🔧 Next Quarter</h4>
-                  <p style={{ margin: 0, fontSize: '0.95rem' }}>JSON API configurations</p>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <h4 style={{ fontWeight: '600', marginBottom: '0.5rem' }}>💪 Result</h4>
-                  <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: '600' }}>You're ready for everything</p>
-                </div>
-              </div>
-            </div>
-
             {/* Upgrade CTA */}
             <div style={{ textAlign: 'center' }}>
               <button onClick={handleProTrial} style={{ 
@@ -2133,9 +2007,16 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Objection-Handling FAQ Section */}
-        <section style={{ ...sectionStyle, background: 'white' }} className="section-padding">
-          <div style={sectionContainerStyle} className="section-container">
+        {/* FAQ Section */}
+        <section style={{ 
+          padding: '5rem 0',
+          background: 'white' 
+        }} className="section-padding">
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px'
+          }} className="section-container">
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
               <h2 style={{ 
                 fontSize: '2.25rem', 
@@ -2157,6 +2038,72 @@ export default function Home() {
               maxWidth: '1000px',
               margin: '0 auto'
             }}>
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  🔒 "Is my data secure?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Absolutely. Unlike other tools that upload files to their servers, VeriDiff processes everything locally in your browser. Your files never leave your device, and we never see or store your data. It's the most secure way to compare sensitive business files.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  📊 "I only need Excel comparison"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Perfect! Start free with Excel comparison after signup. No credit card required. When you need PDF, CSV, or other formats later (and you probably will), upgrade for £19/month instead of buying separate tools for £45/month.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937', 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  💳 "Can I cancel anytime?"
+                </h3>
+                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
+                  Yes, cancel your premium subscription anytime with one click. Cancellation takes effect at your next renewal date, so you keep access until then. No contracts, no commitments - simple and straightforward.
+                </p>
+              </div>
+
               <div style={{
                 background: '#f8fafc',
                 padding: '2rem',
@@ -2271,7 +2218,6 @@ export default function Home() {
           position: 'relative',
           overflow: 'hidden'
         }} className="section-padding">
-          {/* Background decoration */}
           <div style={{
             position: 'absolute',
             top: '-30%',
@@ -2291,7 +2237,13 @@ export default function Home() {
             borderRadius: '50%'
           }} />
           
-          <div style={{ ...sectionContainerStyle, position: 'relative', zIndex: 2 }} className="section-container">
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px',
+            position: 'relative',
+            zIndex: 2
+          }} className="section-container">
             <div style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
@@ -2440,69 +2392,3 @@ export default function Home() {
     </>
   );
 }
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  🔒 "Is my data secure?"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Absolutely. Unlike other tools that upload files to their servers, VeriDiff processes everything locally in your browser. Your files never leave your device, and we never see or store your data. It's the most secure way to compare sensitive business files.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  📊 "I only need Excel comparison"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Perfect! Start free with Excel comparison after signup. No credit card required. When you need PDF, CSV, or other formats later (and you probably will), upgrade for £19/month instead of buying separate tools for £45/month.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  💳 "Can I cancel anytime?"
-                </h3>
-                <p style={{ color: '#4b5563', lineHeight: '1.6', margin: 0 }}>
-                  Yes, cancel your premium subscription anytime with one click. Cancellation takes effect at your next renewal date, so you keep access until then. No contracts, no commitments - simple and straightforward.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.3rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem',
