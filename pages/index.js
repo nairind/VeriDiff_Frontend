@@ -458,31 +458,61 @@ export default function Home() {
 
   // Simple state update handlers - no scroll management
   const handleViewModeChange = useCallback((newMode) => {
+    // Preserve scroll position
+    const scrollY = window.scrollY;
     setViewMode(newMode);
+    // Restore scroll position after state update
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   }, []);
 
   const handleFilterChange = useCallback((newFilter) => {
+    const scrollY = window.scrollY;
     setResultsFilter(newFilter);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   }, []);
 
   const handleSearchChange = useCallback((newTerm) => {
+    const scrollY = window.scrollY;
     setSearchTerm(newTerm);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   }, []);
 
   const handleFocusModeToggle = useCallback((checked) => {
+    const scrollY = window.scrollY;
     setFocusMode(checked);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   }, []);
 
   const handleFieldGroupingToggle = useCallback((checked) => {
+    const scrollY = window.scrollY;
     setFieldGrouping(checked);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   }, []);
 
   const handleIgnoreWhitespaceToggle = useCallback((checked) => {
+    const scrollY = window.scrollY;
     setIgnoreWhitespace(checked);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   }, []);
 
   const handleCharacterDiffToggle = useCallback((checked) => {
+    const scrollY = window.scrollY;
     setShowCharacterDiff(checked);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   }, []);
 
   // Advanced results helper functions
@@ -586,6 +616,7 @@ export default function Home() {
   };
 
   const toggleRowExpansion = (rowIndex) => {
+    const scrollY = window.scrollY;
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(rowIndex)) {
       newExpanded.delete(rowIndex);
@@ -593,9 +624,13 @@ export default function Home() {
       newExpanded.add(rowIndex);
     }
     setExpandedRows(newExpanded);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   };
 
   const toggleGroupExpansion = (groupName) => {
+    const scrollY = window.scrollY;
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupName)) {
       newExpanded.delete(groupName);
@@ -603,6 +638,9 @@ export default function Home() {
       newExpanded.add(groupName);
     }
     setExpandedGroups(newExpanded);
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+    });
   };
 
   // Field grouping logic
@@ -892,6 +930,17 @@ export default function Home() {
             to { transform: rotate(360deg); }
           }
           
+          /* Prevent focus-related scrolling */
+          *:focus {
+            scroll-margin-top: 0;
+            scroll-margin-bottom: 0;
+          }
+          
+          button:focus {
+            outline: 2px solid #2563eb;
+            outline-offset: 2px;
+          }
+          
           @media (max-width: 768px) {
             .upload-container { flex-direction: column !important; gap: 1rem !important; }
             .upload-zone { min-height: 120px !important; }
@@ -1072,7 +1121,11 @@ export default function Home() {
                   onDragOver={handleDragOver}
                   onDragEnter={() => handleDragEnter(1)}
                   onDragLeave={() => handleDragLeave(1)}
-                  onClick={() => document.getElementById('file1').click()}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('file1').click();
+                  }}
                 >
                   <input
                     id="file1"
@@ -1122,7 +1175,11 @@ export default function Home() {
                   onDragOver={handleDragOver}
                   onDragEnter={() => handleDragEnter(2)}
                   onDragLeave={() => handleDragLeave(2)}
-                  onClick={() => document.getElementById('file2').click()}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.getElementById('file2').click();
+                  }}
                 >
                   <input
                     id="file2"
@@ -1144,6 +1201,7 @@ export default function Home() {
               </div>
 
               <button
+                type="button"
                 className="compare-button"
                 onClick={handleCompare}
                 disabled={!file1 || !file2 || isProcessing}
@@ -1288,6 +1346,7 @@ export default function Home() {
               />
               <div style={{ textAlign: 'center', marginTop: '25px' }}>
                 <button 
+                  type="button"
                   onClick={handleProceedWithSheets} 
                   disabled={isProcessing || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
                   style={{
@@ -1385,6 +1444,7 @@ export default function Home() {
                   justifyContent: 'center'
                 }}>
                   <button
+                    type="button"
                     onClick={handleNewComparison}
                     style={{
                       background: 'linear-gradient(135deg, #10b981, #059669)',
@@ -1583,6 +1643,7 @@ export default function Home() {
                       padding: '4px'
                     }}>
                       <button
+                        type="button"
                         onClick={() => handleViewModeChange('unified')}
                         style={{
                           background: viewMode === 'unified' ? '#2563eb' : 'transparent',
@@ -1599,6 +1660,7 @@ export default function Home() {
                         📋 Unified
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleViewModeChange('side-by-side')}
                         style={{
                           background: viewMode === 'side-by-side' ? '#2563eb' : 'transparent',
@@ -1630,7 +1692,10 @@ export default function Home() {
                     </label>
                     <select
                       value={resultsFilter}
-                      onChange={(e) => handleFilterChange(e.target.value)}
+                      onChange={(e) => {
+                        e.preventDefault();
+                        handleFilterChange(e.target.value);
+                      }}
                       style={{
                         width: '100%',
                         padding: '12px 16px',
@@ -2020,7 +2085,12 @@ export default function Home() {
                                   cursor: group.isDefault ? 'default' : 'pointer',
                                   minWidth: `${Math.max(120, group.fields.length * 80)}px`
                                 }}
-                                onClick={() => !group.isDefault && toggleGroupExpansion(group.name)}
+                                onClick={(e) => {
+                                  if (!group.isDefault) {
+                                    e.preventDefault();
+                                    toggleGroupExpansion(group.name);
+                                  }
+                                }}
                                 className="field-group"
                                 >
                                   {group.isDefault ? (
@@ -2064,13 +2134,18 @@ export default function Home() {
                                   cursor: 'pointer',
                                   minWidth: '120px'
                                 }}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  const scrollY = window.scrollY;
                                   if (sortField === field) {
                                     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
                                   } else {
                                     setSortField(field);
                                     setSortDirection('asc');
                                   }
+                                  requestAnimationFrame(() => {
+                                    window.scrollTo(0, scrollY);
+                                  });
                                 }}
                                 >
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
@@ -2230,7 +2305,12 @@ export default function Home() {
                                             {group.fields.filter(f => row.fields[f].status === 'difference').length} differences
                                           </div>
                                           <button
-                                            onClick={() => toggleGroupExpansion(group.name)}
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              toggleGroupExpansion(group.name);
+                                            }}
                                             style={{
                                               background: 'transparent',
                                               border: '1px solid #d1d5db',
@@ -2353,6 +2433,7 @@ export default function Home() {
                     Try adjusting your search terms or filter settings
                   </p>
                   <button
+                    type="button"
                     onClick={() => {
                       setResultsFilter('all');
                       setSearchTerm('');
@@ -2404,6 +2485,7 @@ export default function Home() {
                   flexWrap: 'wrap'
                 }}>
                   <button
+                    type="button"
                     onClick={handleDownloadExcel}
                     style={{
                       background: 'linear-gradient(135deg, #10b981, #059669)',
@@ -2423,6 +2505,7 @@ export default function Home() {
                   </button>
                   
                   <button
+                    type="button"
                     onClick={handleDownloadCSV}
                     style={{
                       background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
@@ -2442,6 +2525,7 @@ export default function Home() {
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleDownloadHTMLDiff}
                     style={{
                       background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
@@ -2795,6 +2879,7 @@ export default function Home() {
               </div>
 
               <button
+                type="button"
                 onClick={handleCompare}
                 disabled={!file1 || !file2}
                 style={{
