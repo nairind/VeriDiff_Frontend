@@ -57,35 +57,73 @@ export default function Home() {
   const [fieldGrouping, setFieldGrouping] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
 
-  // Scroll position preservation
+  // Enhanced scroll position preservation - more robust approach
   const scrollPositionRef = useRef(0);
-  const preserveScrollRef = useRef(false);
   const resultsContainerRef = useRef(null);
   const shouldScrollToResults = useRef(false);
+  const isUpdatingFilters = useRef(false);
+  const scrollLockRef = useRef(false);
 
-  // Scroll position preservation utilities
-  const preserveScrollPosition = useCallback(() => {
+  // Capture scroll position before any state updates
+  const captureScrollPosition = useCallback(() => {
     if (typeof window !== 'undefined') {
       scrollPositionRef.current = window.pageYOffset;
-      preserveScrollRef.current = true;
+      isUpdatingFilters.current = true;
+      scrollLockRef.current = true;
     }
   }, []);
 
+  // More aggressive scroll restoration
   const restoreScrollPosition = useCallback(() => {
-    if (typeof window !== 'undefined' && preserveScrollRef.current) {
+    if (typeof window !== 'undefined' && isUpdatingFilters.current && !shouldScrollToResults.current) {
+      const targetPosition = scrollPositionRef.current;
+      
+      // Multiple restoration attempts to handle all scenarios
+      const restoreScroll = () => {
+        if (scrollLockRef.current) {
+          window.scrollTo(0, targetPosition);
+        }
+      };
+      
+      // Immediate restoration
+      restoreScroll();
+      
+      // Delayed restorations for different rendering phases
+      setTimeout(restoreScroll, 0);
+      setTimeout(restoreScroll, 10);
+      setTimeout(restoreScroll, 50);
+      
       requestAnimationFrame(() => {
-        window.scrollTo(0, scrollPositionRef.current);
-        preserveScrollRef.current = false;
+        restoreScroll();
+        setTimeout(() => {
+          restoreScroll();
+          scrollLockRef.current = false;
+          isUpdatingFilters.current = false;
+        }, 100);
       });
     }
   }, []);
 
   // Effect to restore scroll position after state changes
   useEffect(() => {
-    if (preserveScrollRef.current && !shouldScrollToResults.current) {
+    if (isUpdatingFilters.current && !shouldScrollToResults.current) {
       restoreScrollPosition();
     }
-  }, [viewMode, resultsFilter, searchTerm, focusMode, fieldGrouping, ignoreWhitespace, showCharacterDiff, restoreScrollPosition]);
+  }, [viewMode, resultsFilter, searchTerm, focusMode, fieldGrouping, ignoreWhitespace, showCharacterDiff, expandedGroups, restoreScrollPosition]);
+
+  // Additional scroll event listener to prevent unwanted scrolling during updates
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollLockRef.current && isUpdatingFilters.current) {
+        window.scrollTo(0, scrollPositionRef.current);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', handleScroll, { passive: false });
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   // Analytics tracking function
   const trackAnalytics = async (eventType, data = {}) => {
@@ -484,39 +522,39 @@ export default function Home() {
 
   // Scroll-preserving state update handlers
   const handleViewModeChange = useCallback((newMode) => {
-    preserveScrollPosition();
+    captureScrollPosition();
     setViewMode(newMode);
-  }, [preserveScrollPosition]);
+  }, [captureScrollPosition]);
 
   const handleFilterChange = useCallback((newFilter) => {
-    preserveScrollPosition();
+    captureScrollPosition();
     setResultsFilter(newFilter);
-  }, [preserveScrollPosition]);
+  }, [captureScrollPosition]);
 
   const handleSearchChange = useCallback((newTerm) => {
-    preserveScrollPosition();
+    captureScrollPosition();
     setSearchTerm(newTerm);
-  }, [preserveScrollPosition]);
+  }, [captureScrollPosition]);
 
   const handleFocusModeToggle = useCallback((checked) => {
-    preserveScrollPosition();
+    captureScrollPosition();
     setFocusMode(checked);
-  }, [preserveScrollPosition]);
+  }, [captureScrollPosition]);
 
   const handleFieldGroupingToggle = useCallback((checked) => {
-    preserveScrollPosition();
+    captureScrollPosition();
     setFieldGrouping(checked);
-  }, [preserveScrollPosition]);
+  }, [captureScrollPosition]);
 
   const handleIgnoreWhitespaceToggle = useCallback((checked) => {
-    preserveScrollPosition();
+    captureScrollPosition();
     setIgnoreWhitespace(checked);
-  }, [preserveScrollPosition]);
+  }, [captureScrollPosition]);
 
   const handleCharacterDiffToggle = useCallback((checked) => {
-    preserveScrollPosition();
+    captureScrollPosition();
     setShowCharacterDiff(checked);
-  }, [preserveScrollPosition]);
+  }, [captureScrollPosition]);
 
   // Advanced results helper functions
   const getFilteredResults = () => {
@@ -619,7 +657,7 @@ export default function Home() {
   };
 
   const toggleRowExpansion = (rowIndex) => {
-    preserveScrollPosition();
+    captureScrollPosition();
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(rowIndex)) {
       newExpanded.delete(rowIndex);
@@ -630,7 +668,7 @@ export default function Home() {
   };
 
   const toggleGroupExpansion = (groupName) => {
-    preserveScrollPosition();
+    captureScrollPosition();
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupName)) {
       newExpanded.delete(groupName);
@@ -2100,7 +2138,7 @@ export default function Home() {
                                   minWidth: '120px'
                                 }}
                                 onClick={() => {
-                                  preserveScrollPosition();
+                                  captureScrollPosition();
                                   if (sortField === field) {
                                     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
                                   } else {
@@ -2390,7 +2428,7 @@ export default function Home() {
                   </p>
                   <button
                     onClick={() => {
-                      preserveScrollPosition();
+                      captureScrollPosition();
                       setResultsFilter('all');
                       setSearchTerm('');
                     }}
