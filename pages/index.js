@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
@@ -56,6 +56,36 @@ export default function Home() {
   const [focusMode, setFocusMode] = useState(false);
   const [fieldGrouping, setFieldGrouping] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
+
+  // Scroll position preservation
+  const scrollPositionRef = useRef(0);
+  const preserveScrollRef = useRef(false);
+  const resultsContainerRef = useRef(null);
+  const shouldScrollToResults = useRef(false);
+
+  // Scroll position preservation utilities
+  const preserveScrollPosition = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      scrollPositionRef.current = window.pageYOffset;
+      preserveScrollRef.current = true;
+    }
+  }, []);
+
+  const restoreScrollPosition = useCallback(() => {
+    if (typeof window !== 'undefined' && preserveScrollRef.current) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollPositionRef.current);
+        preserveScrollRef.current = false;
+      });
+    }
+  }, []);
+
+  // Effect to restore scroll position after state changes
+  useEffect(() => {
+    if (preserveScrollRef.current && !shouldScrollToResults.current) {
+      restoreScrollPosition();
+    }
+  }, [viewMode, resultsFilter, searchTerm, focusMode, fieldGrouping, ignoreWhitespace, showCharacterDiff, restoreScrollPosition]);
 
   // Analytics tracking function
   const trackAnalytics = async (eventType, data = {}) => {
@@ -387,9 +417,13 @@ export default function Home() {
         match_rate: ((result.total_records - result.differences_found) / result.total_records * 100).toFixed(1)
       });
       
-      // Scroll to results
+      // Mark that we should scroll to results (this is the only intentional scroll)
+      shouldScrollToResults.current = true;
+      
+      // Scroll to results - this is the ONLY intentional scroll
       setTimeout(() => {
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
+        shouldScrollToResults.current = false; // Reset flag after scroll
       }, 100);
       
     } catch (err) {
@@ -447,6 +481,42 @@ export default function Home() {
     setExpandedRows(new Set());
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Scroll-preserving state update handlers
+  const handleViewModeChange = useCallback((newMode) => {
+    preserveScrollPosition();
+    setViewMode(newMode);
+  }, [preserveScrollPosition]);
+
+  const handleFilterChange = useCallback((newFilter) => {
+    preserveScrollPosition();
+    setResultsFilter(newFilter);
+  }, [preserveScrollPosition]);
+
+  const handleSearchChange = useCallback((newTerm) => {
+    preserveScrollPosition();
+    setSearchTerm(newTerm);
+  }, [preserveScrollPosition]);
+
+  const handleFocusModeToggle = useCallback((checked) => {
+    preserveScrollPosition();
+    setFocusMode(checked);
+  }, [preserveScrollPosition]);
+
+  const handleFieldGroupingToggle = useCallback((checked) => {
+    preserveScrollPosition();
+    setFieldGrouping(checked);
+  }, [preserveScrollPosition]);
+
+  const handleIgnoreWhitespaceToggle = useCallback((checked) => {
+    preserveScrollPosition();
+    setIgnoreWhitespace(checked);
+  }, [preserveScrollPosition]);
+
+  const handleCharacterDiffToggle = useCallback((checked) => {
+    preserveScrollPosition();
+    setShowCharacterDiff(checked);
+  }, [preserveScrollPosition]);
 
   // Advanced results helper functions
   const getFilteredResults = () => {
@@ -549,6 +619,7 @@ export default function Home() {
   };
 
   const toggleRowExpansion = (rowIndex) => {
+    preserveScrollPosition();
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(rowIndex)) {
       newExpanded.delete(rowIndex);
@@ -559,6 +630,7 @@ export default function Home() {
   };
 
   const toggleGroupExpansion = (groupName) => {
+    preserveScrollPosition();
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupName)) {
       newExpanded.delete(groupName);
@@ -1305,7 +1377,7 @@ export default function Home() {
             padding: '3rem 0',
             background: '#f0fdf4',
             borderTop: '1px solid #bbf7d0'
-          }}>
+          }} ref={resultsContainerRef}>
             <div style={{
               maxWidth: '1200px',
               margin: '0 auto',
@@ -1546,7 +1618,7 @@ export default function Home() {
                       padding: '4px'
                     }}>
                       <button
-                        onClick={() => setViewMode('unified')}
+                        onClick={() => handleViewModeChange('unified')}
                         style={{
                           background: viewMode === 'unified' ? '#2563eb' : 'transparent',
                           color: viewMode === 'unified' ? 'white' : '#6b7280',
@@ -1562,7 +1634,7 @@ export default function Home() {
                         📋 Unified
                       </button>
                       <button
-                        onClick={() => setViewMode('side-by-side')}
+                        onClick={() => handleViewModeChange('side-by-side')}
                         style={{
                           background: viewMode === 'side-by-side' ? '#2563eb' : 'transparent',
                           color: viewMode === 'side-by-side' ? 'white' : '#6b7280',
@@ -1593,7 +1665,7 @@ export default function Home() {
                     </label>
                     <select
                       value={resultsFilter}
-                      onChange={(e) => setResultsFilter(e.target.value)}
+                      onChange={(e) => handleFilterChange(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '12px 16px',
@@ -1626,7 +1698,7 @@ export default function Home() {
                       type="text"
                       placeholder="Search values, IDs..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '12px 16px',
@@ -1660,7 +1732,7 @@ export default function Home() {
                         <input
                           type="checkbox"
                           checked={focusMode}
-                          onChange={(e) => setFocusMode(e.target.checked)}
+                          onChange={(e) => handleFocusModeToggle(e.target.checked)}
                           style={{ accentColor: '#2563eb' }}
                         />
                         Focus Mode (highlight changes only)
@@ -1675,7 +1747,7 @@ export default function Home() {
                         <input
                           type="checkbox"
                           checked={fieldGrouping}
-                          onChange={(e) => setFieldGrouping(e.target.checked)}
+                          onChange={(e) => handleFieldGroupingToggle(e.target.checked)}
                           style={{ accentColor: '#2563eb' }}
                         />
                         Group Similar Fields
@@ -1690,7 +1762,7 @@ export default function Home() {
                         <input
                           type="checkbox"
                           checked={ignoreWhitespace}
-                          onChange={(e) => setIgnoreWhitespace(e.target.checked)}
+                          onChange={(e) => handleIgnoreWhitespaceToggle(e.target.checked)}
                           style={{ accentColor: '#2563eb' }}
                         />
                         Ignore Whitespace
@@ -1705,7 +1777,7 @@ export default function Home() {
                         <input
                           type="checkbox"
                           checked={showCharacterDiff}
-                          onChange={(e) => setShowCharacterDiff(e.target.checked)}
+                          onChange={(e) => handleCharacterDiffToggle(e.target.checked)}
                           style={{ accentColor: '#2563eb' }}
                         />
                         Character-Level Diff
@@ -2028,6 +2100,7 @@ export default function Home() {
                                   minWidth: '120px'
                                 }}
                                 onClick={() => {
+                                  preserveScrollPosition();
                                   if (sortField === field) {
                                     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
                                   } else {
@@ -2317,6 +2390,7 @@ export default function Home() {
                   </p>
                   <button
                     onClick={() => {
+                      preserveScrollPosition();
                       setResultsFilter('all');
                       setSearchTerm('');
                     }}
