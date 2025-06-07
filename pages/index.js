@@ -14,6 +14,7 @@ export default function Home() {
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
   const [isComparing, setIsComparing] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [dragActive, setDragActive] = useState({ file1: false, file2: false });
 
   // Check if user has already accepted cookies
@@ -129,9 +130,17 @@ export default function Home() {
     // Simulate comparison process
     setTimeout(() => {
       setIsComparing(false);
-      // Redirect to compare page with files
-      window.location.href = '/compare';
+      setShowResults(true);
+      // Scroll to results section
+      document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
     }, 2000);
+  };
+
+  const handleNewComparison = () => {
+    setFile1(null);
+    setFile2(null);
+    setShowResults(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Registration Modal Component
@@ -263,12 +272,14 @@ export default function Home() {
               flex-direction: column !important; text-align: center !important; gap: 0.75rem !important;
               padding: 1rem !important;
             }
+            section { padding: 2rem 0 !important; }
           }
           
           @media (max-width: 480px) {
             .hero-title { font-size: 2rem !important; }
             .section-container { padding: 0 15px !important; }
             .upload-zone { min-height: 100px !important; font-size: 0.875rem !important; }
+            section { padding: 1.5rem 0 !important; }
           }
           
           .upload-zone {
@@ -357,7 +368,7 @@ export default function Home() {
         {/* Hero Section with Upload Interface */}
         <section style={{
           background: 'linear-gradient(135deg, #eff6ff, #f8fafc)',
-          padding: '4rem 0',
+          padding: '3rem 0',
           textAlign: 'center'
         }}>
           <div style={{
@@ -554,9 +565,156 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Results Section */}
+        {showResults && (
+          <section id="results-section" style={{ 
+            padding: '3rem 0',
+            background: '#f0fdf4',
+            borderTop: '1px solid #bbf7d0'
+          }}>
+            <div style={{
+              maxWidth: '1200px',
+              margin: '0 auto',
+              padding: '0 20px'
+            }} className="section-container">
+              
+              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ 
+                  fontSize: '2rem', 
+                  fontWeight: '700', 
+                  marginBottom: '1rem', 
+                  color: '#166534'
+                }}>
+                  ✅ Comparison Complete!
+                </h2>
+                <p style={{ fontSize: '1.1rem', color: '#065f46' }}>
+                  Found differences between <strong>{file1?.name}</strong> and <strong>{file2?.name}</strong>
+                </p>
+              </div>
+
+              <div style={{
+                background: 'white',
+                borderRadius: '1rem',
+                padding: '2rem',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                marginBottom: '2rem'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.25rem', 
+                  fontWeight: '600', 
+                  color: '#1f2937',
+                  marginBottom: '1rem'
+                }}>
+                  Sample Results Preview:
+                </h3>
+                
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr', 
+                  gap: '2rem',
+                  marginBottom: '1.5rem'
+                }}>
+                  <div style={{
+                    background: '#fef2f2',
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #fecaca'
+                  }}>
+                    <div style={{ fontWeight: '600', color: '#dc2626', marginBottom: '0.5rem' }}>
+                      🔴 Changes Detected
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#7f1d1d' }}>
+                      • 15 cells modified<br/>
+                      • 3 rows added<br/>
+                      • 2 columns renamed
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    background: '#f0fdf4',
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #bbf7d0'
+                  }}>
+                    <div style={{ fontWeight: '600', color: '#059669', marginBottom: '0.5rem' }}>
+                      ✅ Privacy Protected
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#065f46' }}>
+                      • Files processed locally<br/>
+                      • No data uploaded<br/>
+                      • Complete confidentiality
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ 
+                    fontSize: '0.95rem', 
+                    color: '#6b7280', 
+                    marginBottom: '1.5rem'
+                  }}>
+                    Sign up to see detailed results and save your comparisons
+                  </p>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button 
+                      onClick={() => window.location.href = '/api/auth/signin'}
+                      style={{
+                        background: '#2563eb',
+                        color: 'white',
+                        border: 'none',
+                        padding: '0.75rem 2rem',
+                        borderRadius: '0.5rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        fontSize: '1rem'
+                      }}
+                    >
+                      View Full Results (Free)
+                    </button>
+                    <button 
+                      onClick={handleProTrial}
+                      style={{
+                        background: 'linear-gradient(135deg, #dc2626, #ea580c)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '0.75rem 2rem',
+                        borderRadius: '0.5rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        fontSize: '1rem'
+                      }}
+                    >
+                      Get Unlimited (£19/mo)
+                    </button>
+                  </div>
+                  
+                  <div style={{ marginTop: '1rem' }}>
+                    <button 
+                      onClick={handleNewComparison}
+                      style={{
+                        background: 'transparent',
+                        color: '#6b7280',
+                        border: '1px solid #d1d5db',
+                        padding: '0.5rem 1.5rem',
+                        borderRadius: '0.5rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      🔄 Try Another Comparison
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Industry Use Cases */}
         <section style={{ 
-          padding: '4rem 0',
+          padding: '3rem 0',
           background: 'white' 
         }}>
           <div style={{
