@@ -60,6 +60,19 @@ export default function Home() {
   // Only keep refs needed for the intentional scroll to results
   const resultsContainerRef = useRef(null);
   const shouldScrollToResults = useRef(false);
+  const scrollPositionRef = useRef(0);
+
+  // Preserve scroll position before any state update
+  const preserveScroll = () => {
+    scrollPositionRef.current = window.pageYOffset || document.documentElement.scrollTop;
+  };
+
+  // Restore scroll position after render
+  useEffect(() => {
+    if (showResults && scrollPositionRef.current > 0 && !shouldScrollToResults.current) {
+      window.scrollTo(0, scrollPositionRef.current);
+    }
+  }, [viewMode, resultsFilter, searchTerm, focusMode, fieldGrouping, ignoreWhitespace, showCharacterDiff, sortField, sortDirection, expandedGroups, expandedRows]);
 
   // Analytics tracking function
   const trackAnalytics = async (eventType, data = {}) => {
@@ -84,6 +97,13 @@ export default function Home() {
   useEffect(() => {
     trackAnalytics('page_view', { page: 'home' });
   }, []);
+
+  // Restore scroll position after render
+  useEffect(() => {
+    if (showResults && scrollPositionRef.current > 0 && !shouldScrollToResults.current) {
+      window.scrollTo(0, scrollPositionRef.current);
+    }
+  }, [viewMode, resultsFilter, searchTerm, focusMode, fieldGrouping, ignoreWhitespace, showCharacterDiff, sortField, sortDirection, expandedGroups]);
 
   // Detect file type based on file extensions
   const detectFileType = (file1, file2) => {
@@ -396,6 +416,7 @@ export default function Home() {
       
       // Scroll to results - this is the ONLY intentional scroll
       setTimeout(() => {
+        scrollPositionRef.current = 0; // Reset before intentional scroll
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
         shouldScrollToResults.current = false; // Reset flag after scroll
       }, 100);
@@ -443,6 +464,7 @@ export default function Home() {
 
   // New comparison handler
   const handleNewComparison = () => {
+    scrollPositionRef.current = 0; // Reset scroll position
     setFile1(null);
     setFile2(null);
     setFileType(null);
@@ -456,63 +478,40 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Simple state update handlers - no scroll management
+  // Simple state update handlers - preserve scroll
   const handleViewModeChange = useCallback((newMode) => {
-    // Preserve scroll position
-    const scrollY = window.scrollY;
+    preserveScroll();
     setViewMode(newMode);
-    // Restore scroll position after state update
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   }, []);
 
   const handleFilterChange = useCallback((newFilter) => {
-    const scrollY = window.scrollY;
+    preserveScroll();
     setResultsFilter(newFilter);
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   }, []);
 
   const handleSearchChange = useCallback((newTerm) => {
-    const scrollY = window.scrollY;
+    preserveScroll();
     setSearchTerm(newTerm);
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   }, []);
 
   const handleFocusModeToggle = useCallback((checked) => {
-    const scrollY = window.scrollY;
+    preserveScroll();
     setFocusMode(checked);
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   }, []);
 
   const handleFieldGroupingToggle = useCallback((checked) => {
-    const scrollY = window.scrollY;
+    preserveScroll();
     setFieldGrouping(checked);
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   }, []);
 
   const handleIgnoreWhitespaceToggle = useCallback((checked) => {
-    const scrollY = window.scrollY;
+    preserveScroll();
     setIgnoreWhitespace(checked);
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   }, []);
 
   const handleCharacterDiffToggle = useCallback((checked) => {
-    const scrollY = window.scrollY;
+    preserveScroll();
     setShowCharacterDiff(checked);
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   }, []);
 
   // Advanced results helper functions
@@ -616,7 +615,7 @@ export default function Home() {
   };
 
   const toggleRowExpansion = (rowIndex) => {
-    const scrollY = window.scrollY;
+    preserveScroll();
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(rowIndex)) {
       newExpanded.delete(rowIndex);
@@ -624,13 +623,10 @@ export default function Home() {
       newExpanded.add(rowIndex);
     }
     setExpandedRows(newExpanded);
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   };
 
   const toggleGroupExpansion = (groupName) => {
-    const scrollY = window.scrollY;
+    preserveScroll();
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupName)) {
       newExpanded.delete(groupName);
@@ -638,9 +634,6 @@ export default function Home() {
       newExpanded.add(groupName);
     }
     setExpandedGroups(newExpanded);
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY);
-    });
   };
 
   // Field grouping logic
@@ -939,6 +932,15 @@ export default function Home() {
           button:focus {
             outline: 2px solid #2563eb;
             outline-offset: 2px;
+          }
+          
+          /* Prevent scroll on state change */
+          #results-section {
+            scroll-behavior: auto !important;
+          }
+          
+          html {
+            scroll-behavior: auto !important;
           }
           
           @media (max-width: 768px) {
@@ -1636,7 +1638,10 @@ export default function Home() {
                     }}>
                       <button
                         type="button"
-                        onClick={() => handleViewModeChange('unified')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewModeChange('unified');
+                        }}
                         style={{
                           background: viewMode === 'unified' ? '#2563eb' : 'transparent',
                           color: viewMode === 'unified' ? 'white' : '#6b7280',
@@ -1653,7 +1658,10 @@ export default function Home() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleViewModeChange('side-by-side')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewModeChange('side-by-side');
+                        }}
                         style={{
                           background: viewMode === 'side-by-side' ? '#2563eb' : 'transparent',
                           color: viewMode === 'side-by-side' ? 'white' : '#6b7280',
@@ -1685,7 +1693,6 @@ export default function Home() {
                     <select
                       value={resultsFilter}
                       onChange={(e) => {
-                        e.preventDefault();
                         handleFilterChange(e.target.value);
                       }}
                       style={{
@@ -2080,6 +2087,7 @@ export default function Home() {
                                 onClick={(e) => {
                                   if (!group.isDefault) {
                                     e.preventDefault();
+                                    preserveScroll();
                                     toggleGroupExpansion(group.name);
                                   }
                                 }}
@@ -2128,16 +2136,13 @@ export default function Home() {
                                 }}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  const scrollY = window.scrollY;
+                                  preserveScroll();
                                   if (sortField === field) {
                                     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
                                   } else {
                                     setSortField(field);
                                     setSortDirection('asc');
                                   }
-                                  requestAnimationFrame(() => {
-                                    window.scrollTo(0, scrollY);
-                                  });
                                 }}
                                 >
                                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
@@ -2301,6 +2306,7 @@ export default function Home() {
                                             onClick={(e) => {
                                               e.preventDefault();
                                               e.stopPropagation();
+                                              preserveScroll();
                                               toggleGroupExpansion(group.name);
                                             }}
                                             style={{
@@ -2427,6 +2433,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => {
+                      preserveScroll();
                       setResultsFilter('all');
                       setSearchTerm('');
                     }}
