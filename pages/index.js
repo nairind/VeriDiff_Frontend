@@ -1,109 +1,144 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { useSession } from 'next-auth/react';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
+import HeaderMapper from '../components/HeaderMapper';
+import SheetSelector from '../components/SheetSelector';
+
+// File processing utilities
+import { parseCSVFile, compareFiles } from '../utils/simpleCSVComparison';
+import { parseExcelFile, compareExcelFiles, getExcelFileInfo } from '../utils/excelFileComparison';
+import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
+import { mapHeaders } from '../utils/mapHeaders';
+import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
 
 export default function Home() {
-  const { data: session } = useSession();
-  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
-  const [pendingPremiumUpgrade, setPendingPremiumUpgrade] = useState(false);
-  const [showCookieBanner, setShowCookieBanner] = useState(true);
-  
-  // File upload states
+  // Core file states
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
-  const [isComparing, setIsComparing] = useState(false);
-  const [showResults, setShowResults] = useState(false);
+  const [fileType, setFileType] = useState(null); // Auto-detected
   const [dragActive, setDragActive] = useState({ file1: false, file2: false });
 
-  // Check if user has already accepted cookies
-  useEffect(() => {
-    const cookieConsent = localStorage.getItem('veridiff-cookie-consent');
-    if (cookieConsent === 'accepted') {
-      setShowCookieBanner(false);
-    }
-  }, []);
+  // Processing states
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState('');
+  const [error, setError] = useState(null);
 
-  // Handle premium upgrade after successful registration
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const premiumIntent = urlParams.get('premium') === 'true';
-    
-    if (session && (pendingPremiumUpgrade || premiumIntent)) {
-      setPendingPremiumUpgrade(false);
-      setShowRegistrationModal(false);
-      
-      if (premiumIntent) {
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.delete('premium');
-        window.history.replaceState({}, '', newUrl);
-      }
-      
-      handlePremiumUpgradeFlow();
-    }
-  }, [session, pendingPremiumUpgrade]);
+  // Header mapping states
+  const [showMapper, setShowMapper] = useState(false);
+  const [headers1, setHeaders1] = useState([]);
+  const [headers2, setHeaders2] = useState([]);
+  const [suggestedMappings, setSuggestedMappings] = useState([]);
+  const [finalMappings, setFinalMappings] = useState([]);
+  const [sampleData1, setSampleData1] = useState(null);
+  const [sampleData2, setSampleData2] = useState(null);
 
-  const handleProTrial = async () => {
-    if (!session) {
-      setPendingPremiumUpgrade(true);
-      setShowRegistrationModal(true);
-      return;
-    }
-    await handlePremiumUpgradeFlow();
-  };
+  // Sheet selection states (for Excel files)
+  const [showSheetSelector, setShowSheetSelector] = useState(false);
+  const [file1Info, setFile1Info] = useState(null);
+  const [file2Info, setFile2Info] = useState(null);
+  const [selectedSheet1, setSelectedSheet1] = useState(null);
+  const [selectedSheet2, setSelectedSheet2] = useState(null);
 
-  const handlePremiumUpgradeFlow = async () => {
+  // Results states
+  const [results, setResults] = useState(null);
+  const [showResults, setShowResults] = useState(false);
+
+  // Advanced results display states
+  const [resultsFilter, setResultsFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [expandedRows, setExpandedRows] = useState(new Set());
+  const [viewMode, setViewMode] = useState('unified');
+  const [ignoreWhitespace, setIgnoreWhitespace] = useState(false);
+  const [showCharacterDiff, setShowCharacterDiff] = useState(true);
+
+  // Analytics tracking function
+  const trackAnalytics = async (eventType, data = {}) => {
     try {
-      const response = await fetch('/api/stripe/create-checkout-session', {
+      await fetch('/api/analytics/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1RVEnnJbX57fsaKHqLt143Fg',
-          successUrl: `${window.location.origin}/compare?success=true`,
-          cancelUrl: `${window.location.origin}/?canceled=true`,
-        }),
+          event_type: eventType,
+          timestamp: new Date().toISOString(),
+          user_agent: navigator.userAgent,
+          page_url: window.location.href,
+          ...data
+        })
       });
-
-      const { url } = await response.json();
-      if (url) {
-        window.location.href = url;
-      } else {
-        throw new Error('Failed to create checkout session');
-      }
     } catch (error) {
-      console.error('Stripe checkout error:', error);
-      alert('Sorry, there was an error starting your premium trial. Please try again or contact support.');
+      console.log('Analytics tracking failed (non-blocking):', error);
     }
   };
 
-  const handleRegistrationModalClose = () => {
-    setShowRegistrationModal(false);
-    setPendingPremiumUpgrade(false);
-  };
+  // Track page view on mount
+  useEffect(() => {
+    trackAnalytics('page_view', { page: 'home' });
+  }, []);
 
-  const handleCookieAccept = () => {
-    localStorage.setItem('veridiff-cookie-consent', 'accepted');
-    setShowCookieBanner(false);
+  // Detect file type based on file extensions
+  const detectFileType = (file1, file2) => {
+    const getExtension = (file) => file.name.toLowerCase().split('.').pop();
+    
+    const ext1 = getExtension(file1);
+    const ext2 = getExtension(file2);
+    
+    const isExcel = (ext) => ['xlsx', 'xls', 'xlsm'].includes(ext);
+    const isCSV = (ext) => ext === 'csv';
+    
+    if (isExcel(ext1) && isExcel(ext2)) {
+      return 'excel';
+    } else if (isCSV(ext1) && isCSV(ext2)) {
+      return 'csv';
+    } else if (isExcel(ext1) && isCSV(ext2)) {
+      return 'excel_csv';
+    } else if (isCSV(ext1) && isExcel(ext2)) {
+      // Swap files so Excel is always first
+      return 'csv_excel_swapped';
+    }
+    return 'unknown';
   };
 
   // File upload handlers
   const handleFileSelect = (fileNumber, event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
-      if (fileNumber === 1) setFile1(selectedFile);
-      if (fileNumber === 2) setFile2(selectedFile);
+      if (fileNumber === 1) {
+        setFile1(selectedFile);
+      } else {
+        setFile2(selectedFile);
+      }
+      
+      // Clear previous states when new file is selected
+      setError(null);
+      setResults(null);
+      setShowResults(false);
+      setShowMapper(false);
+      setShowSheetSelector(false);
     }
   };
 
+  // Drag and drop handlers
   const handleDrop = (fileNumber, event) => {
     event.preventDefault();
     setDragActive({ ...dragActive, [`file${fileNumber}`]: false });
     
     const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
-      if (fileNumber === 1) setFile1(droppedFile);
-      if (fileNumber === 2) setFile2(droppedFile);
+      if (fileNumber === 1) {
+        setFile1(droppedFile);
+      } else {
+        setFile2(droppedFile);
+      }
+      
+      // Clear previous states
+      setError(null);
+      setResults(null);
+      setShowResults(false);
+      setShowMapper(false);
+      setShowSheetSelector(false);
     }
   };
 
@@ -119,167 +154,650 @@ export default function Home() {
     setDragActive({ ...dragActive, [`file${fileNumber}`]: false });
   };
 
+  // Main comparison handler
   const handleCompare = async () => {
     if (!file1 || !file2) {
-      alert('Please select both files to compare');
+      setError('Please select both files to compare');
       return;
     }
 
-    setIsComparing(true);
-    
-    // Simulate actual file processing
-    setTimeout(() => {
-      setIsComparing(false);
-      setShowResults(true);
-      // Scroll to results section
-      document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
-    }, 2000);
+    setIsProcessing(true);
+    setError(null);
+    setProcessingStep('Analyzing files...');
+
+    try {
+      // Detect file type
+      const detectedType = detectFileType(file1, file2);
+      
+      if (detectedType === 'unknown') {
+        throw new Error('Unsupported file combination. Please use Excel (.xlsx, .xls) or CSV (.csv) files.');
+      }
+
+      // Handle file swapping for CSV-Excel
+      let processFile1 = file1;
+      let processFile2 = file2;
+      let processType = detectedType;
+      
+      if (detectedType === 'csv_excel_swapped') {
+        processFile1 = file2;
+        processFile2 = file1;
+        processType = 'excel_csv';
+      }
+
+      setFileType(processType);
+      
+      // Track analytics
+      await trackAnalytics('comparison_started', {
+        file_type: processType,
+        file1_name: processFile1.name,
+        file2_name: processFile2.name,
+        file1_size: processFile1.size,
+        file2_size: processFile2.size
+      });
+
+      setProcessingStep('Processing files...');
+
+      // Process files based on type
+      if (processType === 'excel') {
+        await handleExcelComparison(processFile1, processFile2);
+      } else if (processType === 'csv') {
+        await handleCSVComparison(processFile1, processFile2);
+      } else if (processType === 'excel_csv') {
+        await handleExcelCSVComparison(processFile1, processFile2);
+      }
+
+    } catch (err) {
+      console.error('Comparison error:', err);
+      setError(err.message);
+      await trackAnalytics('comparison_error', {
+        error_message: err.message,
+        file_type: fileType
+      });
+    } finally {
+      setIsProcessing(false);
+      setProcessingStep('');
+    }
   };
 
+  // Excel file comparison
+  const handleExcelComparison = async (file1, file2) => {
+    setProcessingStep('Analyzing Excel files...');
+    
+    // Get file info for both Excel files
+    const [info1, info2] = await Promise.all([
+      getExcelFileInfo(file1),
+      getExcelFileInfo(file2)
+    ]);
+    
+    setFile1Info(info1);
+    setFile2Info(info2);
+    
+    // Check if either file has multiple sheets
+    const needsSheetSelection = info1.sheets.length > 1 || info2.sheets.length > 1;
+    
+    if (needsSheetSelection) {
+      setShowSheetSelector(true);
+      setIsProcessing(false);
+      return;
+    }
+    
+    // Process with default sheets
+    await processExcelFiles(file1, file2, info1.defaultSheet, info2.defaultSheet);
+  };
+
+  // Process Excel files after sheet selection
+  const processExcelFiles = async (file1, file2, sheet1, sheet2) => {
+    setProcessingStep('Parsing Excel data...');
+    
+    const [result1, result2] = await Promise.all([
+      parseExcelFile(file1, sheet1),
+      parseExcelFile(file2, sheet2)
+    ]);
+    
+    const data1 = result1.data || result1;
+    const data2 = result2.data || result2;
+    
+    if (!Array.isArray(data1) || !Array.isArray(data2)) {
+      throw new Error('Failed to parse Excel data');
+    }
+    
+    setupHeaderMapping(data1, data2, 'excel');
+  };
+
+  // CSV file comparison
+  const handleCSVComparison = async (file1, file2) => {
+    setProcessingStep('Parsing CSV files...');
+    
+    const [data1, data2] = await Promise.all([
+      parseCSVFile(file1),
+      parseCSVFile(file2)
+    ]);
+    
+    setupHeaderMapping(data1, data2, 'csv');
+  };
+
+  // Excel-CSV comparison
+  const handleExcelCSVComparison = async (excelFile, csvFile) => {
+    setProcessingStep('Analyzing Excel file...');
+    
+    // Get Excel file info
+    const excelInfo = await getExcelFileInfo(excelFile);
+    setFile1Info(excelInfo);
+    
+    // Check if Excel has multiple sheets
+    if (excelInfo.sheets.length > 1) {
+      setFile2Info({ fileName: csvFile.name, sheets: [{ name: 'CSV Data', hasData: true }] });
+      setShowSheetSelector(true);
+      setIsProcessing(false);
+      return;
+    }
+    
+    // Process with default sheet
+    await processExcelCSVFiles(excelFile, csvFile, excelInfo.defaultSheet);
+  };
+
+  // Process Excel-CSV after sheet selection
+  const processExcelCSVFiles = async (excelFile, csvFile, excelSheet) => {
+    setProcessingStep('Parsing files...');
+    
+    const [excelResult, csvData] = await Promise.all([
+      parseExcelFile(excelFile, excelSheet),
+      parseCSVFile(csvFile)
+    ]);
+    
+    const excelData = excelResult.data || excelResult;
+    
+    setupHeaderMapping(excelData, csvData, 'excel_csv');
+  };
+
+  // Setup header mapping
+  const setupHeaderMapping = (data1, data2, type) => {
+    setProcessingStep('Setting up header mapping...');
+    
+    const h1 = Object.keys(data1[0] || {});
+    const h2 = Object.keys(data2[0] || {});
+    const suggested = mapHeaders(h1, h2);
+    
+    setHeaders1(h1);
+    setHeaders2(h2);
+    setSuggestedMappings(suggested);
+    setSampleData1(data1.slice(0, 10));
+    setSampleData2(data2.slice(0, 10));
+    setShowMapper(true);
+    setIsProcessing(false);
+  };
+
+  // Handle mapping confirmation
+  const handleMappingConfirmed = (mappings) => {
+    setFinalMappings(mappings);
+  };
+
+  // Run actual comparison
+  const handleRunComparison = async () => {
+    if (!file1 || !file2 || finalMappings.length === 0) {
+      setError('Missing files or mappings.');
+      return;
+    }
+
+    setIsProcessing(true);
+    setProcessingStep('Running comparison...');
+
+    try {
+      let result;
+      
+      if (fileType === 'excel') {
+        result = await compareExcelFiles(file1, file2, finalMappings, {
+          sheet1: selectedSheet1,
+          sheet2: selectedSheet2,
+          autoDetectAmounts: true
+        });
+      } else if (fileType === 'csv') {
+        result = await compareFiles(file1, file2, finalMappings);
+      } else if (fileType === 'excel_csv') {
+        result = await compareExcelCSVFiles(file1, file2, finalMappings, {
+          selectedExcelSheet: selectedSheet1,
+          autoDetectAmounts: true
+        });
+      }
+      
+      setResults(result);
+      setShowResults(true);
+      
+      // Track successful comparison
+      await trackAnalytics('comparison_completed', {
+        file_type: fileType,
+        total_records: result.total_records,
+        differences_found: result.differences_found,
+        match_rate: ((result.total_records - result.differences_found) / result.total_records * 100).toFixed(1)
+      });
+      
+      // Scroll to results
+      setTimeout(() => {
+        document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+      
+    } catch (err) {
+      console.error('Comparison error:', err);
+      setError(err.message);
+    } finally {
+      setIsProcessing(false);
+      setProcessingStep('');
+    }
+  };
+
+  // Sheet selection handler
+  const handleSheetSelect = (sheet1, sheet2) => {
+    setSelectedSheet1(sheet1);
+    setSelectedSheet2(sheet2);
+  };
+
+  // Proceed with selected sheets
+  const handleProceedWithSheets = async () => {
+    if (!selectedSheet1 || (fileType === 'excel' && !selectedSheet2)) {
+      setError('Please select sheets for both files.');
+      return;
+    }
+
+    setIsProcessing(true);
+    setShowSheetSelector(false);
+
+    try {
+      if (fileType === 'excel') {
+        await processExcelFiles(file1, file2, selectedSheet1, selectedSheet2);
+      } else if (fileType === 'excel_csv') {
+        await processExcelCSVFiles(file1, file2, selectedSheet1);
+      }
+    } catch (err) {
+      setError(err.message);
+      setIsProcessing(false);
+    }
+  };
+
+  // New comparison handler
   const handleNewComparison = () => {
     setFile1(null);
     setFile2(null);
+    setFileType(null);
+    setResults(null);
     setShowResults(false);
+    setShowMapper(false);
+    setShowSheetSelector(false);
+    setError(null);
+    setFinalMappings([]);
+    setExpandedRows(new Set());
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Registration Modal Component
-  const RegistrationModal = () => {
-    if (!showRegistrationModal) return null;
+  // Advanced results helper functions
+  const getFilteredResults = () => {
+    if (!results?.results) return [];
+    
+    let filtered = results.results;
+    
+    // Apply filter
+    if (resultsFilter === 'differences') {
+      filtered = filtered.filter(row => 
+        Object.values(row.fields).some(field => field.status === 'difference')
+      );
+    } else if (resultsFilter === 'matches') {
+      filtered = filtered.filter(row => 
+        Object.values(row.fields).every(field => field.status === 'match')
+      );
+    }
+    
+    // Apply search
+    if (searchTerm) {
+      filtered = filtered.filter(row =>
+        Object.values(row.fields).some(field =>
+          String(field.val1).toLowerCase().includes(searchTerm.toLowerCase()) ||
+          String(field.val2).toLowerCase().includes(searchTerm.toLowerCase())
+        ) || String(row.ID).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Apply sorting
+    if (sortField) {
+      filtered.sort((a, b) => {
+        let aVal = sortField === 'ID' ? a.ID : a.fields[sortField]?.val1 || '';
+        let bVal = sortField === 'ID' ? b.ID : b.fields[sortField]?.val1 || '';
+        
+        const aNum = parseFloat(aVal);
+        const bNum = parseFloat(bVal);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          aVal = aNum;
+          bVal = bNum;
+        }
+        
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    
+    return filtered;
+  };
 
+  const getRecordStatus = (row) => {
+    if (!row.fields) return 'unknown';
+    
+    const fieldValues = Object.values(row.fields);
+    const hasDifferences = fieldValues.some(field => field.status === 'difference');
+    const hasAcceptable = fieldValues.some(field => field.status === 'acceptable');
+    const allMatches = fieldValues.every(field => field.status === 'match');
+    
+    if (allMatches) return 'match';
+    if (hasDifferences) return 'modified';
+    if (hasAcceptable) return 'acceptable';
+    return 'unknown';
+  };
+
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'match':
+        return { 
+          color: '#16a34a', 
+          bg: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', 
+          border: '#22c55e', 
+          icon: '✅', 
+          label: 'Perfect Match'
+        };
+      case 'modified':
+        return { 
+          color: '#d97706', 
+          bg: 'linear-gradient(135deg, #fefce8, #fef3c7)', 
+          border: '#f59e0b', 
+          icon: '✏️', 
+          label: 'Modified'
+        };
+      case 'acceptable':
+        return { 
+          color: '#0369a1', 
+          bg: 'linear-gradient(135deg, #eff6ff, #dbeafe)', 
+          border: '#3b82f6', 
+          icon: '⚠️', 
+          label: 'Within Tolerance'
+        };
+      default:
+        return { 
+          color: '#6b7280', 
+          bg: 'linear-gradient(135deg, #f9fafb, #f3f4f6)', 
+          border: '#d1d5db', 
+          icon: '❓', 
+          label: 'Unknown'
+        };
+    }
+  };
+
+  const toggleRowExpansion = (rowIndex) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(rowIndex)) {
+      newExpanded.delete(rowIndex);
+    } else {
+      newExpanded.add(rowIndex);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const getCharacterDiff = (str1, str2, ignoreWhitespace = false) => {
+    if (!str1 || !str2) return { str1: str1 || '', str2: str2 || '', hasChanges: str1 !== str2 };
+    
+    let s1 = ignoreWhitespace ? str1.replace(/\s+/g, ' ').trim() : str1;
+    let s2 = ignoreWhitespace ? str2.replace(/\s+/g, ' ').trim() : str2;
+    
+    if (s1 === s2) {
+      return { str1, str2, hasChanges: false };
+    }
+    
+    const result1 = [];
+    const result2 = [];
+    const maxLen = Math.max(s1.length, s2.length);
+    
+    for (let i = 0; i < maxLen; i++) {
+      const char1 = s1[i] || '';
+      const char2 = s2[i] || '';
+      
+      if (char1 === char2) {
+        result1.push({ char: char1, type: 'same' });
+        result2.push({ char: char2, type: 'same' });
+      } else {
+        result1.push({ char: char1, type: char1 ? 'removed' : 'missing' });
+        result2.push({ char: char2, type: char2 ? 'added' : 'missing' });
+      }
+    }
+    
+    return { str1: result1, str2: result2, hasChanges: true };
+  };
+
+  const renderCharacterDiff = (diffResult) => {
+    if (!showCharacterDiff || !diffResult.hasChanges) {
+      return <span>{typeof diffResult.str1 === 'string' ? diffResult.str1 : diffResult.str1.map(c => c.char).join('')}</span>;
+    }
+    
     return (
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px'
-      }}>
-        <div style={{
-          backgroundColor: 'white', borderRadius: '16px', padding: '30px',
-          maxWidth: '500px', width: '100%', textAlign: 'center'
-        }}>
-          <h3 style={{ margin: '0 0 15px 0', fontSize: '1.5rem', fontWeight: '600', color: '#1f2937' }}>
-            🚀 Start Your Premium Trial
-          </h3>
-          
-          <p style={{ marginBottom: '20px', color: '#6b7280', fontSize: '1rem', lineHeight: '1.5' }}>
-            {pendingPremiumUpgrade ? 
-              "Great choice! Just sign up first, then we'll start your premium trial automatically." :
-              "Sign up to unlock premium features and start your free trial."
-            }
-          </p>
-
-          <div style={{
-            background: '#eff6ff', border: '1px solid #2563eb', borderRadius: '8px',
-            padding: '15px', marginBottom: '25px', textAlign: 'left'
-          }}>
-            <h4 style={{ margin: '0 0 8px 0', color: '#1e40af', fontSize: '0.95rem' }}>
-              ✨ What you get with Premium:
-            </h4>
-            <ul style={{ margin: 0, paddingLeft: '20px', color: '#1e40af', fontSize: '0.9rem' }}>
-              <li>All file format comparisons (PDF, CSV, JSON, XML, TXT)</li>
-              <li>Advanced tolerance & precision controls</li>
-              <li>Priority support & feature requests</li>
-              <li>Cancel anytime - no long-term commitment</li>
-            </ul>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-            <button
-              onClick={() => window.location.href = '/api/auth/signin?callbackUrl=' + encodeURIComponent(window.location.origin + '/?premium=true')}
-              style={{
-                background: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: 'white', border: 'none',
-                padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem'
-              }}
-            >
-              {pendingPremiumUpgrade ? 'Sign Up & Start Trial' : 'Sign Up'}
-            </button>
-            <button onClick={handleRegistrationModalClose} style={{
-              background: '#f3f4f6', color: '#374151', border: 'none',
-              padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: '500'
-            }}>
-              Cancel
-            </button>
-          </div>
-
-          <p style={{ fontSize: '0.8rem', color: '#9ca3af', marginTop: '15px', marginBottom: 0 }}>
-            Your files stay private and secure - processed locally in your browser
-          </p>
-        </div>
-      </div>
+      <span>
+        {Array.isArray(diffResult.str1) ? diffResult.str1.map((charObj, idx) => (
+          <span
+            key={idx}
+            style={{
+              backgroundColor: charObj.type === 'removed' ? '#fee2e2' : 
+                             charObj.type === 'missing' ? '#fef3c7' : 'transparent',
+              color: charObj.type === 'removed' ? '#dc2626' : 
+                     charObj.type === 'missing' ? '#d97706' : 'inherit',
+              textDecoration: charObj.type === 'removed' ? 'line-through' : 'none',
+              padding: charObj.type !== 'same' ? '1px 2px' : '0',
+              borderRadius: '2px'
+            }}
+          >
+            {charObj.char}
+          </span>
+        )) : diffResult.str1}
+      </span>
     );
   };
 
-  // Privacy-First Cookie Banner Component
-  const CookieBanner = () => {
-    if (!showCookieBanner) return null;
+  // Download handlers
+  const handleDownloadExcel = async () => {
+    try {
+      const timestamp = new Date().toISOString().slice(0,10);
+      const filename = `veridiff_comparison_${timestamp}.xlsx`;
+      downloadResultsAsExcel(results, filename);
+      
+      await trackAnalytics('export_completed', {
+        export_format: 'excel',
+        file_type: fileType
+      });
+    } catch (error) {
+      setError(error.message);
+    }
+  };
 
-    return (
-      <div className="cookie-banner" style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: 'linear-gradient(135deg, #1e40af, #3730a3)', color: 'white',
-        padding: '1.25rem 1.5rem', zIndex: 9998, display: 'flex',
-        alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.15)'
-      }}>
-        <div style={{ flex: 1 }}>
-          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', fontWeight: '600' }}>
-            🔒 Privacy-First Cookies
-          </h4>
-          <p style={{ margin: 0, fontSize: '0.9rem', color: '#bfdbfe', lineHeight: '1.4' }}>
-            We only use essential cookies for login and preferences. <strong>No tracking, no analytics, no data collection.</strong>
-          </p>
+  const handleDownloadCSV = async () => {
+    try {
+      const timestamp = new Date().toISOString().slice(0,10);
+      const filename = `veridiff_comparison_${timestamp}.csv`;
+      downloadResultsAsCSV(results, filename);
+      
+      await trackAnalytics('export_completed', {
+        export_format: 'csv',
+        file_type: fileType
+      });
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleDownloadHTMLDiff = async () => {
+    try {
+      if (!results?.results) {
+        alert('No comparison results to export');
+        return;
+      }
+
+      const timestamp = new Date().toISOString().slice(0,10);
+      const filename = `veridiff_comparison_${timestamp}.html`;
+      
+      // Generate comprehensive HTML report
+      const filteredResults = getFilteredResults();
+      const summary = {
+        totalRecords: results.total_records,
+        differences: results.differences_found,
+        matches: results.total_records - results.differences_found,
+        matchRate: (((results.total_records - results.differences_found) / results.total_records) * 100).toFixed(1)
+      };
+
+      const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeriDiff Comparison Report - ${new Date().toLocaleDateString()}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1f2937; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 2rem; margin-bottom: 10px; }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .summary-card { background: white; padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #e5e7eb; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .summary-card h3 { font-size: 2rem; margin-bottom: 5px; }
+        .comparison-table { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; margin-bottom: 20px; }
+        .table-header { background: #f8fafc; padding: 15px; border-bottom: 2px solid #e5e7eb; display: grid; grid-template-columns: 80px 1fr 1fr; gap: 20px; font-weight: 600; }
+        .comparison-row { border-bottom: 1px solid #f3f4f6; display: grid; grid-template-columns: 80px 1fr 1fr; gap: 20px; padding: 15px; align-items: center; }
+        .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; }
+        .file-data { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+        .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+        .field-item { background: white; padding: 8px; border-radius: 6px; border: 1px solid #e5e7eb; }
+        .field-label { font-size: 0.75rem; color: #6b7280; margin-bottom: 2px; }
+        .field-value { font-weight: 500; }
+        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 0.9rem; background: white; border-radius: 12px; border: 1px solid #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 VeriDiff Comparison Report</h1>
+            <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+            <p>File Comparison: ${fileType === 'excel' ? 'Excel ↔ Excel' : fileType === 'excel_csv' ? 'Excel ↔ CSV' : 'CSV ↔ CSV'}</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
-          <button onClick={handleCookieAccept} style={{
-            background: '#10b981', color: 'white', border: 'none',
-            padding: '0.75rem 1.5rem', borderRadius: '0.5rem', fontSize: '0.9rem',
-            fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap'
-          }}>
-            Accept Essential Only
-          </button>
+
+        <div class="summary">
+            <div class="summary-card">
+                <h3 style="color: #2563eb;">${summary.totalRecords}</h3>
+                <p>Total Records</p>
+            </div>
+            <div class="summary-card">
+                <h3 style="color: #dc2626;">${summary.differences}</h3>
+                <p>Differences Found</p>
+            </div>
+            <div class="summary-card">
+                <h3 style="color: #16a34a;">${summary.matches}</h3>
+                <p>Perfect Matches</p>
+            </div>
+            <div class="summary-card">
+                <h3 style="color: #d97706;">${summary.matchRate}%</h3>
+                <p>Match Rate</p>
+            </div>
         </div>
-      </div>
-    );
+
+        <div class="comparison-table">
+            <div class="table-header">
+                <div>Status</div>
+                <div style="text-align: center; color: #2563eb;">📄 File 1 (${file1?.name || 'Original'})</div>
+                <div style="text-align: center; color: #16a34a;">📄 File 2 (${file2?.name || 'Comparison'})</div>
+            </div>
+            
+            ${filteredResults.map(row => {
+              const status = getRecordStatus(row);
+              const config = getStatusConfig(status);
+              
+              return `
+                <div class="comparison-row" style="border-left: 4px solid ${config.border}; background: ${config.bg};">
+                    <div style="text-align: center;">
+                        <div class="status-badge" style="background: white; color: ${config.color}; border: 1px solid ${config.border};">
+                            <span>${config.icon}</span>
+                            <span>${config.label}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="file-data">
+                        <div class="field-grid">
+                            ${Object.entries(row.fields).map(([fieldName, fieldData]) => `
+                                <div class="field-item">
+                                    <div class="field-label">${fieldName}</div>
+                                    <div class="field-value">${fieldData.val1}</div>
+                                    ${fieldData.difference ? `<div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Δ ${fieldData.difference}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="file-data">
+                        <div class="field-grid">
+                            ${Object.entries(row.fields).map(([fieldName, fieldData]) => `
+                                <div class="field-item">
+                                    <div class="field-label">${fieldName}</div>
+                                    <div class="field-value">${fieldData.val2}</div>
+                                    ${fieldData.difference ? `<div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Δ ${fieldData.difference}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+              `;
+            }).join('')}
+        </div>
+
+        <div class="footer">
+            <p>🔒 Generated by VeriDiff - Professional File Comparison Tool</p>
+            <p>All processing performed locally in your browser. No data uploaded to external servers.</p>
+            <p>Report contains ${filteredResults.length} records | Generated with character-level diff: ${showCharacterDiff ? 'enabled' : 'disabled'}</p>
+        </div>
+    </div>
+</body>
+</html>`;
+      
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      await trackAnalytics('export_completed', {
+        export_format: 'html',
+        file_type: fileType
+      });
+    } catch (error) {
+      setError(error.message);
+    }
   };
 
   return (
     <>
       <Head>
-        <title>VeriDiff - Secure Excel Comparison Tool for Business | Compare Excel Files Locally</title>
-        <meta name="description" content="Professional Excel comparison tool with complete privacy. Compare Excel and PDF files locally in your browser. Built for professionals who can't upload sensitive data to cloud servers." />
-        <meta name="keywords" content="Excel comparison, secure file comparison, local Excel compare, PDF comparison, private file diff, business file analysis, GDPR compliant" />
+        <title>VeriDiff - Professional File Comparison Tool | Excel, CSV, Cross-Format Analysis</title>
+        <meta name="description" content="Compare Excel, CSV, and mixed file formats with advanced features. Smart header mapping, tolerance settings, character-level diff, and professional reporting. All processing done locally in your browser." />
+        <meta name="keywords" content="file comparison, excel comparison, csv comparison, data analysis, file diff, spreadsheet comparison, data validation, professional tools" />
         <meta name="robots" content="index, follow" />
         
-        {/* Open Graph tags for social media */}
-        <meta property="og:title" content="VeriDiff - Secure Excel Comparison for Business" />
-        <meta property="og:description" content="Compare Excel files securely in your browser. Built for professionals with sensitive data." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://veridiff.com" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="VeriDiff - Secure Excel Comparison" />
-        <meta name="twitter:description" content="Professional Excel comparison with complete privacy protection." />
-        
         <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          
           @media (max-width: 768px) {
-            .hero-title { font-size: 2.5rem !important; }
-            .hero-subtitle { font-size: 1.1rem !important; }
             .upload-container { flex-direction: column !important; gap: 1rem !important; }
             .upload-zone { min-height: 120px !important; }
             .compare-button { width: 100% !important; margin-top: 1rem !important; }
-            .use-cases-grid { grid-template-columns: 1fr !important; }
-            .why-grid { grid-template-columns: 1fr !important; }
-            .cookie-banner { 
-              flex-direction: column !important; text-align: center !important; gap: 0.75rem !important;
-              padding: 1rem !important;
-            }
-            section { padding: 2rem 0 !important; }
+            .results-controls { grid-template-columns: 1fr !important; }
           }
           
           @media (max-width: 480px) {
-            .hero-title { font-size: 2rem !important; }
-            .section-container { padding: 0 15px !important; }
             .upload-zone { min-height: 100px !important; font-size: 0.875rem !important; }
-            section { padding: 1.5rem 0 !important; }
           }
           
           .upload-zone {
@@ -296,39 +814,6 @@ export default function Home() {
             border-color: #2563eb !important;
             background-color: #eff6ff !important;
           }
-          
-          .compare-button {
-            transition: all 0.3s ease;
-          }
-          
-          .compare-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
-          }
-          
-          .compare-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-          }
-          
-          .cookie-banner {
-            animation: slideUpFade 0.5s ease-out;
-          }
-          
-          @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          
-          .spinner {
-            animation: spin 1s linear infinite;
-          }
         `}</style>
       </Head>
       
@@ -337,7 +822,8 @@ export default function Home() {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         margin: 0,
         padding: 0,
-        color: '#1f2937'
+        color: '#1f2937',
+        background: '#f8fafc'
       }}>
         
         <Header />
@@ -360,7 +846,7 @@ export default function Home() {
               color: '#166534',
               fontWeight: '500'
             }}>
-              🔒 Built for professionals who can't upload sensitive Excel files to cloud servers
+              🔒 All file processing happens locally in your browser - your data never leaves your device
             </p>
           </div>
         </div>
@@ -375,7 +861,7 @@ export default function Home() {
             maxWidth: '1200px',
             margin: '0 auto',
             padding: '0 20px'
-          }} className="section-container">
+          }}>
             
             <h1 style={{ 
               fontSize: '3.5rem', 
@@ -383,8 +869,8 @@ export default function Home() {
               marginBottom: '1rem', 
               lineHeight: '1.2', 
               color: '#1f2937' 
-            }} className="hero-title">
-              Compare Excel Files Securely
+            }}>
+              Professional File Comparison
               <span style={{ 
                 display: 'block', 
                 background: 'linear-gradient(135deg, #2563eb, #7c3aed)', 
@@ -392,7 +878,7 @@ export default function Home() {
                 WebkitTextFillColor: 'transparent', 
                 backgroundClip: 'text' 
               }}>
-                in Your Browser
+                Made Simple
               </span>
             </h1>
             
@@ -404,8 +890,8 @@ export default function Home() {
               marginLeft: 'auto', 
               marginRight: 'auto',
               lineHeight: '1.6'
-            }} className="hero-subtitle">
-              Professional Excel comparison for teams with sensitive data. Your files never leave your device.
+            }}>
+              Compare Excel, CSV, and mixed file formats with enterprise-grade features. Smart mapping, tolerance settings, and detailed analysis.
             </p>
 
             {/* Upload Interface */}
@@ -458,10 +944,10 @@ export default function Home() {
                     {file1 ? '✅' : '📊'}
                   </div>
                   <div style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
-                    {file1 ? file1.name : 'Excel File A'}
+                    {file1 ? file1.name : 'First File'}
                   </div>
                   <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                    {file1 ? 'Ready to compare' : 'Drop file or click to upload'}
+                    {file1 ? 'Ready to compare' : 'Excel (.xlsx, .xls) or CSV'}
                   </div>
                 </div>
 
@@ -508,10 +994,10 @@ export default function Home() {
                     {file2 ? '✅' : '📊'}
                   </div>
                   <div style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
-                    {file2 ? file2.name : 'Excel File B'}
+                    {file2 ? file2.name : 'Second File'}
                   </div>
                   <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                    {file2 ? 'Ready to compare' : 'Drop file or click to upload'}
+                    {file2 ? 'Ready to compare' : 'Excel (.xlsx, .xls) or CSV'}
                   </div>
                 </div>
               </div>
@@ -519,34 +1005,36 @@ export default function Home() {
               <button
                 className="compare-button"
                 onClick={handleCompare}
-                disabled={!file1 || !file2 || isComparing}
+                disabled={!file1 || !file2 || isProcessing}
                 style={{
-                  background: (!file1 || !file2) ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                  background: (!file1 || !file2 || isProcessing) ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #3b82f6)',
                   color: 'white',
                   border: 'none',
                   padding: '1rem 3rem',
                   borderRadius: '0.75rem',
                   fontSize: '1.125rem',
                   fontWeight: '600',
-                  cursor: (!file1 || !file2) ? 'not-allowed' : 'pointer',
+                  cursor: (!file1 || !file2 || isProcessing) ? 'not-allowed' : 'pointer',
                   marginTop: '1.5rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem',
-                  margin: '1.5rem auto 0'
+                  margin: '1.5rem auto 0',
+                  transition: 'all 0.3s ease'
                 }}
               >
-                {isComparing ? (
+                {isProcessing ? (
                   <>
-                    <div className="spinner" style={{ 
+                    <div style={{ 
                       width: '20px', 
                       height: '20px', 
                       border: '2px solid rgba(255,255,255,0.3)',
                       borderTop: '2px solid white',
-                      borderRadius: '50%'
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
                     }}></div>
-                    Comparing...
+                    {processingStep || 'Processing...'}
                   </>
                 ) : (
                   <>🔍 Compare Files</>
@@ -559,14 +1047,156 @@ export default function Home() {
                 marginTop: '1rem',
                 marginBottom: 0
               }}>
-                Also supports PDF comparison • No account required to try
+                Supports: Excel ↔ Excel • CSV ↔ CSV • Excel ↔ CSV cross-format
               </p>
             </div>
           </div>
         </section>
 
-        {/* Results Section - Full Results */}
-        {showResults && (
+        {/* Processing Status */}
+        {isProcessing && (
+          <section style={{
+            padding: '2rem 0',
+            background: '#eff6ff',
+            borderTop: '1px solid #bfdbfe'
+          }}>
+            <div style={{
+              maxWidth: '1200px',
+              margin: '0 auto',
+              padding: '0 20px',
+              textAlign: 'center'
+            }}>
+              <div style={{
+                background: 'white',
+                borderRadius: '1rem',
+                padding: '2rem',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                border: '2px solid #2563eb'
+              }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  border: '4px solid #e5e7eb',
+                  borderTop: '4px solid #2563eb',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  margin: '0 auto 1rem'
+                }}></div>
+                <h3 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '600',
+                  color: '#2563eb',
+                  marginBottom: '0.5rem'
+                }}>
+                  {processingStep || 'Processing Files...'}
+                </h3>
+                <p style={{
+                  color: '#6b7280',
+                  fontSize: '1rem'
+                }}>
+                  Please wait while we analyze your files
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <section style={{
+            padding: '2rem 0',
+            background: '#fef2f2'
+          }}>
+            <div style={{
+              maxWidth: '1200px',
+              margin: '0 auto',
+              padding: '0 20px'
+            }}>
+              <div style={{
+                color: '#dc2626',
+                padding: '20px',
+                border: '2px solid #dc2626',
+                borderRadius: '12px',
+                background: 'white',
+                fontSize: '1rem',
+                fontWeight: '500',
+                textAlign: 'center'
+              }}>
+                <strong>❌ Error:</strong> {error}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Sheet Selector */}
+        {showSheetSelector && (
+          <section style={{
+            padding: '2rem 0',
+            background: 'white'
+          }}>
+            <div style={{
+              maxWidth: '1200px',
+              margin: '0 auto',
+              padding: '0 20px'
+            }}>
+              <SheetSelector
+                file1Info={file1Info}
+                file2Info={file2Info}
+                onSheetSelect={handleSheetSelect}
+                fileType={fileType}
+              />
+              <div style={{ textAlign: 'center', marginTop: '25px' }}>
+                <button 
+                  onClick={handleProceedWithSheets} 
+                  disabled={isProcessing || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)}
+                  style={{
+                    background: isProcessing || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2)
+                      ? '#9ca3af' 
+                      : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '14px 30px',
+                    borderRadius: '8px',
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    cursor: isProcessing || !selectedSheet1 || (fileType === 'excel' && !selectedSheet2) ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {isProcessing ? 'Processing...' : 'Proceed with Selected Sheets'}
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Header Mapper */}
+        {showMapper && (
+          <section style={{
+            padding: '2rem 0',
+            background: 'white'
+          }}>
+            <div style={{
+              maxWidth: '1200px',
+              margin: '0 auto',
+              padding: '0 20px'
+            }}>
+              <HeaderMapper
+                file1Headers={headers1}
+                file2Headers={headers2}
+                suggestedMappings={suggestedMappings}
+                sampleData1={sampleData1}
+                sampleData2={sampleData2}
+                onConfirm={handleMappingConfirmed}
+                onRun={handleRunComparison}
+                isProcessing={isProcessing}
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Results Section */}
+        {showResults && results && (
           <section id="results-section" style={{ 
             padding: '3rem 0',
             background: '#f0fdf4',
@@ -576,420 +1206,1119 @@ export default function Home() {
               maxWidth: '1200px',
               margin: '0 auto',
               padding: '0 20px'
-            }} className="section-container">
+            }}>
               
-              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <h2 style={{ 
-                  fontSize: '2rem', 
-                  fontWeight: '700', 
-                  marginBottom: '1rem', 
-                  color: '#166534'
+              {/* Enhanced Header */}
+              <div style={{ 
+                textAlign: 'center', 
+                marginBottom: '40px',
+                padding: '30px',
+                background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+                borderRadius: '20px',
+                border: '1px solid #cbd5e1'
+              }}>
+                <h2 style={{
+                  background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontSize: '2.5rem',
+                  fontWeight: '700',
+                  margin: '0 0 15px 0'
                 }}>
-                  ✅ Comparison Results
+                  ✅ Comparison Complete!
                 </h2>
-                <p style={{ fontSize: '1.1rem', color: '#065f46' }}>
+                
+                <p style={{
+                  fontSize: '1.1rem',
+                  color: '#6b7280',
+                  margin: '0 0 20px 0'
+                }}>
                   <strong>{file1?.name}</strong> vs <strong>{file2?.name}</strong>
                 </p>
+
+                <div style={{
+                  display: 'inline-flex',
+                  gap: '15px',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center'
+                }}>
+                  <button
+                    onClick={handleNewComparison}
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '1rem',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    🔄 Compare New Files
+                  </button>
+                </div>
               </div>
 
-              {/* Full Comparison Results */}
+              {/* Enhanced Summary Dashboard */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '25px',
+                marginBottom: '40px'
+              }}>
+                {/* Total Records Card */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                  border: '2px solid #0ea5e9',
+                  borderRadius: '20px',
+                  padding: '30px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>📊</div>
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: '#0369a1',
+                    marginBottom: '8px'
+                  }}>
+                    {results.total_records}
+                  </div>
+                  <div style={{ 
+                    color: '#0369a1', 
+                    fontSize: '1.1rem',
+                    fontWeight: '600'
+                  }}>
+                    Total Records
+                  </div>
+                </div>
+
+                {/* Differences Card */}
+                <div style={{
+                  background: results.differences_found > 0 
+                    ? 'linear-gradient(135deg, #fef2f2, #fee2e2)' 
+                    : 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                  border: results.differences_found > 0 
+                    ? '2px solid #ef4444' 
+                    : '2px solid #22c55e',
+                  borderRadius: '20px',
+                  padding: '30px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>
+                    {results.differences_found > 0 ? '⚠️' : '✅'}
+                  </div>
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: results.differences_found > 0 ? '#dc2626' : '#16a34a',
+                    marginBottom: '8px'
+                  }}>
+                    {results.differences_found}
+                  </div>
+                  <div style={{ 
+                    color: results.differences_found > 0 ? '#dc2626' : '#16a34a', 
+                    fontSize: '1.1rem',
+                    fontWeight: '600'
+                  }}>
+                    Differences Found
+                  </div>
+                </div>
+
+                {/* Matches Card */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                  border: '2px solid #22c55e',
+                  borderRadius: '20px',
+                  padding: '30px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>✨</div>
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: '#16a34a',
+                    marginBottom: '8px'
+                  }}>
+                    {results.total_records - results.differences_found}
+                  </div>
+                  <div style={{ 
+                    color: '#16a34a', 
+                    fontSize: '1.1rem',
+                    fontWeight: '600'
+                  }}>
+                    Perfect Matches
+                  </div>
+                </div>
+
+                {/* Match Rate Card */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #fefce8, #fef3c7)',
+                  border: '2px solid #f59e0b',
+                  borderRadius: '20px',
+                  padding: '30px',
+                  textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎯</div>
+                  <div style={{ 
+                    fontSize: '3rem', 
+                    fontWeight: '700', 
+                    color: '#d97706',
+                    marginBottom: '8px'
+                  }}>
+                    {(((results.total_records - results.differences_found) / results.total_records) * 100).toFixed(1)}%
+                  </div>
+                  <div style={{ 
+                    color: '#d97706', 
+                    fontSize: '1.1rem',
+                    fontWeight: '600'
+                  }}>
+                    Match Rate
+                  </div>
+                </div>
+              </div>
+
+              {/* Auto-detected Fields Banner */}
+              {results.autoDetectedFields && results.autoDetectedFields.length > 0 && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+                  border: '2px solid #22c55e',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  marginBottom: '30px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🤖</div>
+                  <div style={{ color: '#166534', fontWeight: '600', fontSize: '1.1rem', marginBottom: '5px' }}>
+                    AI Auto-Detected Amount Fields
+                  </div>
+                  <div style={{ color: '#16a34a', fontSize: '1rem' }}>
+                    {results.autoDetectedFields.join(' • ')}
+                  </div>
+                </div>
+              )}
+
+              {/* Advanced Controls Bar */}
               <div style={{
                 background: 'white',
-                borderRadius: '1rem',
-                padding: '2rem',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                marginBottom: '2rem'
+                border: '1px solid #e5e7eb',
+                borderRadius: '16px',
+                padding: '25px',
+                marginBottom: '30px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
               }}>
-                
-                {/* Summary Stats */}
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                  gap: '1.5rem',
-                  marginBottom: '2rem'
-                }}>
-                  <div style={{
-                    background: '#fef2f2',
-                    padding: '1.5rem',
-                    borderRadius: '0.75rem',
-                    border: '1px solid #fecaca',
-                    textAlign: 'center'
-                  }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626', marginBottom: '0.5rem' }}>
-                      23
-                    </div>
-                    <div style={{ fontWeight: '600', color: '#7f1d1d' }}>
-                      Differences Found
-                    </div>
-                  </div>
-                  
-                  <div style={{
-                    background: '#f0fdf4',
-                    padding: '1.5rem',
-                    borderRadius: '0.75rem',
-                    border: '1px solid #bbf7d0',
-                    textAlign: 'center'
-                  }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#059669', marginBottom: '0.5rem' }}>
-                      187
-                    </div>
-                    <div style={{ fontWeight: '600', color: '#065f46' }}>
-                      Cells Matched
-                    </div>
-                  </div>
-                  
-                  <div style={{
-                    background: '#eff6ff',
-                    padding: '1.5rem',
-                    borderRadius: '0.75rem',
-                    border: '1px solid #bfdbfe',
-                    textAlign: 'center'
-                  }}>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2563eb', marginBottom: '0.5rem' }}>
-                      89%
-                    </div>
-                    <div style={{ fontWeight: '600', color: '#1e40af' }}>
-                      Similarity Score
-                    </div>
-                  </div>
-                </div>
-
-                {/* Detailed Changes */}
-                <div style={{ marginBottom: '2rem' }}>
-                  <h3 style={{ 
-                    fontSize: '1.25rem', 
-                    fontWeight: '600', 
-                    color: '#1f2937',
-                    marginBottom: '1rem'
-                  }}>
-                    📋 Detailed Changes:
-                  </h3>
-                  
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr', 
-                    gap: '1.5rem'
-                  }}>
-                    <div>
-                      <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#dc2626', marginBottom: '0.75rem' }}>
-                        🔴 Modified Cells (15)
-                      </h4>
-                      <div style={{ fontSize: '0.875rem', color: '#7f1d1d', lineHeight: '1.6' }}>
-                        • B3: "Budget 2024" → "Budget 2025"<br/>
-                        • C5: £45,000 → £47,250<br/>
-                        • D7: "Marketing" → "Digital Marketing"<br/>
-                        • E12: 15% → 18%<br/>
-                        • F8: "Q1" → "Q1 Revised"<br/>
-                        <span style={{ color: '#9ca3af' }}>+ 10 more changes...</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#059669', marginBottom: '0.75rem' }}>
-                        ✅ New Additions (8)
-                      </h4>
-                      <div style={{ fontSize: '0.875rem', color: '#065f46', lineHeight: '1.6' }}>
-                        • Row 15: New department "AI Research"<br/>
-                        • Column H: "Risk Assessment" added<br/>
-                        • B20: Performance metrics section<br/>
-                        • G5-G10: Quarterly projections<br/>
-                        • Sheet2: "Summary" worksheet added<br/>
-                        <span style={{ color: '#9ca3af' }}>+ 3 more additions...</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Privacy Assurance */}
                 <div style={{
-                  background: '#f8fafc',
-                  padding: '1.5rem',
-                  borderRadius: '0.75rem',
-                  border: '1px solid #e2e8f0',
-                  marginBottom: '1.5rem'
-                }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span style={{ fontSize: '1.5rem' }}>🔒</span>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>
-                      Privacy Protected
-                    </h4>
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '20px',
+                  alignItems: 'center'
+                }} className="results-controls">
+                  
+                  {/* View Mode Toggle */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      👁️ View Mode
+                    </label>
+                    <div style={{
+                      display: 'flex',
+                      background: '#f3f4f6',
+                      borderRadius: '10px',
+                      padding: '4px'
+                    }}>
+                      <button
+                        onClick={() => setViewMode('unified')}
+                        style={{
+                          background: viewMode === 'unified' ? '#2563eb' : 'transparent',
+                          color: viewMode === 'unified' ? 'white' : '#6b7280',
+                          border: 'none',
+                          padding: '10px 16px',
+                          borderRadius: '8px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        📋 Unified
+                      </button>
+                      <button
+                        onClick={() => setViewMode('side-by-side')}
+                        style={{
+                          background: viewMode === 'side-by-side' ? '#2563eb' : 'transparent',
+                          color: viewMode === 'side-by-side' ? 'white' : '#6b7280',
+                          border: 'none',
+                          padding: '10px 16px',
+                          borderRadius: '8px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        ⚖️ Side-by-Side
+                      </button>
+                    </div>
                   </div>
-                  <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
-                    Your files were processed entirely in your browser. No data was uploaded to our servers or stored anywhere.
-                  </p>
+
+                  {/* Filter Controls */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      📋 Filter Results
+                    </label>
+                    <select
+                      value={resultsFilter}
+                      onChange={(e) => setResultsFilter(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '10px',
+                        fontSize: '1rem',
+                        fontWeight: '500',
+                        background: 'white',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="all">Show All Records</option>
+                      <option value="differences">Differences Only</option>
+                      <option value="matches">Matches Only</option>
+                    </select>
+                  </div>
+
+                  {/* Search */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      🔍 Search Records
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Search values, IDs..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '10px',
+                        fontSize: '1rem',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                    />
+                  </div>
+
+                  {/* Advanced Options */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.9rem',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      ⚙️ Advanced Options
+                    </label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '0.9rem',
+                        color: '#4b5563'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={ignoreWhitespace}
+                          onChange={(e) => setIgnoreWhitespace(e.target.checked)}
+                          style={{ accentColor: '#2563eb' }}
+                        />
+                        Ignore Whitespace
+                      </label>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '0.9rem',
+                        color: '#4b5563'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={showCharacterDiff}
+                          onChange={(e) => setShowCharacterDiff(e.target.checked)}
+                          style={{ accentColor: '#2563eb' }}
+                        />
+                        Character-Level Diff
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1rem' }}>
-                    <button 
-                      onClick={handleNewComparison}
-                      style={{
-                        background: '#2563eb',
-                        color: 'white',
-                        border: 'none',
-                        padding: '0.75rem 2rem',
-                        borderRadius: '0.5rem',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        fontSize: '1rem'
-                      }}
-                    >
-                      🔄 Compare More Files
-                    </button>
-                    <button 
-                      onClick={() => window.location.href = '/api/auth/signin'}
-                      style={{
-                        background: 'white',
-                        color: '#2563eb',
-                        border: '2px solid #2563eb',
-                        padding: '0.75rem 2rem',
-                        borderRadius: '0.5rem',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        fontSize: '1rem'
-                      }}
-                    >
-                      💾 Save Results (Free Account)
-                    </button>
+                {/* Results Counter */}
+                <div style={{
+                  marginTop: '20px',
+                  padding: '15px',
+                  background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  border: '1px solid #0ea5e9'
+                }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0369a1' }}>
+                    {getFilteredResults().length}
                   </div>
-                  
-                  <p style={{ 
-                    fontSize: '0.875rem', 
-                    color: '#6b7280',
-                    margin: 0
+                  <div style={{ fontSize: '0.9rem', color: '#0284c7', fontWeight: '500' }}>
+                    Records Shown ({viewMode === 'side-by-side' ? 'Side-by-Side' : 'Unified'} View)
+                  </div>
+                </div>
+              </div>
+
+              {/* Results Display */}
+              {getFilteredResults().length > 0 ? (
+                viewMode === 'side-by-side' ? (
+                  // Side-by-Side View
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
                   }}>
-                    Want unlimited comparisons? <button 
-                      onClick={handleProTrial}
-                      style={{
-                        background: 'transparent',
-                        color: '#dc2626',
-                        border: 'none',
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                        fontSize: '0.875rem',
-                        fontWeight: '600'
-                      }}
-                    >
-                      Upgrade to Pro (£19/mo)
-                    </button>
+                    {/* Table Header */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                      padding: '20px',
+                      borderBottom: '2px solid #e5e7eb'
+                    }}>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '100px 1fr 1fr',
+                        gap: '20px',
+                        alignItems: 'center',
+                        fontWeight: '700',
+                        color: '#1f2937',
+                        fontSize: '1rem'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>Status</div>
+                        <div style={{ textAlign: 'center', color: '#2563eb' }}>
+                          📄 File 1 ({file1?.name || 'Original'})
+                        </div>
+                        <div style={{ textAlign: 'center', color: '#16a34a' }}>
+                          📄 File 2 ({file2?.name || 'Comparison'})
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Table Body */}
+                    <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                      {getFilteredResults().map((row, rowIndex) => {
+                        const status = getRecordStatus(row);
+                        const config = getStatusConfig(status);
+                        
+                        return (
+                          <div key={rowIndex} style={{
+                            borderBottom: '1px solid #f3f4f6',
+                            borderLeft: `4px solid ${config.border}`,
+                            background: config.bg
+                          }}>
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: '100px 1fr 1fr',
+                              gap: '20px',
+                              padding: '20px',
+                              minHeight: '120px',
+                              alignItems: 'center'
+                            }}>
+                              {/* Status Column */}
+                              <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{config.icon}</div>
+                                <div style={{
+                                  fontSize: '0.8rem',
+                                  fontWeight: '600',
+                                  color: config.color,
+                                  background: 'white',
+                                  padding: '6px 10px',
+                                  borderRadius: '8px',
+                                  border: `2px solid ${config.border}`,
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                }}>
+                                  {config.label}
+                                </div>
+                                <div style={{
+                                  fontSize: '0.7rem',
+                                  color: '#6b7280',
+                                  marginTop: '4px'
+                                }}>
+                                  Record {row.ID}
+                                </div>
+                              </div>
+
+                              {/* File 1 Column */}
+                              <div style={{
+                                background: 'white',
+                                border: '2px solid #e5e7eb',
+                                borderRadius: '12px',
+                                padding: '15px',
+                                minHeight: '80px'
+                              }}>
+                                <div style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                                  gap: '10px'
+                                }}>
+                                  {Object.entries(row.fields).map(([fieldName, fieldData]) => {
+                                    const isChanged = fieldData.status === 'difference';
+                                    const diffResult = getCharacterDiff(String(fieldData.val1), String(fieldData.val2), ignoreWhitespace);
+                                    
+                                    return (
+                                      <div key={fieldName} style={{
+                                        background: isChanged ? '#fee2e2' : '#f9fafb',
+                                        padding: '10px',
+                                        borderRadius: '8px',
+                                        border: isChanged ? '2px solid #fca5a5' : '1px solid #e5e7eb'
+                                      }}>
+                                        <div style={{
+                                          fontSize: '0.75rem',
+                                          color: '#6b7280',
+                                          marginBottom: '4px',
+                                          fontWeight: '600'
+                                        }}>
+                                          {fieldName}
+                                        </div>
+                                        <div style={{
+                                          fontWeight: '500',
+                                          color: isChanged ? '#dc2626' : '#1f2937',
+                                          fontSize: '0.9rem'
+                                        }}>
+                                          {showCharacterDiff && isChanged ? 
+                                            renderCharacterDiff(diffResult) : 
+                                            fieldData.val1
+                                          }
+                                        </div>
+                                        {fieldData.difference && (
+                                          <div style={{
+                                            fontSize: '0.7rem',
+                                            color: '#ef4444',
+                                            marginTop: '4px',
+                                            fontWeight: '600'
+                                          }}>
+                                            Δ {fieldData.difference}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* File 2 Column */}
+                              <div style={{
+                                background: 'white',
+                                border: '2px solid #e5e7eb',
+                                borderRadius: '12px',
+                                padding: '15px',
+                                minHeight: '80px'
+                              }}>
+                                <div style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                                  gap: '10px'
+                                }}>
+                                  {Object.entries(row.fields).map(([fieldName, fieldData]) => {
+                                    const isChanged = fieldData.status === 'difference';
+                                    const diffResult = getCharacterDiff(String(fieldData.val1), String(fieldData.val2), ignoreWhitespace);
+                                    
+                                    return (
+                                      <div key={fieldName} style={{
+                                        background: isChanged ? '#d1fae5' : '#f9fafb',
+                                        padding: '10px',
+                                        borderRadius: '8px',
+                                        border: isChanged ? '2px solid #86efac' : '1px solid #e5e7eb'
+                                      }}>
+                                        <div style={{
+                                          fontSize: '0.75rem',
+                                          color: '#6b7280',
+                                          marginBottom: '4px',
+                                          fontWeight: '600'
+                                        }}>
+                                          {fieldName}
+                                        </div>
+                                        <div style={{
+                                          fontWeight: isChanged ? '600' : '500',
+                                          color: isChanged ? '#16a34a' : '#1f2937',
+                                          fontSize: '0.9rem'
+                                        }}>
+                                          {fieldData.val2}
+                                        </div>
+                                        {fieldData.difference && (
+                                          <div style={{
+                                            fontSize: '0.7rem',
+                                            color: '#16a34a',
+                                            marginTop: '4px',
+                                            fontWeight: '600'
+                                          }}>
+                                            Δ {fieldData.difference}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  // Unified View
+                  <div style={{
+                    background: 'white',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
+                  }}>
+                    {/* Table Header */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                      padding: '20px',
+                      borderBottom: '2px solid #e5e7eb'
+                    }}>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: `100px repeat(${Object.keys(results.results[0].fields).length}, 1fr) 60px`,
+                        gap: '15px',
+                        alignItems: 'center',
+                        fontWeight: '700',
+                        color: '#1f2937',
+                        fontSize: '1rem'
+                      }}>
+                        <div>Record ID</div>
+                        {Object.keys(results.results[0].fields).map((field, idx) => (
+                          <div 
+                            key={idx}
+                            style={{
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px'
+                            }}
+                            onClick={() => {
+                              if (sortField === field) {
+                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                              } else {
+                                setSortField(field);
+                                setSortDirection('asc');
+                              }
+                            }}
+                          >
+                            {field}
+                            {sortField === field && (
+                              <span style={{ fontSize: '0.8rem' }}>
+                                {sortDirection === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                        <div>Details</div>
+                      </div>
+                    </div>
+
+                    {/* Table Body */}
+                    <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                      {getFilteredResults().map((row, rowIndex) => {
+                        const hasAnyDifference = Object.values(row.fields).some(field => field.status === 'difference');
+                        const isExpanded = expandedRows.has(rowIndex);
+                        
+                        return (
+                          <div key={rowIndex}>
+                            {/* Main Row */}
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: `100px repeat(${Object.keys(row.fields).length}, 1fr) 60px`,
+                              gap: '15px',
+                              alignItems: 'center',
+                              padding: '20px',
+                              background: hasAnyDifference 
+                                ? 'linear-gradient(135deg, #fef2f2, #fef7f7)' 
+                                : (rowIndex % 2 === 0 ? '#ffffff' : '#f9fafb'),
+                              borderBottom: '1px solid #f3f4f6',
+                              borderLeft: hasAnyDifference ? '4px solid #ef4444' : '4px solid transparent',
+                              transition: 'all 0.2s ease',
+                              boxShadow: hasAnyDifference ? '0 2px 8px rgba(239, 68, 68, 0.08)' : 'none'
+                            }}>
+                              {/* Record ID */}
+                              <div style={{
+                                fontWeight: '600',
+                                color: '#1f2937',
+                                fontSize: '1rem'
+                              }}>
+                                {row.ID}
+                              </div>
+
+                              {/* Field Values */}
+                              {Object.entries(row.fields).map(([key, value], idx) => {
+                                const isMatch = value.val1 === value.val2;
+                                const isDifference = value.status === 'difference';
+                                
+                                return (
+                                  <div key={idx} style={{
+                                    background: isDifference 
+                                      ? 'linear-gradient(135deg, #fee2e2, #fecaca)' 
+                                      : isMatch 
+                                        ? 'linear-gradient(135deg, #f0fdf4, #dcfce7)'
+                                        : 'linear-gradient(135deg, #fefce8, #fef3c7)',
+                                    border: `2px solid ${isDifference ? '#ef4444' : isMatch ? '#22c55e' : '#f59e0b'}`,
+                                    borderRadius: '12px',
+                                    padding: '15px',
+                                    fontSize: '0.95rem',
+                                    position: 'relative',
+                                    minHeight: '80px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'center',
+                                    boxShadow: isDifference ? '0 4px 12px rgba(239, 68, 68, 0.15)' : '0 2px 4px rgba(0,0,0,0.05)',
+                                    transition: 'all 0.2s ease'
+                                  }}>
+                                    {/* Status Icon */}
+                                    <div style={{
+                                      position: 'absolute',
+                                      top: '8px',
+                                      right: '8px',
+                                      fontSize: '1.2rem'
+                                    }}>
+                                      {isDifference ? '❌' : isMatch ? '✅' : '⚠️'}
+                                    </div>
+
+                                    {/* Values Display */}
+                                    {isMatch ? (
+                                      <div style={{ textAlign: 'center' }}>
+                                        <div style={{
+                                          fontWeight: '700',
+                                          color: '#166534',
+                                          marginBottom: '8px',
+                                          fontSize: '1.1rem'
+                                        }}>
+                                          {value.val1}
+                                        </div>
+                                        <div style={{
+                                          fontSize: '0.8rem',
+                                          color: '#16a34a',
+                                          fontWeight: '600',
+                                          background: 'rgba(34, 197, 94, 0.1)',
+                                          padding: '4px 8px',
+                                          borderRadius: '6px',
+                                          display: 'inline-block'
+                                        }}>
+                                          Perfect Match ✓
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <div style={{
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          gap: '8px'
+                                        }}>
+                                          <div style={{
+                                            background: isDifference 
+                                              ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.25))'
+                                              : 'rgba(59, 130, 246, 0.1)',
+                                            padding: '8px 10px',
+                                            borderRadius: '8px',
+                                            fontSize: '0.9rem',
+                                            fontWeight: '600',
+                                            border: isDifference ? '1px solid rgba(59, 130, 246, 0.3)' : 'none'
+                                          }}>
+                                            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '2px' }}>
+                                              File 1
+                                            </div>
+                                            <div style={{ color: '#1e40af' }}>
+                                              {value.val1}
+                                            </div>
+                                          </div>
+                                          <div style={{
+                                            background: isDifference 
+                                              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.25))'
+                                              : 'rgba(16, 185, 129, 0.1)',
+                                            padding: '8px 10px',
+                                            borderRadius: '8px',
+                                            fontSize: '0.9rem',
+                                            fontWeight: '600',
+                                            border: isDifference ? '1px solid rgba(16, 185, 129, 0.3)' : 'none'
+                                          }}>
+                                            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '2px' }}>
+                                              File 2
+                                            </div>
+                                            <div style={{ color: '#059669' }}>
+                                              {value.val2}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Difference Display */}
+                                        {value.difference && (
+                                          <div style={{
+                                            fontSize: '0.85rem',
+                                            color: isDifference ? '#dc2626' : '#d97706',
+                                            fontWeight: '700',
+                                            marginTop: '10px',
+                                            textAlign: 'center',
+                                            background: isDifference 
+                                              ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2))'
+                                              : 'rgba(245, 158, 11, 0.1)',
+                                            padding: '6px 10px',
+                                            borderRadius: '8px',
+                                            border: `1px solid ${isDifference ? '#ef4444' : '#f59e0b'}`,
+                                            fontSize: '0.9rem'
+                                          }}>
+                                            <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>Difference: </span>
+                                            <span style={{ fontSize: '1rem' }}>Δ {value.difference}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+
+                              {/* Expand Button */}
+                              <div style={{ textAlign: 'center' }}>
+                                <button
+                                  onClick={() => toggleRowExpansion(rowIndex)}
+                                  style={{
+                                    background: isExpanded 
+                                      ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
+                                      : 'linear-gradient(135deg, #e5e7eb, #d1d5db)',
+                                    border: 'none',
+                                    borderRadius: '10px',
+                                    padding: '10px 12px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.9rem',
+                                    fontWeight: '700',
+                                    color: isExpanded ? 'white' : '#6b7280',
+                                    transition: 'all 0.3s ease',
+                                    minWidth: '45px',
+                                    boxShadow: isExpanded 
+                                      ? '0 4px 12px rgba(245, 158, 11, 0.25)' 
+                                      : '0 2px 4px rgba(0,0,0,0.1)',
+                                    transform: isExpanded ? 'scale(1.05)' : 'scale(1)'
+                                  }}
+                                >
+                                  {isExpanded ? '▲' : '▼'}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Expanded Details */}
+                            {isExpanded && (
+                              <div style={{
+                                background: '#f8fafc',
+                                padding: '20px',
+                                borderBottom: '1px solid #e5e7eb'
+                              }}>
+                                <h4 style={{
+                                  margin: '0 0 15px 0',
+                                  color: '#374151',
+                                  fontSize: '1.1rem',
+                                  fontWeight: '600'
+                                }}>
+                                  🔍 Detailed Analysis for Record {row.ID}
+                                </h4>
+                                
+                                <div style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                                  gap: '15px'
+                                }}>
+                                  {Object.entries(row.fields).map(([fieldName, fieldData], idx) => (
+                                    <div key={idx} style={{
+                                      background: 'white',
+                                      border: '1px solid #e5e7eb',
+                                      borderRadius: '8px',
+                                      padding: '15px'
+                                    }}>
+                                      <div style={{
+                                        fontWeight: '600',
+                                        color: '#1f2937',
+                                        marginBottom: '10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                      }}>
+                                        {fieldData.status === 'difference' ? '❌' : fieldData.status === 'match' ? '✅' : '⚠️'} {fieldName}
+                                      </div>
+                                      
+                                      <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr',
+                                        gap: '10px',
+                                        fontSize: '0.9rem'
+                                      }}>
+                                        <div>
+                                          <div style={{ color: '#6b7280', fontSize: '0.8rem', marginBottom: '4px' }}>
+                                            File 1 Value:
+                                          </div>
+                                          <div style={{
+                                            background: '#f0f9ff',
+                                            padding: '8px',
+                                            borderRadius: '6px',
+                                            fontWeight: '500'
+                                          }}>
+                                            {fieldData.val1}
+                                          </div>
+                                        </div>
+                                        
+                                        <div>
+                                          <div style={{ color: '#6b7280', fontSize: '0.8rem', marginBottom: '4px' }}>
+                                            File 2 Value:
+                                          </div>
+                                          <div style={{
+                                            background: '#f0fdf4',
+                                            padding: '8px',
+                                            borderRadius: '6px',
+                                            fontWeight: '500'
+                                          }}>
+                                            {fieldData.val2}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div style={{
+                                        marginTop: '10px',
+                                        padding: '8px',
+                                        background: fieldData.status === 'difference' 
+                                          ? '#fee2e2' 
+                                          : fieldData.status === 'match' 
+                                            ? '#f0fdf4' 
+                                            : '#fefce8',
+                                        borderRadius: '6px',
+                                        fontSize: '0.85rem',
+                                        fontWeight: '500',
+                                        color: fieldData.status === 'difference' 
+                                          ? '#dc2626' 
+                                          : fieldData.status === 'match' 
+                                            ? '#166534' 
+                                            : '#92400e'
+                                      }}>
+                                        Status: {fieldData.status.charAt(0).toUpperCase() + fieldData.status.slice(1)}
+                                        {fieldData.difference && ` (${fieldData.difference})`}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div style={{
+                  background: 'white',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '16px',
+                  padding: '60px',
+                  textAlign: 'center',
+                  color: '#6b7280'
+                }}>
+                  <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🔍</div>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '10px' }}>
+                    No Records Match Your Filter
+                  </h3>
+                  <p style={{ fontSize: '1.1rem', marginBottom: '20px' }}>
+                    Try adjusting your search terms or filter settings
                   </p>
+                  <button
+                    onClick={() => {
+                      setResultsFilter('all');
+                      setSearchTerm('');
+                    }}
+                    style={{
+                      background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              )}
+
+              {/* Enhanced Download Section */}
+              <div style={{
+                background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+                borderRadius: '20px',
+                padding: '30px',
+                marginTop: '40px',
+                textAlign: 'center',
+                border: '1px solid #cbd5e1'
+              }}>
+                <h3 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  marginBottom: '15px'
+                }}>
+                  📥 Export Your Results
+                </h3>
+                <p style={{
+                  color: '#6b7280',
+                  marginBottom: '25px',
+                  fontSize: '1rem'
+                }}>
+                  Download detailed comparison results with all analysis data and advanced formatting
+                </p>
+                
+                <div style={{
+                  display: 'flex',
+                  gap: '15px',
+                  justifyContent: 'center',
+                  flexWrap: 'wrap'
+                }}>
+                  <button
+                    onClick={handleDownloadExcel}
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '16px 32px',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '1.1rem',
+                      transition: 'all 0.3s ease',
+                      minWidth: '180px',
+                      boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)'
+                    }}
+                  >
+                    📊 Excel Report
+                  </button>
+                  
+                  <button
+                    onClick={handleDownloadCSV}
+                    style={{
+                      background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '16px 32px',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '1.1rem',
+                      transition: 'all 0.3s ease',
+                      minWidth: '180px',
+                      boxShadow: '0 4px 15px rgba(14, 165, 233, 0.3)'
+                    }}
+                  >
+                    📄 CSV Data
+                  </button>
+
+                  <button
+                    onClick={handleDownloadHTMLDiff}
+                    style={{
+                      background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '16px 32px',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '1.1rem',
+                      transition: 'all 0.3s ease',
+                      minWidth: '180px',
+                      boxShadow: '0 4px 15px rgba(124, 58, 237, 0.3)'
+                    }}
+                  >
+                    🌐 HTML Diff Report
+                  </button>
+                </div>
+                
+                <div style={{
+                  marginTop: '20px',
+                  fontSize: '0.9rem',
+                  color: '#6b7280'
+                }}>
+                  <strong>Enhanced Features:</strong> Summary statistics • Side-by-side comparison • Color-coded differences • Character-level highlighting • Professional formatting
                 </div>
               </div>
             </div>
           </section>
         )}
 
-        {/* Industry Use Cases */}
-        <section style={{ 
-          padding: '3rem 0',
-          background: 'white' 
-        }}>
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: '0 20px'
-          }} className="section-container">
-            
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 style={{ 
-                fontSize: '2.25rem', 
-                fontWeight: '700', 
-                marginBottom: '1rem', 
-                color: '#1f2937'
-              }}>
-                Perfect For
-              </h2>
-              <p style={{ fontSize: '1.2rem', color: '#6b7280' }}>
-                Teams who need secure file comparison without cloud risks
-              </p>
-            </div>
-
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-              gap: '2rem'
-            }} className="use-cases-grid">
-              
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💰</div>
-                <h3 style={{ 
-                  fontSize: '1.25rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem'
-                }}>
-                  Finance Teams
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
-                  Compare financial reports, budgets, and forecasts without uploading sensitive data to cloud servers.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚖️</div>
-                <h3 style={{ 
-                  fontSize: '1.25rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem'
-                }}>
-                  Legal Teams
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
-                  Review document changes and contract revisions with complete confidentiality and privacy protection.
-                </p>
-              </div>
-
-              <div style={{
-                background: '#f8fafc',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e2e8f0',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👥</div>
-                <h3 style={{ 
-                  fontSize: '1.25rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem'
-                }}>
-                  HR Teams
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
-                  Analyze employee data and compensation files that must stay private and secure at all times.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Why VeriDiff */}
-        <section style={{ 
+        {/* Features Section */}
+        <section id="features" style={{
           padding: '4rem 0',
-          background: '#f8fafc' 
+          background: 'white'
         }}>
           <div style={{
             maxWidth: '1200px',
             margin: '0 auto',
             padding: '0 20px'
-          }} className="section-container">
-            
+          }}>
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 style={{ 
-                fontSize: '2.25rem', 
-                fontWeight: '700', 
-                marginBottom: '1rem', 
+              <h2 style={{
+                fontSize: '2.25rem',
+                fontWeight: '700',
+                marginBottom: '1rem',
                 color: '#1f2937'
               }}>
-                Why Choose VeriDiff?
+                Enterprise-Grade Features
               </h2>
               <p style={{ fontSize: '1.2rem', color: '#6b7280' }}>
-                Professional Excel comparison with complete privacy protection
+                Professional file comparison with advanced analysis capabilities
               </p>
             </div>
 
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
               gap: '2rem'
-            }} className="why-grid">
-              
+            }}>
               <div style={{
-                background: 'white',
+                background: '#f8fafc',
                 padding: '2rem',
                 borderRadius: '1rem',
-                border: '1px solid #e5e7eb',
+                border: '1px solid #e2e8f0',
                 textAlign: 'center'
               }}>
-                <div style={{ 
-                  width: '60px', 
-                  height: '60px', 
-                  background: '#dcfce7', 
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 1rem',
-                  fontSize: '1.5rem'
-                }}>
-                  🔒
-                </div>
-                <h3 style={{ 
-                  fontSize: '1.2rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem'
-                }}>
-                  Complete Privacy
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
-                  Files processed locally in your browser. Never uploaded to servers or stored anywhere.
-                </p>
-              </div>
-
-              <div style={{
-                background: 'white',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e5e7eb',
-                textAlign: 'center'
-              }}>
-                <div style={{ 
-                  width: '60px', 
-                  height: '60px', 
-                  background: '#dbeafe', 
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 1rem',
-                  fontSize: '1.5rem'
-                }}>
-                  ⚡
-                </div>
-                <h3 style={{ 
-                  fontSize: '1.2rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
-                  marginBottom: '1rem'
-                }}>
-                  Instant Results
-                </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
-                  See differences immediately. No waiting for uploads or server processing.
-                </p>
-              </div>
-
-              <div style={{
-                background: 'white',
-                padding: '2rem',
-                borderRadius: '1rem',
-                border: '1px solid #e5e7eb',
-                textAlign: 'center'
-              }}>
-                <div style={{ 
-                  width: '60px', 
-                  height: '60px', 
-                  background: '#fef3c7', 
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -999,110 +2328,302 @@ export default function Home() {
                 }}>
                   🎯
                 </div>
-                <h3 style={{ 
-                  fontSize: '1.2rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937', 
+                <h3 style={{
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  color: '#1f2937',
                   marginBottom: '1rem'
                 }}>
-                  Smart Comparison
+                  Smart Header Mapping
                 </h3>
                 <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
-                  Advanced features beyond Excel's basic compare. Smart mapping and tolerance settings.
+                  Automatically matches similar column headers across files, even with different naming conventions.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem',
+                  fontSize: '1.5rem'
+                }}>
+                  ⚖️
+                </div>
+                <h3 style={{
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  marginBottom: '1rem'
+                }}>
+                  Tolerance Settings
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
+                  Set acceptable variance levels for financial data and amounts with flat or percentage tolerances.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem',
+                  fontSize: '1.5rem'
+                }}>
+                  🔒
+                </div>
+                <h3 style={{
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  marginBottom: '1rem'
+                }}>
+                  Complete Privacy
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
+                  All processing happens locally in your browser. Your sensitive data never leaves your device.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem',
+                  fontSize: '1.5rem'
+                }}>
+                  🔄
+                </div>
+                <h3 style={{
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  marginBottom: '1rem'
+                }}>
+                  Cross-Format Support
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
+                  Compare Excel to Excel, CSV to CSV, or mixed Excel-CSV files with intelligent format handling.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem',
+                  fontSize: '1.5rem'
+                }}>
+                  🤖
+                </div>
+                <h3 style={{
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  marginBottom: '1rem'
+                }}>
+                  AI Auto-Detection
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
+                  Automatically identifies amount fields and applies smart tolerance settings for financial data.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                padding: '2rem',
+                borderRadius: '1rem',
+                border: '1px solid #e2e8f0',
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem',
+                  fontSize: '1.5rem'
+                }}>
+                  📊
+                </div>
+                <h3 style={{
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  marginBottom: '1rem'
+                }}>
+                  Advanced Analytics
+                </h3>
+                <p style={{ color: '#6b7280', lineHeight: '1.6', margin: 0 }}>
+                  Detailed comparison results with filtering, search, character-level diff, and professional reporting.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Simple Pricing */}
-        <section style={{ 
+        {/* Pricing Section */}
+        <section id="pricing" style={{
           padding: '4rem 0',
-          background: 'white' 
+          background: '#f8fafc'
         }}>
           <div style={{
             maxWidth: '800px',
             margin: '0 auto',
             padding: '0 20px',
             textAlign: 'center'
-          }} className="section-container">
-            
-            <h2 style={{ 
-              fontSize: '2.25rem', 
-              fontWeight: '700', 
-              marginBottom: '1rem', 
+          }}>
+            <h2 style={{
+              fontSize: '2.25rem',
+              fontWeight: '700',
+              marginBottom: '1rem',
               color: '#1f2937'
             }}>
               Simple, Transparent Pricing
             </h2>
             <p style={{ fontSize: '1.2rem', color: '#6b7280', marginBottom: '3rem' }}>
-              Start free, upgrade when you need more
+              Professional file comparison tools, completely free
             </p>
 
             <div style={{
-              background: '#f8fafc',
+              background: 'white',
               borderRadius: '1rem',
-              padding: '2rem',
-              border: '1px solid #e2e8f0'
+              padding: '3rem',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
             }}>
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-                  Try VeriDiff Free
+              <div style={{
+                fontSize: '3rem',
+                fontWeight: '700',
+                color: '#10b981',
+                marginBottom: '1rem'
+              }}>
+                FREE
+              </div>
+              <div style={{
+                fontSize: '1.5rem',
+                fontWeight: '600',
+                color: '#1f2937',
+                marginBottom: '2rem'
+              }}>
+                Complete File Comparison Suite
+              </div>
+              
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1rem',
+                marginBottom: '2rem',
+                textAlign: 'left'
+              }}>
+                <div style={{ color: '#374151' }}>
+                  ✅ Excel ↔ Excel comparison<br/>
+                  ✅ CSV ↔ CSV comparison<br/>
+                  ✅ Excel ↔ CSV cross-format
                 </div>
-                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                  <strong>No limits:</strong> Compare any Excel or PDF files immediately
+                <div style={{ color: '#374151' }}>
+                  ✅ Smart header mapping<br/>
+                  ✅ Tolerance settings<br/>
+                  ✅ AI auto-detection
+                </div>
+                <div style={{ color: '#374151' }}>
+                  ✅ Advanced analytics<br/>
+                  ✅ Multiple export formats<br/>
+                  ✅ Complete privacy protection
                 </div>
               </div>
 
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-                  Pro Features
+              <div style={{
+                background: '#f0fdf4',
+                border: '2px solid #22c55e',
+                borderRadius: '0.75rem',
+                padding: '1.5rem',
+                marginBottom: '2rem'
+              }}>
+                <div style={{
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  color: '#166534',
+                  marginBottom: '0.5rem'
+                }}>
+                  🎉 Launch Special - Everything Free
                 </div>
-                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2563eb', marginBottom: '0.5rem' }}>
-                  £19/month
-                </div>
-                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                  Save results • Download reports • Advanced tolerance settings
+                <div style={{ color: '#15803d', fontSize: '0.95rem' }}>
+                  No usage limits • No feature restrictions • No credit card required
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{
-                  background: '#2563eb',
+              <button
+                onClick={handleCompare}
+                disabled={!file1 || !file2}
+                style={{
+                  background: (!file1 || !file2) 
+                    ? '#9ca3af' 
+                    : 'linear-gradient(135deg, #10b981, #059669)',
                   color: 'white',
                   border: 'none',
-                  padding: '0.75rem 2rem',
-                  borderRadius: '0.5rem',
+                  padding: '1rem 3rem',
+                  borderRadius: '0.75rem',
+                  fontSize: '1.2rem',
                   fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}>
-                  Try Free Now
-                </button>
-                <button onClick={handleProTrial} style={{
-                  background: 'white',
-                  color: '#2563eb',
-                  border: '2px solid #2563eb',
-                  padding: '0.75rem 2rem',
-                  borderRadius: '0.5rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
-                }}>
-                  Get Pro Features
-                </button>
-              </div>
+                  cursor: (!file1 || !file2) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {!file1 || !file2 ? 'Upload Files Above to Start' : '🚀 Start Comparing Now'}
+              </button>
             </div>
           </div>
         </section>
 
         <Footer />
-
-        {/* Privacy-First Cookie Banner */}
-        <CookieBanner />
-
-        {/* Registration Modal */}
-        <RegistrationModal />
       </div>
     </>
   );
