@@ -1121,11 +1121,7 @@ export default function Home() {
                   onDragOver={handleDragOver}
                   onDragEnter={() => handleDragEnter(1)}
                   onDragLeave={() => handleDragLeave(1)}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    document.getElementById('file1').click();
-                  }}
+                  onClick={() => document.getElementById('file1').click()}
                 >
                   <input
                     id="file1"
@@ -1175,11 +1171,7 @@ export default function Home() {
                   onDragOver={handleDragOver}
                   onDragEnter={() => handleDragEnter(2)}
                   onDragLeave={() => handleDragLeave(2)}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    document.getElementById('file2').click();
-                  }}
+                  onClick={() => document.getElementById('file2').click()}
                 >
                   <input
                     id="file2"
