@@ -57,73 +57,9 @@ export default function Home() {
   const [fieldGrouping, setFieldGrouping] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
 
-  // Enhanced scroll position preservation - more robust approach
-  const scrollPositionRef = useRef(0);
+  // Only keep refs needed for the intentional scroll to results
   const resultsContainerRef = useRef(null);
   const shouldScrollToResults = useRef(false);
-  const isUpdatingFilters = useRef(false);
-  const scrollLockRef = useRef(false);
-
-  // Capture scroll position before any state updates
-  const captureScrollPosition = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      scrollPositionRef.current = window.pageYOffset;
-      isUpdatingFilters.current = true;
-      scrollLockRef.current = true;
-    }
-  }, []);
-
-  // More aggressive scroll restoration
-  const restoreScrollPosition = useCallback(() => {
-    if (typeof window !== 'undefined' && isUpdatingFilters.current && !shouldScrollToResults.current) {
-      const targetPosition = scrollPositionRef.current;
-      
-      // Multiple restoration attempts to handle all scenarios
-      const restoreScroll = () => {
-        if (scrollLockRef.current) {
-          window.scrollTo(0, targetPosition);
-        }
-      };
-      
-      // Immediate restoration
-      restoreScroll();
-      
-      // Delayed restorations for different rendering phases
-      setTimeout(restoreScroll, 0);
-      setTimeout(restoreScroll, 10);
-      setTimeout(restoreScroll, 50);
-      
-      requestAnimationFrame(() => {
-        restoreScroll();
-        setTimeout(() => {
-          restoreScroll();
-          scrollLockRef.current = false;
-          isUpdatingFilters.current = false;
-        }, 100);
-      });
-    }
-  }, []);
-
-  // Effect to restore scroll position after state changes
-  useEffect(() => {
-    if (isUpdatingFilters.current && !shouldScrollToResults.current) {
-      restoreScrollPosition();
-    }
-  }, [viewMode, resultsFilter, searchTerm, focusMode, fieldGrouping, ignoreWhitespace, showCharacterDiff, expandedGroups, restoreScrollPosition]);
-
-  // Additional scroll event listener to prevent unwanted scrolling during updates
-  useEffect(() => {
-    const handleScroll = () => {
-      if (scrollLockRef.current && isUpdatingFilters.current) {
-        window.scrollTo(0, scrollPositionRef.current);
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('scroll', handleScroll, { passive: false });
-      return () => window.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
 
   // Analytics tracking function
   const trackAnalytics = async (eventType, data = {}) => {
@@ -520,41 +456,34 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Scroll-preserving state update handlers
+  // Simple state update handlers - no scroll management
   const handleViewModeChange = useCallback((newMode) => {
-    captureScrollPosition();
     setViewMode(newMode);
-  }, [captureScrollPosition]);
+  }, []);
 
   const handleFilterChange = useCallback((newFilter) => {
-    captureScrollPosition();
     setResultsFilter(newFilter);
-  }, [captureScrollPosition]);
+  }, []);
 
   const handleSearchChange = useCallback((newTerm) => {
-    captureScrollPosition();
     setSearchTerm(newTerm);
-  }, [captureScrollPosition]);
+  }, []);
 
   const handleFocusModeToggle = useCallback((checked) => {
-    captureScrollPosition();
     setFocusMode(checked);
-  }, [captureScrollPosition]);
+  }, []);
 
   const handleFieldGroupingToggle = useCallback((checked) => {
-    captureScrollPosition();
     setFieldGrouping(checked);
-  }, [captureScrollPosition]);
+  }, []);
 
   const handleIgnoreWhitespaceToggle = useCallback((checked) => {
-    captureScrollPosition();
     setIgnoreWhitespace(checked);
-  }, [captureScrollPosition]);
+  }, []);
 
   const handleCharacterDiffToggle = useCallback((checked) => {
-    captureScrollPosition();
     setShowCharacterDiff(checked);
-  }, [captureScrollPosition]);
+  }, []);
 
   // Advanced results helper functions
   const getFilteredResults = () => {
@@ -657,7 +586,6 @@ export default function Home() {
   };
 
   const toggleRowExpansion = (rowIndex) => {
-    captureScrollPosition();
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(rowIndex)) {
       newExpanded.delete(rowIndex);
@@ -668,7 +596,6 @@ export default function Home() {
   };
 
   const toggleGroupExpansion = (groupName) => {
-    captureScrollPosition();
     const newExpanded = new Set(expandedGroups);
     if (newExpanded.has(groupName)) {
       newExpanded.delete(groupName);
@@ -2138,7 +2065,6 @@ export default function Home() {
                                   minWidth: '120px'
                                 }}
                                 onClick={() => {
-                                  captureScrollPosition();
                                   if (sortField === field) {
                                     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
                                   } else {
@@ -2428,7 +2354,6 @@ export default function Home() {
                   </p>
                   <button
                     onClick={() => {
-                      captureScrollPosition();
                       setResultsFilter('all');
                       setSearchTerm('');
                     }}
