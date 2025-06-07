@@ -53,6 +53,9 @@ export default function Home() {
   const [viewMode, setViewMode] = useState('unified');
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(false);
   const [showCharacterDiff, setShowCharacterDiff] = useState(true);
+  const [focusMode, setFocusMode] = useState(false);
+  const [fieldGrouping, setFieldGrouping] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
 
   // Analytics tracking function
   const trackAnalytics = async (eventType, data = {}) => {
@@ -323,6 +326,12 @@ export default function Home() {
     setSuggestedMappings(suggested);
     setSampleData1(data1.slice(0, 10));
     setSampleData2(data2.slice(0, 10));
+    
+    // Auto-default to side-by-side for 10+ columns
+    if (h1.length >= 10) {
+      setViewMode('side-by-side');
+    }
+    
     setShowMapper(true);
     setIsProcessing(false);
   };
@@ -547,6 +556,52 @@ export default function Home() {
       newExpanded.add(rowIndex);
     }
     setExpandedRows(newExpanded);
+  };
+
+  const toggleGroupExpansion = (groupName) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupName)) {
+      newExpanded.delete(groupName);
+    } else {
+      newExpanded.add(groupName);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
+  // Field grouping logic
+  const groupFields = (fieldNames) => {
+    if (!fieldGrouping || fieldNames.length < 8) {
+      return [{ name: 'All Fields', fields: fieldNames, isDefault: true }];
+    }
+
+    const groups = {
+      'Identity': [],
+      'Financial': [],
+      'Time & Hours': [],
+      'Contact': [],
+      'Other': []
+    };
+
+    fieldNames.forEach(field => {
+      const fieldLower = field.toLowerCase();
+      
+      if (/id|name|employee|person|user|code/.test(fieldLower)) {
+        groups['Identity'].push(field);
+      } else if (/pay|salary|wage|amount|cost|fee|tax|pension|benefit|bonus|overtime/.test(fieldLower)) {
+        groups['Financial'].push(field);
+      } else if (/hour|time|date|period|shift|week|month/.test(fieldLower)) {
+        groups['Time & Hours'].push(field);
+      } else if (/email|phone|address|contact/.test(fieldLower)) {
+        groups['Contact'].push(field);
+      } else {
+        groups['Other'].push(field);
+      }
+    });
+
+    // Filter out empty groups and convert to array
+    return Object.entries(groups)
+      .filter(([name, fields]) => fields.length > 0)
+      .map(([name, fields]) => ({ name, fields, isDefault: false }));
   };
 
   const getCharacterDiff = (str1, str2, ignoreWhitespace = false) => {
@@ -805,10 +860,29 @@ export default function Home() {
             .upload-zone { min-height: 120px !important; }
             .compare-button { width: 100% !important; margin-top: 1rem !important; }
             .results-controls { grid-template-columns: 1fr !important; }
+            
+            /* Mobile table responsiveness */
+            .unified-table { overflow-x: auto !important; }
+            .unified-table table { min-width: 600px !important; }
+            .unified-table th, .unified-table td { min-width: 80px !important; padding: 8px !important; }
+            
+            /* Stack field groups on mobile */
+            .field-group-grid { grid-template-columns: 1fr !important; }
+            
+            /* Mobile side-by-side view */
+            .side-by-side-grid { grid-template-columns: 1fr !important; }
+            .side-by-side-row { grid-template-columns: 1fr !important; gap: 10px !important; }
+            .file-column { margin-bottom: 15px !important; }
           }
           
           @media (max-width: 480px) {
             .upload-zone { min-height: 100px !important; font-size: 0.875rem !important; }
+            .results-controls { grid-template-columns: 1fr !important; gap: 10px !important; }
+            
+            /* Very small screens */
+            .unified-table th, .unified-table td { min-width: 60px !important; padding: 6px !important; font-size: 0.8rem !important; }
+            .field-value { font-size: 0.85rem !important; }
+            .status-badge { font-size: 0.7rem !important; padding: 3px 6px !important; }
           }
           
           .upload-zone {
@@ -824,6 +898,25 @@ export default function Home() {
           .upload-zone.drag-active {
             border-color: #2563eb !important;
             background-color: #eff6ff !important;
+          }
+          
+          /* Focus mode animations */
+          .focus-mode-row {
+            transition: opacity 0.3s ease, transform 0.2s ease;
+          }
+          
+          .focus-mode-row:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          }
+          
+          /* Field grouping animations */
+          .field-group {
+            transition: all 0.3s ease;
+          }
+          
+          .field-group.expanded {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
           }
         `}</style>
       </Head>
@@ -1566,6 +1659,36 @@ export default function Home() {
                       }}>
                         <input
                           type="checkbox"
+                          checked={focusMode}
+                          onChange={(e) => setFocusMode(e.target.checked)}
+                          style={{ accentColor: '#2563eb' }}
+                        />
+                        Focus Mode (highlight changes only)
+                      </label>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '0.9rem',
+                        color: '#4b5563'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={fieldGrouping}
+                          onChange={(e) => setFieldGrouping(e.target.checked)}
+                          style={{ accentColor: '#2563eb' }}
+                        />
+                        Group Similar Fields
+                      </label>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '0.9rem',
+                        color: '#4b5563'
+                      }}>
+                        <input
+                          type="checkbox"
                           checked={ignoreWhitespace}
                           onChange={(e) => setIgnoreWhitespace(e.target.checked)}
                           style={{ accentColor: '#2563eb' }}
@@ -1619,7 +1742,7 @@ export default function Home() {
                     overflow: 'hidden',
                     border: '1px solid #e5e7eb',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
-                  }}>
+                  }} className="side-by-side-grid">
                     {/* Table Header */}
                     <div style={{
                       background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
@@ -1634,12 +1757,12 @@ export default function Home() {
                         fontWeight: '700',
                         color: '#1f2937',
                         fontSize: '1rem'
-                      }}>
+                      }} className="side-by-side-row">
                         <div style={{ textAlign: 'center' }}>Status</div>
-                        <div style={{ textAlign: 'center', color: '#2563eb' }}>
+                        <div style={{ textAlign: 'center', color: '#2563eb' }} className="file-column">
                           📄 File 1 ({file1?.name || 'Original'})
                         </div>
-                        <div style={{ textAlign: 'center', color: '#16a34a' }}>
+                        <div style={{ textAlign: 'center', color: '#16a34a' }} className="file-column">
                           📄 File 2 ({file2?.name || 'Comparison'})
                         </div>
                       </div>
@@ -1651,12 +1774,17 @@ export default function Home() {
                         const status = getRecordStatus(row);
                         const config = getStatusConfig(status);
                         
+                        if (focusMode && status === 'match') {
+                          return null; // Hide perfect matches in focus mode
+                        }
+                        
                         return (
                           <div key={rowIndex} style={{
                             borderBottom: '1px solid #f3f4f6',
                             borderLeft: `4px solid ${config.border}`,
-                            background: config.bg
-                          }}>
+                            background: config.bg,
+                            opacity: focusMode && status === 'match' ? 0.4 : 1
+                          }} className="focus-mode-row">
                             <div style={{
                               display: 'grid',
                               gridTemplateColumns: '100px 1fr 1fr',
@@ -1664,7 +1792,7 @@ export default function Home() {
                               padding: '20px',
                               minHeight: '120px',
                               alignItems: 'center'
-                            }}>
+                            }} className="side-by-side-row">
                               {/* Status Column */}
                               <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{config.icon}</div>
@@ -1677,7 +1805,7 @@ export default function Home() {
                                   borderRadius: '8px',
                                   border: `2px solid ${config.border}`,
                                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                }}>
+                                }} className="status-badge">
                                   {config.label}
                                 </div>
                                 <div style={{
@@ -1696,12 +1824,12 @@ export default function Home() {
                                 borderRadius: '12px',
                                 padding: '15px',
                                 minHeight: '80px'
-                              }}>
+                              }} className="file-column">
                                 <div style={{
                                   display: 'grid',
                                   gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
                                   gap: '10px'
-                                }}>
+                                }} className="field-group-grid">
                                   {Object.entries(row.fields).map(([fieldName, fieldData]) => {
                                     const isChanged = fieldData.status === 'difference';
                                     const diffResult = getCharacterDiff(String(fieldData.val1), String(fieldData.val2), ignoreWhitespace);
@@ -1712,7 +1840,7 @@ export default function Home() {
                                         padding: '10px',
                                         borderRadius: '8px',
                                         border: isChanged ? '2px solid #fca5a5' : '1px solid #e5e7eb'
-                                      }}>
+                                      }} className="field-value">
                                         <div style={{
                                           fontSize: '0.75rem',
                                           color: '#6b7280',
@@ -1754,12 +1882,12 @@ export default function Home() {
                                 borderRadius: '12px',
                                 padding: '15px',
                                 minHeight: '80px'
-                              }}>
+                              }} className="file-column">
                                 <div style={{
                                   display: 'grid',
                                   gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
                                   gap: '10px'
-                                }}>
+                                }} className="field-group-grid">
                                   {Object.entries(row.fields).map(([fieldName, fieldData]) => {
                                     const isChanged = fieldData.status === 'difference';
                                     const diffResult = getCharacterDiff(String(fieldData.val1), String(fieldData.val2), ignoreWhitespace);
@@ -1770,7 +1898,7 @@ export default function Home() {
                                         padding: '10px',
                                         borderRadius: '8px',
                                         border: isChanged ? '2px solid #86efac' : '1px solid #e5e7eb'
-                                      }}>
+                                      }} className="field-value">
                                         <div style={{
                                           fontSize: '0.75rem',
                                           color: '#6b7280',
@@ -1808,348 +1936,366 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  // Unified View
+                  // Professional Unified Table View
                   <div style={{
                     background: 'white',
                     borderRadius: '16px',
                     overflow: 'hidden',
                     border: '1px solid #e5e7eb',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.05)'
-                  }}>
+                  }} className="unified-table">
                     {/* Table Header */}
                     <div style={{
                       background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
                       padding: '20px',
-                      borderBottom: '2px solid #e5e7eb'
+                      borderBottom: '2px solid #e5e7eb',
+                      overflowX: 'auto'
                     }}>
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: `100px repeat(${Object.keys(results.results[0].fields).length}, 1fr) 60px`,
-                        gap: '15px',
-                        alignItems: 'center',
-                        fontWeight: '700',
-                        color: '#1f2937',
-                        fontSize: '1rem'
+                      <table style={{
+                        width: '100%',
+                        minWidth: fieldGrouping ? '800px' : `${Math.max(800, Object.keys(results.results[0].fields).length * 120)}px`,
+                        borderCollapse: 'collapse'
                       }}>
-                        <div>Record ID</div>
-                        {Object.keys(results.results[0].fields).map((field, idx) => (
-                          <div 
-                            key={idx}
-                            style={{
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '5px'
-                            }}
-                            onClick={() => {
-                              if (sortField === field) {
-                                setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setSortField(field);
-                                setSortDirection('asc');
-                              }
-                            }}
-                          >
-                            {field}
-                            {sortField === field && (
-                              <span style={{ fontSize: '0.8rem' }}>
-                                {sortDirection === 'asc' ? '↑' : '↓'}
-                              </span>
+                        <thead>
+                          <tr>
+                            <th style={{
+                              padding: '12px 16px',
+                              textAlign: 'left',
+                              fontWeight: '700',
+                              color: '#1f2937',
+                              fontSize: '1rem',
+                              borderRight: '1px solid #e5e7eb',
+                              minWidth: '100px'
+                            }}>
+                              Record ID
+                            </th>
+                            {fieldGrouping && Object.keys(results.results[0].fields).length >= 8 ? (
+                              // Grouped Headers
+                              groupFields(Object.keys(results.results[0].fields)).map((group) => (
+                                <th key={group.name} style={{
+                                  padding: '12px 16px',
+                                  textAlign: 'center',
+                                  fontWeight: '700',
+                                  color: '#1f2937',
+                                  fontSize: '1rem',
+                                  borderRight: '1px solid #e5e7eb',
+                                  background: group.isDefault ? 'transparent' : 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+                                  cursor: group.isDefault ? 'default' : 'pointer',
+                                  minWidth: `${Math.max(120, group.fields.length * 80)}px`
+                                }}
+                                onClick={() => !group.isDefault && toggleGroupExpansion(group.name)}
+                                className="field-group"
+                                >
+                                  {group.isDefault ? (
+                                    <div style={{ 
+                                      display: 'grid',
+                                      gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
+                                      gap: '8px'
+                                    }} className="field-group-grid">
+                                      {group.fields.map(field => (
+                                        <div key={field} style={{ 
+                                          fontSize: '0.9rem',
+                                          padding: '4px'
+                                        }}>
+                                          {field}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                      <span>{group.name}</span>
+                                      <span style={{ fontSize: '0.8rem', opacity: '0.7' }}>
+                                        ({group.fields.length} fields)
+                                      </span>
+                                      <span style={{ fontSize: '0.8rem' }}>
+                                        {expandedGroups.has(group.name) ? '▼' : '▶'}
+                                      </span>
+                                    </div>
+                                  )}
+                                </th>
+                              ))
+                            ) : (
+                              // Individual Field Headers
+                              Object.keys(results.results[0].fields).map((field, idx) => (
+                                <th key={idx} style={{
+                                  padding: '12px 16px',
+                                  textAlign: 'center',
+                                  fontWeight: '700',
+                                  color: '#1f2937',
+                                  fontSize: '1rem',
+                                  borderRight: '1px solid #e5e7eb',
+                                  cursor: 'pointer',
+                                  minWidth: '120px'
+                                }}
+                                onClick={() => {
+                                  if (sortField === field) {
+                                    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                                  } else {
+                                    setSortField(field);
+                                    setSortDirection('asc');
+                                  }
+                                }}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                                    {field}
+                                    {sortField === field && (
+                                      <span style={{ fontSize: '0.8rem' }}>
+                                        {sortDirection === 'asc' ? '↑' : '↓'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </th>
+                              ))
                             )}
-                          </div>
-                        ))}
-                        <div>Details</div>
-                      </div>
+                            <th style={{
+                              padding: '12px 16px',
+                              textAlign: 'center',
+                              fontWeight: '700',
+                              color: '#1f2937',
+                              fontSize: '1rem',
+                              minWidth: '80px'
+                            }}>
+                              Status
+                            </th>
+                          </tr>
+                        </thead>
+                      </table>
                     </div>
 
                     {/* Table Body */}
-                    <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                      {getFilteredResults().map((row, rowIndex) => {
-                        const hasAnyDifference = Object.values(row.fields).some(field => field.status === 'difference');
-                        const isExpanded = expandedRows.has(rowIndex);
-                        
-                        return (
-                          <div key={rowIndex}>
-                            {/* Main Row */}
-                            <div style={{
-                              display: 'grid',
-                              gridTemplateColumns: `100px repeat(${Object.keys(row.fields).length}, 1fr) 60px`,
-                              gap: '15px',
-                              alignItems: 'center',
-                              padding: '20px',
-                              background: hasAnyDifference 
-                                ? 'linear-gradient(135deg, #fef2f2, #fef7f7)' 
-                                : (rowIndex % 2 === 0 ? '#ffffff' : '#f9fafb'),
-                              borderBottom: '1px solid #f3f4f6',
-                              borderLeft: hasAnyDifference ? '4px solid #ef4444' : '4px solid transparent',
-                              transition: 'all 0.2s ease',
-                              boxShadow: hasAnyDifference ? '0 2px 8px rgba(239, 68, 68, 0.08)' : 'none'
-                            }}>
-                              {/* Record ID */}
-                              <div style={{
-                                fontWeight: '600',
-                                color: '#1f2937',
-                                fontSize: '1rem'
-                              }}>
-                                {row.ID}
-                              </div>
+                    <div style={{ 
+                      maxHeight: '600px', 
+                      overflowY: 'auto',
+                      overflowX: 'auto'
+                    }}>
+                      <table style={{
+                        width: '100%',
+                        minWidth: fieldGrouping ? '800px' : `${Math.max(800, Object.keys(results.results[0].fields).length * 120)}px`,
+                        borderCollapse: 'collapse'
+                      }}>
+                        <tbody>
+                          {getFilteredResults().map((row, rowIndex) => {
+                            const hasAnyDifference = Object.values(row.fields).some(field => field.status === 'difference');
+                            const isHighlighted = focusMode ? hasAnyDifference : true;
+                            
+                            if (focusMode && !hasAnyDifference) {
+                              return null; // Hide perfect matches in focus mode
+                            }
+                            
+                            return (
+                              <tr key={rowIndex} style={{
+                                background: hasAnyDifference 
+                                  ? 'linear-gradient(135deg, #fef2f2, #fefefe)' 
+                                  : (rowIndex % 2 === 0 ? '#ffffff' : '#f9fafb'),
+                                borderLeft: hasAnyDifference ? '4px solid #ef4444' : '4px solid transparent',
+                                opacity: focusMode && !hasAnyDifference ? 0.4 : 1,
+                                transition: 'all 0.2s ease'
+                              }} className="focus-mode-row">
+                                {/* Record ID */}
+                                <td style={{
+                                  padding: '16px',
+                                  borderRight: '1px solid #e5e7eb',
+                                  borderBottom: '1px solid #f3f4f6',
+                                  fontWeight: '600',
+                                  color: '#1f2937',
+                                  fontSize: '1rem',
+                                  textAlign: 'center'
+                                }}>
+                                  {row.ID}
+                                </td>
 
-                              {/* Field Values */}
-                              {Object.entries(row.fields).map(([key, value], idx) => {
-                                const isMatch = value.val1 === value.val2;
-                                const isDifference = value.status === 'difference';
-                                
-                                return (
-                                  <div key={idx} style={{
-                                    background: isDifference 
-                                      ? 'linear-gradient(135deg, #fee2e2, #fecaca)' 
-                                      : isMatch 
-                                        ? 'linear-gradient(135deg, #f0fdf4, #dcfce7)'
-                                        : 'linear-gradient(135deg, #fefce8, #fef3c7)',
-                                    border: `2px solid ${isDifference ? '#ef4444' : isMatch ? '#22c55e' : '#f59e0b'}`,
-                                    borderRadius: '12px',
-                                    padding: '15px',
-                                    fontSize: '0.95rem',
-                                    position: 'relative',
-                                    minHeight: '80px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    justifyContent: 'center',
-                                    boxShadow: isDifference ? '0 4px 12px rgba(239, 68, 68, 0.15)' : '0 2px 4px rgba(0,0,0,0.05)',
-                                    transition: 'all 0.2s ease'
-                                  }}>
-                                    {/* Status Icon */}
-                                    <div style={{
-                                      position: 'absolute',
-                                      top: '8px',
-                                      right: '8px',
-                                      fontSize: '1.2rem'
+                                {/* Field Values */}
+                                {fieldGrouping && Object.keys(results.results[0].fields).length >= 8 ? (
+                                  // Grouped Field Display
+                                  groupFields(Object.keys(row.fields)).map((group) => (
+                                    <td key={group.name} style={{
+                                      padding: '12px',
+                                      borderRight: '1px solid #e5e7eb',
+                                      borderBottom: '1px solid #f3f4f6',
+                                      verticalAlign: 'top'
                                     }}>
-                                      {isDifference ? '❌' : isMatch ? '✅' : '⚠️'}
-                                    </div>
-
-                                    {/* Values Display */}
-                                    {isMatch ? (
-                                      <div style={{ textAlign: 'center' }}>
+                                      {group.isDefault || expandedGroups.has(group.name) ? (
+                                        // Show individual fields
                                         <div style={{
-                                          fontWeight: '700',
-                                          color: '#166534',
-                                          marginBottom: '8px',
-                                          fontSize: '1.1rem'
-                                        }}>
-                                          {value.val1}
-                                        </div>
-                                        <div style={{
-                                          fontSize: '0.8rem',
-                                          color: '#16a34a',
-                                          fontWeight: '600',
-                                          background: 'rgba(34, 197, 94, 0.1)',
-                                          padding: '4px 8px',
-                                          borderRadius: '6px',
-                                          display: 'inline-block'
-                                        }}>
-                                          Perfect Match ✓
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <div>
-                                        <div style={{
-                                          display: 'flex',
-                                          flexDirection: 'column',
+                                          display: 'grid',
+                                          gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
                                           gap: '8px'
-                                        }}>
-                                          <div style={{
-                                            background: isDifference 
-                                              ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.25))'
-                                              : 'rgba(59, 130, 246, 0.1)',
-                                            padding: '8px 10px',
-                                            borderRadius: '8px',
-                                            fontSize: '0.9rem',
-                                            fontWeight: '600',
-                                            border: isDifference ? '1px solid rgba(59, 130, 246, 0.3)' : 'none'
-                                          }}>
-                                            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '2px' }}>
-                                              File 1
-                                            </div>
-                                            <div style={{ color: '#1e40af' }}>
-                                              {value.val1}
-                                            </div>
-                                          </div>
-                                          <div style={{
-                                            background: isDifference 
-                                              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.25))'
-                                              : 'rgba(16, 185, 129, 0.1)',
-                                            padding: '8px 10px',
-                                            borderRadius: '8px',
-                                            fontSize: '0.9rem',
-                                            fontWeight: '600',
-                                            border: isDifference ? '1px solid rgba(16, 185, 129, 0.3)' : 'none'
-                                          }}>
-                                            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '2px' }}>
-                                              File 2
-                                            </div>
-                                            <div style={{ color: '#059669' }}>
-                                              {value.val2}
-                                            </div>
-                                          </div>
+                                        }} className="field-group-grid">
+                                          {group.fields.map(fieldName => {
+                                            const fieldData = row.fields[fieldName];
+                                            const isMatch = fieldData.val1 === fieldData.val2;
+                                            const isDifference = fieldData.status === 'difference';
+                                            
+                                            return (
+                                              <div key={fieldName} style={{
+                                                background: isDifference ? '#fee2e2' : (isMatch ? '#f9fafb' : '#fef3c7'),
+                                                border: `1px solid ${isDifference ? '#fca5a5' : (isMatch ? '#e5e7eb' : '#fcd34d')}`,
+                                                borderRadius: '6px',
+                                                padding: '8px',
+                                                fontSize: '0.9rem'
+                                              }} className="field-value">
+                                                <div style={{
+                                                  fontSize: '0.75rem',
+                                                  color: '#6b7280',
+                                                  marginBottom: '4px',
+                                                  fontWeight: '500'
+                                                }}>
+                                                  {fieldName}
+                                                </div>
+                                                {isMatch ? (
+                                                  <div style={{
+                                                    color: '#374151',
+                                                    fontWeight: '500'
+                                                  }}>
+                                                    {fieldData.val1}
+                                                  </div>
+                                                ) : (
+                                                  <div style={{ fontSize: '0.85rem' }}>
+                                                    <div style={{
+                                                      color: '#dc2626',
+                                                      textDecoration: 'line-through',
+                                                      opacity: 0.7
+                                                    }}>
+                                                      {fieldData.val1}
+                                                    </div>
+                                                    <div style={{
+                                                      color: '#16a34a',
+                                                      fontWeight: '600',
+                                                      marginTop: '2px'
+                                                    }}>
+                                                      {fieldData.val2}
+                                                    </div>
+                                                    {fieldData.difference && (
+                                                      <div style={{
+                                                        fontSize: '0.7rem',
+                                                        color: '#f59e0b',
+                                                        marginTop: '2px',
+                                                        fontWeight: '600'
+                                                      }}>
+                                                        Δ {fieldData.difference}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            );
+                                          })}
                                         </div>
-                                        
-                                        {/* Difference Display */}
-                                        {value.difference && (
-                                          <div style={{
-                                            fontSize: '0.85rem',
-                                            color: isDifference ? '#dc2626' : '#d97706',
-                                            fontWeight: '700',
-                                            marginTop: '10px',
-                                            textAlign: 'center',
-                                            background: isDifference 
-                                              ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.2))'
-                                              : 'rgba(245, 158, 11, 0.1)',
-                                            padding: '6px 10px',
-                                            borderRadius: '8px',
-                                            border: `1px solid ${isDifference ? '#ef4444' : '#f59e0b'}`,
-                                            fontSize: '0.9rem'
-                                          }}>
-                                            <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>Difference: </span>
-                                            <span style={{ fontSize: '1rem' }}>Δ {value.difference}</span>
+                                      ) : (
+                                        // Show group summary
+                                        <div style={{
+                                          textAlign: 'center',
+                                          padding: '12px',
+                                          color: '#6b7280',
+                                          fontSize: '0.9rem'
+                                        }}>
+                                          <div style={{ marginBottom: '4px', fontWeight: '600' }}>
+                                            {group.fields.filter(f => row.fields[f].status === 'difference').length} differences
                                           </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-
-                              {/* Expand Button */}
-                              <div style={{ textAlign: 'center' }}>
-                                <button
-                                  onClick={() => toggleRowExpansion(rowIndex)}
-                                  style={{
-                                    background: isExpanded 
-                                      ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
-                                      : 'linear-gradient(135deg, #e5e7eb, #d1d5db)',
-                                    border: 'none',
-                                    borderRadius: '10px',
-                                    padding: '10px 12px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '700',
-                                    color: isExpanded ? 'white' : '#6b7280',
-                                    transition: 'all 0.3s ease',
-                                    minWidth: '45px',
-                                    boxShadow: isExpanded 
-                                      ? '0 4px 12px rgba(245, 158, 11, 0.25)' 
-                                      : '0 2px 4px rgba(0,0,0,0.1)',
-                                    transform: isExpanded ? 'scale(1.05)' : 'scale(1)'
-                                  }}
-                                >
-                                  {isExpanded ? '▲' : '▼'}
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Expanded Details */}
-                            {isExpanded && (
-                              <div style={{
-                                background: '#f8fafc',
-                                padding: '20px',
-                                borderBottom: '1px solid #e5e7eb'
-                              }}>
-                                <h4 style={{
-                                  margin: '0 0 15px 0',
-                                  color: '#374151',
-                                  fontSize: '1.1rem',
-                                  fontWeight: '600'
-                                }}>
-                                  🔍 Detailed Analysis for Record {row.ID}
-                                </h4>
-                                
-                                <div style={{
-                                  display: 'grid',
-                                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                                  gap: '15px'
-                                }}>
-                                  {Object.entries(row.fields).map(([fieldName, fieldData], idx) => (
-                                    <div key={idx} style={{
-                                      background: 'white',
-                                      border: '1px solid #e5e7eb',
-                                      borderRadius: '8px',
-                                      padding: '15px'
-                                    }}>
-                                      <div style={{
-                                        fontWeight: '600',
-                                        color: '#1f2937',
-                                        marginBottom: '10px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px'
-                                      }}>
-                                        {fieldData.status === 'difference' ? '❌' : fieldData.status === 'match' ? '✅' : '⚠️'} {fieldName}
-                                      </div>
-                                      
-                                      <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: '1fr 1fr',
-                                        gap: '10px',
-                                        fontSize: '0.9rem'
-                                      }}>
-                                        <div>
-                                          <div style={{ color: '#6b7280', fontSize: '0.8rem', marginBottom: '4px' }}>
-                                            File 1 Value:
-                                          </div>
+                                          <button
+                                            onClick={() => toggleGroupExpansion(group.name)}
+                                            style={{
+                                              background: 'transparent',
+                                              border: '1px solid #d1d5db',
+                                              borderRadius: '4px',
+                                              padding: '4px 8px',
+                                              fontSize: '0.8rem',
+                                              cursor: 'pointer',
+                                              color: '#374151'
+                                            }}
+                                          >
+                                            Show Details
+                                          </button>
+                                        </div>
+                                      )}
+                                    </td>
+                                  ))
+                                ) : (
+                                  // Individual Field Display
+                                  Object.entries(row.fields).map(([fieldName, fieldData], idx) => {
+                                    const isMatch = fieldData.val1 === fieldData.val2;
+                                    const isDifference = fieldData.status === 'difference';
+                                    
+                                    return (
+                                      <td key={idx} style={{
+                                        padding: '12px 16px',
+                                        borderRight: '1px solid #e5e7eb',
+                                        borderBottom: '1px solid #f3f4f6',
+                                        fontSize: '0.95rem',
+                                        textAlign: 'center',
+                                        background: isDifference ? '#fef2f2' : 'transparent'
+                                      }} className="field-value">
+                                        {isMatch ? (
                                           <div style={{
-                                            background: '#f0f9ff',
-                                            padding: '8px',
-                                            borderRadius: '6px',
+                                            color: '#374151',
                                             fontWeight: '500'
                                           }}>
                                             {fieldData.val1}
                                           </div>
-                                        </div>
-                                        
-                                        <div>
-                                          <div style={{ color: '#6b7280', fontSize: '0.8rem', marginBottom: '4px' }}>
-                                            File 2 Value:
+                                        ) : (
+                                          <div>
+                                            <div style={{
+                                              color: '#dc2626',
+                                              fontSize: '0.85rem',
+                                              textDecoration: 'line-through',
+                                              opacity: 0.7,
+                                              marginBottom: '2px'
+                                            }}>
+                                              {fieldData.val1}
+                                            </div>
+                                            <div style={{
+                                              color: '#16a34a',
+                                              fontWeight: '600',
+                                              fontSize: '0.9rem'
+                                            }}>
+                                              {fieldData.val2}
+                                            </div>
+                                            {fieldData.difference && (
+                                              <div style={{
+                                                fontSize: '0.75rem',
+                                                color: '#f59e0b',
+                                                marginTop: '4px',
+                                                fontWeight: '600'
+                                              }}>
+                                                Δ {fieldData.difference}
+                                              </div>
+                                            )}
                                           </div>
-                                          <div style={{
-                                            background: '#f0fdf4',
-                                            padding: '8px',
-                                            borderRadius: '6px',
-                                            fontWeight: '500'
-                                          }}>
-                                            {fieldData.val2}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      
-                                      <div style={{
-                                        marginTop: '10px',
-                                        padding: '8px',
-                                        background: fieldData.status === 'difference' 
-                                          ? '#fee2e2' 
-                                          : fieldData.status === 'match' 
-                                            ? '#f0fdf4' 
-                                            : '#fefce8',
-                                        borderRadius: '6px',
-                                        fontSize: '0.85rem',
-                                        fontWeight: '500',
-                                        color: fieldData.status === 'difference' 
-                                          ? '#dc2626' 
-                                          : fieldData.status === 'match' 
-                                            ? '#166534' 
-                                            : '#92400e'
-                                      }}>
-                                        Status: {fieldData.status.charAt(0).toUpperCase() + fieldData.status.slice(1)}
-                                        {fieldData.difference && ` (${fieldData.difference})`}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                                        )}
+                                      </td>
+                                    );
+                                  })
+                                )}
+
+                                {/* Status */}
+                                <td style={{
+                                  padding: '12px 16px',
+                                  borderBottom: '1px solid #f3f4f6',
+                                  textAlign: 'center'
+                                }}>
+                                  <div style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '4px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '600',
+                                    background: hasAnyDifference ? '#fef2f2' : '#f0fdf4',
+                                    color: hasAnyDifference ? '#dc2626' : '#16a34a',
+                                    border: `1px solid ${hasAnyDifference ? '#fca5a5' : '#bbf7d0'}`
+                                  }} className="status-badge">
+                                    {hasAnyDifference ? '❌' : '✅'}
+                                    <span style={{ marginLeft: '2px' }}>
+                                      {hasAnyDifference ? 'Diff' : 'Match'}
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 )
