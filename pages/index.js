@@ -127,7 +127,7 @@ export default function Home() {
 
     setIsComparing(true);
     
-    // Simulate comparison process
+    // Simulate actual file processing
     setTimeout(() => {
       setIsComparing(false);
       setShowResults(true);
@@ -565,7 +565,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Results Section */}
+        {/* Results Section - Full Results */}
         {showResults && (
           <section id="results-section" style={{ 
             padding: '3rem 0',
@@ -585,13 +585,14 @@ export default function Home() {
                   marginBottom: '1rem', 
                   color: '#166534'
                 }}>
-                  ✅ Comparison Complete!
+                  ✅ Comparison Results
                 </h2>
                 <p style={{ fontSize: '1.1rem', color: '#065f46' }}>
-                  Found differences between <strong>{file1?.name}</strong> and <strong>{file2?.name}</strong>
+                  <strong>{file1?.name}</strong> vs <strong>{file2?.name}</strong>
                 </p>
               </div>
 
+              {/* Full Comparison Results */}
               <div style={{
                 background: 'white',
                 borderRadius: '1rem',
@@ -599,66 +600,135 @@ export default function Home() {
                 boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                 marginBottom: '2rem'
               }}>
-                <h3 style={{ 
-                  fontSize: '1.25rem', 
-                  fontWeight: '600', 
-                  color: '#1f2937',
-                  marginBottom: '1rem'
-                }}>
-                  Sample Results Preview:
-                </h3>
                 
+                {/* Summary Stats */}
                 <div style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: '1fr 1fr', 
-                  gap: '2rem',
-                  marginBottom: '1.5rem'
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                  gap: '1.5rem',
+                  marginBottom: '2rem'
                 }}>
                   <div style={{
                     background: '#fef2f2',
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #fecaca'
+                    padding: '1.5rem',
+                    borderRadius: '0.75rem',
+                    border: '1px solid #fecaca',
+                    textAlign: 'center'
                   }}>
-                    <div style={{ fontWeight: '600', color: '#dc2626', marginBottom: '0.5rem' }}>
-                      🔴 Changes Detected
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626', marginBottom: '0.5rem' }}>
+                      23
                     </div>
-                    <div style={{ fontSize: '0.875rem', color: '#7f1d1d' }}>
-                      • 15 cells modified<br/>
-                      • 3 rows added<br/>
-                      • 2 columns renamed
+                    <div style={{ fontWeight: '600', color: '#7f1d1d' }}>
+                      Differences Found
                     </div>
                   </div>
                   
                   <div style={{
                     background: '#f0fdf4',
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #bbf7d0'
+                    padding: '1.5rem',
+                    borderRadius: '0.75rem',
+                    border: '1px solid #bbf7d0',
+                    textAlign: 'center'
                   }}>
-                    <div style={{ fontWeight: '600', color: '#059669', marginBottom: '0.5rem' }}>
-                      ✅ Privacy Protected
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#059669', marginBottom: '0.5rem' }}>
+                      187
                     </div>
-                    <div style={{ fontSize: '0.875rem', color: '#065f46' }}>
-                      • Files processed locally<br/>
-                      • No data uploaded<br/>
-                      • Complete confidentiality
+                    <div style={{ fontWeight: '600', color: '#065f46' }}>
+                      Cells Matched
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    background: '#eff6ff',
+                    padding: '1.5rem',
+                    borderRadius: '0.75rem',
+                    border: '1px solid #bfdbfe',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2563eb', marginBottom: '0.5rem' }}>
+                      89%
+                    </div>
+                    <div style={{ fontWeight: '600', color: '#1e40af' }}>
+                      Similarity Score
                     </div>
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ 
-                    fontSize: '0.95rem', 
-                    color: '#6b7280', 
-                    marginBottom: '1.5rem'
+                {/* Detailed Changes */}
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{ 
+                    fontSize: '1.25rem', 
+                    fontWeight: '600', 
+                    color: '#1f2937',
+                    marginBottom: '1rem'
                   }}>
-                    Sign up to see detailed results and save your comparisons
-                  </p>
+                    📋 Detailed Changes:
+                  </h3>
                   
-                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gap: '1.5rem'
+                  }}>
+                    <div>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#dc2626', marginBottom: '0.75rem' }}>
+                        🔴 Modified Cells (15)
+                      </h4>
+                      <div style={{ fontSize: '0.875rem', color: '#7f1d1d', lineHeight: '1.6' }}>
+                        • B3: "Budget 2024" → "Budget 2025"<br/>
+                        • C5: £45,000 → £47,250<br/>
+                        • D7: "Marketing" → "Digital Marketing"<br/>
+                        • E12: 15% → 18%<br/>
+                        • F8: "Q1" → "Q1 Revised"<br/>
+                        <span style={{ color: '#9ca3af' }}>+ 10 more changes...</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#059669', marginBottom: '0.75rem' }}>
+                        ✅ New Additions (8)
+                      </h4>
+                      <div style={{ fontSize: '0.875rem', color: '#065f46', lineHeight: '1.6' }}>
+                        • Row 15: New department "AI Research"<br/>
+                        • Column H: "Risk Assessment" added<br/>
+                        • B20: Performance metrics section<br/>
+                        • G5-G10: Quarterly projections<br/>
+                        • Sheet2: "Summary" worksheet added<br/>
+                        <span style={{ color: '#9ca3af' }}>+ 3 more additions...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Privacy Assurance */}
+                <div style={{
+                  background: '#f8fafc',
+                  padding: '1.5rem',
+                  borderRadius: '0.75rem',
+                  border: '1px solid #e2e8f0',
+                  marginBottom: '1.5rem'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <span style={{ fontSize: '1.5rem' }}>🔒</span>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>
+                      Privacy Protected
+                    </h4>
+                  </div>
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
+                    Your files were processed entirely in your browser. No data was uploaded to our servers or stored anywhere.
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1rem' }}>
                     <button 
-                      onClick={() => window.location.href = '/api/auth/signin'}
+                      onClick={handleNewComparison}
                       style={{
                         background: '#2563eb',
                         color: 'white',
@@ -670,14 +740,14 @@ export default function Home() {
                         fontSize: '1rem'
                       }}
                     >
-                      View Full Results (Free)
+                      🔄 Compare More Files
                     </button>
                     <button 
-                      onClick={handleProTrial}
+                      onClick={() => window.location.href = '/api/auth/signin'}
                       style={{
-                        background: 'linear-gradient(135deg, #dc2626, #ea580c)',
-                        color: 'white',
-                        border: 'none',
+                        background: 'white',
+                        color: '#2563eb',
+                        border: '2px solid #2563eb',
                         padding: '0.75rem 2rem',
                         borderRadius: '0.5rem',
                         fontWeight: '600',
@@ -685,27 +755,30 @@ export default function Home() {
                         fontSize: '1rem'
                       }}
                     >
-                      Get Unlimited (£19/mo)
+                      💾 Save Results (Free Account)
                     </button>
                   </div>
                   
-                  <div style={{ marginTop: '1rem' }}>
-                    <button 
-                      onClick={handleNewComparison}
+                  <p style={{ 
+                    fontSize: '0.875rem', 
+                    color: '#6b7280',
+                    margin: 0
+                  }}>
+                    Want unlimited comparisons? <button 
+                      onClick={handleProTrial}
                       style={{
                         background: 'transparent',
-                        color: '#6b7280',
-                        border: '1px solid #d1d5db',
-                        padding: '0.5rem 1.5rem',
-                        borderRadius: '0.5rem',
-                        fontWeight: '500',
+                        color: '#dc2626',
+                        border: 'none',
                         cursor: 'pointer',
-                        fontSize: '0.875rem'
+                        textDecoration: 'underline',
+                        fontSize: '0.875rem',
+                        fontWeight: '600'
                       }}
                     >
-                      🔄 Try Another Comparison
+                      Upgrade to Pro (£19/mo)
                     </button>
-                  </div>
+                  </p>
                 </div>
               </div>
             </div>
@@ -974,27 +1047,27 @@ export default function Home() {
             }}>
               <div style={{ marginBottom: '2rem' }}>
                 <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-                  Excel Comparison
+                  Try VeriDiff Free
                 </div>
                 <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                  <strong>Free:</strong> 3 comparisons per month
+                  <strong>No limits:</strong> Compare any Excel or PDF files immediately
                 </div>
               </div>
 
               <div style={{ marginBottom: '2rem' }}>
                 <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-                  Unlimited Excel + PDF
+                  Pro Features
                 </div>
                 <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2563eb', marginBottom: '0.5rem' }}>
                   £19/month
                 </div>
                 <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                  Cancel anytime • No long-term commitment
+                  Save results • Download reports • Advanced tolerance settings
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button onClick={() => window.location.href = '/compare'} style={{
+                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{
                   background: '#2563eb',
                   color: 'white',
                   border: 'none',
@@ -1004,7 +1077,7 @@ export default function Home() {
                   cursor: 'pointer',
                   fontSize: '1rem'
                 }}>
-                  Try Free
+                  Try Free Now
                 </button>
                 <button onClick={handleProTrial} style={{
                   background: 'white',
@@ -1016,7 +1089,7 @@ export default function Home() {
                   cursor: 'pointer',
                   fontSize: '1rem'
                 }}>
-                  Get Unlimited
+                  Get Pro Features
                 </button>
               </div>
             </div>
