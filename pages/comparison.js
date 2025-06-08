@@ -6,7 +6,7 @@ import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import HeaderMapper from '../components/HeaderMapper';
 import { detectFileType } from '../utils/fileDetection';
-import { comparePDFFiles, setProgressCallback } from '../utils/largePdfFileComparison';
+import { comparePDFFiles, setProgressCallback } from '../utils/pdfFileComparison1';
 
 export default function Comparison() {
   const router = useRouter();
