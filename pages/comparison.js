@@ -154,29 +154,84 @@ export default function Comparison() {
   const handlePDFComparison = async () => {
     try {
       setIsLoading(true);
-      console.log('Starting PDF comparison...');
+      setError(null);
+      console.log('🔍 Starting PDF comparison process...');
+
+      // Check PDF.js availability first
+      if (typeof window === 'undefined' || !window.pdfjsLib) {
+        throw new Error(
+          'PDF Processing Engine Not Ready\n\n' +
+          'The PDF processing library is not available.\n\n' +
+          'Please try:\n' +
+          '• Refreshing the page and waiting 30 seconds\n' +
+          '• Checking your internet connection\n' +
+          '• Disabling ad blockers temporarily\n' +
+          '• Trying a different browser\n\n' +
+          'If the problem persists, the PDF processing service may be temporarily unavailable.'
+        );
+      }
+
+      if (window.pdfJsError) {
+        throw new Error(
+          window.pdfJsErrorMessage || 
+          'PDF Processing Engine Failed\n\n' +
+          'The PDF processing library encountered an error during initialization.\n\n' +
+          'Please refresh the page and try again. If the problem persists, ' +
+          'try using a different browser or contact support.'
+        );
+      }
 
       // Load PDF file data from sessionStorage
       const file1Data = sessionStorage.getItem('veridiff_file1_data');
       const file2Data = sessionStorage.getItem('veridiff_file2_data');
 
       if (!file1Data || !file2Data) {
-        throw new Error('PDF file data not found in session storage');
+        throw new Error(
+          'PDF File Data Missing\n\n' +
+          'The uploaded PDF files are no longer available in memory.\n\n' +
+          'This can happen if:\n' +
+          '• The browser session was reset\n' +
+          '• Files were too large for browser storage\n' +
+          '• Browser security settings cleared the data\n\n' +
+          'Please return to the upload page and select your files again.'
+        );
       }
 
-      // Convert base64 back to binary for PDF processing
-      const file1Binary = Uint8Array.from(atob(file1Data), c => c.charCodeAt(0));
-      const file2Binary = Uint8Array.from(atob(file2Data), c => c.charCodeAt(0));
+      console.log('📁 Converting file data for PDF processing...');
 
-      // Perform PDF comparison
-      console.log('Calling PDF comparison engine...');
+      // Convert base64 back to binary for PDF processing
+      let file1Binary, file2Binary;
+      
+      try {
+        file1Binary = Uint8Array.from(atob(file1Data), c => c.charCodeAt(0));
+        file2Binary = Uint8Array.from(atob(file2Data), c => c.charCodeAt(0));
+        
+        console.log(`📊 File sizes: ${(file1Binary.length/1024).toFixed(1)}KB, ${(file2Binary.length/1024).toFixed(1)}KB`);
+      } catch (conversionError) {
+        throw new Error(
+          'File Data Conversion Error\n\n' +
+          'Failed to process the uploaded PDF files.\n\n' +
+          'This might be caused by:\n' +
+          '• Corrupted file data in browser storage\n' +
+          '• Files that are too large\n' +
+          '• Browser compatibility issues\n\n' +
+          'Please try:\n' +
+          '• Uploading the files again\n' +
+          '• Using smaller PDF files\n' +
+          '• Trying a different browser'
+        );
+      }
+
+      // Perform PDF comparison with enhanced error handling
+      console.log('⚙️ Starting PDF comparison engine...');
+      
       const comparisonResults = await comparePDFFiles(
         file1Binary.buffer, 
         file2Binary.buffer, 
         pdfOptions
       );
 
-      console.log('PDF comparison completed:', comparisonResults);
+      console.log('✅ PDF comparison completed successfully');
 
       // Store PDF results and metadata
       sessionStorage.setItem('veridiff_pdf_results', JSON.stringify(comparisonResults));
@@ -187,8 +242,21 @@ export default function Comparison() {
       router.push('/track-comparison');
 
     } catch (error) {
-      console.error('PDF comparison error:', error);
-      setError(`PDF comparison failed: ${error.message}`);
+      console.error('❌ PDF comparison error:', error);
+      
+      // Enhanced error handling with user-friendly messages
+      let userMessage = error.message;
+      
+      // Add helpful context for common errors
+      if (error.message.includes('PDF.js')) {
+        userMessage = error.message + '\n\nTechnical Note: This error is related to the PDF processing library loading.';
+      } else if (error.message.includes('timeout') || error.message.includes('timed out')) {
+        userMessage = error.message + '\n\nSuggestion: Try using smaller PDF files or check your internet connection.';
+      } else if (error.message.includes('memory') || error.message.includes('Memory')) {
+        userMessage = error.message + '\n\nSuggestion: Try closing other browser tabs or using smaller PDF files.';
+      }
+      
+      setError(userMessage);
       setIsLoading(false);
     }
   };
