@@ -894,7 +894,7 @@ export default function Home() {
                                 <div class="field-item">
                                     <div class="field-label">${fieldName}</div>
                                     <div class="field-value">${fieldData.val2}</div>
-                                    ${fieldData.difference ? \`<div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Δ ${fieldData.difference}</div>\` : ''}
+                                    ${fieldData.difference ? `<div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Δ ${fieldData.difference}</div>\` : ''}
                                 </div>
                             \`).join('')}
                         </div>
