@@ -890,7 +890,7 @@ export default function Home() {
                     
                     <div class="file-data">
                         <div class="field-grid">
-                            ${Object.entries(row.fields).map(([fieldName, fieldData]) => \`
+                            ${Object.entries(row.fields).map(([fieldName, fieldData]) => `
                                 <div class="field-item">
                                     <div class="field-label">${fieldName}</div>
                                     <div class="field-value">${fieldData.val2}</div>
