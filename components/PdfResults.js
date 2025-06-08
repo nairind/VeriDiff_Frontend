@@ -2,10 +2,39 @@
 import { useState } from 'react';
 import PDFSideBySideView from './PDFSideBySideView';
 
-const PdfResults = ({ results, file1Name, file2Name }) => {
+const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   const [expandedPages, setExpandedPages] = useState(new Set());
-  const [downloadingReport, setDownloadingReport] = useState(false);
+  const [isGeneratingDownload, setIsGeneratingDownload] = useState(false);
   const [viewMode, setViewMode] = useState('summary'); // 'summary' | 'sideBySide'
+  const [downloadDropdownOpen, setDownloadDropdownOpen] = useState(false);
+
+  // Download options
+  const downloadOptions = [
+    {
+      id: 'text',
+      label: '📄 Text Report',
+      description: 'Detailed text-based comparison report',
+      format: 'txt'
+    },
+    {
+      id: 'html',
+      label: '🌐 HTML Report',
+      description: 'Interactive web page with side-by-side view',
+      format: 'html'
+    },
+    {
+      id: 'excel',
+      label: '📊 Excel Export',
+      description: 'Structured data with change analysis',
+      format: 'xlsx'
+    },
+    {
+      id: 'csv',
+      label: '📋 CSV Data',
+      description: 'Raw comparison data for analysis',
+      format: 'csv'
+    }
+  ];
 
   // Toggle page expansion
   const togglePageExpansion = (pageNumber) => {
@@ -28,26 +57,288 @@ const PdfResults = ({ results, file1Name, file2Name }) => {
     }
   };
 
-  // Generate and download detailed report
-  const downloadReport = async () => {
-    setDownloadingReport(true);
-    try {
-      const reportContent = generateDetailedReport();
-      const blob = new Blob([reportContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `PDF_Comparison_Report_${new Date().toISOString().split('T')[0]}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error generating report:', error);
-      alert('Error generating report. Please try again.');
-    } finally {
-      setDownloadingReport(false);
-    }
+  // Generate HTML report with embedded side-by-side view
+  const generateHTMLReport = () => {
+    const timestamp = new Date().toLocaleString();
+    
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Comparison Report - ${file1Name} vs ${file2Name}</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f8fafc; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            padding-bottom: 20px; 
+            border-bottom: 2px solid #e5e7eb; 
+        }
+        .title { 
+            font-size: 2rem; 
+            font-weight: 700; 
+            margin-bottom: 10px; 
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle { 
+            color: #6b7280; 
+            font-size: 1.1rem; 
+        }
+        .summary-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 20px; 
+            margin: 30px 0; 
+        }
+        .summary-card { 
+            background: #f8fafc; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #e5e7eb; 
+        }
+        .summary-card h3 { 
+            margin: 0 0 15px 0; 
+            color: #1f2937; 
+            font-size: 1.1rem; 
+        }
+        .summary-card .metric { 
+            font-size: 2rem; 
+            font-weight: 700; 
+            margin-bottom: 5px; 
+        }
+        .similarity-high { color: #22c55e; }
+        .similarity-medium { color: #f59e0b; }
+        .similarity-low { color: #ef4444; }
+        .side-by-side { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+            margin: 30px 0; 
+        }
+        .document-panel { 
+            border: 1px solid #e5e7eb; 
+            border-radius: 8px; 
+            overflow: hidden; 
+        }
+        .document-header { 
+            background: #f8fafc; 
+            padding: 15px; 
+            font-weight: 600; 
+            border-bottom: 1px solid #e5e7eb; 
+        }
+        .document-content { 
+            padding: 20px; 
+            max-height: 600px; 
+            overflow-y: auto; 
+        }
+        .page { 
+            margin-bottom: 30px; 
+        }
+        .page-header { 
+            background: #f3f4f6; 
+            padding: 8px 12px; 
+            border-radius: 4px; 
+            font-weight: 600; 
+            margin-bottom: 15px; 
+            font-size: 0.9rem; 
+        }
+        .paragraph { 
+            margin-bottom: 12px; 
+            padding: 4px 0; 
+            line-height: 1.6; 
+        }
+        .added { 
+            background: #dcfce7; 
+            border: 1px solid #166534; 
+            color: #166534; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-weight: 500; 
+        }
+        .removed { 
+            background: #fee2e2; 
+            border: 1px solid #dc2626; 
+            color: #dc2626; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-weight: 500; 
+        }
+        .modified { 
+            background: #fef3c7; 
+            border: 1px solid #d97706; 
+            color: #92400e; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-weight: 500; 
+        }
+        .legend { 
+            display: flex; 
+            justify-content: center; 
+            gap: 20px; 
+            margin: 20px 0; 
+            font-size: 0.9rem; 
+        }
+        .legend-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        .legend-box { 
+            width: 16px; 
+            height: 16px; 
+            border-radius: 3px; 
+        }
+        .footer { 
+            margin-top: 40px; 
+            padding-top: 20px; 
+            border-top: 1px solid #e5e7eb; 
+            text-align: center; 
+            color: #6b7280; 
+            font-size: 0.9rem; 
+        }
+        @media (max-width: 768px) {
+            .side-by-side { grid-template-columns: 1fr; }
+            .summary-grid { grid-template-columns: 1fr; }
+        }
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">📑 PDF Comparison Report</h1>
+            <p class="subtitle">Generated on ${timestamp}</p>
+            <p><strong>${file1Name || 'Document 1'}</strong> vs <strong>${file2Name || 'Document 2'}</strong></p>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>📊 Overall Similarity</h3>
+                <div class="metric ${results.similarity_score >= 90 ? 'similarity-high' : results.similarity_score >= 70 ? 'similarity-medium' : 'similarity-low'}">
+                    ${results.similarity_score || 0}%
+                </div>
+                <p>Document similarity score</p>
+            </div>
+            <div class="summary-card">
+                <h3>📄 Pages Compared</h3>
+                <div class="metric" style="color: #2563eb;">${results.total_pages || 0}</div>
+                <p>${results.page_differences?.length || 0} pages with changes</p>
+            </div>
+            <div class="summary-card">
+                <h3>🔍 Changes Found</h3>
+                <div class="metric" style="color: #7c3aed;">${results.differences_found || 0}</div>
+                <p>Total differences detected</p>
+            </div>
+            <div class="summary-card">
+                <h3>📝 Word Analysis</h3>
+                <div class="metric" style="color: #059669;">
+                    ${results.word_changes?.file1_words || 0} → ${results.word_changes?.file2_words || 0}
+                </div>
+                <p>${results.word_changes?.word_change_percentage || 0}% word change</p>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="background: #dcfce7; border: 1px solid #166534;"></div>
+                <span>Added Content</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #fee2e2; border: 1px solid #dc2626;"></div>
+                <span>Removed Content</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #fef3c7; border: 1px solid #d97706;"></div>
+                <span>Modified Content</span>
+            </div>
+        </div>
+
+        <div class="side-by-side">
+            <div class="document-panel">
+                <div class="document-header">📄 ${file1Name || 'Document 1'}</div>
+                <div class="document-content">
+                    ${(results.file1_pages || []).map(page => `
+                        <div class="page">
+                            <div class="page-header">Page ${page.page_number}</div>
+                            ${(page.paragraphs || []).map((para, index) => {
+                                const change = (results.text_changes || []).find(c => 
+                                    c.page === page.page_number && c.paragraph === index
+                                );
+                                const changeClass = change ? change.type : '';
+                                return `<div class="paragraph ${changeClass}">${para.text}</div>`;
+                            }).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div class="document-panel">
+                <div class="document-header">📄 ${file2Name || 'Document 2'}</div>
+                <div class="document-content">
+                    ${(results.file2_pages || []).map(page => `
+                        <div class="page">
+                            <div class="page-header">Page ${page.page_number}</div>
+                            ${(page.paragraphs || []).map((para, index) => {
+                                const change = (results.text_changes || []).find(c => 
+                                    c.page === page.page_number && c.paragraph === index
+                                );
+                                const changeClass = change ? change.type : '';
+                                return `<div class="paragraph ${changeClass}">${para.text}</div>`;
+                            }).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Generated by VeriDiff - Professional File Comparison Tool</p>
+            <p>Processing time: ${results.processing_time?.total_time_ms || 'N/A'}ms | 
+               Quality: ${Math.round((results.quality_metrics?.overall_success_rate || 1) * 100)}%</p>
+        </div>
+    </div>
+</body>
+</html>`;
+  };
+
+  // Generate CSV export
+  const generateCSVData = () => {
+    const headers = ['Page', 'Paragraph', 'Change_Type', 'Original_Text', 'New_Text', 'Character_Count', 'File_Source'];
+    const rows = [headers];
+
+    (results.text_changes || []).forEach(change => {
+      rows.push([
+        change.page,
+        change.paragraph,
+        change.type,
+        change.type === 'modified' ? change.old_text : change.text,
+        change.type === 'modified' ? change.new_text : '',
+        change.char_count || change.char_count_old || 0,
+        change.file
+      ]);
+    });
+
+    return rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
   };
 
   // Generate comprehensive text report
@@ -117,11 +408,66 @@ ${line}
 TECHNICAL DETAILS:
 • File 1 Success Rate: ${Math.round((results.quality_metrics?.file1_success_rate || 1) * 100)}%
 • File 2 Success Rate: ${Math.round((results.quality_metrics?.file2_success_rate || 1) * 100)}%
-• Comparison Options: ${JSON.stringify(results.comparison_options || {}, null, 2)}
+• Comparison Options: ${JSON.stringify(options, null, 2)}
 
 ${line}
 END OF REPORT
 ${line}`;
+  };
+
+  // Helper function to trigger download
+  const downloadBlob = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Enhanced download function with multiple options
+  const downloadComparisonData = async (format) => {
+    const timestamp = new Date().toISOString().split('T')[0];
+    
+    try {
+      setIsGeneratingDownload(true);
+      setDownloadDropdownOpen(false);
+      
+      switch (format) {
+        case 'html':
+          const htmlContent = generateHTMLReport();
+          const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+          downloadBlob(htmlBlob, `PDF_Comparison_Report_${timestamp}.html`);
+          break;
+
+        case 'excel':
+          // For now, export as enhanced CSV with Excel-compatible format
+          const csvContent = generateCSVData();
+          const csvBlob = new Blob([csvContent], { type: 'text/csv' });
+          downloadBlob(csvBlob, `PDF_Comparison_Data_${timestamp}.csv`);
+          break;
+
+        case 'csv':
+          const csvData = generateCSVData();
+          const csvDataBlob = new Blob([csvData], { type: 'text/csv' });
+          downloadBlob(csvDataBlob, `PDF_Changes_${timestamp}.csv`);
+          break;
+
+        case 'text':
+        default:
+          const textContent = generateDetailedReport();
+          const textBlob = new Blob([textContent], { type: 'text/plain' });
+          downloadBlob(textBlob, `PDF_Comparison_Report_${timestamp}.txt`);
+          break;
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      alert(`Failed to generate ${format.toUpperCase()} export: ${error.message}`);
+    } finally {
+      setIsGeneratingDownload(false);
+    }
   };
 
   // Get status color for different change types
@@ -161,7 +507,7 @@ ${line}`;
       boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
       border: '1px solid #e5e7eb'
     }}>
-      {/* Header Section with View Toggle */}
+      {/* Header Section with View Toggle and Downloads */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -227,33 +573,76 @@ ${line}`;
             </button>
           </div>
 
-          {/* Download Report Button */}
-          <button
-            onClick={downloadReport}
-            disabled={downloadingReport}
-            style={{
-              background: downloadingReport ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '8px',
-              fontSize: '0.95rem',
-              fontWeight: '600',
-              cursor: downloadingReport ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            {downloadingReport ? '⏳' : '📥'} 
-            {downloadingReport ? 'Generating...' : 'Download Report'}
-          </button>
+          {/* Enhanced Download Dropdown */}
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <button
+              onClick={() => setDownloadDropdownOpen(!downloadDropdownOpen)}
+              disabled={isGeneratingDownload}
+              style={{
+                background: isGeneratingDownload ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '8px',
+                fontSize: '0.95rem',
+                fontWeight: '600',
+                cursor: isGeneratingDownload ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              {isGeneratingDownload ? '⏳' : '📥'} 
+              {isGeneratingDownload ? 'Generating...' : 'Download Report'} ⌄
+            </button>
+
+            {downloadDropdownOpen && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                background: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                zIndex: 1000,
+                minWidth: '280px',
+                marginTop: '4px'
+              }}>
+                {downloadOptions.map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => downloadComparisonData(option.id)}
+                    style={{
+                      width: '100%',
+                      background: 'none',
+                      border: 'none',
+                      padding: '12px 16px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid #f3f4f6',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = '#f8fafc'}
+                    onMouseLeave={(e) => e.target.style.background = 'none'}
+                  >
+                    <div style={{ fontWeight: '500', marginBottom: '2px' }}>
+                      {option.label}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                      {option.description}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Conditional View Rendering */}
       {viewMode === 'summary' ? (
-        // EXISTING SUMMARY VIEW (All current functionality preserved)
+        /* SUMMARY VIEW - All existing functionality preserved */
         <>
           {/* File Information */}
           <div style={{
@@ -617,7 +1006,7 @@ ${line}`;
           </div>
         </>
       ) : (
-        // NEW SIDE-BY-SIDE VIEW
+        /* SIDE-BY-SIDE VIEW */
         <PDFSideBySideView 
           results={results} 
           file1Name={file1Name} 
