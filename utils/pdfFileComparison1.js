@@ -1,8 +1,22 @@
-// utils/pdfFileComparison1.js
-// ENHANCED PDF.js IMPLEMENTATION WITH ROBUST ERROR HANDLING
+// utils/largePdfFileComparison.js
+// ENHANCED PDF.js IMPLEMENTATION FOR LARGE FILES (UP TO 100MB)
 
-// Enhanced PDF.js availability checker with better error handling
-const waitForPDFJS = (maxWaitTime = 30000) => {
+// Progress callback system for large file processing
+let progressCallback = null;
+
+export const setProgressCallback = (callback) => {
+  progressCallback = callback;
+};
+
+const updateProgress = (stage, progress, message) => {
+  if (progressCallback) {
+    progressCallback({ stage, progress, message });
+  }
+  console.log(`📊 ${stage}: ${progress}% - ${message}`);
+};
+
+// Enhanced PDF.js availability checker with extended timeout for large files
+const waitForPDFJS = (maxWaitTime = 45000) => {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
     let checkCount = 0;
@@ -14,30 +28,30 @@ const waitForPDFJS = (maxWaitTime = 30000) => {
         console.log(`🔍 PDF.js availability check #${checkCount}`);
       }
       
-      // Check for explicit error state first
+      // Check for explicit error state
       if (window.pdfJsError) {
         const errorMsg = window.pdfJsErrorMessage || 'PDF.js library failed to load';
         console.error('❌ PDF.js error state detected:', errorMsg);
         reject(new Error(
           'PDF Processing Engine Unavailable\n\n' +
-          'The PDF processing library failed to load properly.\n\n' +
-          'This can happen due to:\n' +
-          '• Poor internet connection\n' +
-          '• Ad blockers or browser extensions blocking resources\n' +
-          '• Corporate firewall restrictions\n' +
-          '• CDN service interruptions\n\n' +
-          'Solutions to try:\n' +
-          '• Refresh the page and wait 30-60 seconds\n' +
-          '• Disable ad blockers temporarily\n' +
-          '• Try a different browser or incognito mode\n' +
-          '• Check your internet connection\n' +
-          '• Contact support if the problem persists\n\n' +
+          'The PDF processing library failed to load.\n\n' +
+          'For large PDF files (50MB+), this is often caused by:\n' +
+          '• Network timeout during library loading\n' +
+          '• Browser security restrictions\n' +
+          '• Insufficient memory for large file processing\n' +
+          '• Ad blockers blocking PDF processing resources\n\n' +
+          'Solutions for large file processing:\n' +
+          '• Refresh page and wait 60+ seconds\n' +
+          '• Close other browser tabs to free memory\n' +
+          '• Disable ad blockers and extensions\n' +
+          '• Try Chrome or Firefox for better large file support\n' +
+          '• Consider splitting very large PDFs into smaller sections\n\n' +
           'Technical details: ' + errorMsg
         ));
         return;
       }
       
-      // Enhanced validation - check for all required components
+      // Enhanced validation for large file processing
       if (typeof window !== 'undefined' && 
           window.pdfjsLib && 
           window.pdfjsLib.getDocument &&
@@ -45,76 +59,70 @@ const waitForPDFJS = (maxWaitTime = 30000) => {
           window.pdfJsReady) {
         
         try {
-          // Additional validation - test worker configuration
+          // Test worker configuration
           const workerSrc = window.pdfjsLib.GlobalWorkerOptions.workerSrc;
           if (!workerSrc) {
-            throw new Error('PDF.js worker not configured');
+            throw new Error('PDF.js worker not configured for large file processing');
           }
           
           // Test basic functionality
           if (typeof window.pdfjsLib.getDocument !== 'function') {
-            throw new Error('PDF.js getDocument function not available');
+            throw new Error('PDF.js core functions not available');
           }
           
-          console.log('✅ PDF.js is ready and functional');
+          console.log('✅ PDF.js ready for large file processing');
           resolve(window.pdfjsLib);
           return;
           
         } catch (testError) {
-          console.warn('⚠️ PDF.js loaded but functionality test failed:', testError);
-          // Continue checking rather than failing immediately
+          console.warn('⚠️ PDF.js loaded but large file support test failed:', testError);
         }
       }
       
       const elapsed = Date.now() - startTime;
       if (elapsed >= maxWaitTime) {
-        const timeoutMsg = `PDF.js library not available after ${maxWaitTime/1000} seconds`;
-        console.error('❌', timeoutMsg);
-        
         reject(new Error(
           'PDF Processing Timeout\n\n' +
           'The PDF processing engine did not load within the expected time.\n\n' +
-          'This usually indicates:\n' +
-          '• Slow internet connection\n' +
-          '• Network connectivity issues\n' +
-          '• Browser blocking external resources\n' +
-          '• High server load\n\n' +
+          'For large file processing, this may indicate:\n' +
+          '• Slow internet connection affecting library download\n' +
+          '• Browser memory limitations\n' +
+          '• Network restrictions blocking external resources\n\n' +
           'Please try:\n' +
-          '• Refreshing the page and waiting longer\n' +
-          '• Checking your internet connection speed\n' +
-          '• Using a different browser\n' +
-          '• Trying again in a few minutes\n\n' +
+          '• Refreshing and waiting 2+ minutes\n' +
+          '• Closing other applications to free memory\n' +
+          '• Using a different browser with better large file support\n' +
+          '• Ensuring stable, fast internet connection\n\n' +
           `Timeout after: ${maxWaitTime/1000} seconds`
         ));
         return;
       }
       
-      // Progressive backoff with status updates
-      const baseDelay = 200;
-      const maxDelay = 2000;
-      const delay = Math.min(baseDelay * Math.pow(1.2, checkCount), maxDelay);
+      // Adaptive delay for large file processing
+      const delay = Math.min(300 * Math.pow(1.2, checkCount), 3000);
       
-      if (checkCount % 10 === 0) {
+      if (checkCount % 8 === 0) {
         const remainingTime = Math.round((maxWaitTime - elapsed) / 1000);
-        console.log(`⏳ Still waiting for PDF.js... (${remainingTime}s remaining)`);
+        console.log(`⏳ Large file PDF.js loading... (${remainingTime}s remaining)`);
       }
       
       setTimeout(checkPDFJS, delay);
     }
     
-    // Start checking immediately
     checkPDFJS();
   });
 };
 
-// Enhanced file reading with comprehensive validation
-const readFileAsArrayBuffer = (file) => {
+// Enhanced file reading with support for large files up to 100MB
+const readLargePDFFile = (file) => {
   return new Promise((resolve, reject) => {
-    console.log('📁 Reading PDF file:', file?.name);
+    console.log('📁 Reading large PDF file:', file?.name, `(${(file.size/1024/1024).toFixed(1)}MB)`);
     
-    // Basic file validation
+    updateProgress('File Reading', 0, `Starting to read ${file.name} (${(file.size/1024/1024).toFixed(1)}MB)`);
+    
+    // Enhanced validation for large files
     if (!file) {
-      reject(new Error('No file provided for PDF processing'));
+      reject(new Error('No file provided for large PDF processing'));
       return;
     }
 
@@ -123,75 +131,115 @@ const readFileAsArrayBuffer = (file) => {
       return;
     }
 
-    if (file.size > 200 * 1024 * 1024) { // 200MB limit
+    // Increased limit to 100MB with detailed guidance
+    if (file.size > 100 * 1024 * 1024) {
       reject(new Error(
-        `PDF file is too large (${(file.size / 1024 / 1024).toFixed(1)}MB).\n\n` +
-        'Maximum supported size is 200MB.\n' +
-        'Please try:\n' +
-        '• Compressing the PDF file\n' +
-        '• Splitting large documents into smaller files\n' +
-        '• Using a PDF optimization tool'
+        `PDF File Too Large (${(file.size / 1024 / 1024).toFixed(1)}MB)\n\n` +
+        'Maximum supported size is 100MB for optimal performance.\n\n' +
+        'For files larger than 100MB, consider:\n' +
+        '• Splitting the PDF into smaller sections (recommended: 20-50MB each)\n' +
+        '• Using PDF compression tools to reduce file size\n' +
+        '• Comparing specific page ranges instead of entire documents\n' +
+        '• Using specialized document management software for bulk comparisons\n\n' +
+        'Large file processing tips:\n' +
+        '• Ensure 8GB+ RAM available\n' +
+        '• Close other browser tabs and applications\n' +
+        '• Use latest Chrome or Firefox for best performance\n' +
+        '• Allow 10-30 minutes for very large files'
       ));
       return;
     }
 
+    // Memory check for large files
+    if (file.size > 50 * 1024 * 1024) {
+      console.warn(`⚠️ Large PDF detected (${(file.size/1024/1024).toFixed(1)}MB). Ensuring sufficient memory...`);
+      
+      // Basic memory check (approximate)
+      if (navigator.deviceMemory && navigator.deviceMemory < 4) {
+        console.warn('⚠️ Low device memory detected. Large file processing may be slow.');
+      }
+    }
+
     const reader = new FileReader();
+    
+    // Progress tracking for large files
+    let lastProgressUpdate = 0;
+    
+    reader.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const progress = Math.round((e.loaded / e.total) * 100);
+        
+        // Update progress every 5% to avoid too many updates
+        if (progress - lastProgressUpdate >= 5) {
+          updateProgress('File Reading', progress, `Reading file data... ${(e.loaded/1024/1024).toFixed(1)}MB / ${(e.total/1024/1024).toFixed(1)}MB`);
+          lastProgressUpdate = progress;
+        }
+      }
+    };
     
     reader.onload = (e) => {
       try {
+        updateProgress('File Reading', 95, 'Validating PDF structure...');
+        
         const arrayBuffer = e.target.result;
         
-        // Enhanced PDF validation
+        // Enhanced PDF validation for large files
         const bytes = new Uint8Array(arrayBuffer);
         if (bytes.length < 8) {
           reject(new Error('File is too small to be a valid PDF document (less than 8 bytes)'));
           return;
         }
         
-        // Check for PDF magic bytes (%PDF)
+        // Check PDF magic bytes
         if (bytes[0] !== 37 || bytes[1] !== 80 || bytes[2] !== 68 || bytes[3] !== 70) {
           reject(new Error(
             'Invalid PDF File Format\n\n' +
-            'The selected file does not appear to be a valid PDF document.\n' +
-            'The file header is missing the required PDF signature.\n\n' +
+            'The file does not appear to be a valid PDF document.\n' +
             'Please ensure:\n' +
-            '• The file has a .pdf extension\n' +
-            '• The file was not corrupted during download/transfer\n' +
-            '• The file is actually a PDF and not renamed from another format\n' +
-            '• Try opening the file in a PDF viewer to verify it works'
+            '• File has .pdf extension\n' +
+            '• File is not corrupted\n' +
+            '• File was not renamed from another format\n' +
+            '• Try opening in a PDF viewer to verify it works'
           ));
           return;
         }
         
-        // Validate PDF version (optional but helpful)
-        const headerStr = new TextDecoder().decode(bytes.slice(0, Math.min(32, bytes.length)));
+        // Advanced structure validation for large files
+        const headerStr = new TextDecoder().decode(bytes.slice(0, Math.min(64, bytes.length)));
         if (!headerStr.includes('PDF-')) {
           console.warn('⚠️ PDF version information not found in expected location');
         }
         
-        console.log('✅ PDF file validated and read successfully');
-        console.log(`📊 File size: ${(arrayBuffer.byteLength / 1024).toFixed(1)}KB`);
+        // Check for potential issues with large files
+        if (arrayBuffer.byteLength > 75 * 1024 * 1024) {
+          console.warn('⚠️ Very large PDF file. Processing may take 15-30 minutes.');
+        }
+        
+        updateProgress('File Reading', 100, `PDF file validated (${(arrayBuffer.byteLength/1024/1024).toFixed(1)}MB)`);
+        
+        console.log('✅ Large PDF file validated and read successfully');
         resolve(arrayBuffer);
         
       } catch (error) {
-        console.error('❌ PDF file processing error:', error);
-        reject(new Error(`Failed to process PDF file: ${error.message}`));
+        console.error('❌ Large PDF file processing error:', error);
+        reject(new Error(`Failed to process large PDF file: ${error.message}`));
       }
     };
     
     reader.onerror = (e) => {
-      console.error('❌ FileReader error:', e);
+      console.error('❌ FileReader error for large file:', e);
       reject(new Error(
-        `Failed to read PDF file "${file.name}"\n\n` +
-        'This could be caused by:\n' +
-        '• File corruption\n' +
-        '• Insufficient memory\n' +
-        '• File being used by another application\n' +
-        '• Browser security restrictions\n\n' +
-        'Please try:\n' +
-        '• Closing other applications\n' +
-        '• Using a smaller PDF file\n' +
-        '• Restarting your browser'
+        `Failed to read large PDF file "${file.name}"\n\n` +
+        'Large file reading can fail due to:\n' +
+        '• Insufficient memory (need 4GB+ available)\n' +
+        '• File corruption during transfer\n' +
+        '• Browser limitations with very large files\n' +
+        '• File being used by another application\n\n' +
+        'Solutions:\n' +
+        '• Close other applications to free memory\n' +
+        '• Try with a smaller file first\n' +
+        '• Restart browser and try again\n' +
+        '• Use a different browser (Chrome/Firefox recommended)'
       ));
     };
     
@@ -199,136 +247,150 @@ const readFileAsArrayBuffer = (file) => {
   });
 };
 
-// Enhanced PDF text extraction with comprehensive error handling
-const extractTextFromPDF = async (arrayBuffer, fileName) => {
+// Enhanced PDF text extraction optimized for large files
+const extractTextFromLargePDF = async (arrayBuffer, fileName) => {
   let pdf = null;
   
   try {
-    console.log('🔍 Starting enhanced PDF text extraction for:', fileName);
+    const fileSizeMB = (arrayBuffer.byteLength / 1024 / 1024).toFixed(1);
+    console.log(`🔍 Starting large PDF text extraction for: ${fileName} (${fileSizeMB}MB)`);
     
-    // Wait for PDF.js with enhanced error handling
-    const pdfjsLib = await waitForPDFJS(45000); // Increased timeout
+    updateProgress('PDF Loading', 0, `Initializing PDF processing for ${fileSizeMB}MB file...`);
     
-    // Load PDF document with enhanced configuration
+    // Wait for PDF.js with extended timeout for large files
+    const pdfjsLib = await waitForPDFJS(60000);
+    
+    updateProgress('PDF Loading', 10, 'PDF.js engine ready, loading document...');
+    
+    // Load PDF document with optimized settings for large files
     try {
-      console.log('📚 Loading PDF document with enhanced settings...');
+      console.log('📚 Loading large PDF document with optimized settings...');
       
       const loadingTask = pdfjsLib.getDocument({ 
         data: arrayBuffer,
         verbosity: 0, // Reduce console noise
-        maxImageSize: 2 * 1024 * 1024, // 2MB max for images
-        disableFontFace: true, // Better compatibility
-        disableRange: false, // Allow range requests
-        disableStream: false, // Allow streaming
+        maxImageSize: 1024 * 1024, // 1MB max for images (reduced for large files)
+        disableFontFace: true, // Better performance for large files
+        disableRange: true, // Load entire file for better large file handling
+        disableStream: true, // More reliable for large files
         cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdfjs-dist@3.11.174/cmaps/',
         cMapPacked: true,
-        enableXfa: false, // Disable XFA forms
+        enableXfa: false, // Disable XFA forms for performance
         useSystemFonts: false, // Use embedded fonts
-        useWorkerFetch: false, // Better compatibility
-        isEvalSupported: false, // Security
-        fontExtraProperties: false // Performance
+        useWorkerFetch: false, // Better compatibility for large files
+        isEvalSupported: false, // Security and performance
+        fontExtraProperties: false, // Performance optimization
+        standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdfjs-dist@3.11.174/standard_fonts/',
       });
       
-      // Enhanced timeout with progress tracking
+      // Enhanced timeout for large files (up to 5 minutes)
       const loadTimeout = setTimeout(() => {
         try {
           loadingTask.destroy();
         } catch (destroyError) {
-          console.warn('⚠️ Error destroying PDF loading task:', destroyError);
+          console.warn('⚠️ Error destroying large PDF loading task:', destroyError);
         }
         throw new Error(
-          'PDF Document Loading Timeout\n\n' +
-          'The PDF document took too long to load (60+ seconds).\n\n' +
+          'Large PDF Loading Timeout\n\n' +
+          `The large PDF document (${fileSizeMB}MB) took too long to load.\n\n` +
           'This usually happens with:\n' +
-          '• Very large PDF files (try files under 50MB)\n' +
-          '• Complex PDFs with many images or forms\n' +
-          '• Heavily encrypted or secured PDFs\n' +
+          '• Very complex PDFs with many images or forms\n' +
+          '• Files approaching the 100MB limit\n' +
+          '• Insufficient available memory\n' +
           '• Network connectivity issues\n\n' +
-          'Suggestions:\n' +
-          '• Try a smaller or simpler PDF file\n' +
-          '• Ensure stable internet connection\n' +
-          '• Split large documents into smaller sections\n' +
-          '• Try a different PDF if possible'
+          'Suggestions for large files:\n' +
+          '• Ensure 8GB+ system RAM available\n' +
+          '• Close other browser tabs and applications\n' +
+          '• Try splitting the PDF into smaller sections\n' +
+          '• Use a machine with better specifications\n' +
+          '• Allow up to 30 minutes for very large files'
         );
-      }, 60000);
+      }, 300000); // 5 minute timeout
       
       pdf = await loadingTask.promise;
       clearTimeout(loadTimeout);
       
-    } catch (loadError) {
-      console.error('❌ PDF loading error:', loadError);
+      updateProgress('PDF Loading', 30, `PDF loaded successfully - ${pdf.numPages} pages detected`);
       
-      // Enhanced error categorization
+    } catch (loadError) {
+      console.error('❌ Large PDF loading error:', loadError);
+      
       const errorMsg = loadError.message.toLowerCase();
       
       if (errorMsg.includes('invalid pdf') || errorMsg.includes('not a pdf')) {
         throw new Error(
-          'Invalid PDF Document\n\n' +
-          'The file appears to be corrupted or is not a valid PDF.\n\n' +
-          'Possible causes:\n' +
-          '• File was corrupted during download or transfer\n' +
-          '• File is not actually a PDF (wrong file type)\n' +
+          'Invalid Large PDF Document\n\n' +
+          'The large file appears to be corrupted or is not a valid PDF.\n\n' +
+          'Common issues with large PDFs:\n' +
+          '• File was corrupted during upload/transfer\n' +
           '• PDF was created with non-standard tools\n' +
-          '• File is incomplete or truncated\n\n' +
+          '• File is incomplete or truncated\n' +
+          '• PDF contains unsupported features\n\n' +
           'Solutions:\n' +
           '• Try re-downloading the original PDF\n' +
-          '• Open the file in a PDF viewer to verify it works\n' +
-          '• Try converting the file to PDF again\n' +
-          '• Use a different PDF file for testing'
+          '• Use PDF repair tools if available\n' +
+          '• Split into smaller sections and test each\n' +
+          '• Try a different PDF for testing'
         );
-      } else if (errorMsg.includes('password') || errorMsg.includes('encrypted')) {
+      } else if (errorMsg.includes('memory') || errorMsg.includes('out of memory')) {
         throw new Error(
-          'Password-Protected PDF\n\n' +
-          'This PDF requires a password or contains encryption that prevents processing.\n\n' +
-          'Our comparison tool cannot process:\n' +
-          '• Password-protected PDFs\n' +
-          '• Encrypted PDF documents\n' +
-          '• Digitally signed PDFs with restrictions\n\n' +
-          'Please provide an unprotected version of the document or remove the password protection.'
+          'Insufficient Memory for Large PDF\n\n' +
+          `The ${fileSizeMB}MB PDF requires more memory than available.\n\n` +
+          'Memory requirements:\n' +
+          '• 50MB+ PDFs need 8GB+ system RAM\n' +
+          '• 75MB+ PDFs need 16GB+ system RAM\n' +
+          '• Browser needs 4GB+ available memory\n\n' +
+          'Solutions:\n' +
+          '• Close other applications and browser tabs\n' +
+          '• Restart browser to clear memory\n' +
+          '• Use a machine with more RAM\n' +
+          '• Split PDF into smaller sections (20-30MB each)\n' +
+          '• Try during off-peak hours when system is less busy'
         );
       } else if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
-        throw new Error(loadError.message); // Pass through enhanced timeout message
+        throw new Error(loadError.message);
       } else {
         throw new Error(
-          `PDF Loading Failed\n\n` +
-          `The PDF document could not be loaded due to: ${loadError.message}\n\n` +
-          'This might be caused by:\n' +
-          '• Unsupported PDF version or features\n' +
-          '• Corrupted PDF structure\n' +
-          '• Browser compatibility issues\n' +
-          '• Memory limitations\n\n' +
-          'Please try:\n' +
-          '• Using a different PDF file\n' +
-          '• Converting the PDF to a newer format\n' +
-          '• Reducing the PDF file size\n' +
-          '• Refreshing the page and trying again'
+          `Large PDF Loading Failed\n\n` +
+          `Error processing ${fileSizeMB}MB PDF: ${loadError.message}\n\n` +
+          'Large file specific issues:\n' +
+          '• PDF structure too complex for browser processing\n' +
+          '• Memory limitations during processing\n' +
+          '• Browser compatibility with large files\n\n' +
+          'Recommendations:\n' +
+          '• Try with smaller file first to test system\n' +
+          '• Use latest Chrome or Firefox\n' +
+          '• Ensure stable internet connection\n' +
+          '• Consider PDF optimization tools'
         );
       }
     }
     
-    console.log(`📄 PDF loaded successfully. Pages: ${pdf.numPages}`);
+    console.log(`📄 Large PDF loaded successfully. Pages: ${pdf.numPages}`);
     
-    // Validate PDF structure
+    // Validate PDF structure for large files
     if (pdf.numPages === 0) {
-      throw new Error('PDF contains no pages or all pages are inaccessible');
+      throw new Error('Large PDF contains no pages or all pages are inaccessible');
     }
     
-    if (pdf.numPages > 2000) {
+    if (pdf.numPages > 3000) {
       throw new Error(
-        `PDF Too Large\n\n` +
-        `This PDF has ${pdf.numPages} pages, which exceeds our processing limit of 2000 pages.\n\n` +
-        'For large documents, please consider:\n' +
-        '• Splitting the PDF into smaller sections\n' +
-        '• Comparing specific page ranges\n' +
-        '• Using a document management system for bulk comparisons'
+        `PDF Too Large (${pdf.numPages} pages)\n\n` +
+        'PDFs with more than 3000 pages exceed processing limits.\n\n' +
+        'For very large documents:\n' +
+        '• Split into sections of 500-1000 pages each\n' +
+        '• Compare specific page ranges\n' +
+        '• Use specialized document management tools\n' +
+        '• Consider server-based processing solutions'
       );
     }
     
-    if (pdf.numPages > 500) {
-      console.warn(`⚠️ Large PDF detected (${pdf.numPages} pages). Processing may take 5-10 minutes.`);
+    if (pdf.numPages > 1000) {
+      console.warn(`⚠️ Very large PDF detected (${pdf.numPages} pages). Processing may take 20-60 minutes.`);
+      updateProgress('PDF Loading', 35, `Large document: ${pdf.numPages} pages. This will take 20-60 minutes...`);
     }
     
-    // Extract text from all pages
+    // Extract text from all pages with progress tracking
     const pages = [];
     let totalCharacters = 0;
     let totalWords = 0;
@@ -337,156 +399,189 @@ const extractTextFromPDF = async (arrayBuffer, fileName) => {
     const startTime = Date.now();
     
     console.log(`📃 Starting text extraction from ${pdf.numPages} pages...`);
+    updateProgress('Text Extraction', 40, `Starting extraction from ${pdf.numPages} pages...`);
     
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      try {
-        // Progress logging for large documents
-        if (pageNum % 25 === 0 || pageNum === 1 || pageNum === pdf.numPages) {
-          const elapsed = Math.round((Date.now() - startTime) / 1000);
-          const progress = Math.round((pageNum / pdf.numPages) * 100);
-          console.log(`📃 Processing page ${pageNum}/${pdf.numPages} (${progress}% - ${elapsed}s elapsed)`);
-        }
-        
-        const page = await pdf.getPage(pageNum);
-        
-        // Enhanced text extraction with multiple fallback strategies
-        let textContent;
+    // Process pages in batches for large files to manage memory
+    const batchSize = pdf.numPages > 500 ? 25 : 50; // Smaller batches for very large files
+    let processedPages = 0;
+    
+    for (let batch = 0; batch * batchSize < pdf.numPages; batch++) {
+      const batchStart = batch * batchSize + 1;
+      const batchEnd = Math.min((batch + 1) * batchSize, pdf.numPages);
+      
+      console.log(`📦 Processing batch ${batch + 1}: pages ${batchStart}-${batchEnd}`);
+      updateProgress('Text Extraction', 40 + (processedPages / pdf.numPages) * 50, 
+        `Processing pages ${batchStart}-${batchEnd} of ${pdf.numPages}...`);
+      
+      // Process batch with memory management
+      for (let pageNum = batchStart; pageNum <= batchEnd; pageNum++) {
         try {
-          // Primary extraction strategy with timeout
-          const extractionPromise = page.getTextContent({
-            normalizeWhitespace: true,
-            disableCombineTextItems: false,
-            includeMarkedContent: false
-          });
+          // Progress update for large documents
+          if (pageNum % 100 === 0 || pageNum === 1 || pageNum === pdf.numPages) {
+            const elapsed = Math.round((Date.now() - startTime) / 1000);
+            const progress = Math.round((pageNum / pdf.numPages) * 100);
+            const estimatedTotal = Math.round((elapsed / pageNum) * pdf.numPages);
+            const remaining = Math.round(estimatedTotal - elapsed);
+            
+            console.log(`📃 Page ${pageNum}/${pdf.numPages} (${progress}% - ${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')} elapsed, ~${Math.floor(remaining/60)}:${(remaining%60).toString().padStart(2,'0')} remaining)`);
+            updateProgress('Text Extraction', 40 + (pageNum / pdf.numPages) * 50, 
+              `Page ${pageNum}/${pdf.numPages} - ${Math.floor(elapsed/60)}:${(elapsed%60).toString().padStart(2,'0')} elapsed`);
+          }
           
-          const pageTimeout = setTimeout(() => {
-            throw new Error(`Page ${pageNum} text extraction timed out`);
-          }, 30000); // 30 second timeout per page
+          const page = await pdf.getPage(pageNum);
           
-          textContent = await extractionPromise;
-          clearTimeout(pageTimeout);
-          
-        } catch (pageExtractionError) {
-          console.warn(`⚠️ Primary extraction failed for page ${pageNum}, trying fallback...`);
-          
-          // Fallback extraction strategy
+          // Enhanced text extraction with timeout for each page
+          let textContent;
           try {
-            textContent = await page.getTextContent({
-              normalizeWhitespace: false,
-              disableCombineTextItems: true,
-              includeMarkedContent: true
+            const extractionPromise = page.getTextContent({
+              normalizeWhitespace: true,
+              disableCombineTextItems: false,
+              includeMarkedContent: false
             });
-          } catch (fallbackError) {
-            throw new Error(`Text extraction failed: ${pageExtractionError.message}`);
-          }
-        }
-        
-        // Enhanced text processing with improved paragraph detection
-        let pageText = '';
-        let paragraphs = [];
-        let currentParagraph = '';
-        const lineThreshold = 10; // Threshold for paragraph detection
-        let currentY = null;
-        
-        if (textContent.items && textContent.items.length > 0) {
-          // Sort items by position for proper reading order
-          const sortedItems = textContent.items.sort((a, b) => {
-            const yDiff = b.transform[5] - a.transform[5]; // Y coordinate (top to bottom)
-            if (Math.abs(yDiff) > lineThreshold) {
-              return yDiff;
+            
+            const pageTimeout = setTimeout(() => {
+              throw new Error(`Page ${pageNum} extraction timeout`);
+            }, 45000); // 45 second timeout per page for large files
+            
+            textContent = await extractionPromise;
+            clearTimeout(pageTimeout);
+            
+          } catch (pageExtractionError) {
+            console.warn(`⚠️ Primary extraction failed for page ${pageNum}, trying fallback...`);
+            
+            try {
+              textContent = await page.getTextContent({
+                normalizeWhitespace: false,
+                disableCombineTextItems: true,
+                includeMarkedContent: true
+              });
+            } catch (fallbackError) {
+              throw new Error(`Text extraction failed: ${pageExtractionError.message}`);
             }
-            return a.transform[4] - b.transform[4]; // X coordinate (left to right)
-          });
+          }
           
-          for (const item of sortedItems) {
-            const text = item.str.trim();
-            if (!text) continue;
-            
-            const itemY = item.transform[5];
-            
-            // Detect paragraph breaks
-            if (currentY !== null && Math.abs(itemY - currentY) > lineThreshold) {
-              if (currentParagraph.trim()) {
-                paragraphs.push({
-                  text: currentParagraph.trim(),
-                  paragraph_index: paragraphs.length,
-                  y_position: currentY,
-                  char_count: currentParagraph.trim().length
-                });
-                currentParagraph = '';
+          // Enhanced text processing
+          let pageText = '';
+          let paragraphs = [];
+          let currentParagraph = '';
+          const lineThreshold = 12; // Slightly larger threshold for large files
+          let currentY = null;
+          
+          if (textContent.items && textContent.items.length > 0) {
+            const sortedItems = textContent.items.sort((a, b) => {
+              const yDiff = b.transform[5] - a.transform[5];
+              if (Math.abs(yDiff) > lineThreshold) {
+                return yDiff;
               }
+              return a.transform[4] - b.transform[4];
+            });
+            
+            for (const item of sortedItems) {
+              const text = item.str.trim();
+              if (!text) continue;
+              
+              const itemY = item.transform[5];
+              
+              if (currentY !== null && Math.abs(itemY - currentY) > lineThreshold) {
+                if (currentParagraph.trim()) {
+                  paragraphs.push({
+                    text: currentParagraph.trim(),
+                    paragraph_index: paragraphs.length,
+                    y_position: currentY,
+                    char_count: currentParagraph.trim().length
+                  });
+                  currentParagraph = '';
+                }
+              }
+              
+              const needsSpace = currentParagraph && 
+                                !currentParagraph.endsWith(' ') && 
+                                !currentParagraph.endsWith('\n') &&
+                                !text.startsWith(' ');
+              currentParagraph += (needsSpace ? ' ' : '') + text;
+              currentY = itemY;
+              pageText += text + ' ';
             }
             
-            // Add text with appropriate spacing
-            const needsSpace = currentParagraph && 
-                              !currentParagraph.endsWith(' ') && 
-                              !currentParagraph.endsWith('\n') &&
-                              !text.startsWith(' ');
-            currentParagraph += (needsSpace ? ' ' : '') + text;
-            currentY = itemY;
-            pageText += text + ' ';
+            if (currentParagraph.trim()) {
+              paragraphs.push({
+                text: currentParagraph.trim(),
+                paragraph_index: paragraphs.length,
+                y_position: currentY,
+                char_count: currentParagraph.trim().length
+              });
+            }
           }
           
-          // Add final paragraph
-          if (currentParagraph.trim()) {
+          if (paragraphs.length === 0) {
             paragraphs.push({
-              text: currentParagraph.trim(),
-              paragraph_index: paragraphs.length,
-              y_position: currentY,
-              char_count: currentParagraph.trim().length
+              text: pageText.trim() || '[This page appears to be empty or contains only images/graphics]',
+              paragraph_index: 0,
+              y_position: 0,
+              char_count: pageText.trim().length
             });
           }
-        }
-        
-        // Handle empty pages gracefully
-        if (paragraphs.length === 0) {
-          paragraphs.push({
-            text: pageText.trim() || '[This page appears to be empty or contains only images/graphics]',
-            paragraph_index: 0,
-            y_position: 0,
-            char_count: pageText.trim().length
+          
+          const words = pageText.trim().split(/\s+/).filter(w => w.length > 0);
+          totalWords += words.length;
+          totalCharacters += pageText.length;
+          successfulPages++;
+          
+          pages.push({
+            page_number: pageNum,
+            paragraphs: paragraphs,
+            word_count: words.length,
+            character_count: pageText.length,
+            raw_text: pageText.trim(),
+            processing_status: 'success'
+          });
+          
+          // Cleanup page to manage memory for large files
+          try {
+            page.cleanup();
+          } catch (cleanupError) {
+            // Ignore cleanup errors
+          }
+          
+        } catch (pageError) {
+          console.warn(`⚠️ Error processing page ${pageNum}:`, pageError.message);
+          failedPages++;
+          
+          pages.push({
+            page_number: pageNum,
+            paragraphs: [{
+              text: `[Error processing page ${pageNum}: ${pageError.message}]`,
+              paragraph_index: 0,
+              y_position: 0,
+              char_count: 0
+            }],
+            word_count: 0,
+            character_count: 0,
+            raw_text: '',
+            processing_status: 'error',
+            error_message: pageError.message
           });
         }
         
-        const words = pageText.trim().split(/\s+/).filter(w => w.length > 0);
-        totalWords += words.length;
-        totalCharacters += pageText.length;
-        successfulPages++;
+        processedPages++;
+      }
+      
+      // Memory management between batches for large files
+      if (pdf.numPages > 500) {
+        // Force garbage collection hint
+        if (global.gc) {
+          global.gc();
+        }
         
-        pages.push({
-          page_number: pageNum,
-          paragraphs: paragraphs,
-          word_count: words.length,
-          character_count: pageText.length,
-          raw_text: pageText.trim(),
-          processing_status: 'success'
-        });
-        
-      } catch (pageError) {
-        console.warn(`⚠️ Error processing page ${pageNum}:`, pageError.message);
-        failedPages++;
-        
-        // Add error page to maintain page numbering
-        pages.push({
-          page_number: pageNum,
-          paragraphs: [{
-            text: `[Error processing page ${pageNum}: ${pageError.message}]`,
-            paragraph_index: 0,
-            y_position: 0,
-            char_count: 0
-          }],
-          word_count: 0,
-          character_count: 0,
-          raw_text: '',
-          processing_status: 'error',
-          error_message: pageError.message
-        });
+        // Small delay to allow memory cleanup
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
     
     const processingTime = Date.now() - startTime;
     
-    // Generate comprehensive metadata
+    updateProgress('Text Extraction', 90, 'Finalizing extraction results...');
+    
     const metadata = {
       fileName: fileName,
       fileSize: arrayBuffer.byteLength,
@@ -496,29 +591,34 @@ const extractTextFromPDF = async (arrayBuffer, fileName) => {
       totalWords: totalWords,
       totalCharacters: totalCharacters,
       isValidPDF: true,
-      extractionMethod: 'PDF.js Enhanced v3.11.174',
+      extractionMethod: 'PDF.js Large File Optimized v3.11.174',
       processingDate: new Date().toISOString(),
       processingTimeMs: processingTime,
       averageWordsPerPage: successfulPages > 0 ? Math.round(totalWords / successfulPages) : 0,
       successRate: Math.round((successfulPages / pdf.numPages) * 100),
-      processingSpeed: Math.round(pdf.numPages / (processingTime / 1000)) // pages per second
+      processingSpeed: Math.round(pdf.numPages / (processingTime / 1000)),
+      isLargeFile: arrayBuffer.byteLength > 50 * 1024 * 1024,
+      memoryUsage: Math.round(arrayBuffer.byteLength / 1024 / 1024) + 'MB'
     };
     
-    console.log('✅ PDF text extraction completed successfully:');
-    console.log(`  📊 Pages: ${pages.length} (${successfulPages} successful, ${failedPages} failed)`);
+    updateProgress('Text Extraction', 100, 'Large PDF processing completed successfully!');
+    
+    console.log('✅ Large PDF text extraction completed successfully:');
+    console.log(`  📊 File Size: ${(arrayBuffer.byteLength/1024/1024).toFixed(1)}MB`);
+    console.log(`  📄 Pages: ${pages.length} (${successfulPages} successful, ${failedPages} failed)`);
     console.log(`  📝 Words: ${totalWords.toLocaleString()}`);
     console.log(`  🔤 Characters: ${totalCharacters.toLocaleString()}`);
     console.log(`  ⚡ Speed: ${metadata.processingSpeed} pages/second`);
     console.log(`  ✅ Success Rate: ${metadata.successRate}%`);
-    console.log(`  ⏱️ Total Time: ${(processingTime/1000).toFixed(1)}s`);
+    console.log(`  ⏱️ Total Time: ${Math.floor(processingTime/60000)}:${((processingTime%60000)/1000).toFixed(0).padStart(2,'0')}`);
     
-    // Quality warnings
-    if (failedPages > pdf.numPages * 0.2) { // More than 20% failed
-      console.warn(`⚠️ High page failure rate: ${failedPages}/${pdf.numPages} pages failed`);
+    // Quality warnings for large files
+    if (failedPages > pdf.numPages * 0.1) {
+      console.warn(`⚠️ High page failure rate in large file: ${failedPages}/${pdf.numPages} pages failed`);
     }
     
     if (totalWords === 0) {
-      console.warn('⚠️ No text content found. This may be an image-only PDF.');
+      console.warn('⚠️ No text content found in large PDF. This may be an image-only PDF.');
     }
     
     return {
@@ -528,33 +628,39 @@ const extractTextFromPDF = async (arrayBuffer, fileName) => {
     };
     
   } catch (error) {
-    console.error('❌ PDF text extraction failed:', error);
+    console.error('❌ Large PDF text extraction failed:', error);
     throw error;
   } finally {
-    // Clean up PDF resources
+    // Enhanced cleanup for large files
     if (pdf) {
       try {
         pdf.destroy();
-        console.log('🧹 PDF resources cleaned up');
+        console.log('🧹 Large PDF resources cleaned up');
       } catch (cleanupError) {
-        console.warn('⚠️ PDF cleanup warning:', cleanupError);
+        console.warn('⚠️ Large PDF cleanup warning:', cleanupError);
       }
+    }
+    
+    // Additional memory cleanup for large files
+    if (global.gc) {
+      global.gc();
     }
   }
 };
 
-// Main PDF parsing function with comprehensive error handling
-export const parsePDFFile = async (file) => {
-  console.log('🔧 Starting enhanced PDF parsing for:', file?.name);
+// Enhanced PDF parsing for large files
+export const parseLargePDFFile = async (file) => {
+  console.log('🔧 Starting large PDF parsing for:', file?.name, `(${(file.size/1024/1024).toFixed(1)}MB)`);
   
   try {
-    // Enhanced file type validation
+    // Enhanced validation for large files
     if (file.type && !file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
       throw new Error(
         'Invalid File Type\n\n' +
         'Please select a valid PDF file with .pdf extension.\n' +
         `Selected file type: ${file.type || 'unknown'}\n` +
-        `File name: ${file.name}`
+        `File name: ${file.name}\n` +
+        `File size: ${(file.size/1024/1024).toFixed(1)}MB`
       );
     }
     
@@ -563,25 +669,28 @@ export const parsePDFFile = async (file) => {
     if (file instanceof ArrayBuffer) {
       arrayBuffer = file;
     } else {
-      arrayBuffer = await readFileAsArrayBuffer(file);
+      arrayBuffer = await readLargePDFFile(file);
     }
     
-    // Extract text using enhanced PDF.js implementation
-    const result = await extractTextFromPDF(arrayBuffer, file.name || 'document.pdf');
+    // Extract text using large file optimized implementation
+    const result = await extractTextFromLargePDF(arrayBuffer, file.name || 'large-document.pdf');
     
-    console.log('✅ PDF parsing completed successfully');
+    console.log('✅ Large PDF parsing completed successfully');
     return result;
     
   } catch (error) {
-    console.error('❌ PDF parsing failed:', error);
-    throw error; // Re-throw the detailed error messages
+    console.error('❌ Large PDF parsing failed:', error);
+    throw error;
   }
 };
 
-// Enhanced PDF comparison with improved error handling
-export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
-  console.log('🔄 Starting enhanced PDF comparison');
-  console.log('🎛️ Comparison options:', options);
+// Enhanced PDF comparison optimized for large files
+export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
+  console.log('🔄 Starting large PDF comparison');
+  
+  const pdf1Size = (pdf1.byteLength / 1024 / 1024).toFixed(1);
+  const pdf2Size = (pdf2.byteLength / 1024 / 1024).toFixed(1);
+  console.log(`📊 File sizes: ${pdf1Size}MB vs ${pdf2Size}MB`);
   
   const {
     compareMode = 'text',
@@ -591,31 +700,30 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
   } = options;
   
   try {
-    console.log('📖 Parsing both PDF files...');
+    updateProgress('Comparison', 0, `Starting comparison of ${pdf1Size}MB and ${pdf2Size}MB PDFs...`);
+    
+    console.log('📖 Parsing both large PDF files...');
     const startTime = Date.now();
     
-    // Parse both PDFs with enhanced progress indication
-    const [data1, data2] = await Promise.all([
-      parsePDFFile(pdf1).catch(error => {
-        throw new Error(`First PDF Error:\n${error.message}`);
-      }),
-      parsePDFFile(pdf2).catch(error => {
-        throw new Error(`Second PDF Error:\n${error.message}`);
-      })
-    ]);
+    // Parse both PDFs with progress tracking
+    updateProgress('Comparison', 5, 'Parsing first PDF file...');
+    const data1 = await parseLargePDFFile(pdf1).catch(error => {
+      throw new Error(`First PDF Error:\n${error.message}`);
+    });
+    
+    updateProgress('Comparison', 35, 'Parsing second PDF file...');
+    const data2 = await parseLargePDFFile(pdf2).catch(error => {
+      throw new Error(`Second PDF Error:\n${error.message}`);
+    });
     
     const parseTime = Date.now() - startTime;
-    console.log(`📊 Both PDFs parsed successfully in ${(parseTime/1000).toFixed(1)}s`);
-    console.log(`  File 1: ${data1.pages.length} pages, ${data1.metadata.totalWords} words`);
-    console.log(`  File 2: ${data2.pages.length} pages, ${data2.metadata.totalWords} words`);
+    console.log(`📊 Both large PDFs parsed successfully in ${Math.floor(parseTime/60000)}:${((parseTime%60000)/1000).toFixed(0).padStart(2,'0')}`);
+    console.log(`  File 1: ${data1.pages.length} pages, ${data1.metadata.totalWords.toLocaleString()} words`);
+    console.log(`  File 2: ${data2.pages.length} pages, ${data2.metadata.totalWords.toLocaleString()} words`);
     
-    // Quality checks
-    if (data1.metadata.totalWords === 0 && data2.metadata.totalWords === 0) {
-      console.warn('⚠️ Both PDFs contain no extractable text');
-    }
+    updateProgress('Comparison', 70, 'Starting detailed content comparison...');
     
-    // Start detailed comparison
-    console.log('🔍 Starting detailed content comparison...');
+    // Start detailed comparison with progress tracking
     const comparisonStartTime = Date.now();
     
     const text_changes = [];
@@ -626,16 +734,23 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
     
     const maxPages = Math.max(data1.pages.length, data2.pages.length);
     
-    // Page-by-page comparison with enhanced logic
+    console.log(`🔍 Comparing ${maxPages} pages...`);
+    
+    // Page-by-page comparison with progress updates for large files
     for (let pageIndex = 0; pageIndex < maxPages; pageIndex++) {
       const page1 = data1.pages[pageIndex];
       const page2 = data2.pages[pageIndex];
       const pageNum = pageIndex + 1;
       
+      // Progress updates every 100 pages for large documents
+      if (pageNum % 100 === 0 || pageNum === maxPages) {
+        const comparisonProgress = 70 + (pageNum / maxPages) * 25;
+        updateProgress('Comparison', comparisonProgress, `Comparing page ${pageNum} of ${maxPages}...`);
+      }
+      
       let pageChanges = 0;
       
       if (!page1 && page2) {
-        // Page added in second document
         pageChanges = page2.paragraphs.length;
         differences += pageChanges;
         totalElements += page2.paragraphs.length;
@@ -652,7 +767,6 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
         });
         
       } else if (page1 && !page2) {
-        // Page removed in second document
         pageChanges = page1.paragraphs.length;
         differences += pageChanges;
         totalElements += page1.paragraphs.length;
@@ -669,7 +783,6 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
         });
         
       } else if (page1 && page2) {
-        // Compare existing pages
         const maxParas = Math.max(page1.paragraphs.length, page2.paragraphs.length);
         totalElements += maxParas;
         
@@ -700,7 +813,6 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
               char_count: para1.char_count || para1.text.length
             });
           } else if (para1 && para2) {
-            // Enhanced text comparison
             let text1 = para1.text;
             let text2 = para2.text;
             
@@ -709,12 +821,11 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
               text2 = text2.replace(/\s+/g, ' ').trim();
             }
             
-            // Skip error messages in comparison
             const isError1 = text1.startsWith('[Error') || text1.startsWith('[This page appears');
             const isError2 = text2.startsWith('[Error') || text2.startsWith('[This page appears');
             
             if (isError1 && isError2) {
-              matches++; // Both are placeholders, consider them matching
+              matches++;
             } else if (isError1 || isError2) {
               pageChanges++;
               differences++;
@@ -762,11 +873,12 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
     const comparisonTime = Date.now() - comparisonStartTime;
     const totalTime = parseTime + comparisonTime;
     
-    // Calculate enhanced similarity metrics
+    updateProgress('Comparison', 95, 'Finalizing comparison results...');
+    
+    // Calculate metrics
     const totalComparisons = differences + matches;
     const similarity_score = totalComparisons > 0 ? Math.round((matches / totalComparisons) * 100) : 100;
     
-    // Word-level analysis
     const wordChanges = {
       file1_words: data1.metadata.totalWords,
       file2_words: data2.metadata.totalWords,
@@ -775,64 +887,69 @@ export const comparePDFFiles = async (pdf1, pdf2, options = {}) => {
         Math.round((Math.abs(data1.metadata.totalWords - data2.metadata.totalWords) / data1.metadata.totalWords) * 100) : 0
     };
     
-    // Comprehensive results
     const results = {
-      // Core metrics
       differences_found: differences,
       matches_found: matches,
       total_pages: maxPages,
       total_elements: totalElements,
       similarity_score: similarity_score,
       
-      // Detailed changes
       text_changes: text_changes,
       page_differences: page_differences,
       
-      // File data
       file1_pages: data1.pages,
       file2_pages: data2.pages,
       file1_metadata: data1.metadata,
       file2_metadata: data2.metadata,
       
-      // Change type counts
       added_count: text_changes.filter(c => c.type === 'added').length,
       removed_count: text_changes.filter(c => c.type === 'removed').length,
       modified_count: text_changes.filter(c => c.type === 'modified').length,
       
-      // Word analysis
       word_changes: wordChanges,
       
-      // Enhanced metadata
-      comparison_type: 'pdf_document',
+      comparison_type: 'large_pdf_document',
       comparison_options: options,
-      processing_note: `Enhanced PDF comparison using PDF.js v3.11.174 with ${data1.metadata.successRate}%/${data2.metadata.successRate}% success rates`,
+      processing_note: `Large PDF comparison (${pdf1Size}MB + ${pdf2Size}MB) using optimized PDF.js processing`,
       processing_time: {
         parse_time_ms: parseTime,
         comparison_time_ms: comparisonTime,
         total_time_ms: totalTime
       },
       
-      // Quality metrics
       quality_metrics: {
         file1_success_rate: data1.metadata.successfulPages / data1.metadata.totalPages,
         file2_success_rate: data2.metadata.successfulPages / data2.metadata.totalPages,
         overall_success_rate: (data1.metadata.successfulPages + data2.metadata.successfulPages) / 
                              (data1.metadata.totalPages + data2.metadata.totalPages),
-        processing_speed_pages_per_second: Math.round((data1.metadata.totalPages + data2.metadata.totalPages) / (totalTime / 1000))
+        processing_speed_pages_per_second: Math.round((data1.metadata.totalPages + data2.metadata.totalPages) / (totalTime / 1000)),
+        memory_usage: `${pdf1Size}MB + ${pdf2Size}MB processed`
       }
     };
     
-    console.log('✅ PDF comparison completed successfully:');
+    updateProgress('Comparison', 100, 'Large PDF comparison completed successfully!');
+    
+    const totalTimeFormatted = `${Math.floor(totalTime/60000)}:${((totalTime%60000)/1000).toFixed(0).padStart(2,'0')}`;
+    
+    console.log('✅ Large PDF comparison completed successfully:');
     console.log(`  📊 Similarity: ${results.similarity_score}%`);
-    console.log(`  🔍 Changes: ${results.differences_found}`);
-    console.log(`  ✅ Matches: ${results.matches_found}`);
-    console.log(`  ⏱️ Total Time: ${(totalTime/1000).toFixed(1)}s`);
+    console.log(`  🔍 Changes: ${results.differences_found.toLocaleString()}`);
+    console.log(`  ✅ Matches: ${results.matches_found.toLocaleString()}`);
+    console.log(`  📄 Total Pages: ${results.total_pages.toLocaleString()}`);
+    console.log(`  ⏱️ Total Time: ${totalTimeFormatted}`);
     console.log(`  🚀 Speed: ${results.quality_metrics.processing_speed_pages_per_second} pages/s`);
+    console.log(`  💾 Memory: ${results.quality_metrics.memory_usage}`);
     
     return results;
     
   } catch (error) {
-    console.error('❌ PDF comparison failed:', error);
-    throw error; // Re-throw with enhanced error details
+    console.error('❌ Large PDF comparison failed:', error);
+    throw error;
   }
+};
+
+// Export the enhanced functions
+export {
+  compareLargePDFFiles as comparePDFFiles,
+  parseLargePDFFile as parsePDFFile
 };
