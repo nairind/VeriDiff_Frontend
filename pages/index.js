@@ -911,8 +911,7 @@ export default function Home() {
         </div>
     </div>
 </body>
-</html>`
-; //
+</html>`; //
       
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
