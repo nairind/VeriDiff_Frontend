@@ -261,167 +261,261 @@ export default function Comparison() {
     }
   };
 
-  const renderPDFOptions = () => (
-    <div style={{
-      background: 'white',
-      borderRadius: '12px',
-      padding: '25px',
-      marginBottom: '20px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-      border: '1px solid #e5e7eb'
-    }}>
-      <h3 style={{
-        fontSize: '1.3rem',
-        fontWeight: '600',
+  const renderPDFOptions = () => {
+    // Check PDF.js loading status
+    const isPDFJSReady = typeof window !== 'undefined' && window.pdfJsReady;
+    const isPDFJSError = typeof window !== 'undefined' && window.pdfJsError;
+    const isPDFJSLoading = typeof window !== 'undefined' && !window.pdfJsReady && !window.pdfJsError;
+
+    return (
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '25px',
         marginBottom: '20px',
-        color: '#1f2937'
+        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+        border: '1px solid #e5e7eb'
       }}>
-        📕 PDF Comparison Options
-      </h3>
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '20px',
-        marginBottom: '25px'
-      }}>
-        <div>
-          <label style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontSize: '0.95rem',
-            fontWeight: '500',
-            color: '#374151',
-            marginBottom: '15px',
-            cursor: 'pointer'
-          }}>
-            <input
-              type="checkbox"
-              checked={pdfOptions.ignoreFormatting}
-              onChange={(e) => setPdfOptions(prev => ({
-                ...prev,
-                ignoreFormatting: e.target.checked
-              }))}
-              style={{ transform: 'scale(1.2)' }}
-            />
-            Ignore Formatting Differences
-          </label>
-          <p style={{
-            fontSize: '0.85rem',
-            color: '#6b7280',
-            margin: '0 0 0 30px',
-            lineHeight: '1.4'
-          }}>
-            Focus on content changes rather than formatting differences like spacing and fonts.
-          </p>
-        </div>
-
-        <div>
-          <label style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontSize: '0.95rem',
-            fontWeight: '500',
-            color: '#374151',
-            marginBottom: '15px',
-            cursor: 'pointer'
-          }}>
-            <input
-              type="checkbox"
-              checked={pdfOptions.pageByPage}
-              onChange={(e) => setPdfOptions(prev => ({
-                ...prev,
-                pageByPage: e.target.checked
-              }))}
-              style={{ transform: 'scale(1.2)' }}
-            />
-            Page-by-Page Analysis
-          </label>
-          <p style={{
-            fontSize: '0.85rem',
-            color: '#6b7280',
-            margin: '0 0 0 30px',
-            lineHeight: '1.4'
-          }}>
-            Compare documents page-by-page for detailed analysis and better organization of results.
-          </p>
-        </div>
-      </div>
-
-      <div style={{
-        background: '#f8fafc',
-        padding: '15px',
-        borderRadius: '8px',
-        marginBottom: '20px'
-      }}>
-        <h4 style={{
-          fontSize: '1rem',
+        <h3 style={{
+          fontSize: '1.3rem',
           fontWeight: '600',
-          marginBottom: '10px',
+          marginBottom: '20px',
           color: '#1f2937'
         }}>
-          📄 Document Information
-        </h4>
+          📕 PDF Comparison Options
+        </h3>
+
+        {/* PDF.js Loading Status */}
+        {isPDFJSLoading && (
+          <div style={{
+            background: '#fffbeb',
+            border: '1px solid #fed7aa',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <div style={{ fontSize: '1.2rem' }}>⏳</div>
+            <div>
+              <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '5px' }}>
+                Loading PDF Processing Engine...
+              </div>
+              <div style={{ fontSize: '0.9rem', color: '#92400e' }}>
+                Please wait while we initialize the PDF comparison system. This usually takes 10-30 seconds.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PDF.js Error Status */}
+        {isPDFJSError && (
+          <div style={{
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '20px'
+          }}>
+            <div style={{ fontWeight: '600', color: '#dc2626', marginBottom: '10px' }}>
+              ❌ PDF Processing Engine Error
+            </div>
+            <div style={{ fontSize: '0.9rem', color: '#dc2626', marginBottom: '15px' }}>
+              {window.pdfJsErrorMessage || 'The PDF processing engine failed to load properly.'}
+            </div>
+            <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+              <strong>Solutions to try:</strong>
+              <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
+                <li>Refresh the page and wait 30-60 seconds</li>
+                <li>Check your internet connection</li>
+                <li>Disable ad blockers temporarily</li>
+                <li>Try using a different browser</li>
+                <li>Clear browser cache and cookies</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {/* PDF.js Ready Status */}
+        {isPDFJSReady && (
+          <div style={{
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <div style={{ fontSize: '1.2rem' }}>✅</div>
+            <div style={{ fontWeight: '600', color: '#166534' }}>
+              PDF Processing Engine Ready
+            </div>
+          </div>
+        )}
+
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '15px',
-          fontSize: '0.9rem'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '20px',
+          marginBottom: '25px'
         }}>
           <div>
-            <strong>File 1:</strong> {fileInfo.file1?.name}
-            <br />
-            <span style={{ color: '#6b7280' }}>
-              Size: {fileInfo.file1 ? (fileInfo.file1.size / 1024 / 1024).toFixed(1) : 0}MB
-            </span>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '0.95rem',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '15px',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="checkbox"
+                checked={pdfOptions.ignoreFormatting}
+                onChange={(e) => setPdfOptions(prev => ({
+                  ...prev,
+                  ignoreFormatting: e.target.checked
+                }))}
+                style={{ transform: 'scale(1.2)' }}
+              />
+              Ignore Formatting Differences
+            </label>
+            <p style={{
+              fontSize: '0.85rem',
+              color: '#6b7280',
+              margin: '0 0 0 30px',
+              lineHeight: '1.4'
+            }}>
+              Focus on content changes rather than formatting differences like spacing and fonts.
+            </p>
           </div>
+
           <div>
-            <strong>File 2:</strong> {fileInfo.file2?.name}
-            <br />
-            <span style={{ color: '#6b7280' }}>
-              Size: {fileInfo.file2 ? (fileInfo.file2.size / 1024 / 1024).toFixed(1) : 0}MB
-            </span>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '0.95rem',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '15px',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="checkbox"
+                checked={pdfOptions.pageByPage}
+                onChange={(e) => setPdfOptions(prev => ({
+                  ...prev,
+                  pageByPage: e.target.checked
+                }))}
+                style={{ transform: 'scale(1.2)' }}
+              />
+              Page-by-Page Analysis
+            </label>
+            <p style={{
+              fontSize: '0.85rem',
+              color: '#6b7280',
+              margin: '0 0 0 30px',
+              lineHeight: '1.4'
+            }}>
+              Compare documents page-by-page for detailed analysis and better organization of results.
+            </p>
           </div>
         </div>
-      </div>
 
-      <button
-        onClick={handlePDFComparison}
-        disabled={isLoading}
-        style={{
-          background: isLoading ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
-          color: 'white',
-          border: 'none',
-          padding: '12px 30px',
+        <div style={{
+          background: '#f8fafc',
+          padding: '15px',
           borderRadius: '8px',
-          fontSize: '1rem',
-          fontWeight: '600',
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '10px',
-          width: '100%',
-          maxWidth: '300px',
-          margin: '0 auto'
-        }}
-      >
-        {isLoading ? (
-          <>
-            <span>⏳</span>
-            Processing PDFs...
-          </>
-        ) : (
-          <>
-            <span>📊</span>
-            Compare PDF Documents
-          </>
+          marginBottom: '20px'
+        }}>
+          <h4 style={{
+            fontSize: '1rem',
+            fontWeight: '600',
+            marginBottom: '10px',
+            color: '#1f2937'
+          }}>
+            📄 Document Information
+          </h4>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '15px',
+            fontSize: '0.9rem'
+          }}>
+            <div>
+              <strong>File 1:</strong> {fileInfo.file1?.name}
+              <br />
+              <span style={{ color: '#6b7280' }}>
+                Size: {fileInfo.file1 ? (fileInfo.file1.size / 1024 / 1024).toFixed(1) : 0}MB
+              </span>
+            </div>
+            <div>
+              <strong>File 2:</strong> {fileInfo.file2?.name}
+              <br />
+              <span style={{ color: '#6b7280' }}>
+                Size: {fileInfo.file2 ? (fileInfo.file2.size / 1024 / 1024).toFixed(1) : 0}MB
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handlePDFComparison}
+          disabled={isLoading || !isPDFJSReady}
+          style={{
+            background: (isLoading || !isPDFJSReady) ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+            color: 'white',
+            border: 'none',
+            padding: '12px 30px',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            fontWeight: '600',
+            cursor: (isLoading || !isPDFJSReady) ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            width: '100%',
+            maxWidth: '300px',
+            margin: '0 auto'
+          }}
+        >
+          {isLoading ? (
+            <>
+              <span>⏳</span>
+              Processing PDFs...
+            </>
+          ) : !isPDFJSReady ? (
+            <>
+              <span>⏳</span>
+              {isPDFJSError ? 'PDF Engine Error' : 'Waiting for PDF Engine...'}
+            </>
+          ) : (
+            <>
+              <span>📊</span>
+              Compare PDF Documents
+            </>
+          )}
+        </button>
+        
+        {!isPDFJSReady && !isPDFJSError && (
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: '10px', 
+            fontSize: '0.85rem', 
+            color: '#6b7280' 
+          }}>
+            The PDF processing engine is still loading. Please wait...
+          </div>
         )}
-      </button>
-    </div>
-  );
+      </div>
+    );
+  };
 
   if (error) {
     return (
