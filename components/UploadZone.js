@@ -10,12 +10,12 @@ const UploadZone = ({ onFilesReady }) => {
 
   const showErrorMessage = (title, message) => {
     setErrorMessage({ title, message });
-    setTimeout(() => setErrorMessage(null), 5000);
+    setTimeout(() => setErrorMessage(null), 6000);
   };
 
   const showWarningMessage = (title, message) => {
     setWarningMessage({ title, message });
-    setTimeout(() => setWarningMessage(null), 4000);
+    setTimeout(() => setWarningMessage(null), 5000);
   };
 
   const getFileIcon = (fileName) => {
@@ -26,6 +26,8 @@ const UploadZone = ({ onFilesReady }) => {
         return '📊';
       case 'csv':
         return '📄';
+      case 'pdf':
+        return '📕';
       default:
         return '📁';
     }
@@ -33,39 +35,104 @@ const UploadZone = ({ onFilesReady }) => {
 
   const getFileType = (fileName) => {
     const extension = fileName.split('.').pop().toLowerCase();
-    return ['xlsx', 'xls'].includes(extension) ? 'excel' : 'csv';
+    if (['xlsx', 'xls'].includes(extension)) return 'excel';
+    if (extension === 'csv') return 'csv';
+    if (extension === 'pdf') return 'pdf';
+    return 'unknown';
+  };
+
+  const getFileTypeLabel = (type) => {
+    switch (type) {
+      case 'excel': return 'EXCEL';
+      case 'csv': return 'CSV';
+      case 'pdf': return 'PDF';
+      default: return 'UNKNOWN';
+    }
+  };
+
+  const areFilesCompatible = (file1Type, file2Type) => {
+    // Valid combinations
+    const validCombinations = [
+      ['excel', 'excel'],
+      ['csv', 'csv'],
+      ['excel', 'csv'],
+      ['csv', 'excel'],
+      ['pdf', 'pdf']
+    ];
+    
+    return validCombinations.some(([type1, type2]) => 
+      (file1Type === type1 && file2Type === type2)
+    );
+  };
+
+  const getIncompatibilityMessage = (file1Type, file2Type) => {
+    const file1Label = getFileTypeLabel(file1Type);
+    const file2Label = getFileTypeLabel(file2Type);
+    
+    return `${file1Label} and ${file2Label} files cannot be compared together.\n\n` +
+           `${file1Label} files contain ${file1Type === 'pdf' ? 'text content' : 'structured data'} while ` +
+           `${file2Label} files contain ${file2Type === 'pdf' ? 'text content' : 'structured data'}.\n\n` +
+           'Supported combinations:\n' +
+           '• Excel ↔ Excel (spreadsheet vs spreadsheet)\n' +
+           '• CSV ↔ CSV (data vs data)\n' +
+           '• Excel ↔ CSV (cross-format data comparison)\n' +
+           '• PDF ↔ PDF (document vs document)\n\n' +
+           'Please select compatible file types for comparison.';
   };
 
   const arrangeFiles = (uploadedFiles) => {
-    // Auto-arrange: Excel files first, CSV files second
-    const excelFiles = uploadedFiles.filter(f => getFileType(f.name) === 'excel');
-    const csvFiles = uploadedFiles.filter(f => getFileType(f.name) === 'csv');
+    // Smart auto-arrangement with priority system
+    // Priority: Excel (1), CSV (2), PDF (3)
+    const priority = { excel: 1, csv: 2, pdf: 3 };
     
-    return [...excelFiles, ...csvFiles];
+    return uploadedFiles.sort((a, b) => {
+      const aType = getFileType(a.name);
+      const bType = getFileType(b.name);
+      return (priority[aType] || 99) - (priority[bType] || 99);
+    });
+  };
+
+  const validateAndProcessFiles = (filesToValidate) => {
+    // Clear previous messages
+    setErrorMessage(null);
+    setWarningMessage(null);
+
+    if (filesToValidate.length !== 2) {
+      if (filesToValidate.length > 2) {
+        showErrorMessage('Too many files', 'Please upload only 2 files for comparison');
+      }
+      return false;
+    }
+
+    const arrangedFiles = arrangeFiles(filesToValidate);
+    const [file1, file2] = arrangedFiles;
+    const file1Type = getFileType(file1.name);
+    const file2Type = getFileType(file2.name);
+
+    // Check compatibility
+    if (!areFilesCompatible(file1Type, file2Type)) {
+      showErrorMessage('Incompatible File Types', getIncompatibilityMessage(file1Type, file2Type));
+      return false;
+    }
+
+    // Files are compatible, proceed
+    setFiles(arrangedFiles);
+    return true;
   };
 
   const handleFiles = async (newFiles) => {
-    // Clear any previous messages
-    setErrorMessage(null);
-    setWarningMessage(null);
-    
-    if (files.length + newFiles.length > 2) {
-      showErrorMessage('Too many files', 'Please upload only 2 files for comparison');
-      return;
-    }
-
     setIsProcessing(true);
     
     try {
       const updatedFiles = [...files, ...newFiles];
-      const arrangedFiles = arrangeFiles(updatedFiles);
-      setFiles(arrangedFiles);
-
-      // If we have exactly 2 files, process them and auto-proceed
-      if (arrangedFiles.length === 2) {
-        setTimeout(() => {
-          processAndProceed(arrangedFiles);
-        }, 800); // Brief delay to show the "Ready to Compare" state
+      
+      if (validateAndProcessFiles(updatedFiles)) {
+        // If we have exactly 2 compatible files, process them and auto-proceed
+        if (updatedFiles.length === 2) {
+          setTimeout(() => {
+            processAndProceed(files); // Use the arranged files from state
+          }, 800);
+        }
       }
     } catch (error) {
       console.error('Error processing files:', error);
@@ -140,7 +207,7 @@ const UploadZone = ({ onFilesReady }) => {
     
     droppedFiles.forEach(file => {
       const extension = file.name.split('.').pop().toLowerCase();
-      if (['xlsx', 'xls', 'csv'].includes(extension)) {
+      if (['xlsx', 'xls', 'csv', 'pdf'].includes(extension)) {
         validFiles.push(file);
       } else {
         invalidFiles.push(file);
@@ -150,7 +217,7 @@ const UploadZone = ({ onFilesReady }) => {
     // Handle different scenarios
     if (validFiles.length === 0) {
       showErrorMessage('No supported files found', 
-        `Please upload Excel (.xlsx, .xls) or CSV files only.\n\nRejected: ${invalidFiles.map(f => f.name).join(', ')}`);
+        `Please upload Excel (.xlsx, .xls), CSV, or PDF files only.\n\nRejected: ${invalidFiles.map(f => f.name).join(', ')}`);
       return;
     }
 
@@ -169,7 +236,7 @@ const UploadZone = ({ onFilesReady }) => {
     
     selectedFiles.forEach(file => {
       const extension = file.name.split('.').pop().toLowerCase();
-      if (['xlsx', 'xls', 'csv'].includes(extension)) {
+      if (['xlsx', 'xls', 'csv', 'pdf'].includes(extension)) {
         validFiles.push(file);
       } else {
         invalidFiles.push(file);
@@ -179,7 +246,7 @@ const UploadZone = ({ onFilesReady }) => {
     // Handle different scenarios
     if (validFiles.length === 0) {
       showErrorMessage('No supported files found', 
-        `Please select Excel (.xlsx, .xls) or CSV files only.\n\nSelected: ${invalidFiles.map(f => f.name).join(', ')}`);
+        `Please select Excel (.xlsx, .xls), CSV, or PDF files only.\n\nSelected: ${invalidFiles.map(f => f.name).join(', ')}`);
       return;
     }
 
@@ -194,6 +261,7 @@ const UploadZone = ({ onFilesReady }) => {
   const removeFile = (index) => {
     const updatedFiles = files.filter((_, i) => i !== index);
     setFiles(updatedFiles);
+    setErrorMessage(null); // Clear any compatibility errors
   };
 
   const openFileDialog = () => {
@@ -226,7 +294,7 @@ const UploadZone = ({ onFilesReady }) => {
             Drop Any 2 Files to Compare
           </div>
           <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-            Excel (.xlsx, .xls) and CSV files supported
+            Excel (.xlsx, .xls), CSV, and PDF files supported
           </div>
         </div>
       );
@@ -266,7 +334,7 @@ const UploadZone = ({ onFilesReady }) => {
                     padding: '0.25rem 0.5rem',
                     borderRadius: '0.25rem'
                   }}>
-                    {getFileType(file.name).toUpperCase()}
+                    {getFileTypeLabel(getFileType(file.name))}
                   </span>
                 </div>
                 <button
@@ -317,7 +385,7 @@ const UploadZone = ({ onFilesReady }) => {
                   <div>
                     <div style={{ fontWeight: '500', fontSize: '0.875rem' }}>{file.name}</div>
                     <div style={{ fontSize: '0.75rem', color: '#059669' }}>
-                      File {index + 1} ({getFileType(file.name).toUpperCase()})
+                      File {index + 1} ({getFileTypeLabel(getFileType(file.name))})
                     </div>
                   </div>
                 </div>
@@ -383,7 +451,7 @@ const UploadZone = ({ onFilesReady }) => {
           id="unified-file-input"
           type="file"
           multiple
-          accept=".xlsx,.xls,.csv"
+          accept=".xlsx,.xls,.csv,.pdf"
           onChange={handleInputChange}
           style={{ display: 'none' }}
         />
@@ -463,7 +531,7 @@ const UploadZone = ({ onFilesReady }) => {
             fontSize: '0.75rem'
           }}>
             <span>💡</span>
-            <span>Excel files will be arranged as File 1, CSV files as File 2</span>
+            <span>Files auto-arrange by type: Excel → CSV → PDF</span>
           </div>
         </div>
       )}
