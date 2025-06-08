@@ -36,4 +36,5 @@ export default function TrackComparison() {
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(false);
   const [showCharacterDiff, setShowCharacterDiff] = useState(true);
   const [focusMode, setFocusMode] = useState(false);
-  const [fieldGrouping, setFieldGrouping] = useState(true
+  const [fieldGrouping, setFieldGrouping] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
