@@ -9,7 +9,7 @@ import SheetSelector from '../components/SheetSelector';
 import { detectFileType } from '../utils/fileDetection';
 import { trackAnalytics } from '../utils/analytics';
 
-// File processing utilities
+// Import your existing utility functions
 import { parseCSVFile, compareFiles } from '../utils/simpleCSVComparison';
 import { parseExcelFile, compareExcelFiles, getExcelFileInfo } from '../utils/excelFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
@@ -58,12 +58,15 @@ export default function Comparison() {
           return;
         }
 
-        // Recreate File objects
-        const f1 = new File([new Uint8Array(file1Data)], file1Info.name, {
+        // Convert ArrayBuffer back to File objects
+        const arrayBuffer1 = base64ToArrayBuffer(file1Data);
+        const arrayBuffer2 = base64ToArrayBuffer(file2Data);
+        
+        const f1 = new File([arrayBuffer1], file1Info.name, {
           type: file1Info.type,
           lastModified: file1Info.lastModified
         });
-        const f2 = new File([new Uint8Array(file2Data)], file2Info.name, {
+        const f2 = new File([arrayBuffer2], file2Info.name, {
           type: file2Info.type,
           lastModified: file2Info.lastModified
         });
@@ -81,6 +84,16 @@ export default function Comparison() {
 
     restoreFiles();
   }, []);
+
+  // Helper function to convert base64 to ArrayBuffer
+  const base64ToArrayBuffer = (base64) => {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  };
 
   const handleCompare = async (f1 = file1, f2 = file2) => {
     if (!f1 || !f2) {
@@ -181,6 +194,7 @@ export default function Comparison() {
       parseExcelFile(file2, sheet2)
     ]);
     
+    // Extract data from your file structure
     const data1 = result1.data || result1;
     const data2 = result2.data || result2;
     
@@ -232,6 +246,7 @@ export default function Comparison() {
       parseCSVFile(csvFile)
     ]);
     
+    // Extract data from your file structure
     const excelData = excelResult.data || excelResult;
     
     setupHeaderMapping(excelData, csvData, 'excel_csv');
@@ -240,6 +255,10 @@ export default function Comparison() {
   // Setup header mapping
   const setupHeaderMapping = (data1, data2, type) => {
     setProcessingStep('Setting up header mapping...');
+    
+    if (!data1 || !data2 || data1.length === 0 || data2.length === 0) {
+      throw new Error('No data found in files');
+    }
     
     const h1 = Object.keys(data1[0] || {});
     const h2 = Object.keys(data2[0] || {});
