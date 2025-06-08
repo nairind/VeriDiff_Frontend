@@ -330,6 +330,14 @@ const UploadZone = ({ onFilesReady }) => {
           <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>
             Excel (.xlsx, .xls), CSV, and PDF files supported
           </div>
+          <div style={{ 
+            color: '#059669', 
+            fontSize: '0.8rem', 
+            marginTop: '0.5rem',
+            fontWeight: '500'
+          }}>
+            📈 Now supports large PDFs up to 100MB!
+          </div>
         </div>
       );
     }
@@ -348,50 +356,72 @@ const UploadZone = ({ onFilesReady }) => {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {files.map((file, index) => (
-              <div key={index} style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: '#f9fafb',
-                padding: '0.75rem',
-                borderRadius: '0.5rem',
-                border: '1px solid #e5e7eb'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ fontSize: '1.5rem' }}>{getFileIcon(file.name)}</span>
-                  <span style={{ fontWeight: '500', fontSize: '0.875rem' }}>{file.name}</span>
-                  <span style={{
-                    fontSize: '0.75rem',
-                    color: '#6b7280',
-                    background: '#e5e7eb',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '0.25rem'
-                  }}>
-                    {getFileTypeLabel(getFileType(file.name))}
-                  </span>
+            {files.map((file, index) => {
+              const isLargeFile = file.size > 25 * 1024 * 1024; // 25MB+
+              const isVeryLargeFile = file.size > 75 * 1024 * 1024; // 75MB+
+              
+              return (
+                <div key={index} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: isVeryLargeFile ? '#fef3c7' : isLargeFile ? '#fef7e6' : '#f9fafb',
+                  padding: '0.75rem',
+                  borderRadius: '0.5rem',
+                  border: `1px solid ${isVeryLargeFile ? '#f59e0b' : isLargeFile ? '#fed7aa' : '#e5e7eb'}`
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '1.5rem' }}>{getFileIcon(file.name)}</span>
+                    <div>
+                      <div style={{ fontWeight: '500', fontSize: '0.875rem' }}>{file.name}</div>
+                      <div style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{
+                          color: '#6b7280',
+                          background: '#e5e7eb',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.25rem'
+                        }}>
+                          {getFileTypeLabel(getFileType(file.name))}
+                        </span>
+                        <span style={{ color: '#6b7280' }}>
+                          {(file.size / 1024 / 1024).toFixed(1)}MB
+                        </span>
+                        {isVeryLargeFile && (
+                          <span style={{ color: '#f59e0b', fontWeight: '600' }}>Very Large</span>
+                        )}
+                        {isLargeFile && !isVeryLargeFile && (
+                          <span style={{ color: '#d97706', fontWeight: '600' }}>Large</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeFile(index)}
+                    style={{
+                      color: '#ef4444',
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      padding: '0.25rem'
+                    }}
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  onClick={() => removeFile(index)}
-                  style={{
-                    color: '#ef4444',
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '1.25rem',
-                    cursor: 'pointer',
-                    padding: '0.25rem'
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       );
     }
 
     if (files.length === 2) {
+      const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+      const totalSizeMB = (totalSize / 1024 / 1024).toFixed(1);
+      const isLargeProcessing = totalSize > 50 * 1024 * 1024; // 50MB+ total
+      const estimatedTime = isLargeProcessing ? Math.ceil(totalSizeMB / 10) : null; // ~10MB per minute
+      
       return (
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>✅</div>
@@ -403,41 +433,73 @@ const UploadZone = ({ onFilesReady }) => {
           }}>
             Ready to Compare!
           </div>
+          
+          {/* Large file warning */}
+          {isLargeProcessing && (
+            <div style={{
+              background: '#fffbeb',
+              border: '1px solid #fed7aa',
+              borderRadius: '0.5rem',
+              padding: '0.75rem',
+              marginBottom: '1rem',
+              fontSize: '0.85rem'
+            }}>
+              <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '0.25rem' }}>
+                ⚠️ Large Files Detected ({totalSizeMB}MB total)
+              </div>
+              <div style={{ color: '#92400e' }}>
+                Processing may take {estimatedTime}-{estimatedTime * 2} minutes. Ensure stable connection and keep browser active.
+              </div>
+            </div>
+          )}
+          
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-            {files.map((file, index) => (
-              <div key={index} style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: '#ecfdf5',
-                padding: '0.75rem',
-                borderRadius: '0.5rem',
-                border: '1px solid #d1fae5'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ fontSize: '1.5rem' }}>{getFileIcon(file.name)}</span>
-                  <div>
-                    <div style={{ fontWeight: '500', fontSize: '0.875rem' }}>{file.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#059669' }}>
-                      File {index + 1} ({getFileTypeLabel(getFileType(file.name))})
+            {files.map((file, index) => {
+              const isLargeFile = file.size > 25 * 1024 * 1024;
+              const isVeryLargeFile = file.size > 75 * 1024 * 1024;
+              
+              return (
+                <div key={index} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: '#ecfdf5',
+                  padding: '0.75rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #d1fae5'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '1.5rem' }}>{getFileIcon(file.name)}</span>
+                    <div>
+                      <div style={{ fontWeight: '500', fontSize: '0.875rem' }}>{file.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#059669', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>File {index + 1} ({getFileTypeLabel(getFileType(file.name))})</span>
+                        <span>• {(file.size / 1024 / 1024).toFixed(1)}MB</span>
+                        {isVeryLargeFile && (
+                          <span style={{ color: '#f59e0b', fontWeight: '600' }}>Very Large</span>
+                        )}
+                        {isLargeFile && !isVeryLargeFile && (
+                          <span style={{ color: '#d97706', fontWeight: '600' }}>Large</span>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => removeFile(index)}
+                    style={{
+                      color: '#ef4444',
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      padding: '0.25rem'
+                    }}
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  onClick={() => removeFile(index)}
-                  style={{
-                    color: '#ef4444',
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '1.25rem',
-                    cursor: 'pointer',
-                    padding: '0.25rem'
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
             {isProcessing ? 'Processing files...' : 'Starting comparison...'}
@@ -562,11 +624,30 @@ const UploadZone = ({ onFilesReady }) => {
             color: '#1d4ed8',
             padding: '0.5rem 0.75rem',
             borderRadius: '0.5rem',
-            fontSize: '0.75rem'
+            fontSize: '0.75rem',
+            marginBottom: '0.5rem'
           }}>
             <span>💡</span>
             <span>Files auto-arrange by type: Excel → CSV → PDF</span>
           </div>
+          
+          {/* Large file tip */}
+          {files.some(file => file.size > 25 * 1024 * 1024) && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: '#fef3c7',
+              color: '#92400e',
+              padding: '0.5rem 0.75rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.75rem',
+              marginTop: '0.5rem'
+            }}>
+              <span>🔥</span>
+              <span>Large PDF detected: Ensure stable internet & 8GB+ RAM for best performance</span>
+            </div>
+          )}
         </div>
       )}
     </div>
