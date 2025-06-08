@@ -1,5 +1,5 @@
 // /components/UploadZone.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const UploadZone = ({ onFilesReady }) => {
   const [files, setFiles] = useState([]);
@@ -7,15 +7,67 @@ const UploadZone = ({ onFilesReady }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [warningMessage, setWarningMessage] = useState(null);
+  const [pdfJsStatus, setPdfJsStatus] = useState('checking'); // checking, ready, error, loading
+
+  // Monitor PDF.js loading status
+  useEffect(() => {
+    let statusCheckInterval;
+    
+    const checkPdfJsStatus = () => {
+      if (window.pdfJsReady) {
+        setPdfJsStatus('ready');
+        if (statusCheckInterval) {
+          clearInterval(statusCheckInterval);
+        }
+      } else if (window.pdfJsError) {
+        setPdfJsStatus('error');
+        if (statusCheckInterval) {
+          clearInterval(statusCheckInterval);
+        }
+      } else if (window.pdfjsLib) {
+        setPdfJsStatus('ready');
+        if (statusCheckInterval) {
+          clearInterval(statusCheckInterval);
+        }
+      } else {
+        setPdfJsStatus('loading');
+      }
+    };
+
+    // Initial check
+    checkPdfJsStatus();
+
+    // Set up interval to check status
+    statusCheckInterval = setInterval(checkPdfJsStatus, 1000);
+
+    // Listen for PDF.js ready event
+    const handlePdfJsReady = (event) => {
+      console.log('✅ PDF.js ready event received:', event.detail);
+      setPdfJsStatus('ready');
+      if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+      }
+    };
+
+    window.addEventListener('pdfJsReady', handlePdfJsReady);
+
+    // Cleanup
+    return () => {
+      if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+      }
+      window.removeEventListener('pdfJsReady', handlePdfJsReady);
+    };
+  }, []);
 
   const showErrorMessage = (title, message) => {
     setErrorMessage({ title, message });
-    setTimeout(() => setErrorMessage(null), 6000);
+    setTimeout(() => setErrorMessage(null), 8000);
   };
 
   const showWarningMessage = (title, message) => {
     setWarningMessage({ title, message });
-    setTimeout(() => setWarningMessage(null), 5000);
+    setTimeout(() => setWarningMessage(null), 6000);
   };
 
   const getFileIcon = (fileName) => {
@@ -69,14 +121,14 @@ const UploadZone = ({ onFilesReady }) => {
     const file1Label = getFileTypeLabel(file1Type);
     const file2Label = getFileTypeLabel(file2Type);
     
-    return `${file1Label} and ${file2Label} files cannot be compared together.\n\n` +
+    return `${file1Label} and ${file2Label} files cannot be compared together.\\n\\n` +
            `${file1Label} files contain ${file1Type === 'pdf' ? 'text content' : 'structured data'} while ` +
-           `${file2Label} files contain ${file2Type === 'pdf' ? 'text content' : 'structured data'}.\n\n` +
-           'Supported combinations:\n' +
-           '• Excel ↔ Excel (spreadsheet vs spreadsheet)\n' +
-           '• CSV ↔ CSV (data vs data)\n' +
-           '• Excel ↔ CSV (cross-format data comparison)\n' +
-           '• PDF ↔ PDF (document vs document)\n\n' +
+           `${file2Label} files contain ${file2Type === 'pdf' ? 'text content' : 'structured data'}.\\n\\n` +
+           'Supported combinations:\\n' +
+           '• Excel ↔ Excel (spreadsheet vs spreadsheet)\\n' +
+           '• CSV ↔ CSV (data vs data)\\n' +
+           '• Excel ↔ CSV (cross-format data comparison)\\n' +
+           '• PDF ↔ PDF (document vs document)\\n\\n' +
            'Please select compatible file types for comparison.';
   };
 
@@ -120,6 +172,26 @@ const UploadZone = ({ onFilesReady }) => {
       return { isValid: false, arrangedFiles: [] };
     }
 
+    // Check PDF.js status for PDF files
+    if ((file1Type === 'pdf' || file2Type === 'pdf') && pdfJsStatus === 'error') {
+      showErrorMessage('PDF Processing Unavailable', 
+        'PDF processing engine failed to load. Please refresh the page and try again.\\n\\n' +
+        'If the problem persists:\\n' +
+        '• Check your internet connection\\n' +
+        '• Disable ad blockers temporarily\\n' +
+        '• Try using Chrome or Firefox\\n' +
+        '• Clear browser cache and reload'
+      );
+      return { isValid: false, arrangedFiles: [] };
+    }
+
+    if ((file1Type === 'pdf' || file2Type === 'pdf') && pdfJsStatus === 'loading') {
+      showWarningMessage('PDF Engine Loading', 
+        'PDF processing engine is still loading. Please wait a moment before uploading PDF files.'
+      );
+      return { isValid: false, arrangedFiles: [] };
+    }
+
     // Files are compatible and ready to compare
     setFiles(arrangedFiles);
     return { isValid: true, arrangedFiles: arrangedFiles, readyToCompare: true };
@@ -128,6 +200,7 @@ const UploadZone = ({ onFilesReady }) => {
   const handleFiles = async (newFiles) => {
     console.log('🔄 handleFiles called with:', newFiles.map(f => f.name));
     console.log('📊 Current files in state:', files.map(f => f.name));
+    console.log('📋 PDF.js status:', pdfJsStatus);
     
     setIsProcessing(true);
     
@@ -245,13 +318,13 @@ const UploadZone = ({ onFilesReady }) => {
     // Handle different scenarios
     if (validFiles.length === 0) {
       showErrorMessage('No supported files found', 
-        `Please upload Excel (.xlsx, .xls), CSV, or PDF files only.\n\nRejected: ${invalidFiles.map(f => f.name).join(', ')}`);
+        `Please upload Excel (.xlsx, .xls), CSV, or PDF files only.\\n\\nRejected: ${invalidFiles.map(f => f.name).join(', ')}`);
       return;
     }
 
     if (invalidFiles.length > 0) {
       showWarningMessage('Some files ignored', 
-        `Only processing supported files.\n\nIgnored: ${invalidFiles.map(f => f.name).join(', ')}\nProcessing: ${validFiles.map(f => f.name).join(', ')}`);
+        `Only processing supported files.\\n\\nIgnored: ${invalidFiles.map(f => f.name).join(', ')}\\nProcessing: ${validFiles.map(f => f.name).join(', ')}`);
     }
 
     handleFiles(validFiles);
@@ -280,13 +353,13 @@ const UploadZone = ({ onFilesReady }) => {
     // Handle different scenarios
     if (validFiles.length === 0) {
       showErrorMessage('No supported files found', 
-        `Please select Excel (.xlsx, .xls), CSV, or PDF files only.\n\nSelected: ${invalidFiles.map(f => f.name).join(', ')}`);
+        `Please select Excel (.xlsx, .xls), CSV, or PDF files only.\\n\\nSelected: ${invalidFiles.map(f => f.name).join(', ')}`);
       return;
     }
 
     if (invalidFiles.length > 0) {
       showWarningMessage('Some files ignored', 
-        `Only processing supported files.\n\nIgnored: ${invalidFiles.map(f => f.name).join(', ')}\nProcessing: ${validFiles.map(f => f.name).join(', ')}`);
+        `Only processing supported files.\\n\\nIgnored: ${invalidFiles.map(f => f.name).join(', ')}\\nProcessing: ${validFiles.map(f => f.name).join(', ')}`);
     }
 
     handleFiles(validFiles);
@@ -312,6 +385,67 @@ const UploadZone = ({ onFilesReady }) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
+  };
+
+  const renderPdfJsStatus = () => {
+    if (files.some(file => getFileType(file.name) === 'pdf') || files.length === 0) {
+      switch (pdfJsStatus) {
+        case 'loading':
+          return (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: '#eff6ff',
+              color: '#1d4ed8',
+              padding: '0.5rem 0.75rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.75rem',
+              marginBottom: '0.5rem'
+            }}>
+              <span>🔄</span>
+              <span>PDF engine loading... Please wait before uploading PDFs</span>
+            </div>
+          );
+        case 'ready':
+          return (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: '#ecfdf5',
+              color: '#065f46',
+              padding: '0.5rem 0.75rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.75rem',
+              marginBottom: '0.5rem'
+            }}>
+              <span>✅</span>
+              <span>PDF engine ready - Large files up to 100MB supported!</span>
+            </div>
+          );
+        case 'error':
+          return (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: '#fef2f2',
+              color: '#991b1b',
+              padding: '0.5rem 0.75rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.75rem',
+              marginBottom: '0.5rem'
+            }}>
+              <span>❌</span>
+              <span>PDF engine failed to load - Refresh page to retry</span>
+            </div>
+          );
+        default:
+          return null;
+      }
+    }
+    return null;
   };
 
   const renderFileStatus = () => {
@@ -359,6 +493,7 @@ const UploadZone = ({ onFilesReady }) => {
             {files.map((file, index) => {
               const isLargeFile = file.size > 25 * 1024 * 1024; // 25MB+
               const isVeryLargeFile = file.size > 75 * 1024 * 1024; // 75MB+
+              const fileType = getFileType(file.name);
               
               return (
                 <div key={index} style={{
@@ -381,7 +516,7 @@ const UploadZone = ({ onFilesReady }) => {
                           padding: '0.25rem 0.5rem',
                           borderRadius: '0.25rem'
                         }}>
-                          {getFileTypeLabel(getFileType(file.name))}
+                          {getFileTypeLabel(fileType)}
                         </span>
                         <span style={{ color: '#6b7280' }}>
                           {(file.size / 1024 / 1024).toFixed(1)}MB
@@ -391,6 +526,15 @@ const UploadZone = ({ onFilesReady }) => {
                         )}
                         {isLargeFile && !isVeryLargeFile && (
                           <span style={{ color: '#d97706', fontWeight: '600' }}>Large</span>
+                        )}
+                        {fileType === 'pdf' && pdfJsStatus === 'ready' && (
+                          <span style={{ color: '#059669', fontWeight: '600' }}>✓ Ready</span>
+                        )}
+                        {fileType === 'pdf' && pdfJsStatus === 'loading' && (
+                          <span style={{ color: '#d97706', fontWeight: '600' }}>⏳ Engine Loading</span>
+                        )}
+                        {fileType === 'pdf' && pdfJsStatus === 'error' && (
+                          <span style={{ color: '#dc2626', fontWeight: '600' }}>❌ Engine Error</span>
                         )}
                       </div>
                     </div>
@@ -421,6 +565,7 @@ const UploadZone = ({ onFilesReady }) => {
       const totalSizeMB = (totalSize / 1024 / 1024).toFixed(1);
       const isLargeProcessing = totalSize > 50 * 1024 * 1024; // 50MB+ total
       const estimatedTime = isLargeProcessing ? Math.ceil(totalSizeMB / 10) : null; // ~10MB per minute
+      const hasPdf = files.some(file => getFileType(file.name) === 'pdf');
       
       return (
         <div style={{ textAlign: 'center' }}>
@@ -433,6 +578,25 @@ const UploadZone = ({ onFilesReady }) => {
           }}>
             Ready to Compare!
           </div>
+          
+          {/* PDF engine status for PDF files */}
+          {hasPdf && pdfJsStatus !== 'ready' && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: '0.5rem',
+              padding: '0.75rem',
+              marginBottom: '1rem',
+              fontSize: '0.85rem'
+            }}>
+              <div style={{ fontWeight: '600', color: '#991b1b', marginBottom: '0.25rem' }}>
+                ⚠️ PDF Engine Not Ready
+              </div>
+              <div style={{ color: '#991b1b' }}>
+                {pdfJsStatus === 'loading' ? 'PDF processing engine is still loading. Please wait...' : 'PDF processing engine failed to load. Please refresh the page.'}
+              </div>
+            </div>
+          )}
           
           {/* Large file warning */}
           {isLargeProcessing && (
@@ -457,6 +621,7 @@ const UploadZone = ({ onFilesReady }) => {
             {files.map((file, index) => {
               const isLargeFile = file.size > 25 * 1024 * 1024;
               const isVeryLargeFile = file.size > 75 * 1024 * 1024;
+              const fileType = getFileType(file.name);
               
               return (
                 <div key={index} style={{
@@ -473,13 +638,18 @@ const UploadZone = ({ onFilesReady }) => {
                     <div>
                       <div style={{ fontWeight: '500', fontSize: '0.875rem' }}>{file.name}</div>
                       <div style={{ fontSize: '0.75rem', color: '#059669', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span>File {index + 1} ({getFileTypeLabel(getFileType(file.name))})</span>
+                        <span>File {index + 1} ({getFileTypeLabel(fileType)})</span>
                         <span>• {(file.size / 1024 / 1024).toFixed(1)}MB</span>
                         {isVeryLargeFile && (
                           <span style={{ color: '#f59e0b', fontWeight: '600' }}>Very Large</span>
                         )}
                         {isLargeFile && !isVeryLargeFile && (
                           <span style={{ color: '#d97706', fontWeight: '600' }}>Large</span>
+                        )}
+                        {fileType === 'pdf' && (
+                          <span style={{ color: pdfJsStatus === 'ready' ? '#059669' : '#dc2626', fontWeight: '600' }}>
+                            {pdfJsStatus === 'ready' ? '✓ Engine Ready' : '❌ Engine Issue'}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -502,7 +672,7 @@ const UploadZone = ({ onFilesReady }) => {
             })}
           </div>
           <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            {isProcessing ? 'Processing files...' : 'Starting comparison...'}
+            {isProcessing ? 'Processing files...' : hasPdf && pdfJsStatus !== 'ready' ? 'Waiting for PDF engine...' : 'Starting comparison...'}
           </div>
         </div>
       );
@@ -511,6 +681,9 @@ const UploadZone = ({ onFilesReady }) => {
 
   return (
     <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+      {/* PDF.js status indicator */}
+      {renderPdfJsStatus()}
+      
       <div
         className={`upload-zone ${dragActive ? 'drag-active' : ''}`}
         style={{
