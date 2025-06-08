@@ -7,13 +7,18 @@ import Footer from '../components/layout/Footer';
 import SummaryCards from '../components/SummaryCards';
 import ControlsBar from '../components/ControlsBar';
 import ExportSection from '../components/ExportSection';
+import ResultsDisplay from '../components/ResultsDisplay';
 import { createScrollManager } from '../utils/scrollUtils';
 import { getFilteredResults, groupFields } from '../utils/filterUtils';
 import { getRecordStatus, getStatusConfig } from '../utils/statusUtils';
 import { getCharacterDiff, renderCharacterDiff } from '../utils/characterDiff';
 import { handleDownloadExcel, handleDownloadCSV, handleDownloadHTMLDiff } from '../utils/exportUtils';
-import { trackAnalytics } from '../utils/analytics';
 import { downloadResultsAsCSV } from '../utils/downloadResults';
+
+// Simple analytics function
+const trackAnalytics = async (eventType, data = {}) => {
+  console.log('Analytics:', eventType, data);
+};
 
 export default function TrackComparison() {
   const router = useRouter();
@@ -388,63 +393,24 @@ export default function TrackComparison() {
             />
 
             {/* Results Display */}
-            {filteredResults.length > 0 ? (
-              <div style={{
-                background: 'white',
-                border: '2px solid #e5e7eb',
-                borderRadius: '16px',
-                padding: '60px',
-                textAlign: 'center',
-                color: '#6b7280'
-              }}>
-                <div style={{ fontSize: '4rem', marginBottom: '20px' }}>📊</div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '10px' }}>
-                  Results Ready for Display
-                </h3>
-                <p style={{ fontSize: '1.1rem', marginBottom: '20px' }}>
-                  Found {filteredResults.length} records to display
-                </p>
-                <p style={{ fontSize: '0.9rem', color: '#9ca3af' }}>
-                  Results view implementation in progress
-                </p>
-              </div>
-            ) : (
-              <div style={{
-                background: 'white',
-                border: '2px solid #e5e7eb',
-                borderRadius: '16px',
-                padding: '60px',
-                textAlign: 'center',
-                color: '#6b7280'
-              }}>
-                <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🔍</div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '10px' }}>
-                  No Records Match Your Filter
-                </h3>
-                <p style={{ fontSize: '1.1rem', marginBottom: '20px' }}>
-                  Try adjusting your search terms or filter settings
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    scrollManager.preserveScroll();
-                    setResultsFilter('all');
-                    setSearchTerm('');
-                  }}
-                  style={{
-                    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Clear All Filters
-                </button>
-              </div>
-            )}
+            <ResultsDisplay 
+              filteredResults={filteredResults}
+              viewMode={viewMode}
+              file1={file1}
+              file2={file2}
+              focusMode={focusMode}
+              fieldGrouping={fieldGrouping}
+              expandedGroups={expandedGroups}
+              toggleGroupExpansion={toggleGroupExpansion}
+              ignoreWhitespace={ignoreWhitespace}
+              showCharacterDiff={showCharacterDiff}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              setSortField={setSortField}
+              setSortDirection={setSortDirection}
+              preserveScroll={scrollManager.preserveScroll}
+              results={results}
+            />
 
             <ExportSection 
               onDownloadExcel={onDownloadExcel}
