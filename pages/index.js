@@ -734,7 +734,16 @@ export default function Home() {
     try {
       const timestamp = new Date().toISOString().slice(0,10);
       const filename = `veridiff_comparison_${timestamp}.xlsx`;
-      downloadResultsAsExcel(results, filename);
+      
+      // Add metadata to results for the Excel report
+      const enhancedResults = {
+        ...results,
+        file1Name: file1?.name,
+        file2Name: file2?.name,
+        comparisonMode: `${viewMode === 'unified' ? 'Unified' : 'Side-by-Side'} view${results.toleranceApplied ? ', ' + results.toleranceApplied : ''}`
+      };
+      
+      downloadResultsAsExcel(enhancedResults, filename);
       
       await trackAnalytics('export_completed', {
         export_format: 'excel',
@@ -749,7 +758,16 @@ export default function Home() {
     try {
       const timestamp = new Date().toISOString().slice(0,10);
       const filename = `veridiff_comparison_${timestamp}.csv`;
-      downloadResultsAsCSV(results, filename);
+      
+      // Add metadata to results
+      const enhancedResults = {
+        ...results,
+        file1Name: file1?.name,
+        file2Name: file2?.name,
+        comparisonMode: `${viewMode === 'unified' ? 'Unified' : 'Side-by-Side'} view${results.toleranceApplied ? ', ' + results.toleranceApplied : ''}`
+      };
+      
+      downloadResultsAsCSV(enhancedResults, filename);
       
       await trackAnalytics('export_completed', {
         export_format: 'csv',
@@ -776,7 +794,10 @@ export default function Home() {
         totalRecords: results.total_records,
         differences: results.differences_found,
         matches: results.total_records - results.differences_found,
-        matchRate: (((results.total_records - results.differences_found) / results.total_records) * 100).toFixed(1)
+        matchRate: (((results.total_records - results.differences_found) / results.total_records) * 100).toFixed(1),
+        file1Name: file1?.name,
+        file2Name: file2?.name,
+        comparisonMode: `${viewMode === 'unified' ? 'Unified' : 'Side-by-Side'} view${results.toleranceApplied ? ', ' + results.toleranceApplied : ''}`
       };
 
       const htmlContent = `<!DOCTYPE html>
@@ -812,6 +833,8 @@ export default function Home() {
             <h1>📊 VeriDiff Comparison Report</h1>
             <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
             <p>File Comparison: ${fileType === 'excel' ? 'Excel ↔ Excel' : fileType === 'excel_csv' ? 'Excel ↔ CSV' : 'CSV ↔ CSV'}</p>
+            <p><strong>File 1:</strong> ${summary.file1Name} | <strong>File 2:</strong> ${summary.file2Name}</p>
+            <p><strong>Mode:</strong> ${summary.comparisonMode}</p>
         </div>
 
         <div class="summary">
@@ -836,8 +859,8 @@ export default function Home() {
         <div class="comparison-table">
             <div class="table-header">
                 <div>Status</div>
-                <div style="text-align: center; color: #2563eb;">📄 File 1 (${file1?.name || 'Original'})</div>
-                <div style="text-align: center; color: #16a34a;">📄 File 2 (${file2?.name || 'Comparison'})</div>
+                <div style="text-align: center; color: #2563eb;">📄 File 1 (${summary.file1Name || 'Original'})</div>
+                <div style="text-align: center; color: #16a34a;">📄 File 2 (${summary.file2Name || 'Comparison'})</div>
             </div>
             
             ${filteredResults.map(row => {
@@ -861,23 +884,23 @@ export default function Home() {
                                     <div class="field-value">${fieldData.val1}</div>
                                     ${fieldData.difference ? `<div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Δ ${fieldData.difference}</div>` : ''}
                                 </div>
-                            `).join('')}
+                            \`).join('')}
                         </div>
                     </div>
                     
                     <div class="file-data">
                         <div class="field-grid">
-                            ${Object.entries(row.fields).map(([fieldName, fieldData]) => `
+                            ${Object.entries(row.fields).map(([fieldName, fieldData]) => \`
                                 <div class="field-item">
                                     <div class="field-label">${fieldName}</div>
                                     <div class="field-value">${fieldData.val2}</div>
-                                    ${fieldData.difference ? `<div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Δ ${fieldData.difference}</div>` : ''}
+                                    ${fieldData.difference ? \`<div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Δ ${fieldData.difference}</div>\` : ''}
                                 </div>
-                            `).join('')}
+                            \`).join('')}
                         </div>
                     </div>
                 </div>
-              `;
+              \`;
             }).join('')}
         </div>
 
