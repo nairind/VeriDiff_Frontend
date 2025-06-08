@@ -97,11 +97,16 @@ const UploadZone = ({ onFilesReady }) => {
     setErrorMessage(null);
     setWarningMessage(null);
 
+    if (filesToValidate.length > 2) {
+      showErrorMessage('Too many files', 'Please upload only 2 files for comparison');
+      return { isValid: false, arrangedFiles: [] };
+    }
+
     if (filesToValidate.length !== 2) {
-      if (filesToValidate.length > 2) {
-        showErrorMessage('Too many files', 'Please upload only 2 files for comparison');
-      }
-      return false;
+      // Just update the files without proceeding to comparison
+      const arrangedFiles = arrangeFiles(filesToValidate);
+      setFiles(arrangedFiles);
+      return { isValid: true, arrangedFiles: arrangedFiles, readyToCompare: false };
     }
 
     const arrangedFiles = arrangeFiles(filesToValidate);
@@ -112,30 +117,41 @@ const UploadZone = ({ onFilesReady }) => {
     // Check compatibility
     if (!areFilesCompatible(file1Type, file2Type)) {
       showErrorMessage('Incompatible File Types', getIncompatibilityMessage(file1Type, file2Type));
-      return false;
+      return { isValid: false, arrangedFiles: [] };
     }
 
-    // Files are compatible, proceed
+    // Files are compatible and ready to compare
     setFiles(arrangedFiles);
-    return true;
+    return { isValid: true, arrangedFiles: arrangedFiles, readyToCompare: true };
   };
 
   const handleFiles = async (newFiles) => {
+    console.log('🔄 handleFiles called with:', newFiles.map(f => f.name));
+    console.log('📊 Current files in state:', files.map(f => f.name));
+    
     setIsProcessing(true);
     
     try {
       const updatedFiles = [...files, ...newFiles];
+      console.log('📋 Updated files list:', updatedFiles.map(f => f.name));
       
-      if (validateAndProcessFiles(updatedFiles)) {
+      const validationResult = validateAndProcessFiles(updatedFiles);
+      console.log('✅ Validation result:', validationResult);
+      
+      if (validationResult.isValid && validationResult.readyToCompare) {
+        console.log('🚀 Ready to compare! Auto-proceeding in 800ms...');
         // If we have exactly 2 compatible files, process them and auto-proceed
-        if (updatedFiles.length === 2) {
-          setTimeout(() => {
-            processAndProceed(files); // Use the arranged files from state
-          }, 800);
-        }
+        setTimeout(() => {
+          console.log('⏰ Timeout triggered, calling processAndProceed');
+          processAndProceed(validationResult.arrangedFiles);
+        }, 800);
+      } else if (validationResult.isValid) {
+        console.log('📝 Files valid but not ready to compare yet (need more files)');
+      } else {
+        console.log('❌ Validation failed');
       }
     } catch (error) {
-      console.error('Error processing files:', error);
+      console.error('❌ Error in handleFiles:', error);
       showErrorMessage('Processing error', 'Error processing files. Please try again.');
     }
     
@@ -143,6 +159,8 @@ const UploadZone = ({ onFilesReady }) => {
   };
 
   const processAndProceed = async (filesToProcess) => {
+    console.log('🔧 processAndProceed called with:', filesToProcess.map(f => f.name));
+    
     try {
       const [file1, file2] = filesToProcess;
 
@@ -160,6 +178,7 @@ const UploadZone = ({ onFilesReady }) => {
         lastModified: file2.lastModified
       };
 
+      console.log('💾 Storing file metadata...');
       sessionStorage.setItem('veridiff_file1_info', JSON.stringify(file1Data));
       sessionStorage.setItem('veridiff_file2_info', JSON.stringify(file2Data));
 
@@ -172,6 +191,7 @@ const UploadZone = ({ onFilesReady }) => {
               // Store as base64 string (remove data URL prefix)
               const base64 = e.target.result.split(',')[1];
               sessionStorage.setItem(key, base64);
+              console.log(`💾 Stored ${key} (${base64.length} chars)`);
               resolve();
             } catch (error) {
               reject(error);
@@ -182,16 +202,18 @@ const UploadZone = ({ onFilesReady }) => {
         });
       };
 
+      console.log('📖 Reading file contents...');
       await Promise.all([
         storeFile(file1, 'veridiff_file1_data'),
         storeFile(file2, 'veridiff_file2_data')
       ]);
 
+      console.log('✅ Files processed successfully, calling onFilesReady');
       // Call the callback to proceed
       onFilesReady({ file1, file2 });
       
     } catch (error) {
-      console.error('Error processing files:', error);
+      console.error('❌ Error in processAndProceed:', error);
       showErrorMessage('Processing error', 'Error processing files. Please try again.');
     }
   };
@@ -201,7 +223,10 @@ const UploadZone = ({ onFilesReady }) => {
     e.stopPropagation();
     setDragActive(false);
     
+    console.log('📁 Files dropped');
     const droppedFiles = Array.from(e.dataTransfer.files);
+    console.log('📁 Dropped files:', droppedFiles.map(f => f.name));
+    
     const validFiles = [];
     const invalidFiles = [];
     
@@ -213,6 +238,9 @@ const UploadZone = ({ onFilesReady }) => {
         invalidFiles.push(file);
       }
     });
+
+    console.log('✅ Valid files:', validFiles.map(f => f.name));
+    console.log('❌ Invalid files:', invalidFiles.map(f => f.name));
 
     // Handle different scenarios
     if (validFiles.length === 0) {
@@ -230,7 +258,10 @@ const UploadZone = ({ onFilesReady }) => {
   };
 
   const handleInputChange = (e) => {
+    console.log('📁 Files selected via input');
     const selectedFiles = Array.from(e.target.files);
+    console.log('📁 Selected files:', selectedFiles.map(f => f.name));
+    
     const validFiles = [];
     const invalidFiles = [];
     
@@ -242,6 +273,9 @@ const UploadZone = ({ onFilesReady }) => {
         invalidFiles.push(file);
       }
     });
+
+    console.log('✅ Valid files:', validFiles.map(f => f.name));
+    console.log('❌ Invalid files:', invalidFiles.map(f => f.name));
 
     // Handle different scenarios
     if (validFiles.length === 0) {
