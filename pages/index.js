@@ -1,4 +1,3 @@
-// /pages/index.js
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -7,7 +6,6 @@ import Footer from '../components/layout/Footer';
 import UploadZone from '../components/UploadZone';
 import FeatureSection from '../components/FeatureSection';
 import PricingSection from '../components/PricingSection';
-import { trackAnalytics } from '../utils/analytics';
 
 export default function Home() {
   const router = useRouter();
@@ -16,7 +14,8 @@ export default function Home() {
   const [dragActive, setDragActive] = useState({ file1: false, file2: false });
 
   useEffect(() => {
-    trackAnalytics('page_view', { page: 'home' });
+    // Simple analytics - just console log for now
+    console.log('Page view: home');
   }, []);
 
   const handleFileSelect = (fileNumber, event) => {
@@ -62,7 +61,7 @@ export default function Home() {
       return;
     }
 
-    // Store files in sessionStorage for the comparison page
+    // Store file metadata
     const file1Data = {
       name: file1.name,
       size: file1.size,
@@ -79,15 +78,22 @@ export default function Home() {
     sessionStorage.setItem('veridiff_file1_info', JSON.stringify(file1Data));
     sessionStorage.setItem('veridiff_file2_info', JSON.stringify(file2Data));
     
-    // Store actual file data using FileReader
+    // Store actual file data as base64
     const storeFile = (file, key) => {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
-          sessionStorage.setItem(key, e.target.result);
-          resolve();
+          try {
+            // Store as base64 string (remove data URL prefix)
+            const base64 = e.target.result.split(',')[1];
+            sessionStorage.setItem(key, base64);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
         };
-        reader.readAsArrayBuffer(file);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
     };
 
@@ -96,6 +102,9 @@ export default function Home() {
       storeFile(file2, 'veridiff_file2_data')
     ]).then(() => {
       router.push('/comparison');
+    }).catch(error => {
+      console.error('Error storing files:', error);
+      alert('Error storing files. Please try again.');
     });
   };
 
