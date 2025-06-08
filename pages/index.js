@@ -4,13 +4,14 @@ import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import HeaderMapper from '../components/HeaderMapper';
 import SheetSelector from '../components/SheetSelector';
+import * as XLSX from 'xlsx';
 
 // File processing utilities
 import { parseCSVFile, compareFiles } from '../utils/simpleCSVComparison';
 import { parseExcelFile, compareExcelFiles, getExcelFileInfo } from '../utils/excelFileComparison';
 import { compareExcelCSVFiles } from '../utils/excelCSVComparison';
 import { mapHeaders } from '../utils/mapHeaders';
-import { downloadResultsAsExcel, downloadResultsAsCSV } from '../utils/downloadResults';
+import { downloadResultsAsCSV } from '../utils/downloadResults';
 
 export default function Home() {
   // Core file states
@@ -729,21 +730,173 @@ export default function Home() {
     );
   };
 
-  // Download handlers
+  // Enhanced Excel download handler with conditional formatting, filters, and hyperlinks
   const handleDownloadExcel = async () => {
     try {
       const timestamp = new Date().toISOString().slice(0,10);
       const filename = `veridiff_comparison_${timestamp}.xlsx`;
       
-      // Add metadata to results for the Excel report
-      const enhancedResults = {
-        ...results,
-        file1Name: file1?.name,
-        file2Name: file2?.name,
-        comparisonMode: `${viewMode === 'unified' ? 'Unified' : 'Side-by-Side'} view${results.toleranceApplied ? ', ' + results.toleranceApplied : ''}`
+      if (!results?.results) {
+        throw new Error('No comparison results to export');
+      }
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Find mismatch rows for hyperlinks
+      const mismatchRows = [];
+      results.results.forEach((row, index) => {
+        const hasDifferences = Object.values(row.fields).some(field => field.status === 'difference');
+        if (hasDifferences) {
+          mismatchRows.push(index + 2); // +2 because Excel is 1-indexed and we have a header row
+        }
+      });
+
+      // Enhanced Summary Sheet Data
+      const summaryData = [
+        ['VeriDiff Comparison Report'],
+        [''],
+        ['📋 Report Metadata'],
+        ['Generated On', new Date().toLocaleString()],
+        ['File 1 Name', file1?.name || 'Unknown'],
+        ['File 2 Name', file2?.name || 'Unknown'],
+        ['Comparison Mode', `${viewMode === 'unified' ? 'Unified' : 'Side-by-Side'} view${results.toleranceApplied ? ', ' + results.toleranceApplied : ''}`],
+        ['File Type', fileType === 'excel' ? 'Excel ↔ Excel' : fileType === 'excel_csv' ? 'Excel ↔ CSV' : 'CSV ↔ CSV'],
+        [''],
+        ['📊 Comparison Summary'],
+        ['Total Records', results.total_records],
+        ['Differences Found', results.differences_found],
+        ['Perfect Matches', results.total_records - results.differences_found],
+        ['Match Rate', `${(((results.total_records - results.differences_found) / results.total_records) * 100).toFixed(1)}%`],
+        [''],
+        ['⚠️ Mismatch Analysis'],
+        ['Rows with Mismatches', mismatchRows.length > 0 ? mismatchRows.join(', ') : 'None'],
+        [''],
+        ['🤖 Auto-Detected Fields', results.autoDetectedFields ? results.autoDetectedFields.join(', ') : 'None']
+      ];
+
+      // Create Summary worksheet
+      const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+      
+      // Add hyperlinks for individual mismatch rows
+      if (mismatchRows.length > 0) {
+        const mismatchText = mismatchRows.join(', ');
+        const hyperlinkCell = summaryWs['B17']; // The cell with mismatch row numbers
+        if (hyperlinkCell) {
+          hyperlinkCell.l = { Target: `#'Detailed Results'!A2`, Tooltip: 'Click to navigate to detailed results' };
+        }
+      }
+
+      // Style Summary sheet with enhanced formatting
+      summaryWs['!cols'] = [{ width: 30 }, { width: 50 }];
+      
+      // Apply sheet protection to Summary
+      summaryWs['!protect'] = { 
+        password: '', 
+        objects: true, 
+        scenarios: true,
+        selectLockedCells: true,
+        selectUnlockedCells: true
       };
       
-      downloadResultsAsExcel(enhancedResults, filename);
+      // Detailed Results Sheet Data
+      const fieldNames = Object.keys(results.results[0]?.fields || {});
+      const detailedHeaders = ['Record ID'];
+      
+      // Add field headers with status columns
+      fieldNames.forEach(field => {
+        detailedHeaders.push(`${field} (File 1)`, `${field} (File 2)`, `${field} Status`);
+      });
+
+      const detailedData = [detailedHeaders];
+      
+      results.results.forEach((row, rowIndex) => {
+        const rowData = [row.ID];
+        
+        fieldNames.forEach(fieldName => {
+          const fieldData = row.fields[fieldName];
+          const status = fieldData.status === 'match' ? '✅' : '❌';
+          
+          rowData.push(
+            fieldData.val1 || '',
+            fieldData.val2 || '',
+            status
+          );
+        });
+        
+        detailedData.push(rowData);
+      });
+
+      // Create Detailed Results worksheet
+      const detailedWs = XLSX.utils.aoa_to_sheet(detailedData);
+      
+      // Add Excel table with filters
+      const range = XLSX.utils.encode_range({
+        s: { c: 0, r: 0 },
+        e: { c: detailedHeaders.length - 1, r: detailedData.length - 1 }
+      });
+      
+      detailedWs['!ref'] = range;
+      detailedWs['!autofilter'] = { ref: range };
+      
+      // Set column widths
+      const colWidths = detailedHeaders.map(() => ({ width: 18 }));
+      detailedWs['!cols'] = colWidths;
+
+      // Apply conditional formatting for status columns
+      const conditionalFormats = [];
+      fieldNames.forEach((field, index) => {
+        const statusColIndex = 1 + (index + 1) * 3 - 1; // Status column positions (0-indexed)
+        const statusColLetter = XLSX.utils.encode_col(statusColIndex);
+        
+        // Green background for matches (✅)
+        conditionalFormats.push({
+          ref: `${statusColLetter}2:${statusColLetter}${detailedData.length}`,
+          priority: 1,
+          type: 'cellIs',
+          operator: 'equal',
+          formula: ['"✅"'],
+          style: {
+            fill: { fgColor: { rgb: 'C6EFCE' } },
+            font: { color: { rgb: '006100' } }
+          }
+        });
+        
+        // Red background for mismatches (❌)
+        conditionalFormats.push({
+          ref: `${statusColLetter}2:${statusColLetter}${detailedData.length}`,
+          priority: 2,
+          type: 'cellIs',
+          operator: 'equal',
+          formula: ['"❌"'],
+          style: {
+            fill: { fgColor: { rgb: 'FFC7CE' } },
+            font: { color: { rgb: '9C0006' } }
+          }
+        });
+      });
+
+      // Add conditional formatting to worksheet
+      if (conditionalFormats.length > 0) {
+        detailedWs['!conditionalFormatting'] = conditionalFormats;
+      }
+
+      // Apply sheet protection to Detailed Results
+      detailedWs['!protect'] = { 
+        password: '', 
+        objects: true, 
+        scenarios: true,
+        selectLockedCells: true,
+        selectUnlockedCells: true,
+        autoFilter: false  // Allow filtering
+      };
+
+      // Add worksheets to workbook
+      XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+      XLSX.utils.book_append_sheet(wb, detailedWs, 'Detailed Results');
+
+      // Write and download file
+      XLSX.writeFile(wb, filename);
       
       await trackAnalytics('export_completed', {
         export_format: 'excel',
@@ -884,7 +1037,7 @@ export default function Home() {
                                     <div class="field-value">${fieldData.val1}</div>
                                     ${fieldData.difference ? `<div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Δ ${fieldData.difference}</div>` : ''}
                                 </div>
-                            \`).join('')}
+                            `).join('')}
                         </div>
                     </div>
                     
@@ -896,11 +1049,11 @@ export default function Home() {
                                     <div class="field-value">${fieldData.val2}</div>
                                     ${fieldData.difference ? `<div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">Δ ${fieldData.difference}</div>` : ''}
                                 </div>
-                            \`).join('')}
+                            `).join('')}
                         </div>
                     </div>
                 </div>
-              \`;
+              `;
             }).join('')}
         </div>
 
@@ -911,7 +1064,7 @@ export default function Home() {
         </div>
     </div>
 </body>
-</html>`; //
+</html>`;
       
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
