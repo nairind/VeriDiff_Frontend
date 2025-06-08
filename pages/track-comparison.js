@@ -38,3 +38,16 @@ export default function TrackComparison() {
   const [focusMode, setFocusMode] = useState(false);
   const [fieldGrouping, setFieldGrouping] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
+  <ExportSection 
+              onDownloadExcel={onDownloadExcel}
+              onDownloadCSV={onDownloadCSV}
+              onDownloadHTMLDiff={onDownloadHTMLDiff}
+            />
+          </div>
+        </section>
+
+        <Footer />
+      </div>
+    </>
+  );
+}
