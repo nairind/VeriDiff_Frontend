@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Header from '../components/layout/Header';
@@ -9,103 +9,21 @@ import PricingSection from '../components/PricingSection';
 
 export default function Home() {
   const router = useRouter();
-  const [file1, setFile1] = useState(null);
-  const [file2, setFile2] = useState(null);
-  const [dragActive, setDragActive] = useState({ file1: false, file2: false });
 
   useEffect(() => {
     // Simple analytics - just console log for now
     console.log('Page view: home');
   }, []);
 
-  const handleFileSelect = (fileNumber, event) => {
-    const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      if (fileNumber === 1) {
-        setFile1(selectedFile);
-      } else {
-        setFile2(selectedFile);
-      }
+  const handleFilesReady = async ({ file1, file2 }) => {
+    try {
+      // Files are already stored in sessionStorage by the UploadZone component
+      // Navigate to comparison page
+      await router.push('/comparison');
+    } catch (error) {
+      console.error('Error navigating to comparison:', error);
+      alert('Error proceeding to comparison. Please try again.');
     }
-  };
-
-  const handleDrop = (fileNumber, event) => {
-    event.preventDefault();
-    setDragActive({ ...dragActive, [`file${fileNumber}`]: false });
-    
-    const droppedFile = event.dataTransfer.files[0];
-    if (droppedFile) {
-      if (fileNumber === 1) {
-        setFile1(droppedFile);
-      } else {
-        setFile2(droppedFile);
-      }
-    }
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-  };
-
-  const handleDragEnter = (fileNumber) => {
-    setDragActive({ ...dragActive, [`file${fileNumber}`]: true });
-  };
-
-  const handleDragLeave = (fileNumber) => {
-    setDragActive({ ...dragActive, [`file${fileNumber}`]: false });
-  };
-
-  const handleProceedToComparison = () => {
-    if (!file1 || !file2) {
-      alert('Please select both files to compare');
-      return;
-    }
-
-    // Store file metadata
-    const file1Data = {
-      name: file1.name,
-      size: file1.size,
-      type: file1.type,
-      lastModified: file1.lastModified
-    };
-    const file2Data = {
-      name: file2.name,
-      size: file2.size,
-      type: file2.type,
-      lastModified: file2.lastModified
-    };
-
-    sessionStorage.setItem('veridiff_file1_info', JSON.stringify(file1Data));
-    sessionStorage.setItem('veridiff_file2_info', JSON.stringify(file2Data));
-    
-    // Store actual file data as base64
-    const storeFile = (file, key) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            // Store as base64 string (remove data URL prefix)
-            const base64 = e.target.result.split(',')[1];
-            sessionStorage.setItem(key, base64);
-            resolve();
-          } catch (error) {
-            reject(error);
-          }
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    };
-
-    Promise.all([
-      storeFile(file1, 'veridiff_file1_data'),
-      storeFile(file2, 'veridiff_file2_data')
-    ]).then(() => {
-      router.push('/comparison');
-    }).catch(error => {
-      console.error('Error storing files:', error);
-      alert('Error storing files. Please try again.');
-    });
   };
 
   return (
@@ -225,76 +143,12 @@ export default function Home() {
               boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
               marginBottom: '2rem'
             }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1.5rem',
-                justifyContent: 'center',
-                flexWrap: 'wrap'
-              }} className="upload-container">
-                
-                <UploadZone
-                  fileNumber={1}
-                  file={file1}
-                  dragActive={dragActive.file1}
-                  onFileSelect={(e) => handleFileSelect(1, e)}
-                  onDrop={(e) => handleDrop(1, e)}
-                  onDragOver={handleDragOver}
-                  onDragEnter={() => handleDragEnter(1)}
-                  onDragLeave={() => handleDragLeave(1)}
-                />
-
-                <div style={{ 
-                  fontSize: '1.5rem', 
-                  fontWeight: '600', 
-                  color: '#2563eb',
-                  padding: '0 1rem'
-                }}>
-                  VS
-                </div>
-
-                <UploadZone
-                  fileNumber={2}
-                  file={file2}
-                  dragActive={dragActive.file2}
-                  onFileSelect={(e) => handleFileSelect(2, e)}
-                  onDrop={(e) => handleDrop(2, e)}
-                  onDragOver={handleDragOver}
-                  onDragEnter={() => handleDragEnter(2)}
-                  onDragLeave={() => handleDragLeave(2)}
-                />
-              </div>
-
-              <button
-                type="button"
-                className="compare-button"
-                onClick={handleProceedToComparison}
-                disabled={!file1 || !file2}
-                style={{
-                  background: (!file1 || !file2) ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #3b82f6)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '1rem 3rem',
-                  borderRadius: '0.75rem',
-                  fontSize: '1.125rem',
-                  fontWeight: '600',
-                  cursor: (!file1 || !file2) ? 'not-allowed' : 'pointer',
-                  marginTop: '1.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  margin: '1.5rem auto 0',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                🔍 Compare Files
-              </button>
+              <UploadZone onFilesReady={handleFilesReady} />
 
               <p style={{ 
                 fontSize: '0.875rem', 
                 color: '#6b7280', 
-                marginTop: '1rem',
+                marginTop: '1.5rem',
                 marginBottom: 0
               }}>
                 Supports: Excel ↔ Excel • CSV ↔ CSV • Excel ↔ CSV cross-format
@@ -306,9 +160,9 @@ export default function Home() {
         <FeatureSection />
         
         <PricingSection 
-          file1={file1} 
-          file2={file2} 
-          onCompare={handleProceedToComparison} 
+          file1={null} 
+          file2={null} 
+          onCompare={() => {}} 
         />
 
         <Footer />
