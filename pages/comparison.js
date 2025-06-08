@@ -1,4 +1,4 @@
-// /pages/comparison.js
+// /pages/comparison.js - Enhanced for Large PDF Support
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -6,9 +6,7 @@ import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import HeaderMapper from '../components/HeaderMapper';
 import { detectFileType } from '../utils/fileDetection';
-import { comparePDFFiles } from '../utils/pdfFileComparison1';
-// Import your existing Excel/CSV comparison functions
-// import { compareExcelFiles, compareCSVFiles } from '../utils/fileComparison';
+import { comparePDFFiles, setProgressCallback } from '../utils/largePdfFileComparison';
 
 export default function Comparison() {
   const router = useRouter();
@@ -18,7 +16,17 @@ export default function Comparison() {
   const [comparisonType, setComparisonType] = useState(null);
   const [error, setError] = useState(null);
 
-  // For Excel/CSV comparisons (your existing state)
+  // Large PDF specific state
+  const [isLargeFile, setIsLargeFile] = useState(false);
+  const [processingProgress, setProcessingProgress] = useState({
+    stage: '',
+    progress: 0,
+    message: '',
+    isActive: false
+  });
+  const [estimatedTime, setEstimatedTime] = useState(null);
+
+  // For Excel/CSV comparisons (existing state)
   const [showHeaderMapper, setShowHeaderMapper] = useState(false);
   const [sheets, setSheets] = useState({ file1: [], file2: [] });
   const [selectedSheets, setSelectedSheets] = useState({ file1: 0, file2: 0 });
@@ -39,11 +47,23 @@ export default function Comparison() {
 
   useEffect(() => {
     loadFileData();
+    
+    // Set up progress callback for large PDF processing
+    setProgressCallback((progressData) => {
+      setProcessingProgress({
+        ...progressData,
+        isActive: true
+      });
+    });
+
+    // Cleanup progress callback on unmount
+    return () => {
+      setProgressCallback(null);
+    };
   }, []);
 
   const loadFileData = async () => {
     try {
-      // Load file info from sessionStorage (your existing logic)
       const file1Info = JSON.parse(sessionStorage.getItem('veridiff_file1_info') || 'null');
       const file2Info = JSON.parse(sessionStorage.getItem('veridiff_file2_info') || 'null');
 
@@ -54,27 +74,32 @@ export default function Comparison() {
 
       setFileInfo({ file1: file1Info, file2: file2Info });
 
-      // Detect comparison type based on file extensions
+      // Check if files are large (50MB+)
+      const totalSize = (file1Info.size + file2Info.size) / 1024 / 1024;
+      const isLarge = totalSize > 50 || file1Info.size > 25 * 1024 * 1024 || file2Info.size > 25 * 1024 * 1024;
+      setIsLargeFile(isLarge);
+
+      if (isLarge) {
+        // Estimate processing time for large files
+        const estimatedMinutes = Math.ceil(totalSize / 10); // Rough estimate: 10MB per minute
+        setEstimatedTime(estimatedMinutes);
+      }
+
       const file1Type = getFileTypeFromName(file1Info.name);
       const file2Type = getFileTypeFromName(file2Info.name);
       
       console.log('File types detected:', { file1Type, file2Type });
 
-      // Determine comparison strategy
       if (file1Type === 'pdf' && file2Type === 'pdf') {
         setComparisonType('pdf');
         setFileType('pdf');
         setIsLoading(false);
       } else if (['excel', 'csv'].includes(file1Type) && ['excel', 'csv'].includes(file2Type)) {
         setComparisonType('tabular');
-        // Use your existing file detection logic for Excel/CSV
         const detectedFileType = detectFileType(file1Info, file2Info);
         setFileType(detectedFileType);
-        
-        // Load sheets and headers for Excel/CSV files (your existing logic)
         await loadSheetsAndHeaders();
       } else {
-        // This shouldn't happen with our validation, but just in case
         setError(`Incompatible file types: ${file1Type} and ${file2Type} cannot be compared together.`);
         setIsLoading(false);
       }
@@ -95,11 +120,7 @@ export default function Comparison() {
   };
 
   const loadSheetsAndHeaders = async () => {
-    // Your existing sheet and header loading logic for Excel/CSV files
     try {
-      // This would be your existing implementation
-      // For now, I'll show the structure you'd follow:
-      
       const file1Data = sessionStorage.getItem('veridiff_file1_data');
       const file2Data = sessionStorage.getItem('veridiff_file2_data');
 
@@ -107,11 +128,7 @@ export default function Comparison() {
         throw new Error('File data not found');
       }
 
-      // Use your existing file processing logic here
-      // const file1Processed = await processFile(file1Data, fileInfo.file1.name);
-      // const file2Processed = await processFile(file2Data, fileInfo.file2.name);
-      
-      // For demo purposes, setting basic structure:
+      // Existing tabular file processing logic would go here
       setSheets({ 
         file1: [{ name: 'Sheet1', index: 0 }], 
         file2: [{ name: 'Sheet1', index: 0 }] 
@@ -135,13 +152,11 @@ export default function Comparison() {
     try {
       setIsLoading(true);
 
-      // Store comparison settings
       sessionStorage.setItem('veridiff_header_mappings', JSON.stringify(headerMappings));
       sessionStorage.setItem('veridiff_selected_sheets', JSON.stringify(selectedSheets));
       sessionStorage.setItem('veridiff_tolerance_settings', JSON.stringify(toleranceSettings));
       sessionStorage.setItem('veridiff_file_type', fileType);
 
-      // Navigate to results (your existing logic)
       router.push('/track-comparison');
 
     } catch (error) {
@@ -155,18 +170,25 @@ export default function Comparison() {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('🔍 Starting PDF comparison process...');
+      setProcessingProgress({
+        stage: 'Initialization',
+        progress: 0,
+        message: 'Preparing for PDF comparison...',
+        isActive: true
+      });
 
-      // Check PDF.js availability first
+      console.log('🔍 Starting enhanced PDF comparison process...');
+
+      // Enhanced PDF.js availability check
       if (typeof window === 'undefined' || !window.pdfjsLib) {
         throw new Error(
           'PDF Processing Engine Not Ready\n\n' +
           'The PDF processing library is not available.\n\n' +
-          'Please try:\n' +
-          '• Refreshing the page and waiting 30 seconds\n' +
-          '• Checking your internet connection\n' +
-          '• Disabling ad blockers temporarily\n' +
-          '• Trying a different browser\n\n' +
+          'For large PDF files, please:\n' +
+          '• Refresh the page and wait 1-2 minutes\n' +
+          '• Ensure stable internet connection\n' +
+          '• Close other browser tabs to free memory\n' +
+          '• Try using Chrome or Firefox for best large file support\n\n' +
           'If the problem persists, the PDF processing service may be temporarily unavailable.'
         );
       }
@@ -175,13 +197,13 @@ export default function Comparison() {
         throw new Error(
           window.pdfJsErrorMessage || 
           'PDF Processing Engine Failed\n\n' +
-          'The PDF processing library encountered an error during initialization.\n\n' +
-          'Please refresh the page and try again. If the problem persists, ' +
-          'try using a different browser or contact support.'
+          'The PDF processing library encountered an error.\n\n' +
+          'For large files, this often indicates memory or network issues.\n' +
+          'Please refresh the page and ensure sufficient system resources.'
         );
       }
 
-      // Load PDF file data from sessionStorage
+      // Load PDF file data
       const file1Data = sessionStorage.getItem('veridiff_file1_data');
       const file2Data = sessionStorage.getItem('veridiff_file2_data');
 
@@ -189,41 +211,60 @@ export default function Comparison() {
         throw new Error(
           'PDF File Data Missing\n\n' +
           'The uploaded PDF files are no longer available in memory.\n\n' +
-          'This can happen if:\n' +
-          '• The browser session was reset\n' +
-          '• Files were too large for browser storage\n' +
-          '• Browser security settings cleared the data\n\n' +
-          'Please return to the upload page and select your files again.'
+          'For large files (50MB+), this can happen due to:\n' +
+          '• Browser memory limitations\n' +
+          '• Session timeout\n' +
+          '• File size exceeding browser storage limits\n\n' +
+          'Please return to upload page and try:\n' +
+          '• Uploading smaller files (under 50MB each)\n' +
+          '• Using files with fewer pages\n' +
+          '• Closing other browser tabs before uploading'
         );
       }
 
-      console.log('📁 Converting file data for PDF processing...');
+      console.log('📁 Converting large file data for PDF processing...');
+      setProcessingProgress({
+        stage: 'File Preparation',
+        progress: 5,
+        message: 'Converting file data for processing...',
+        isActive: true
+      });
 
-      // Convert base64 back to binary for PDF processing
       let file1Binary, file2Binary;
       
       try {
         file1Binary = Uint8Array.from(atob(file1Data), c => c.charCodeAt(0));
         file2Binary = Uint8Array.from(atob(file2Data), c => c.charCodeAt(0));
         
-        console.log(`📊 File sizes: ${(file1Binary.length/1024).toFixed(1)}KB, ${(file2Binary.length/1024).toFixed(1)}KB`);
+        const size1 = (file1Binary.length/1024/1024).toFixed(1);
+        const size2 = (file2Binary.length/1024/1024).toFixed(1);
+        console.log(`📊 Large file sizes: ${size1}MB, ${size2}MB`);
+        
+        setProcessingProgress({
+          stage: 'File Preparation',
+          progress: 10,
+          message: `Files ready: ${size1}MB + ${size2}MB. Starting PDF engine...`,
+          isActive: true
+        });
+        
       } catch (conversionError) {
         throw new Error(
-          'File Data Conversion Error\n\n' +
+          'Large File Data Conversion Error\n\n' +
           'Failed to process the uploaded PDF files.\n\n' +
-          'This might be caused by:\n' +
-          '• Corrupted file data in browser storage\n' +
-          '• Files that are too large\n' +
-          '• Browser compatibility issues\n\n' +
-          'Please try:\n' +
-          '• Uploading the files again\n' +
-          '• Using smaller PDF files\n' +
-          '• Trying a different browser'
+          'For large files, this might be caused by:\n' +
+          '• Files exceeding browser memory limits\n' +
+          '• Corrupted data during upload\n' +
+          '• Browser compatibility issues with large files\n\n' +
+          'Solutions:\n' +
+          '• Try smaller PDF files (under 25MB each)\n' +
+          '• Split large PDFs into sections\n' +
+          '• Use a different browser\n' +
+          '• Restart browser and try again'
         );
       }
 
-      // Perform PDF comparison with enhanced error handling
-      console.log('⚙️ Starting PDF comparison engine...');
+      // Start the comparison process
+      console.log('⚙️ Starting large PDF comparison engine...');
       
       const comparisonResults = await comparePDFFiles(
         file1Binary.buffer, 
@@ -231,38 +272,165 @@ export default function Comparison() {
         pdfOptions
       );
 
-      console.log('✅ PDF comparison completed successfully');
+      console.log('✅ Large PDF comparison completed successfully');
 
-      // Store PDF results and metadata
+      // Store results
       sessionStorage.setItem('veridiff_pdf_results', JSON.stringify(comparisonResults));
       sessionStorage.setItem('veridiff_comparison_type', 'pdf');
       sessionStorage.setItem('veridiff_pdf_options', JSON.stringify(pdfOptions));
 
+      setProcessingProgress({
+        stage: 'Complete',
+        progress: 100,
+        message: 'Comparison completed! Redirecting to results...',
+        isActive: false
+      });
+
       // Navigate to results
-      router.push('/track-comparison');
+      setTimeout(() => {
+        router.push('/track-comparison');
+      }, 1500);
 
     } catch (error) {
-      console.error('❌ PDF comparison error:', error);
+      console.error('❌ Large PDF comparison error:', error);
       
-      // Enhanced error handling with user-friendly messages
       let userMessage = error.message;
       
-      // Add helpful context for common errors
       if (error.message.includes('PDF.js')) {
-        userMessage = error.message + '\n\nTechnical Note: This error is related to the PDF processing library loading.';
-      } else if (error.message.includes('timeout') || error.message.includes('timed out')) {
-        userMessage = error.message + '\n\nSuggestion: Try using smaller PDF files or check your internet connection.';
+        userMessage = error.message + '\n\n⚠️ Technical Note: PDF processing library issue.';
       } else if (error.message.includes('memory') || error.message.includes('Memory')) {
-        userMessage = error.message + '\n\nSuggestion: Try closing other browser tabs or using smaller PDF files.';
+        userMessage = error.message + '\n\n💡 Suggestion: Try closing other applications and browser tabs.';
+      } else if (error.message.includes('timeout') || error.message.includes('timed out')) {
+        userMessage = error.message + '\n\n⏰ Suggestion: Large files may need 30+ minutes. Please be patient.';
       }
       
       setError(userMessage);
       setIsLoading(false);
+      setProcessingProgress({
+        stage: 'Error',
+        progress: 0,
+        message: 'Processing failed',
+        isActive: false
+      });
     }
   };
 
+  const renderLargePDFWarning = () => {
+    if (!isLargeFile) return null;
+
+    return (
+      <div style={{
+        background: '#fffbeb',
+        border: '2px solid #f59e0b',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '20px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
+          <div style={{ fontSize: '2rem' }}>⚠️</div>
+          <div>
+            <h3 style={{ margin: 0, color: '#92400e', fontSize: '1.2rem', fontWeight: '600' }}>
+              Large PDF Files Detected
+            </h3>
+            <p style={{ margin: '5px 0 0 0', color: '#92400e', fontSize: '0.95rem' }}>
+              Total size: {((fileInfo.file1?.size + fileInfo.file2?.size) / 1024 / 1024).toFixed(1)}MB
+            </p>
+          </div>
+        </div>
+        
+        <div style={{ fontSize: '0.9rem', color: '#92400e', lineHeight: '1.6' }}>
+          <div style={{ marginBottom: '12px' }}>
+            <strong>Processing Requirements:</strong>
+          </div>
+          <ul style={{ margin: '0 0 15px 20px', padding: 0 }}>
+            <li>Estimated processing time: <strong>{estimatedTime} - {estimatedTime * 2} minutes</strong></li>
+            <li>Recommended: 8GB+ system RAM</li>
+            <li>Keep browser tab active during processing</li>
+            <li>Ensure stable internet connection</li>
+          </ul>
+          
+          <div style={{ marginBottom: '12px' }}>
+            <strong>Optimization Tips:</strong>
+          </div>
+          <ul style={{ margin: '0 0 0 20px', padding: 0 }}>
+            <li>Close other browser tabs and applications</li>
+            <li>Use Chrome or Firefox for best performance</li>
+            <li>Consider splitting very large PDFs (75MB+) into sections</li>
+            <li>Process during off-peak hours if possible</li>
+          </ul>
+        </div>
+      </div>
+    );
+  };
+
+  const renderProgressIndicator = () => {
+    if (!processingProgress.isActive && processingProgress.progress === 0) return null;
+
+    return (
+      <div style={{
+        background: 'white',
+        border: '2px solid #3b82f6',
+        borderRadius: '12px',
+        padding: '25px',
+        marginBottom: '20px'
+      }}>
+        <div style={{ marginBottom: '15px' }}>
+          <h3 style={{ margin: '0 0 5px 0', color: '#1e40af', fontSize: '1.2rem' }}>
+            🔄 {processingProgress.stage}
+          </h3>
+          <p style={{ margin: 0, color: '#3730a3', fontSize: '0.95rem' }}>
+            {processingProgress.message}
+          </p>
+        </div>
+        
+        <div style={{
+          background: '#e0e7ff',
+          borderRadius: '10px',
+          height: '12px',
+          overflow: 'hidden',
+          marginBottom: '10px'
+        }}>
+          <div style={{
+            background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
+            height: '100%',
+            width: `${processingProgress.progress}%`,
+            transition: 'width 0.3s ease',
+            borderRadius: '10px'
+          }} />
+        </div>
+        
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: '0.85rem',
+          color: '#4338ca'
+        }}>
+          <span>{processingProgress.progress}% Complete</span>
+          {isLargeFile && estimatedTime && processingProgress.progress > 0 && (
+            <span>
+              Est. remaining: {Math.round((100 - processingProgress.progress) * estimatedTime / 100)} min
+            </span>
+          )}
+        </div>
+        
+        {isLargeFile && (
+          <div style={{
+            marginTop: '15px',
+            padding: '10px',
+            background: '#f0f9ff',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
+            color: '#0369a1'
+          }}>
+            💡 <strong>Large File Processing:</strong> Please keep this tab active and avoid closing the browser. 
+            Large PDFs may take 20-60 minutes to process completely.
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderPDFOptions = () => {
-    // Check PDF.js loading status
     const isPDFJSReady = typeof window !== 'undefined' && window.pdfJsReady;
     const isPDFJSError = typeof window !== 'undefined' && window.pdfJsError;
     const isPDFJSLoading = typeof window !== 'undefined' && !window.pdfJsReady && !window.pdfJsError;
@@ -285,7 +453,13 @@ export default function Comparison() {
           📕 PDF Comparison Options
         </h3>
 
-        {/* PDF.js Loading Status */}
+        {/* Progress Indicator */}
+        {renderProgressIndicator()}
+
+        {/* Large File Warning */}
+        {renderLargePDFWarning()}
+
+        {/* PDF.js Status Indicators */}
         {isPDFJSLoading && (
           <div style={{
             background: '#fffbeb',
@@ -303,13 +477,15 @@ export default function Comparison() {
                 Loading PDF Processing Engine...
               </div>
               <div style={{ fontSize: '0.9rem', color: '#92400e' }}>
-                Please wait while we initialize the PDF comparison system. This usually takes 10-30 seconds.
+                {isLargeFile 
+                  ? 'Large file mode: This may take 1-2 minutes to initialize...'
+                  : 'Please wait while we initialize the PDF comparison system.'
+                }
               </div>
             </div>
           </div>
         )}
 
-        {/* PDF.js Error Status */}
         {isPDFJSError && (
           <div style={{
             background: '#fef2f2',
@@ -324,20 +500,14 @@ export default function Comparison() {
             <div style={{ fontSize: '0.9rem', color: '#dc2626', marginBottom: '15px' }}>
               {window.pdfJsErrorMessage || 'The PDF processing engine failed to load properly.'}
             </div>
-            <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-              <strong>Solutions to try:</strong>
-              <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-                <li>Refresh the page and wait 30-60 seconds</li>
-                <li>Check your internet connection</li>
-                <li>Disable ad blockers temporarily</li>
-                <li>Try using a different browser</li>
-                <li>Clear browser cache and cookies</li>
-              </ul>
-            </div>
+            {isLargeFile && (
+              <div style={{ fontSize: '0.85rem', color: '#7f1d1d', marginBottom: '10px' }}>
+                <strong>Large File Note:</strong> This error may be due to insufficient memory or network timeout.
+              </div>
+            )}
           </div>
         )}
 
-        {/* PDF.js Ready Status */}
         {isPDFJSReady && (
           <div style={{
             background: '#f0fdf4',
@@ -351,11 +521,12 @@ export default function Comparison() {
           }}>
             <div style={{ fontSize: '1.2rem' }}>✅</div>
             <div style={{ fontWeight: '600', color: '#166534' }}>
-              PDF Processing Engine Ready
+              PDF Processing Engine Ready {isLargeFile ? '(Large File Mode)' : ''}
             </div>
           </div>
         )}
 
+        {/* PDF Options */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
@@ -390,7 +561,10 @@ export default function Comparison() {
               margin: '0 0 0 30px',
               lineHeight: '1.4'
             }}>
-              Focus on content changes rather than formatting differences like spacing and fonts.
+              {isLargeFile 
+                ? 'Recommended for large files: Focus on content changes rather than formatting.'
+                : 'Focus on content changes rather than formatting differences like spacing and fonts.'
+              }
             </p>
           </div>
 
@@ -422,11 +596,15 @@ export default function Comparison() {
               margin: '0 0 0 30px',
               lineHeight: '1.4'
             }}>
-              Compare documents page-by-page for detailed analysis and better organization of results.
+              {isLargeFile
+                ? 'Essential for large files: Organizes results by page for better navigation.'
+                : 'Compare documents page-by-page for detailed analysis and better organization.'
+              }
             </p>
           </div>
         </div>
 
+        {/* Document Information */}
         <div style={{
           background: '#f8fafc',
           padding: '15px',
@@ -452,6 +630,9 @@ export default function Comparison() {
               <br />
               <span style={{ color: '#6b7280' }}>
                 Size: {fileInfo.file1 ? (fileInfo.file1.size / 1024 / 1024).toFixed(1) : 0}MB
+                {fileInfo.file1 && fileInfo.file1.size > 50 * 1024 * 1024 && 
+                  <span style={{ color: '#f59e0b', fontWeight: '600' }}> (Large)</span>
+                }
               </span>
             </div>
             <div>
@@ -459,36 +640,62 @@ export default function Comparison() {
               <br />
               <span style={{ color: '#6b7280' }}>
                 Size: {fileInfo.file2 ? (fileInfo.file2.size / 1024 / 1024).toFixed(1) : 0}MB
+                {fileInfo.file2 && fileInfo.file2.size > 50 * 1024 * 1024 && 
+                  <span style={{ color: '#f59e0b', fontWeight: '600' }}> (Large)</span>
+                }
               </span>
             </div>
           </div>
+          
+          {isLargeFile && (
+            <div style={{
+              marginTop: '10px',
+              padding: '8px',
+              background: '#fef3c7',
+              borderRadius: '4px',
+              fontSize: '0.85rem',
+              color: '#92400e'
+            }}>
+              ⚠️ Large files detected. Processing may take {estimatedTime}-{estimatedTime * 2} minutes.
+            </div>
+          )}
         </div>
 
+        {/* Compare Button */}
         <button
           onClick={handlePDFComparison}
-          disabled={isLoading || !isPDFJSReady}
+          disabled={isLoading || !isPDFJSReady || processingProgress.isActive}
           style={{
-            background: (isLoading || !isPDFJSReady) ? '#9ca3af' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+            background: (isLoading || !isPDFJSReady || processingProgress.isActive) 
+              ? '#9ca3af' 
+              : isLargeFile 
+                ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                : 'linear-gradient(135deg, #2563eb, #7c3aed)',
             color: 'white',
             border: 'none',
             padding: '12px 30px',
             borderRadius: '8px',
             fontSize: '1rem',
             fontWeight: '600',
-            cursor: (isLoading || !isPDFJSReady) ? 'not-allowed' : 'pointer',
+            cursor: (isLoading || !isPDFJSReady || processingProgress.isActive) ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '10px',
             width: '100%',
-            maxWidth: '300px',
+            maxWidth: '400px',
             margin: '0 auto'
           }}
         >
-          {isLoading ? (
+          {processingProgress.isActive ? (
             <>
               <span>⏳</span>
-              Processing PDFs...
+              Processing Large PDFs...
+            </>
+          ) : isLoading ? (
+            <>
+              <span>⏳</span>
+              Initializing...
             </>
           ) : !isPDFJSReady ? (
             <>
@@ -497,8 +704,8 @@ export default function Comparison() {
             </>
           ) : (
             <>
-              <span>📊</span>
-              Compare PDF Documents
+              <span>{isLargeFile ? '🔥' : '📊'}</span>
+              {isLargeFile ? 'Start Large PDF Comparison' : 'Compare PDF Documents'}
             </>
           )}
         </button>
@@ -510,13 +717,17 @@ export default function Comparison() {
             fontSize: '0.85rem', 
             color: '#6b7280' 
           }}>
-            The PDF processing engine is still loading. Please wait...
+            {isLargeFile 
+              ? 'Large file processing engine loading... Please wait up to 2 minutes.'
+              : 'PDF processing engine loading...'
+            }
           </div>
         )}
       </div>
     );
   };
 
+  // Rest of your existing error and loading render functions...
   if (error) {
     return (
       <>
@@ -549,7 +760,8 @@ export default function Comparison() {
               <p style={{
                 color: '#6b7280',
                 marginBottom: '25px',
-                lineHeight: '1.6'
+                lineHeight: '1.6',
+                whiteSpace: 'pre-line'
               }}>
                 {error}
               </p>
@@ -605,7 +817,7 @@ export default function Comparison() {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
             }}>
-              🔍 File Comparison Setup
+              {isLargeFile ? '🔥 Large File Comparison Setup' : '🔍 File Comparison Setup'}
             </h1>
             <p style={{
               fontSize: '1.1rem',
@@ -614,14 +826,16 @@ export default function Comparison() {
               margin: '0 auto'
             }}>
               {comparisonType === 'pdf' 
-                ? 'Configure your PDF document comparison settings'
+                ? isLargeFile
+                  ? 'Configure your large PDF document comparison settings'
+                  : 'Configure your PDF document comparison settings'
                 : 'Set up field mapping and comparison options for your data files'
               }
             </p>
           </div>
 
           {/* Loading State */}
-          {isLoading && (
+          {isLoading && !processingProgress.isActive && (
             <div style={{
               background: 'white',
               borderRadius: '12px',
@@ -636,11 +850,16 @@ export default function Comparison() {
                 marginBottom: '10px',
                 color: '#1f2937'
               }}>
-                {comparisonType === 'pdf' ? 'Processing PDF Documents...' : 'Loading File Data...'}
+                {comparisonType === 'pdf' 
+                  ? isLargeFile ? 'Preparing Large PDF Processing...' : 'Processing PDF Documents...'
+                  : 'Loading File Data...'
+                }
               </h3>
               <p style={{ color: '#6b7280' }}>
                 {comparisonType === 'pdf' 
-                  ? 'Analyzing document structure and extracting text content'
+                  ? isLargeFile 
+                    ? 'Initializing large file processing engine and checking system resources...'
+                    : 'Analyzing document structure and extracting text content'
                   : 'Reading file structure and preparing comparison options'
                 }
               </p>
@@ -650,7 +869,7 @@ export default function Comparison() {
           {/* PDF Comparison Interface */}
           {!isLoading && comparisonType === 'pdf' && renderPDFOptions()}
 
-          {/* Excel/CSV Comparison Interface (Your existing HeaderMapper) */}
+          {/* Excel/CSV Comparison Interface */}
           {!isLoading && comparisonType === 'tabular' && showHeaderMapper && (
             <HeaderMapper
               fileType={fileType}
