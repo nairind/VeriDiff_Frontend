@@ -1,3 +1,4 @@
+import { SmartDiff, compareWithSmartDiff } from './smartDiff.js';
 // utils/largePdfFileComparison.js
 // ENHANCED PDF.js IMPLEMENTATION FOR LARGE FILES (UP TO 100MB) - FIXED VERSION
 
