@@ -641,13 +641,28 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
         function highlightSearchText(text, searchTerm) {
             if (!searchTerm.trim()) return text;
             
-            const regex = new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\\\]]/g, '\\\\        function highlightSearchText(text, searchTerm) {
-            if (!searchTerm.trim()) return text;
+            // Simple case-insensitive text highlighting without regex complications
+            const lowerText = text.toLowerCase();
+            const lowerTerm = searchTerm.toLowerCase().trim();
             
-            const regex = new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-            return text.replace(regex, '<span class="highlight">$1</span>');
-        }') + ')', 'gi');
-            return text.replace(regex, '<span class="highlight">$1</span>');
+            if (!lowerText.includes(lowerTerm)) return text;
+            
+            let result = '';
+            let lastIndex = 0;
+            let index = lowerText.indexOf(lowerTerm);
+            
+            while (index !== -1) {
+                // Add text before match
+                result += text.substring(lastIndex, index);
+                // Add highlighted match
+                result += '<span class="highlight">' + text.substring(index, index + lowerTerm.length) + '</span>';
+                lastIndex = index + lowerTerm.length;
+                index = lowerText.indexOf(lowerTerm, lastIndex);
+            }
+            
+            // Add remaining text
+            result += text.substring(lastIndex);
+            return result;
         }
         
         function filterPages(pages, fileNumber) {
