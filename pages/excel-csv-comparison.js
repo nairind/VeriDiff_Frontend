@@ -283,10 +283,46 @@ export default function ExcelCSVComparison() {
         comparisonResults = await compareFiles(file1, file2, headerMappings);
       }
 
-      console.log('✅ Comparison completed:', {
+      // DEBUG: Check what the comparison actually returned
+      console.log('🔍 DEBUG - Raw comparison results:', comparisonResults);
+      console.log('🔍 DEBUG - Results type:', typeof comparisonResults);
+      console.log('🔍 DEBUG - Results keys:', comparisonResults ? Object.keys(comparisonResults) : 'null');
+      console.log('🔍 DEBUG - Results structure:', {
+        hasResults: !!comparisonResults,
+        hasTotalRecords: comparisonResults?.total_records !== undefined,
+        hasDifferencesFound: comparisonResults?.differences_found !== undefined,
+        hasMatchesFound: comparisonResults?.matches_found !== undefined,
+        hasResultsArray: !!comparisonResults?.results,
+        resultsArrayType: Array.isArray(comparisonResults?.results) ? 'array' : typeof comparisonResults?.results,
+        resultsArrayLength: comparisonResults?.results?.length
+      });
+
+      // Validate results before using them
+      if (!comparisonResults) {
+        throw new Error('Comparison returned no results (null/undefined)');
+      }
+      
+      if (typeof comparisonResults !== 'object') {
+        throw new Error(`Comparison returned invalid type: ${typeof comparisonResults}`);
+      }
+      
+      if (comparisonResults.total_records === undefined) {
+        throw new Error('Comparison results missing total_records property');
+      }
+      
+      if (comparisonResults.results === undefined) {
+        throw new Error('Comparison results missing results array');
+      }
+      
+      if (!Array.isArray(comparisonResults.results)) {
+        throw new Error(`Comparison results.results is not an array: ${typeof comparisonResults.results}`);
+      }
+
+      console.log('✅ Comparison completed and validated:', {
         total_records: comparisonResults.total_records,
         differences_found: comparisonResults.differences_found,
-        matches_found: comparisonResults.matches_found
+        matches_found: comparisonResults.matches_found,
+        results_count: comparisonResults.results.length
       });
 
       // Store results in sessionStorage
