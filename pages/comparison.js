@@ -1,4 +1,4 @@
-// /pages/comparison.js - Enhanced for Large PDF Support
+// /pages/comparison.js - Enhanced for Large PDF Support + FIXED Excel/CSV Logic
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -7,6 +7,11 @@ import Footer from '../components/layout/Footer';
 import HeaderMapper from '../components/HeaderMapper';
 import { detectFileType } from '../utils/fileDetection';
 import { comparePDFFiles, setProgressCallback } from '../utils/pdfFileComparison1';
+
+// FIXED: Import Excel/CSV comparison utilities
+import { compareFiles } from '../utils/simpleCSVComparison';
+import { compareExcelFiles, getExcelFileInfo } from '../utils/excelFileComparison';
+import { compareExcelCSVFiles, getExcelCSVFileInfo } from '../utils/excelCSVComparison';
 
 export default function Comparison() {
   const router = useRouter();
@@ -37,6 +42,11 @@ export default function Comparison() {
     toleranceType: 'percentage'
   });
 
+  // FIXED: Add state for Excel/CSV processing
+  const [suggestedMappings, setSuggestedMappings] = useState([]);
+  const [sampleData1, setSampleData1] = useState([]);
+  const [sampleData2, setSampleData2] = useState([]);
+
   // For PDF comparisons
   const [pdfOptions, setPdfOptions] = useState({
     compareMode: 'text',
@@ -61,6 +71,33 @@ export default function Comparison() {
       setProgressCallback(null);
     };
   }, []);
+
+  // FIXED: Helper function to convert base64 to File object
+  const base64ToFile = (base64Data, fileName, mimeType) => {
+    try {
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      return new File([byteArray], fileName, { type: mimeType });
+    } catch (error) {
+      console.error('Error converting base64 to File:', error);
+      throw new Error(`Failed to convert ${fileName} data`);
+    }
+  };
+
+  // FIXED: Helper function to get MIME type from file extension
+  const getMimeType = (fileName) => {
+    const extension = fileName.toLowerCase().split('.').pop();
+    const mimeTypes = {
+      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'xls': 'application/vnd.ms-excel',
+      'csv': 'text/csv'
+    };
+    return mimeTypes[extension] || 'application/octet-stream';
+  };
 
   const loadFileData = async () => {
     try {
@@ -119,49 +156,353 @@ export default function Comparison() {
     return 'unknown';
   };
 
+  // FIXED: Actually load sheets and headers from real file data
   const loadSheetsAndHeaders = async () => {
     try {
+      console.log('🔍 Loading real sheets and headers from file data...');
+      
+      // Get file data from sessionStorage
       const file1Data = sessionStorage.getItem('veridiff_file1_data');
       const file2Data = sessionStorage.getItem('veridiff_file2_data');
+
+      if (!file1Data || !file2Data) {
+        throw new Error('File data not found in sessionStorage');
+      }
+
+      const file1Info = JSON.parse(sessionStorage.getItem('veridiff_file1_info') || '{}');
+      const file2Info = JSON.parse(sessionStorage.getItem('veridiff_file2_info') || '{}');
+
+      // Convert base64 to File objects
+      const file1MimeType = getMimeType(file1Info.name);
+      const file2MimeType = getMimeType(file2Info.name);
+      
+      const file1 = base64ToFile(file1Data, file1Info.name, file1MimeType);
+      const file2 = base64ToFile(file2Data, file2Info.name, file2MimeType);
+
+      console.log('📁 Converted files for processing:', { 
+        file1: file1.name, 
+        file2: file2.name,
+        fileType 
+      });
+
+      let sheetsData = { file1: [], file2: [] };
+      let headersData = { file1: [], file2: [] };
+      let sampleData1 = [];
+      let sampleData2 = [];
+
+      // Parse files based on type
+      if (fileType === 'excel') {
+        // Excel ↔ Excel
+        console.log('📊 Processing Excel ↔ Excel comparison...');
+        
+        const [file1Info, file2Info] = await Promise.all([
+          getExcelFileInfo(file1),
+          getExcelFileInfo(file2)
+        ]);
+
+        sheetsData = {
+          file1: file1Info.sheets,
+          file2: file2Info.sheets
+        };
+
+        // Get headers from default sheets
+        const defaultSheet1 = file1Info.defaultSheet || file1Info.sheets[0]?.name;
+        const defaultSheet2 = file2Info.defaultSheet || file2Info.sheets[0]?.name;
+
+        const [result1, result2] = await Promise.all([
+          import('../utils/excelFileComparison').then(module => 
+            module.parseExcelFile(file1, defaultSheet1)
+          ),
+          import('../utils/excelFileComparison').then(module => 
+            module.parseExcelFile(file2, defaultSheet2)
+          )
+        ]);
+
+        const data1 = result1.data || result1;
+        const data2 = result2.data || result2;
+
+        if (Array.isArray(data1) && data1.length > 0) {
+          headersData.file1 = Object.keys(data1[0]);
+          sampleData1 = data1.slice(0, 5);
+        }
+        if (Array.isArray(data2) && data2.length > 0) {
+          headersData.file2 = Object.keys(data2[0]);
+          sampleData2 = data2.slice(0, 5);
+        }
+
+        setSelectedSheets({ 
+          file1: defaultSheet1, 
+          file2: defaultSheet2 
+        });
+
+      } else if (fileType === 'csv') {
+        // CSV ↔ CSV
+        console.log('📄 Processing CSV ↔ CSV comparison...');
+        
+        const [data1, data2] = await Promise.all([
+          import('../utils/simpleCSVComparison').then(module => 
+            module.parseCSVFile(file1)
+          ),
+          import('../utils/simpleCSVComparison').then(module => 
+            module.parseCSVFile(file2)
+          )
+        ]);
+
+        if (Array.isArray(data1) && data1.length > 0) {
+          headersData.file1 = Object.keys(data1[0]);
+          sampleData1 = data1.slice(0, 5);
+        }
+        if (Array.isArray(data2) && data2.length > 0) {
+          headersData.file2 = Object.keys(data2[0]);
+          sampleData2 = data2.slice(0, 5);
+        }
+
+        // CSV files don't have sheets
+        sheetsData = {
+          file1: [{ name: 'CSV Data', index: 0 }],
+          file2: [{ name: 'CSV Data', index: 0 }]
+        };
+
+      } else if (fileType === 'excel_csv' || fileType === 'csv_excel_swapped') {
+        // Mixed format
+        console.log('🔄 Processing Excel ↔ CSV comparison...');
+        
+        const isFile1Excel = fileType === 'excel_csv';
+        const excelFile = isFile1Excel ? file1 : file2;
+        const csvFile = isFile1Excel ? file2 : file1;
+
+        // Get Excel info
+        const excelInfo = await getExcelFileInfo(excelFile);
+        const defaultExcelSheet = excelInfo.defaultSheet || excelInfo.sheets[0]?.name;
+
+        // Parse both files
+        const [excelResult, csvData] = await Promise.all([
+          import('../utils/excelFileComparison').then(module => 
+            module.parseExcelFile(excelFile, defaultExcelSheet)
+          ),
+          import('../utils/simpleCSVComparison').then(module => 
+            module.parseCSVFile(csvFile)
+          )
+        ]);
+
+        const excelData = excelResult.data || excelResult;
+
+        if (isFile1Excel) {
+          // File 1 is Excel, File 2 is CSV
+          sheetsData = {
+            file1: excelInfo.sheets,
+            file2: [{ name: 'CSV Data', index: 0 }]
+          };
+          
+          if (Array.isArray(excelData) && excelData.length > 0) {
+            headersData.file1 = Object.keys(excelData[0]);
+            sampleData1 = excelData.slice(0, 5);
+          }
+          if (Array.isArray(csvData) && csvData.length > 0) {
+            headersData.file2 = Object.keys(csvData[0]);
+            sampleData2 = csvData.slice(0, 5);
+          }
+          
+          setSelectedSheets({ 
+            file1: defaultExcelSheet, 
+            file2: 'CSV Data' 
+          });
+        } else {
+          // File 1 is CSV, File 2 is Excel  
+          sheetsData = {
+            file1: [{ name: 'CSV Data', index: 0 }],
+            file2: excelInfo.sheets
+          };
+          
+          if (Array.isArray(csvData) && csvData.length > 0) {
+            headersData.file1 = Object.keys(csvData[0]);
+            sampleData1 = csvData.slice(0, 5);
+          }
+          if (Array.isArray(excelData) && excelData.length > 0) {
+            headersData.file2 = Object.keys(excelData[0]);
+            sampleData2 = excelData.slice(0, 5);
+          }
+          
+          setSelectedSheets({ 
+            file1: 'CSV Data', 
+            file2: defaultExcelSheet 
+          });
+        }
+      }
+
+      // Create suggested mappings based on header similarity
+      const mappings = [];
+      headersData.file1.forEach(header1 => {
+        // Find best match in file2 headers
+        let bestMatch = '';
+        let bestScore = 0;
+        
+        headersData.file2.forEach(header2 => {
+          const score = calculateSimilarity(header1, header2);
+          if (score > bestScore && score > 0.5) {
+            bestScore = score;
+            bestMatch = header2;
+          }
+        });
+
+        mappings.push({
+          file1Header: header1,
+          file2Header: bestMatch,
+          similarity: bestScore
+        });
+      });
+
+      console.log('✅ Successfully loaded file data:', {
+        sheets: sheetsData,
+        headers: headersData,
+        mappings: mappings.length,
+        sampleData1: sampleData1.length,
+        sampleData2: sampleData2.length
+      });
+
+      // Set the state
+      setSheets(sheetsData);
+      setHeaders(headersData);
+      setSuggestedMappings(mappings);
+      setSampleData1(sampleData1);
+      setSampleData2(sampleData2);
+      setShowHeaderMapper(true);
+      setIsLoading(false);
+
+    } catch (error) {
+      console.error('❌ Error loading sheets and headers:', error);
+      setError(`Failed to process files: ${error.message}`);
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to calculate header similarity
+  const calculateSimilarity = (str1, str2) => {
+    const s1 = str1.toLowerCase().trim();
+    const s2 = str2.toLowerCase().trim();
+    
+    if (s1 === s2) return 1.0;
+    
+    // Simple similarity based on common characters
+    const longer = s1.length > s2.length ? s1 : s2;
+    const shorter = s1.length > s2.length ? s2 : s1;
+    
+    if (longer.length === 0) return 1.0;
+    
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  };
+
+  // Helper function for edit distance
+  const levenshteinDistance = (str1, str2) => {
+    const matrix = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  };
+
+  // FIXED: Actually perform Excel/CSV comparison instead of just storing settings
+  const handleTabularComparison = async (headerMappings) => {
+    try {
+      setIsLoading(true);
+      console.log('🚀 Starting Excel/CSV comparison with mappings:', headerMappings);
+
+      // Get file data from sessionStorage
+      const file1Data = sessionStorage.getItem('veridiff_file1_data');
+      const file2Data = sessionStorage.getItem('veridiff_file2_data');
+      const file1Info = JSON.parse(sessionStorage.getItem('veridiff_file1_info') || '{}');
+      const file2Info = JSON.parse(sessionStorage.getItem('veridiff_file2_info') || '{}');
 
       if (!file1Data || !file2Data) {
         throw new Error('File data not found');
       }
 
-      // Existing tabular file processing logic would go here
-      setSheets({ 
-        file1: [{ name: 'Sheet1', index: 0 }], 
-        file2: [{ name: 'Sheet1', index: 0 }] 
-      });
-      setHeaders({ 
-        file1: ['Column1', 'Column2'], 
-        file2: ['Column1', 'Column2'] 
-      });
+      // Convert base64 to File objects
+      const file1MimeType = getMimeType(file1Info.name);
+      const file2MimeType = getMimeType(file2Info.name);
       
-      setShowHeaderMapper(true);
-      setIsLoading(false);
+      const file1 = base64ToFile(file1Data, file1Info.name, file1MimeType);
+      const file2 = base64ToFile(file2Data, file2Info.name, file2MimeType);
 
-    } catch (error) {
-      console.error('Error loading sheets and headers:', error);
-      setError('Failed to process files. Please try again.');
-      setIsLoading(false);
-    }
-  };
+      console.log('📊 Performing comparison for file type:', fileType);
 
-  const handleTabularComparison = async (headerMappings) => {
-    try {
-      setIsLoading(true);
+      let comparisonResults;
 
+      // Perform the actual comparison based on file type
+      if (fileType === 'excel') {
+        // Excel ↔ Excel comparison
+        comparisonResults = await compareExcelFiles(file1, file2, headerMappings, {
+          sheet1: selectedSheets.file1,
+          sheet2: selectedSheets.file2,
+          autoDetectAmounts: true
+        });
+        
+      } else if (fileType === 'csv') {
+        // CSV ↔ CSV comparison
+        comparisonResults = await compareFiles(file1, file2, headerMappings);
+        
+      } else if (fileType === 'excel_csv') {
+        // Excel ↔ CSV comparison
+        comparisonResults = await compareExcelCSVFiles(file1, file2, headerMappings, {
+          selectedExcelSheet: selectedSheets.file1,
+          autoDetectAmounts: true
+        });
+        
+      } else if (fileType === 'csv_excel_swapped') {
+        // CSV ↔ Excel comparison (swapped)
+        comparisonResults = await compareExcelCSVFiles(file2, file1, headerMappings, {
+          selectedExcelSheet: selectedSheets.file2,
+          autoDetectAmounts: true
+        });
+      } else {
+        throw new Error(`Unsupported file type: ${fileType}`);
+      }
+
+      console.log('✅ Comparison completed:', {
+        total_records: comparisonResults.total_records,
+        differences_found: comparisonResults.differences_found,
+        matches_found: comparisonResults.matches_found
+      });
+
+      // Store results in sessionStorage (like PDF does)
+      sessionStorage.setItem('veridiff_comparison_results', JSON.stringify(comparisonResults));
+      sessionStorage.setItem('veridiff_comparison_type', 'tabular');
+      sessionStorage.setItem('veridiff_file_type', fileType);
+      
+      // Store additional metadata for results page
       sessionStorage.setItem('veridiff_header_mappings', JSON.stringify(headerMappings));
       sessionStorage.setItem('veridiff_selected_sheets', JSON.stringify(selectedSheets));
       sessionStorage.setItem('veridiff_tolerance_settings', JSON.stringify(toleranceSettings));
-      sessionStorage.setItem('veridiff_file_type', fileType);
 
+      console.log('💾 Results stored in sessionStorage, navigating to results...');
+
+      // Navigate to results page
       router.push('/track-comparison');
 
     } catch (error) {
-      console.error('Error in tabular comparison:', error);
-      setError('Comparison failed. Please try again.');
+      console.error('❌ Excel/CSV comparison error:', error);
+      setError(`Comparison failed: ${error.message}`);
       setIsLoading(false);
     }
   };
@@ -869,18 +1210,17 @@ export default function Comparison() {
           {/* PDF Comparison Interface */}
           {!isLoading && comparisonType === 'pdf' && renderPDFOptions()}
 
-          {/* Excel/CSV Comparison Interface */}
+          {/* Excel/CSV Comparison Interface - FIXED */}
           {!isLoading && comparisonType === 'tabular' && showHeaderMapper && (
             <HeaderMapper
-              fileType={fileType}
-              sheets={sheets}
-              selectedSheets={selectedSheets}
-              setSelectedSheets={setSelectedSheets}
-              headers={headers}
-              toleranceSettings={toleranceSettings}
-              setToleranceSettings={setToleranceSettings}
-              onComparisonReady={handleTabularComparison}
-              fileInfo={fileInfo}
+              file1Headers={headers.file1}
+              file2Headers={headers.file2}
+              suggestedMappings={suggestedMappings}
+              onConfirm={handleTabularComparison}
+              onRun={handleTabularComparison}
+              sampleData1={sampleData1}
+              sampleData2={sampleData2}
+              isProcessing={isLoading}
             />
           )}
         </div>
