@@ -1,4 +1,4 @@
-// /pages/comparison.js - Enhanced for Large PDF Support + FIXED Excel/CSV Logic
+// /pages/comparison.js - Enhanced for Large PDF Support + FIXED Excel/CSV Logic + DEBUGGING
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -258,16 +258,52 @@ export default function Comparison() {
           )
         ]);
 
+        // DEBUGGING: Check what parseExcelFile actually returns
+        console.log('🔍 CRITICAL DEBUG - Parsed data check:', {
+          result1Type: typeof result1,
+          result1IsArray: Array.isArray(result1),
+          result1Keys: result1 ? Object.keys(result1) : 'null',
+          result1Data: result1?.data ? 'has data property' : 'no data property',
+          result1Sample: result1?.data ? result1.data.slice(0, 2) : result1?.slice(0, 2),
+          
+          result2Type: typeof result2,
+          result2IsArray: Array.isArray(result2),
+          result2Keys: result2 ? Object.keys(result2) : 'null',
+          result2Data: result2?.data ? 'has data property' : 'no data property'
+        });
+
         const data1 = result1.data || result1;
         const data2 = result2.data || result2;
 
+        console.log('🔍 CRITICAL DEBUG - Extracted data check:', {
+          data1Type: typeof data1,
+          data1IsArray: Array.isArray(data1),
+          data1Length: data1?.length,
+          data1FirstRow: data1?.[0],
+          data1FirstRowKeys: data1?.[0] ? Object.keys(data1[0]) : 'no first row',
+          
+          data2Type: typeof data2,
+          data2IsArray: Array.isArray(data2),
+          data2Length: data2?.length,
+          data2FirstRowKeys: data2?.[0] ? Object.keys(data2[0]) : 'no first row'
+        });
+
         if (Array.isArray(data1) && data1.length > 0) {
           headersData.file1 = Object.keys(data1[0]);
+          console.log('📋 File1 headers extracted:', headersData.file1);
           sampleData1 = data1.slice(0, 5);
+          console.log('📋 File1 sample data:', sampleData1);
+        } else {
+          console.error('❌ File1 data is not a valid array or is empty:', data1);
         }
+        
         if (Array.isArray(data2) && data2.length > 0) {
           headersData.file2 = Object.keys(data2[0]);
+          console.log('📋 File2 headers extracted:', headersData.file2);
           sampleData2 = data2.slice(0, 5);
+          console.log('📋 File2 sample data:', sampleData2);
+        } else {
+          console.error('❌ File2 data is not a valid array or is empty:', data2);
         }
 
         setSelectedSheets({ 
@@ -288,12 +324,23 @@ export default function Comparison() {
           )
         ]);
 
+        console.log('🔍 CSV DEBUG - Parsed data check:', {
+          data1Type: typeof data1,
+          data1IsArray: Array.isArray(data1),
+          data1Length: data1?.length,
+          data1FirstRow: data1?.[0],
+          data2Length: data2?.length,
+          data2FirstRow: data2?.[0]
+        });
+
         if (Array.isArray(data1) && data1.length > 0) {
           headersData.file1 = Object.keys(data1[0]);
+          console.log('📋 CSV File1 headers extracted:', headersData.file1);
           sampleData1 = data1.slice(0, 5);
         }
         if (Array.isArray(data2) && data2.length > 0) {
           headersData.file2 = Object.keys(data2[0]);
+          console.log('📋 CSV File2 headers extracted:', headersData.file2);
           sampleData2 = data2.slice(0, 5);
         }
 
@@ -381,6 +428,14 @@ export default function Comparison() {
           )
         ]);
 
+        console.log('🔍 MIXED DEBUG - Parsed data check:', {
+          excelResult: excelResult,
+          excelResultType: typeof excelResult,
+          excelData: excelResult?.data || excelResult,
+          csvData: csvData,
+          csvDataType: typeof csvData
+        });
+
         const excelData = excelResult.data || excelResult;
 
         if (isFile1Excel) {
@@ -392,10 +447,12 @@ export default function Comparison() {
           
           if (Array.isArray(excelData) && excelData.length > 0) {
             headersData.file1 = Object.keys(excelData[0]);
+            console.log('📋 Mixed File1 (Excel) headers extracted:', headersData.file1);
             sampleData1 = excelData.slice(0, 5);
           }
           if (Array.isArray(csvData) && csvData.length > 0) {
             headersData.file2 = Object.keys(csvData[0]);
+            console.log('📋 Mixed File2 (CSV) headers extracted:', headersData.file2);
             sampleData2 = csvData.slice(0, 5);
           }
           
@@ -412,10 +469,12 @@ export default function Comparison() {
           
           if (Array.isArray(csvData) && csvData.length > 0) {
             headersData.file1 = Object.keys(csvData[0]);
+            console.log('📋 Mixed File1 (CSV) headers extracted:', headersData.file1);
             sampleData1 = csvData.slice(0, 5);
           }
           if (Array.isArray(excelData) && excelData.length > 0) {
             headersData.file2 = Object.keys(excelData[0]);
+            console.log('📋 Mixed File2 (Excel) headers extracted:', headersData.file2);
             sampleData2 = excelData.slice(0, 5);
           }
           
@@ -428,6 +487,11 @@ export default function Comparison() {
 
       // Create suggested mappings based on header similarity
       const mappings = [];
+      console.log('🔍 Creating mappings from headers:', {
+        file1Headers: headersData.file1,
+        file2Headers: headersData.file2
+      });
+      
       headersData.file1.forEach(header1 => {
         // Find best match in file2 headers
         let bestMatch = '';
