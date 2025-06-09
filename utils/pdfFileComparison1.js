@@ -1004,4 +1004,6 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
 export {
   compareLargePDFFiles as comparePDFFiles,
   parseLargePDFFile as parsePDFFile
+  compareWithSmartDiff,  // Add this new export
+  SmartDiff   
 };
