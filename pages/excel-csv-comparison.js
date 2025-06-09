@@ -1,4 +1,4 @@
-// /pages/excel-csv-comparison.js - WITH SHEET SELECTOR INTEGRATION
+// /pages/excel-csv-comparison.js - COMPLETE FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -7,9 +7,9 @@ import Footer from '../components/layout/Footer';
 import HeaderMapper from '../components/HeaderMapper';
 import SheetSelector from '../components/SheetSelector';
 
-// Import Excel/CSV utilities
+// Import Excel/CSV utilities - USING CORRECT FUNCTIONS
 import { compareFiles, parseCSVFile } from '../utils/simpleCSVComparison';
-import { compareExcelFiles, parseExcelFile } from '../utils/excelFileComparison';
+import { compareExcelFiles, parseExcelFile, getExcelFileInfo } from '../utils/excelFileComparison';
 
 export default function ExcelCSVComparison() {
   const router = useRouter();
@@ -129,34 +129,40 @@ export default function ExcelCSVComparison() {
       // Check File 1 for multiple sheets (only if Excel)
       if (file1Type === 'excel') {
         const file1 = base64ToFile(file1Data, fileInfo1.name, getMimeType(fileInfo1.name));
-        const sheetsData = await getExcelSheets(file1);
+        
+        // ✅ FIXED: Use the correct function from your utilities
+        const excelInfo1 = await getExcelFileInfo(file1);
+        console.log('📊 File 1 Excel info:', excelInfo1);
         
         sheets1Info = {
           fileName: fileInfo1.name,
-          sheets: sheetsData.sheets,
-          defaultSheet: sheetsData.defaultSheet
+          sheets: excelInfo1.sheets,
+          defaultSheet: excelInfo1.defaultSheet
         };
 
-        if (sheetsData.sheets.length > 1) {
+        if (excelInfo1.sheets.length > 1) {
           needsSheetSelection = true;
-          console.log('📊 File 1 has multiple sheets:', sheetsData.sheets.length);
+          console.log('📊 File 1 has multiple sheets:', excelInfo1.sheets.length);
         }
       }
 
       // Check File 2 for multiple sheets (only if Excel)
       if (file2Type === 'excel') {
         const file2 = base64ToFile(file2Data, fileInfo2.name, getMimeType(fileInfo2.name));
-        const sheetsData = await getExcelSheets(file2);
+        
+        // ✅ FIXED: Use the correct function from your utilities
+        const excelInfo2 = await getExcelFileInfo(file2);
+        console.log('📊 File 2 Excel info:', excelInfo2);
         
         sheets2Info = {
           fileName: fileInfo2.name,
-          sheets: sheetsData.sheets,
-          defaultSheet: sheetsData.defaultSheet
+          sheets: excelInfo2.sheets,
+          defaultSheet: excelInfo2.defaultSheet
         };
 
-        if (sheetsData.sheets.length > 1) {
+        if (excelInfo2.sheets.length > 1) {
           needsSheetSelection = true;
-          console.log('📊 File 2 has multiple sheets:', sheetsData.sheets.length);
+          console.log('📊 File 2 has multiple sheets:', excelInfo2.sheets.length);
         }
       }
 
@@ -169,8 +175,8 @@ export default function ExcelCSVComparison() {
       } else {
         // No sheet selection needed - proceed directly to header loading
         console.log('📋 No sheet selection needed - proceeding to headers');
-        const defaultSheet1 = typeof sheets1Info?.defaultSheet === 'string' ? sheets1Info.defaultSheet : null;
-        const defaultSheet2 = typeof sheets2Info?.defaultSheet === 'string' ? sheets2Info.defaultSheet : null;
+        const defaultSheet1 = sheets1Info?.defaultSheet || null;
+        const defaultSheet2 = sheets2Info?.defaultSheet || null;
         
         console.log('📋 Using default sheets:', { defaultSheet1, defaultSheet2 });
         
@@ -186,97 +192,11 @@ export default function ExcelCSVComparison() {
     }
   };
 
-  const getExcelSheets = async (file) => {
-    try {
-      console.log('🔍 Getting Excel sheets for file:', file.name);
-      
-      // Try to get sheets info from your Excel parser
-      const result = await parseExcelFile(file, { sheetsOnly: true });
-      console.log('📊 Excel sheets result:', result);
-      
-      // Handle different possible return formats from your Excel parser
-      let sheets = [];
-      let defaultSheet = 'Sheet1';
-      
-      if (result && Array.isArray(result.sheets)) {
-        // Format: { sheets: [{ name: 'Sheet1', ... }] }
-        sheets = result.sheets;
-        defaultSheet = sheets[0]?.name || 'Sheet1';
-      } else if (result && Array.isArray(result)) {
-        // Format: [{ name: 'Sheet1', ... }]
-        sheets = result;
-        defaultSheet = sheets[0]?.name || 'Sheet1';
-      } else if (result && result.workbook && result.workbook.SheetNames) {
-        // Format: { workbook: { SheetNames: ['Sheet1', 'Sheet2'] } }
-        const sheetNames = result.workbook.SheetNames;
-        sheets = sheetNames.map(name => ({
-          name: name,
-          hasData: true,
-          rowCount: 0,
-          headers: [],
-          isHidden: false
-        }));
-        defaultSheet = sheetNames[0] || 'Sheet1';
-      } else {
-        // Try parsing without sheetsOnly flag to get basic info
-        console.log('🔄 Trying standard parse to detect sheets...');
-        const standardResult = await parseExcelFile(file);
-        console.log('📊 Standard parse result:', standardResult);
-        
-        // Default fallback
-        sheets = [{ 
-          name: 'Sheet1', 
-          hasData: true, 
-          rowCount: 0, 
-          headers: [],
-          isHidden: false 
-        }];
-        defaultSheet = 'Sheet1';
-      }
-      
-      // Ensure defaultSheet is always a string
-      if (typeof defaultSheet !== 'string') {
-        defaultSheet = sheets[0]?.name || 'Sheet1';
-      }
-      
-      console.log('✅ Final sheets info:', { 
-        sheetsCount: sheets.length, 
-        defaultSheet: defaultSheet,
-        sheetNames: sheets.map(s => s.name)
-      });
-      
-      return {
-        sheets: sheets,
-        defaultSheet: defaultSheet
-      };
-      
-    } catch (error) {
-      console.error('❌ Error getting Excel sheets:', error);
-      // Safe fallback
-      return {
-        sheets: [{ 
-          name: 'Sheet1', 
-          hasData: true, 
-          rowCount: 0, 
-          headers: [],
-          isHidden: false 
-        }],
-        defaultSheet: 'Sheet1'
-      };
-    }
-  };
-
   const handleSheetSelection = async (sheet1, sheet2) => {
     try {
-      console.log('📋 Sheets selected (raw):', { sheet1, sheet2, types: { sheet1: typeof sheet1, sheet2: typeof sheet2 } });
+      console.log('📋 Sheets selected:', { sheet1, sheet2, types: { sheet1: typeof sheet1, sheet2: typeof sheet2 } });
       
-      // Ensure we have string values
-      const validSheet1 = typeof sheet1 === 'string' ? sheet1 : String(sheet1);
-      const validSheet2 = typeof sheet2 === 'string' ? sheet2 : String(sheet2);
-      
-      console.log('📋 Sheets selected (validated):', { validSheet1, validSheet2 });
-      
-      setSelectedSheets({ sheet1: validSheet1, sheet2: validSheet2 });
+      setSelectedSheets({ sheet1, sheet2 });
       setSheetsSelected(true);
       setIsLoading(true);
 
@@ -285,7 +205,7 @@ export default function ExcelCSVComparison() {
       const file2Type = getFileType(fileInfo.file2.name);
 
       // Load headers for selected sheets
-      await loadHeaders(file1Type, file2Type, validSheet1, validSheet2);
+      await loadHeaders(file1Type, file2Type, sheet1, sheet2);
       
     } catch (error) {
       console.error('❌ Error handling sheet selection:', error);
@@ -344,18 +264,11 @@ export default function ExcelCSVComparison() {
       } else if (file1Type === 'excel') {
         console.log('📊 Processing File 1 as Excel...', { sheet: selectedSheet1 });
         
-        // Create options object for Excel parsing
-        const parseOptions = {};
-        if (selectedSheet1 && typeof selectedSheet1 === 'string') {
-          parseOptions.sheet = selectedSheet1;
-          parseOptions.selectedSheet = selectedSheet1;
-        }
-        
-        console.log('📊 Excel parse options for File 1:', parseOptions);
-        
-        const result1 = await parseExcelFile(file1, parseOptions);
+        // ✅ FIXED: Use correct function signature
+        const result1 = await parseExcelFile(file1, selectedSheet1);
         console.log('📊 Excel File 1 parsed:', { result: result1 });
         
+        // ✅ FIXED: Extract data correctly based on your utility function
         const data1 = result1?.data || result1;
         if (Array.isArray(data1) && data1.length > 0) {
           headersData.file1 = Object.keys(data1[0]);
@@ -378,18 +291,11 @@ export default function ExcelCSVComparison() {
       } else if (file2Type === 'excel') {
         console.log('📊 Processing File 2 as Excel...', { sheet: selectedSheet2 });
         
-        // Create options object for Excel parsing
-        const parseOptions = {};
-        if (selectedSheet2 && typeof selectedSheet2 === 'string') {
-          parseOptions.sheet = selectedSheet2;
-          parseOptions.selectedSheet = selectedSheet2;
-        }
-        
-        console.log('📊 Excel parse options for File 2:', parseOptions);
-        
-        const result2 = await parseExcelFile(file2, parseOptions);
+        // ✅ FIXED: Use correct function signature
+        const result2 = await parseExcelFile(file2, selectedSheet2);
         console.log('📊 Excel File 2 parsed:', { result: result2 });
         
+        // ✅ FIXED: Extract data correctly based on your utility function
         const data2 = result2?.data || result2;
         if (Array.isArray(data2) && data2.length > 0) {
           headersData.file2 = Object.keys(data2[0]);
@@ -514,12 +420,9 @@ export default function ExcelCSVComparison() {
         });
         
       } else {
-        // Mixed comparison - use CSV comparison logic for now (simpler)
+        // Mixed comparison - use compareFiles for now
         console.log('🔄 Performing mixed Excel/CSV comparison...', { sheets: selectedSheets });
-        comparisonResults = await compareFiles(file1, file2, headerMappings, {
-          sheet1: selectedSheets.sheet1,
-          sheet2: selectedSheets.sheet2
-        });
+        comparisonResults = await compareFiles(file1, file2, headerMappings);
       }
 
       // Validate comparison results
