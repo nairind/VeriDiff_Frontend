@@ -1932,81 +1932,83 @@ ${line}`;
                   padding: '20px'
                 }}
               >
-                {(results.file1_pages || []).map(page => (
-                  <div key={page.page_number} style={{ marginBottom: '30px' }}>
-                    <div style={{
-                      background: '#f3f4f6',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      marginBottom: '15px',
-                      fontSize: '0.9rem',
-                      color: '#374151'
-                    }}>
-                      Page {page.page_number}
-                    </div>
-                    {(page.paragraphs || []).map((para, index) => {
-                      const change = (results.text_changes || []).find(c => 
-                        c.page === page.page_number && c.paragraph === index
-                      );
-                      
-                      let style = {
-                        marginBottom: '12px',
-                        padding: '8px 0',
-                        lineHeight: '1.6',
+                {(results.file1_pages || []).map(page => {
+                  return (
+                    <div key={page.page_number} style={{ marginBottom: '30px' }}>
+                      <div style={{
+                        background: '#f3f4f6',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        marginBottom: '15px',
+                        fontSize: '0.9rem',
                         color: '#374151'
-                      };
+                      }}>
+                        Page {page.page_number}
+                      </div>
+                      {(page.paragraphs || []).map((para, index) => {
+                        const change = (results.text_changes || []).find(c => 
+                          c.page === page.page_number && c.paragraph === index
+                        );
+                        
+                        let style = {
+                          marginBottom: '12px',
+                          padding: '8px 0',
+                          lineHeight: '1.6',
+                          color: '#374151'
+                        };
 
-                      if (change) {
-                        switch (change.type) {
-                          case 'added':
-                            style = {
-                              ...style,
-                              background: '#dcfce7',
-                              border: '1px solid #166534',
-                              color: '#166534',
-                              padding: '10px 12px',
-                              borderRadius: '6px',
-                              fontWeight: '500'
-                            };
-                            break;
-                          case 'removed':
-                            style = {
-                              ...style,
-                              background: '#fee2e2',
-                              border: '1px solid #dc2626',
-                              color: '#dc2626',
-                              padding: '10px 12px',
-                              borderRadius: '6px',
-                              fontWeight: '500'
-                            };
-                            break;
-                          case 'modified':
-                            style = {
-                              ...style,
-                              background: '#fef3c7',
-                              border: '1px solid #d97706',
-                              color: '#92400e',
-                              padding: '10px 12px',
-                              borderRadius: '6px',
-                              fontWeight: '500'
-                            };
-                            break;
+                        if (change) {
+                          switch (change.type) {
+                            case 'added':
+                              style = {
+                                ...style,
+                                background: '#dcfce7',
+                                border: '1px solid #166534',
+                                color: '#166534',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                fontWeight: '500'
+                              };
+                              break;
+                            case 'removed':
+                              style = {
+                                ...style,
+                                background: '#fee2e2',
+                                border: '1px solid #dc2626',
+                                color: '#dc2626',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                fontWeight: '500'
+                              };
+                              break;
+                            case 'modified':
+                              style = {
+                                ...style,
+                                background: '#fef3c7',
+                                border: '1px solid #d97706',
+                                color: '#92400e',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                fontWeight: '500'
+                              };
+                              break;
+                          }
                         }
-                      }
 
-                      return (
-                        <div 
-                          key={index} 
-                          className="side-by-side-paragraph"
-                          style={style}
-                        >
-                          {para.text}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
+                        return (
+                          <div 
+                            key={index} 
+                            className="side-by-side-paragraph"
+                            style={style}
+                          >
+                            {para.text}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -2037,81 +2039,83 @@ ${line}`;
                   padding: '20px'
                 }}
               >
-                {(results.file2_pages || []).map(page => (
-                  <div key={page.page_number} style={{ marginBottom: '30px' }}>
-                    <div style={{
-                      background: '#f3f4f6',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      marginBottom: '15px',
-                      fontSize: '0.9rem',
-                      color: '#374151'
-                    }}>
-                      Page {page.page_number}
-                    </div>
-                    {(page.paragraphs || []).map((para, index) => {
-                      const change = (results.text_changes || []).find(c => 
-                        c.page === page.page_number && c.paragraph === index
-                      );
-                      
-                      let style = {
-                        marginBottom: '12px',
-                        padding: '8px 0',
-                        lineHeight: '1.6',
+                {(results.file2_pages || []).map(page => {
+                  return (
+                    <div key={page.page_number} style={{ marginBottom: '30px' }}>
+                      <div style={{
+                        background: '#f3f4f6',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        fontWeight: '600',
+                        marginBottom: '15px',
+                        fontSize: '0.9rem',
                         color: '#374151'
-                      };
+                      }}>
+                        Page {page.page_number}
+                      </div>
+                      {(page.paragraphs || []).map((para, index) => {
+                        const change = (results.text_changes || []).find(c => 
+                          c.page === page.page_number && c.paragraph === index
+                        );
+                        
+                        let style = {
+                          marginBottom: '12px',
+                          padding: '8px 0',
+                          lineHeight: '1.6',
+                          color: '#374151'
+                        };
 
-                      if (change) {
-                        switch (change.type) {
-                          case 'added':
-                            style = {
-                              ...style,
-                              background: '#dcfce7',
-                              border: '1px solid #166534',
-                              color: '#166534',
-                              padding: '10px 12px',
-                              borderRadius: '6px',
-                              fontWeight: '500'
-                            };
-                            break;
-                          case 'removed':
-                            style = {
-                              ...style,
-                              background: '#fee2e2',
-                              border: '1px solid #dc2626',
-                              color: '#dc2626',
-                              padding: '10px 12px',
-                              borderRadius: '6px',
-                              fontWeight: '500'
-                            };
-                            break;
-                          case 'modified':
-                            style = {
-                              ...style,
-                              background: '#fef3c7',
-                              border: '1px solid #d97706',
-                              color: '#92400e',
-                              padding: '10px 12px',
-                              borderRadius: '6px',
-                              fontWeight: '500'
-                            };
-                            break;
+                        if (change) {
+                          switch (change.type) {
+                            case 'added':
+                              style = {
+                                ...style,
+                                background: '#dcfce7',
+                                border: '1px solid #166534',
+                                color: '#166534',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                fontWeight: '500'
+                              };
+                              break;
+                            case 'removed':
+                              style = {
+                                ...style,
+                                background: '#fee2e2',
+                                border: '1px solid #dc2626',
+                                color: '#dc2626',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                fontWeight: '500'
+                              };
+                              break;
+                            case 'modified':
+                              style = {
+                                ...style,
+                                background: '#fef3c7',
+                                border: '1px solid #d97706',
+                                color: '#92400e',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                fontWeight: '500'
+                              };
+                              break;
+                          }
                         }
-                      }
 
-                      return (
-                        <div 
-                          key={index} 
-                          className="side-by-side-paragraph"
-                          style={style}
-                        >
-                          {para.text}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
+                        return (
+                          <div 
+                            key={index} 
+                            className="side-by-side-paragraph"
+                            style={style}
+                          >
+                            {para.text}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
