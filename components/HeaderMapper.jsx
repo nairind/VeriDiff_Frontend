@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm, onRun, sampleData1, sampleData2, isProcessing }) => {
   const [mappings, setMappings] = useState([]);
-  const [autoRerunEnabled, setAutoRerunEnabled] = useState(true);
+  const [autoRerunEnabled, setAutoRerunEnabled] = useState(false); // Start disabled for stable UI
   const [hasInitialized, setHasInitialized] = useState(false);
   const lastAutoRunRef = useRef(0);
 
