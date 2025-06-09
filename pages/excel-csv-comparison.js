@@ -325,16 +325,45 @@ export default function ExcelCSVComparison() {
         results_count: comparisonResults.results.length
       });
 
-      // Store results in sessionStorage
-      sessionStorage.setItem('veridiff_comparison_results', JSON.stringify(comparisonResults));
-      sessionStorage.setItem('veridiff_comparison_type', 'tabular');
-      sessionStorage.setItem('veridiff_file_type', fileType || 'mixed');
-      sessionStorage.setItem('veridiff_header_mappings', JSON.stringify(headerMappings));
+      // Store results in sessionStorage with error handling
+      console.log('💾 Starting sessionStorage operations...');
+      
+      try {
+        console.log('🔍 DEBUG - About to stringify comparison results...');
+        const resultsJson = JSON.stringify(comparisonResults);
+        console.log('✅ Comparison results JSON.stringify successful, length:', resultsJson.length);
+        sessionStorage.setItem('veridiff_comparison_results', resultsJson);
+        
+        console.log('🔍 DEBUG - Setting comparison type...');
+        sessionStorage.setItem('veridiff_comparison_type', 'tabular');
+        
+        console.log('🔍 DEBUG - Setting file type:', fileType);
+        sessionStorage.setItem('veridiff_file_type', fileType || 'mixed');
+        
+        console.log('🔍 DEBUG - About to stringify header mappings...');
+        console.log('🔍 DEBUG - Header mappings:', headerMappings);
+        const mappingsJson = JSON.stringify(headerMappings);
+        console.log('✅ Header mappings JSON.stringify successful, length:', mappingsJson.length);
+        sessionStorage.setItem('veridiff_header_mappings', mappingsJson);
+        
+        console.log('✅ All sessionStorage operations completed successfully');
+        
+      } catch (storageError) {
+        console.error('❌ SessionStorage error:', storageError);
+        throw new Error(`Failed to store results: ${storageError.message}`);
+      }
 
       console.log('💾 Results stored in sessionStorage, navigating to results...');
 
       // Navigate to results page
-      router.push('/track-comparison');
+      try {
+        console.log('🔍 DEBUG - About to navigate to /track-comparison...');
+        await router.push('/track-comparison');
+        console.log('✅ Navigation completed successfully');
+      } catch (navigationError) {
+        console.error('❌ Navigation error:', navigationError);
+        throw new Error(`Failed to navigate: ${navigationError.message}`);
+      }
 
     } catch (error) {
       console.error('❌ Excel/CSV comparison error:', error);
