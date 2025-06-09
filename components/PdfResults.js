@@ -3,6 +3,28 @@ import { useState } from 'react';
 
 const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   const [isGeneratingDownload, setIsGeneratingDownload] = useState(false);
+  const [expandedPages, setExpandedPages] = useState(new Set());
+
+  // Toggle page expansion
+  const togglePageExpansion = (pageNumber) => {
+    const newExpanded = new Set(expandedPages);
+    if (newExpanded.has(pageNumber)) {
+      newExpanded.delete(pageNumber);
+    } else {
+      newExpanded.add(pageNumber);
+    }
+    setExpandedPages(newExpanded);
+  };
+
+  // Expand/collapse all pages
+  const toggleAllPages = () => {
+    if (expandedPages.size === results.page_differences?.length) {
+      setExpandedPages(new Set());
+    } else {
+      const allPages = new Set(results.page_differences?.map(p => p.page_number) || []);
+      setExpandedPages(allPages);
+    }
+  };
 
   // Simple text report generation
   const generateTextReport = () => {
@@ -226,40 +248,196 @@ ${line}`;
       {/* Changes List */}
       {results.page_differences && results.page_differences.length > 0 ? (
         <div>
-          <h3 style={{
-            fontSize: '1.3rem',
-            fontWeight: '600',
-            margin: '0 0 20px 0',
-            color: '#1f2937'
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px'
           }}>
-            📋 Pages with Changes ({results.page_differences.length} pages)
-          </h3>
+            <h3 style={{
+              fontSize: '1.3rem',
+              fontWeight: '600',
+              margin: 0,
+              color: '#1f2937'
+            }}>
+              📋 Pages with Changes ({results.page_differences.length} pages)
+            </h3>
+            
+            <button
+              onClick={toggleAllPages}
+              style={{
+                background: '#f3f4f6',
+                border: '1px solid #d1d5db',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                color: '#374151'
+              }}
+            >
+              {expandedPages.size === results.page_differences.length ? '📕 Collapse All' : '📖 Expand All'}
+            </button>
+          </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {results.page_differences.map((page, index) => (
               <div
                 key={page.page_number}
                 style={{
-                  background: '#f8fafc',
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
-                  padding: '15px 20px'
+                  overflow: 'hidden'
                 }}
               >
-                <div style={{
-                  fontSize: '1.1rem',
-                  fontWeight: '600',
-                  color: '#1f2937',
-                  marginBottom: '5px'
-                }}>
-                  📄 Page {page.page_number}
+                {/* Page Header - Clickable */}
+                <div
+                  onClick={() => togglePageExpansion(page.page_number)}
+                  style={{
+                    background: '#f8fafc',
+                    padding: '15px 20px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderBottom: expandedPages.has(page.page_number) ? '1px solid #e5e7eb' : 'none'
+                  }}
+                >
+                  <div>
+                    <div style={{
+                      fontSize: '1.1rem',
+                      fontWeight: '600',
+                      color: '#1f2937',
+                      marginBottom: '5px'
+                    }}>
+                      📄 Page {page.page_number}
+                    </div>
+                    <div style={{
+                      fontSize: '0.9rem',
+                      color: '#6b7280'
+                    }}>
+                      {page.summary} • {page.page1_paragraphs || 0} → {page.page2_paragraphs || 0} paragraphs
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    fontSize: '1.2rem',
+                    transform: expandedPages.has(page.page_number) ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s'
+                  }}>
+                    ⌄
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: '0.9rem',
-                  color: '#6b7280'
-                }}>
-                  {page.summary} • {page.page1_paragraphs || 0} → {page.page2_paragraphs || 0} paragraphs
-                </div>
+
+                {/* Page Details - Expandable */}
+                {expandedPages.has(page.page_number) && (
+                  <div style={{ padding: '20px' }}>
+                    {results.text_changes
+                      ?.filter(change => change.page === page.page_number)
+                      ?.map((change, changeIndex) => {
+                        const getChangeColor = (type) => {
+                          switch (type) {
+                            case 'added': return '#22c55e';
+                            case 'removed': return '#ef4444';
+                            case 'modified': return '#f59e0b';
+                            default: return '#6b7280';
+                          }
+                        };
+
+                        const getChangeBackground = (type) => {
+                          switch (type) {
+                            case 'added': return '#dcfce7';
+                            case 'removed': return '#fee2e2';
+                            case 'modified': return '#fef3c7';
+                            default: return '#f3f4f6';
+                          }
+                        };
+
+                        return (
+                          <div
+                            key={changeIndex}
+                            style={{
+                              background: getChangeBackground(change.type),
+                              border: `1px solid ${getChangeColor(change.type)}`,
+                              borderRadius: '6px',
+                              padding: '15px',
+                              marginBottom: changeIndex < results.text_changes.filter(c => c.page === page.page_number).length - 1 ? '12px' : '0'
+                            }}
+                          >
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              marginBottom: '10px'
+                            }}>
+                              <span style={{
+                                background: getChangeColor(change.type),
+                                color: 'white',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '0.8rem',
+                                fontWeight: '600',
+                                textTransform: 'uppercase'
+                              }}>
+                                {change.type}
+                              </span>
+                              <span style={{
+                                fontSize: '0.9rem',
+                                color: '#6b7280'
+                              }}>
+                                Paragraph {change.paragraph}
+                              </span>
+                            </div>
+
+                            {change.type === 'modified' ? (
+                              <div style={{ fontSize: '0.9rem' }}>
+                                <div style={{
+                                  background: '#fee2e2',
+                                  padding: '10px',
+                                  borderRadius: '4px',
+                                  marginBottom: '8px',
+                                  border: '1px solid #fca5a5'
+                                }}>
+                                  <strong style={{ color: '#dc2626' }}>❌ Original:</strong>
+                                  <div style={{ marginTop: '5px', fontFamily: 'monospace' }}>
+                                    "{change.old_text}"
+                                  </div>
+                                </div>
+                                <div style={{
+                                  background: '#dcfce7',
+                                  padding: '10px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #a7f3d0'
+                                }}>
+                                  <strong style={{ color: '#166534' }}>✅ New:</strong>
+                                  <div style={{ marginTop: '5px', fontFamily: 'monospace' }}>
+                                    "{change.new_text}"
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div style={{
+                                fontSize: '0.9rem',
+                                fontFamily: 'monospace',
+                                lineHeight: '1.4',
+                                color: '#374151'
+                              }}>
+                                "{change.text}"
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }) || (
+                        <div style={{
+                          padding: '20px',
+                          textAlign: 'center',
+                          color: '#6b7280',
+                          fontStyle: 'italic'
+                        }}>
+                          No detailed changes available for this page
+                        </div>
+                      )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
