@@ -217,7 +217,6 @@ export default function ExcelCSVComparison() {
       
       setSelectedSheets({ sheet1, sheet2 });
       setSheetsSelected(true);
-      setShowSheetSelector(false); // ✅ CRITICAL: Hide sheet selector
       setIsLoading(true);
 
       // Determine file types again
