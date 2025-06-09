@@ -1,6 +1,5 @@
 // components/PdfResults.js - Enhanced Version
-import { useState } from 'react';
-import PDFSideBySideView from './PDFSideBySideView'; // ← This now uses your enhanced version
+import { useState, useEffect } from 'react';
 
 const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   const [expandedPages, setExpandedPages] = useState(new Set());
@@ -41,6 +40,45 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
       format: 'txt'
     }
   ];
+
+  // Setup synchronized scrolling for side-by-side view
+  useEffect(() => {
+    if (viewMode === 'sideBySide') {
+      const doc1 = document.getElementById('sideBySideDoc1');
+      const doc2 = document.getElementById('sideBySideDoc2');
+      
+      if (doc1 && doc2) {
+        let isScrolling = false;
+        
+        const handleDoc1Scroll = function() {
+          if (!isScrolling) {
+            isScrolling = true;
+            const scrollRatio = this.scrollTop / (this.scrollHeight - this.clientHeight);
+            doc2.scrollTop = scrollRatio * (doc2.scrollHeight - doc2.clientHeight);
+            setTimeout(() => isScrolling = false, 10);
+          }
+        };
+        
+        const handleDoc2Scroll = function() {
+          if (!isScrolling) {
+            isScrolling = true;
+            const scrollRatio = this.scrollTop / (this.scrollHeight - this.clientHeight);
+            doc1.scrollTop = scrollRatio * (doc1.scrollHeight - doc1.clientHeight);
+            setTimeout(() => isScrolling = false, 10);
+          }
+        };
+        
+        doc1.addEventListener('scroll', handleDoc1Scroll);
+        doc2.addEventListener('scroll', handleDoc2Scroll);
+        
+        // Cleanup event listeners
+        return () => {
+          doc1.removeEventListener('scroll', handleDoc1Scroll);
+          doc2.removeEventListener('scroll', handleDoc2Scroll);
+        };
+      }
+    }
+  }, [viewMode]);
 
   // Generate interactive HTML with embedded filtering (from my ExportSection)
   const generateInteractiveHTML = () => {
@@ -1750,13 +1788,337 @@ ${line}`;
           </div>
         </>
       ) : (
-        /* SIDE-BY-SIDE VIEW - Now uses the enhanced PDFSideBySideView with filtering & sync scrolling */
-        <PDFSideBySideView 
-          results={results} 
-          file1Name={file1Name} 
-          file2Name={file2Name} 
-        />
-      )}
+        /* SIDE-BY-SIDE VIEW - Built-in implementation with filtering & sync scrolling */
+        <div>
+          {/* Side-by-Side Controls */}
+          <div style={{
+            background: '#f8fafc',
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '20px',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '15px'
+            }}>
+              <h3 style={{
+                margin: 0,
+                fontSize: '1.2rem',
+                fontWeight: '600',
+                color: '#1f2937'
+              }}>
+                📄 Side-by-Side Document Comparison
+              </h3>
+              
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                alignItems: 'center',
+                flexWrap: 'wrap'
+              }}>
+                <input
+                  type="text"
+                  placeholder="Search in documents..."
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    fontSize: '0.9rem',
+                    minWidth: '200px'
+                  }}
+                  onChange={(e) => {
+                    // Simple search implementation
+                    const searchTerm = e.target.value.toLowerCase();
+                    const highlights = document.querySelectorAll('.side-by-side-highlight');
+                    highlights.forEach(h => {
+                      h.style.background = '';
+                      h.style.fontWeight = '';
+                      h.classList.remove('side-by-side-highlight');
+                    });
+                    
+                    if (searchTerm.trim()) {
+                      const textElements = document.querySelectorAll('.side-by-side-paragraph');
+                      textElements.forEach(el => {
+                        if (el.textContent.toLowerCase().includes(searchTerm)) {
+                          el.style.background = '#fbbf24';
+                          el.style.fontWeight = 'bold';
+                          el.classList.add('side-by-side-highlight');
+                        }
+                      });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '20px',
+            marginBottom: '20px',
+            fontSize: '0.9rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '16px',
+                height: '16px',
+                background: '#dcfce7',
+                border: '1px solid #166534',
+                borderRadius: '3px'
+              }}></div>
+              <span>Added</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '16px',
+                height: '16px',
+                background: '#fee2e2',
+                border: '1px solid #dc2626',
+                borderRadius: '3px'
+              }}></div>
+              <span>Removed</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: '16px',
+                height: '16px',
+                background: '#fef3c7',
+                border: '1px solid #d97706',
+                borderRadius: '3px'
+              }}></div>
+              <span>Modified</span>
+            </div>
+          </div>
+
+          {/* Side-by-Side Document Panels */}
+          <div 
+            className="side-by-side-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '20px',
+              height: '600px'
+            }}
+          >
+            {/* Document 1 Panel */}
+            <div 
+              className="side-by-side-panel"
+              style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                background: 'white'
+              }}
+            >
+              <div style={{
+                background: '#f8fafc',
+                padding: '15px 20px',
+                borderBottom: '1px solid #e5e7eb',
+                fontWeight: '600',
+                fontSize: '1.1rem',
+                color: '#1f2937'
+              }}>
+                📄 {file1Name || 'Document 1'}
+              </div>
+              <div 
+                id="sideBySideDoc1"
+                style={{
+                  height: 'calc(600px - 60px)',
+                  overflowY: 'auto',
+                  padding: '20px'
+                }}
+              >
+                {(results.file1_pages || []).map(page => (
+                  <div key={page.page_number} style={{ marginBottom: '30px' }}>
+                    <div style={{
+                      background: '#f3f4f6',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      marginBottom: '15px',
+                      fontSize: '0.9rem',
+                      color: '#374151'
+                    }}>
+                      Page {page.page_number}
+                    </div>
+                    {(page.paragraphs || []).map((para, index) => {
+                      const change = (results.text_changes || []).find(c => 
+                        c.page === page.page_number && c.paragraph === index
+                      );
+                      
+                      let style = {
+                        marginBottom: '12px',
+                        padding: '8px 0',
+                        lineHeight: '1.6',
+                        color: '#374151'
+                      };
+
+                      if (change) {
+                        switch (change.type) {
+                          case 'added':
+                            style = {
+                              ...style,
+                              background: '#dcfce7',
+                              border: '1px solid #166534',
+                              color: '#166534',
+                              padding: '10px 12px',
+                              borderRadius: '6px',
+                              fontWeight: '500'
+                            };
+                            break;
+                          case 'removed':
+                            style = {
+                              ...style,
+                              background: '#fee2e2',
+                              border: '1px solid #dc2626',
+                              color: '#dc2626',
+                              padding: '10px 12px',
+                              borderRadius: '6px',
+                              fontWeight: '500'
+                            };
+                            break;
+                          case 'modified':
+                            style = {
+                              ...style,
+                              background: '#fef3c7',
+                              border: '1px solid #d97706',
+                              color: '#92400e',
+                              padding: '10px 12px',
+                              borderRadius: '6px',
+                              fontWeight: '500'
+                            };
+                            break;
+                        }
+                      }
+
+                      return (
+                        <div 
+                          key={index} 
+                          className="side-by-side-paragraph"
+                          style={style}
+                        >
+                          {para.text}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Document 2 Panel */}
+            <div 
+              className="side-by-side-panel"
+              style={{
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                background: 'white'
+              }}
+            >
+              <div style={{
+                background: '#f8fafc',
+                padding: '15px 20px',
+                borderBottom: '1px solid #e5e7eb',
+                fontWeight: '600',
+                fontSize: '1.1rem',
+                color: '#1f2937'
+              }}>
+                📄 {file2Name || 'Document 2'}
+              </div>
+              <div 
+                id="sideBySideDoc2"
+                style={{
+                  height: 'calc(600px - 60px)',
+                  overflowY: 'auto',
+                  padding: '20px'
+                }}
+              >
+                {(results.file2_pages || []).map(page => (
+                  <div key={page.page_number} style={{ marginBottom: '30px' }}>
+                    <div style={{
+                      background: '#f3f4f6',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      marginBottom: '15px',
+                      fontSize: '0.9rem',
+                      color: '#374151'
+                    }}>
+                      Page {page.page_number}
+                    </div>
+                    {(page.paragraphs || []).map((para, index) => {
+                      const change = (results.text_changes || []).find(c => 
+                        c.page === page.page_number && c.paragraph === index
+                      );
+                      
+                      let style = {
+                        marginBottom: '12px',
+                        padding: '8px 0',
+                        lineHeight: '1.6',
+                        color: '#374151'
+                      };
+
+                      if (change) {
+                        switch (change.type) {
+                          case 'added':
+                            style = {
+                              ...style,
+                              background: '#dcfce7',
+                              border: '1px solid #166534',
+                              color: '#166534',
+                              padding: '10px 12px',
+                              borderRadius: '6px',
+                              fontWeight: '500'
+                            };
+                            break;
+                          case 'removed':
+                            style = {
+                              ...style,
+                              background: '#fee2e2',
+                              border: '1px solid #dc2626',
+                              color: '#dc2626',
+                              padding: '10px 12px',
+                              borderRadius: '6px',
+                              fontWeight: '500'
+                            };
+                            break;
+                          case 'modified':
+                            style = {
+                              ...style,
+                              background: '#fef3c7',
+                              border: '1px solid #d97706',
+                              color: '#92400e',
+                              padding: '10px 12px',
+                              borderRadius: '6px',
+                              fontWeight: '500'
+                            };
+                            break;
+                        }
+                      }
+
+                      return (
+                        <div 
+                          key={index} 
+                          className="side-by-side-paragraph"
+                          style={style}
+                        >
+                          {para.text}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
   );
 };
