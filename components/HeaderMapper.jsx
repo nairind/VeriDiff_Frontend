@@ -71,7 +71,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
       onConfirm(mappings);
       setTimeout(() => {
         if (!isProcessing) {
-          onRun();
+          onRun(mappings);  // 🔧 FIXED: Now passing mappings
         }
       }, 100);
     }, 1000);
@@ -122,7 +122,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
     console.log('🔄 Manual run triggered');
     setAutoRerunEnabled(false);
     lastAutoRunRef.current = Date.now();
-    onRun();
+    onRun(mappings);  // 🔧 FIXED: Now passing mappings
     
     setTimeout(() => {
       setAutoRerunEnabled(true);
