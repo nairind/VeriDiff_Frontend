@@ -138,15 +138,17 @@ export default function Comparison() {
       } else if (['excel', 'csv'].includes(file1Type) && ['excel', 'csv'].includes(file2Type)) {
         setComparisonType('tabular');
         
-        // DEBUG: Check what we're passing to detectFileType
-        console.log('🔍 DEBUG - About to call detectFileType with:', {
-          file1Info: file1Info,
-          file2Info: file2Info,
-          file1InfoName: file1Info?.name,
-          file2InfoName: file2Info?.name
-        });
+        // FIXED: Bypass broken detectFileType() and use working logic
+        let detectedFileType;
+        if (file1Type === file2Type) {
+          detectedFileType = file1Type; // 'csv' or 'excel'
+        } else if (file1Type === 'excel' && file2Type === 'csv') {
+          detectedFileType = 'excel_csv';
+        } else if (file1Type === 'csv' && file2Type === 'excel') {
+          detectedFileType = 'csv_excel_swapped';
+        }
         
-        const detectedFileType = detectFileType(file1Info, file2Info);
+        console.log('✅ FIXED - File type set to:', detectedFileType);
         setFileType(detectedFileType);
         await loadSheetsAndHeaders();
       } else {
