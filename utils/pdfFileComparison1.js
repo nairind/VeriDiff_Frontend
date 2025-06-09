@@ -1,6 +1,244 @@
-import { SmartDiff, compareWithSmartDiff } from './smartDiff.js';
 // utils/largePdfFileComparison.js
-// ENHANCED PDF.js IMPLEMENTATION FOR LARGE FILES (UP TO 100MB) - FIXED VERSION
+// ENHANCED PDF.js IMPLEMENTATION FOR LARGE FILES (UP TO 100MB) - FIXED VERSION WITH SMARTDIFF
+
+// ==============================================================================
+// SMARTDIFF CLASS - INTEGRATED FOR BETTER COMPARISON ACCURACY
+// ==============================================================================
+
+/**
+ * SmartDiff - Advanced text comparison with intelligent change detection
+ * Handles whitespace, formatting, and provides granular diff information
+ */
+class SmartDiff {
+  constructor(options = {}) {
+    this.options = {
+      ignoreWhitespace: options.ignoreWhitespace ?? true,
+      ignoreCase: options.ignoreCase ?? false,
+      wordLevel: options.wordLevel ?? true,
+      sentenceLevel: options.sentenceLevel ?? true,
+      similarity_threshold: options.similarity_threshold ?? 0.8,
+      context_lines: options.context_lines ?? 3,
+      ...options
+    };
+  }
+
+  /**
+   * Calculate Levenshtein distance for similarity scoring
+   */
+  levenshteinDistance(str1, str2) {
+    const matrix = Array(str2.length + 1).fill().map(() => Array(str1.length + 1).fill(0));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,     // insertion
+          matrix[j - 1][i] + 1,     // deletion
+          matrix[j - 1][i - 1] + cost // substitution
+        );
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+
+  /**
+   * Calculate similarity score between two texts
+   */
+  calculateSimilarity(text1, text2) {
+    if (text1 === text2) return 1.0;
+    if (!text1 || !text2) return 0.0;
+    
+    const maxLength = Math.max(text1.length, text2.length);
+    const distance = this.levenshteinDistance(text1, text2);
+    return Math.max(0, (maxLength - distance) / maxLength);
+  }
+
+  /**
+   * Normalize text based on options
+   */
+  normalizeText(text) {
+    if (!text) return '';
+    
+    let normalized = text;
+    
+    if (this.options.ignoreWhitespace) {
+      normalized = normalized.replace(/\s+/g, ' ').trim();
+    }
+    
+    if (this.options.ignoreCase) {
+      normalized = normalized.toLowerCase();
+    }
+    
+    return normalized;
+  }
+
+  /**
+   * Split text into meaningful units for comparison
+   */
+  tokenizeText(text, level = 'word') {
+    if (!text) return [];
+    
+    switch (level) {
+      case 'character':
+        return text.split('');
+      case 'word':
+        return text.split(/\s+/).filter(word => word.length > 0);
+      case 'sentence':
+        return text.split(/[.!?]+/).filter(sentence => sentence.trim().length > 0);
+      case 'line':
+        return text.split(/\n/).filter(line => line.trim().length > 0);
+      default:
+        return [text];
+    }
+  }
+
+  /**
+   * Advanced diff algorithm using dynamic programming
+   */
+  computeSmartDiff(text1, text2) {
+    const norm1 = this.normalizeText(text1);
+    const norm2 = this.normalizeText(text2);
+    
+    // Quick exact match check
+    if (norm1 === norm2) {
+      return {
+        type: 'unchanged',
+        similarity: 1.0,
+        changes: [],
+        confidence: 'high'
+      };
+    }
+
+    // Calculate overall similarity
+    const similarity = this.calculateSimilarity(norm1, norm2);
+    
+    // If similarity is very low, treat as complete replacement
+    if (similarity < this.options.similarity_threshold) {
+      return {
+        type: 'replaced',
+        similarity: similarity,
+        changes: [{
+          type: 'delete',
+          content: text1,
+          position: 0
+        }, {
+          type: 'insert',
+          content: text2,
+          position: 0
+        }],
+        confidence: similarity < 0.3 ? 'high' : 'medium'
+      };
+    }
+
+    // Perform word-level diff for moderate changes
+    const words1 = this.tokenizeText(norm1, 'word');
+    const words2 = this.tokenizeText(norm2, 'word');
+    
+    const wordDiff = this.diffArrays(words1, words2);
+    
+    return {
+      type: 'modified',
+      similarity: similarity,
+      changes: wordDiff,
+      confidence: similarity > 0.7 ? 'high' : 'medium',
+      word_changes: this.analyzeWordChanges(wordDiff)
+    };
+  }
+
+  /**
+   * Compare two arrays and return diff operations
+   */
+  diffArrays(arr1, arr2) {
+    const changes = [];
+    const m = arr1.length;
+    const n = arr2.length;
+    
+    // Create LCS matrix
+    const lcs = Array(m + 1).fill().map(() => Array(n + 1).fill(0));
+    
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (arr1[i - 1] === arr2[j - 1]) {
+          lcs[i][j] = lcs[i - 1][j - 1] + 1;
+        } else {
+          lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
+        }
+      }
+    }
+    
+    // Backtrack to find changes
+    let i = m, j = n;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && arr1[i - 1] === arr2[j - 1]) {
+        i--; j--;
+      } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
+        changes.unshift({
+          type: 'insert',
+          content: arr2[j - 1],
+          position: j - 1
+        });
+        j--;
+      } else if (i > 0) {
+        changes.unshift({
+          type: 'delete',
+          content: arr1[i - 1],
+          position: i - 1
+        });
+        i--;
+      }
+    }
+    
+    return changes;
+  }
+
+  /**
+   * Analyze word-level changes for better insights
+   */
+  analyzeWordChanges(changes) {
+    const analysis = {
+      insertions: 0,
+      deletions: 0,
+      total_changes: changes.length,
+      change_density: 0,
+      common_patterns: []
+    };
+    
+    changes.forEach(change => {
+      if (change.type === 'insert') analysis.insertions++;
+      if (change.type === 'delete') analysis.deletions++;
+    });
+    
+    return analysis;
+  }
+
+  /**
+   * Compare paragraphs with context awareness
+   */
+  compareParagraphs(para1, para2, context = {}) {
+    const result = this.computeSmartDiff(para1.text, para2.text);
+    
+    return {
+      ...result,
+      paragraph1: para1,
+      paragraph2: para2,
+      context: context,
+      metadata: {
+        char_count_1: para1.text.length,
+        char_count_2: para2.text.length,
+        position_1: para1.y_position || 0,
+        position_2: para2.y_position || 0
+      }
+    };
+  }
+}
+
+// ==============================================================================
+// ORIGINAL PDF PROCESSING CODE WITH SMARTDIFF INTEGRATION
+// ==============================================================================
 
 // Progress callback system for large file processing
 let progressCallback = null;
@@ -640,7 +878,7 @@ const extractTextFromLargePDF = async (arrayBuffer, fileName) => {
       totalWords: totalWords,
       totalCharacters: totalCharacters,
       isValidPDF: true,
-      extractionMethod: 'PDF.js Large File Optimized (Fixed)',
+      extractionMethod: 'PDF.js Large File Optimized with SmartDiff',
       pdfJsVersion: window.pdfjsLib?.version || 'unknown',
       processingDate: new Date().toISOString(),
       processingTimeMs: processingTime,
@@ -734,9 +972,13 @@ export const parseLargePDFFile = async (file) => {
   }
 };
 
-// Enhanced PDF comparison optimized for large files
+// ==============================================================================
+// SMARTDIFF-ENHANCED PDF COMPARISON
+// ==============================================================================
+
+// Enhanced PDF comparison with SmartDiff integration
 export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
-  console.log('🔄 Starting large PDF comparison');
+  console.log('🧠 Starting SmartDiff-enhanced PDF comparison');
   
   const pdf1Size = (pdf1.byteLength / 1024 / 1024).toFixed(1);
   const pdf2Size = (pdf2.byteLength / 1024 / 1024).toFixed(1);
@@ -746,22 +988,35 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
     compareMode = 'text',
     ignoreFormatting = true,
     pageByPage = true,
-    includeImages = false
+    includeImages = false,
+    useSmartDiff = true,
+    similarity_threshold = 0.8,
+    ignoreWhitespace = true,
+    ignoreCase = false
   } = options;
   
+  // Initialize SmartDiff
+  const smartDiff = new SmartDiff({
+    ignoreWhitespace: ignoreWhitespace,
+    ignoreCase: ignoreCase,
+    similarity_threshold: similarity_threshold,
+    wordLevel: true,
+    sentenceLevel: true
+  });
+  
   try {
-    updateProgress('Comparison', 0, 'Starting comparison of ' + pdf1Size + 'MB and ' + pdf2Size + 'MB PDFs...');
+    updateProgress('SmartDiff Comparison', 0, 'Starting enhanced comparison of ' + pdf1Size + 'MB and ' + pdf2Size + 'MB PDFs...');
     
     console.log('📖 Parsing both large PDF files...');
     const startTime = Date.now();
     
     // Parse both PDFs with progress tracking
-    updateProgress('Comparison', 5, 'Parsing first PDF file...');
+    updateProgress('SmartDiff Comparison', 5, 'Parsing first PDF file...');
     const data1 = await parseLargePDFFile(pdf1).catch(error => {
       throw new Error('First PDF Error:\\n' + error.message);
     });
     
-    updateProgress('Comparison', 35, 'Parsing second PDF file...');
+    updateProgress('SmartDiff Comparison', 35, 'Parsing second PDF file...');
     const data2 = await parseLargePDFFile(pdf2).catch(error => {
       throw new Error('Second PDF Error:\\n' + error.message);
     });
@@ -771,34 +1026,39 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
     console.log('  File 1: ' + data1.pages.length + ' pages, ' + data1.metadata.totalWords.toLocaleString() + ' words');
     console.log('  File 2: ' + data2.pages.length + ' pages, ' + data2.metadata.totalWords.toLocaleString() + ' words');
     
-    updateProgress('Comparison', 70, 'Starting detailed content comparison...');
+    updateProgress('SmartDiff Comparison', 60, 'Starting SmartDiff analysis...');
     
-    // Start detailed comparison with progress tracking
+    // Start detailed comparison with SmartDiff
     const comparisonStartTime = Date.now();
     
+    const smart_changes = [];
     const text_changes = [];
     const page_differences = [];
+    let total_similarity = 0;
+    let compared_elements = 0;
     let totalElements = 0;
     let differences = 0;
     let matches = 0;
     
     const maxPages = Math.max(data1.pages.length, data2.pages.length);
     
-    console.log('🔍 Comparing ' + maxPages + ' pages...');
+    console.log('🧠 SmartDiff comparing ' + maxPages + ' pages...');
     
-    // Page-by-page comparison with progress updates for large files
+    // Page-by-page comparison with SmartDiff
     for (let pageIndex = 0; pageIndex < maxPages; pageIndex++) {
       const page1 = data1.pages[pageIndex];
       const page2 = data2.pages[pageIndex];
       const pageNum = pageIndex + 1;
       
-      // Progress updates every 100 pages for large documents
-      if (pageNum % 100 === 0 || pageNum === maxPages) {
-        const comparisonProgress = 70 + (pageNum / maxPages) * 25;
-        updateProgress('Comparison', comparisonProgress, 'Comparing page ' + pageNum + ' of ' + maxPages + '...');
+      // Progress updates every 50 pages for large documents
+      if (pageNum % 50 === 0 || pageNum === maxPages) {
+        const comparisonProgress = 60 + (pageNum / maxPages) * 35;
+        updateProgress('SmartDiff Comparison', comparisonProgress, 'SmartDiff analyzing page ' + pageNum + ' of ' + maxPages + '...');
       }
       
       let pageChanges = 0;
+      let page_similarity_sum = 0;
+      let page_comparisons = 0;
       
       if (!page1 && page2) {
         pageChanges = page2.paragraphs.length;
@@ -806,13 +1066,25 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
         totalElements += page2.paragraphs.length;
         
         page2.paragraphs.forEach((para, paraIndex) => {
+          smart_changes.push({
+            page: pageNum,
+            paragraph: paraIndex,
+            type: 'page_added',
+            change_type: 'addition',
+            content: para.text,
+            confidence: 'high',
+            similarity: 0,
+            metadata: { char_count: para.text.length }
+          });
+          
           text_changes.push({
             page: pageNum,
             paragraph: paraIndex,
             type: 'added',
             text: para.text,
             file: 'file2',
-            char_count: para.char_count || para.text.length
+            char_count: para.char_count || para.text.length,
+            confidence: 'high'
           });
         });
         
@@ -822,13 +1094,25 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
         totalElements += page1.paragraphs.length;
         
         page1.paragraphs.forEach((para, paraIndex) => {
+          smart_changes.push({
+            page: pageNum,
+            paragraph: paraIndex,
+            type: 'page_removed',
+            change_type: 'deletion',
+            content: para.text,
+            confidence: 'high',
+            similarity: 0,
+            metadata: { char_count: para.text.length }
+          });
+          
           text_changes.push({
             page: pageNum,
             paragraph: paraIndex,
             type: 'removed',
             text: para.text,
             file: 'file1',
-            char_count: para.char_count || para.text.length
+            char_count: para.char_count || para.text.length,
+            confidence: 'high'
           });
         });
         
@@ -843,77 +1127,138 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
           if (!para1 && para2) {
             pageChanges++;
             differences++;
+            
+            smart_changes.push({
+              page: pageNum,
+              paragraph: paraIndex,
+              type: 'paragraph_added',
+              change_type: 'addition',
+              content: para2.text,
+              confidence: 'high',
+              similarity: 0,
+              metadata: { char_count: para2.text.length }
+            });
+            
             text_changes.push({
               page: pageNum,
               paragraph: paraIndex,
               type: 'added',
               text: para2.text,
               file: 'file2',
-              char_count: para2.char_count || para2.text.length
+              char_count: para2.char_count || para2.text.length,
+              confidence: 'high'
             });
+            
           } else if (para1 && !para2) {
             pageChanges++;
             differences++;
+            
+            smart_changes.push({
+              page: pageNum,
+              paragraph: paraIndex,
+              type: 'paragraph_removed',
+              change_type: 'deletion',
+              content: para1.text,
+              confidence: 'high',
+              similarity: 0,
+              metadata: { char_count: para1.text.length }
+            });
+            
             text_changes.push({
               page: pageNum,
               paragraph: paraIndex,
               type: 'removed',
               text: para1.text,
               file: 'file1',
-              char_count: para1.char_count || para1.text.length
+              char_count: para1.char_count || para1.text.length,
+              confidence: 'high'
             });
+            
           } else if (para1 && para2) {
-            let text1 = para1.text;
-            let text2 = para2.text;
-            
-            if (ignoreFormatting) {
-              text1 = text1.replace(/\\s+/g, ' ').trim();
-              text2 = text2.replace(/\\s+/g, ' ').trim();
-            }
-            
-            const isError1 = text1.startsWith('[Error') || text1.startsWith('[This page appears');
-            const isError2 = text2.startsWith('[Error') || text2.startsWith('[This page appears');
-            
-            if (isError1 && isError2) {
-              matches++;
-            } else if (isError1 || isError2) {
-              pageChanges++;
-              differences++;
-              text_changes.push({
+            // Use SmartDiff for paragraph comparison
+            if (useSmartDiff) {
+              const comparison = smartDiff.compareParagraphs(para1, para2, {
                 page: pageNum,
-                paragraph: paraIndex,
-                type: 'modified',
-                old_text: para1.text,
-                new_text: para2.text,
-                file: 'both',
-                char_count_old: para1.char_count || para1.text.length,
-                char_count_new: para2.char_count || para2.text.length
+                paragraph: paraIndex
               });
-            } else if (text1 !== text2) {
-              pageChanges++;
-              differences++;
-              text_changes.push({
-                page: pageNum,
-                paragraph: paraIndex,
-                type: 'modified',
-                old_text: para1.text,
-                new_text: para2.text,
-                file: 'both',
-                char_count_old: para1.char_count || para1.text.length,
-                char_count_new: para2.char_count || para2.text.length
-              });
+              
+              page_similarity_sum += comparison.similarity;
+              page_comparisons++;
+              compared_elements++;
+              total_similarity += comparison.similarity;
+              
+              if (comparison.type !== 'unchanged') {
+                pageChanges++;
+                differences++;
+                
+                smart_changes.push({
+                  page: pageNum,
+                  paragraph: paraIndex,
+                  type: comparison.type,
+                  change_type: comparison.type === 'replaced' ? 'major_change' : 'modification',
+                  similarity: comparison.similarity,
+                  confidence: comparison.confidence,
+                  changes: comparison.changes,
+                  word_analysis: comparison.word_changes,
+                  old_content: para1.text,
+                  new_content: para2.text,
+                  metadata: comparison.metadata
+                });
+                
+                text_changes.push({
+                  page: pageNum,
+                  paragraph: paraIndex,
+                  type: 'modified',
+                  old_text: para1.text,
+                  new_text: para2.text,
+                  file: 'both',
+                  char_count_old: para1.char_count || para1.text.length,
+                  char_count_new: para2.char_count || para2.text.length,
+                  similarity: Math.round(comparison.similarity * 100),
+                  confidence: comparison.confidence,
+                  smart_analysis: comparison.changes
+                });
+              } else {
+                matches++;
+              }
             } else {
-              matches++;
+              // Fallback to basic comparison
+              let text1 = para1.text;
+              let text2 = para2.text;
+              
+              if (ignoreFormatting) {
+                text1 = text1.replace(/\\s+/g, ' ').trim();
+                text2 = text2.replace(/\\s+/g, ' ').trim();
+              }
+              
+              if (text1 !== text2) {
+                pageChanges++;
+                differences++;
+                text_changes.push({
+                  page: pageNum,
+                  paragraph: paraIndex,
+                  type: 'modified',
+                  old_text: para1.text,
+                  new_text: para2.text,
+                  file: 'both',
+                  char_count_old: para1.char_count || para1.text.length,
+                  char_count_new: para2.char_count || para2.text.length
+                });
+              } else {
+                matches++;
+              }
             }
           }
         }
       }
       
       if (pageChanges > 0) {
+        const page_similarity = page_comparisons > 0 ? page_similarity_sum / page_comparisons : 0;
         page_differences.push({
           page_number: pageNum,
           changes_count: pageChanges,
-          summary: pageChanges + ' change' + (pageChanges > 1 ? 's' : '') + ' detected',
+          similarity: Math.round(page_similarity * 100),
+          summary: pageChanges + ' change' + (pageChanges > 1 ? 's' : '') + ' detected (' + Math.round(page_similarity * 100) + '% similar)',
           page1_paragraphs: page1?.paragraphs.length || 0,
           page2_paragraphs: page2?.paragraphs.length || 0
         });
@@ -923,11 +1268,22 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
     const comparisonTime = Date.now() - comparisonStartTime;
     const totalTime = parseTime + comparisonTime;
     
-    updateProgress('Comparison', 95, 'Finalizing comparison results...');
+    updateProgress('SmartDiff Comparison', 95, 'Finalizing SmartDiff results...');
     
-    // Calculate metrics
-    const totalComparisons = differences + matches;
-    const similarity_score = totalComparisons > 0 ? Math.round((matches / totalComparisons) * 100) : 100;
+    // Calculate enhanced metrics
+    const overall_similarity = compared_elements > 0 ? total_similarity / compared_elements : 
+                              (matches / (matches + differences)) || 1.0;
+    const similarity_score = Math.round(overall_similarity * 100);
+    
+    const change_summary = {
+      total_changes: smart_changes.length,
+      major_changes: smart_changes.filter(c => c.change_type === 'major_change').length,
+      additions: smart_changes.filter(c => c.change_type === 'addition').length,
+      deletions: smart_changes.filter(c => c.change_type === 'deletion').length,
+      modifications: smart_changes.filter(c => c.change_type === 'modification').length,
+      high_confidence: smart_changes.filter(c => c.confidence === 'high').length,
+      medium_confidence: smart_changes.filter(c => c.confidence === 'medium').length
+    };
     
     const wordChanges = {
       file1_words: data1.metadata.totalWords,
@@ -938,6 +1294,12 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
     };
     
     const results = {
+      // Enhanced SmartDiff results
+      smart_changes: smart_changes,
+      change_summary: change_summary,
+      overall_similarity: similarity_score,
+      
+      // Original format compatibility
       differences_found: differences,
       matches_found: matches,
       total_pages: maxPages,
@@ -958,9 +1320,11 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
       
       word_changes: wordChanges,
       
-      comparison_type: 'large_pdf_document',
+      comparison_type: useSmartDiff ? 'smartdiff_enhanced_pdf' : 'large_pdf_document',
+      comparison_method: useSmartDiff ? 'SmartDiff Enhanced with Levenshtein + LCS' : 'Basic Text Comparison',
       comparison_options: options,
-      processing_note: 'Large PDF comparison (' + pdf1Size + 'MB + ' + pdf2Size + 'MB) using optimized PDF.js processing (FIXED)',
+      processing_note: 'Large PDF comparison (' + pdf1Size + 'MB + ' + pdf2Size + 'MB) using ' + 
+                      (useSmartDiff ? 'SmartDiff enhanced' : 'basic') + ' PDF.js processing',
       processing_time: {
         parse_time_ms: parseTime,
         comparison_time_ms: comparisonTime,
@@ -974,15 +1338,18 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
                              (data1.metadata.totalPages + data2.metadata.totalPages),
         processing_speed_pages_per_second: Math.round((data1.metadata.totalPages + data2.metadata.totalPages) / (totalTime / 1000)),
         memory_usage: pdf1Size + 'MB + ' + pdf2Size + 'MB processed',
-        pdf_js_version: data1.metadata.pdfJsVersion
+        pdf_js_version: data1.metadata.pdfJsVersion,
+        smartdiff_enabled: useSmartDiff,
+        confidence_scoring: useSmartDiff
       }
     };
     
-    updateProgress('Comparison', 100, 'Large PDF comparison completed successfully!');
+    updateProgress('SmartDiff Comparison', 100, 'SmartDiff comparison completed successfully!');
     
     const totalTimeFormatted = Math.floor(totalTime/60000) + ':' + ((totalTime%60000)/1000).toFixed(0).padStart(2,'0');
     
-    console.log('✅ Large PDF comparison completed successfully:');
+    console.log('✅ ' + (useSmartDiff ? 'SmartDiff-enhanced' : 'Basic') + ' PDF comparison completed:');
+    console.log('  🧠 Method: ' + results.comparison_method);
     console.log('  📊 Similarity: ' + results.similarity_score + '%');
     console.log('  🔍 Changes: ' + results.differences_found.toLocaleString());
     console.log('  ✅ Matches: ' + results.matches_found.toLocaleString());
@@ -990,7 +1357,11 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
     console.log('  ⏱️ Total Time: ' + totalTimeFormatted);
     console.log('  🚀 Speed: ' + results.quality_metrics.processing_speed_pages_per_second + ' pages/s');
     console.log('  💾 Memory: ' + results.quality_metrics.memory_usage);
-    console.log('  📋 PDF.js: ' + results.quality_metrics.pdf_js_version);
+    
+    if (useSmartDiff) {
+      console.log('  🎯 High Confidence: ' + change_summary.high_confidence + '/' + smart_changes.length + ' changes');
+      console.log('  📈 Change Types: ' + change_summary.additions + ' added, ' + change_summary.deletions + ' deleted, ' + change_summary.modifications + ' modified');
+    }
     
     return results;
     
@@ -1000,7 +1371,6 @@ export const compareLargePDFFiles = async (pdf1, pdf2, options = {}) => {
   }
 };
 
-// Export the enhanced functions
-export const compareLargePDFFiles = compareWithSmartDiff;
-export { parseLargePDFFile as parsePDFFile };
-
+// Export the enhanced functions with proper naming
+export const comparePDFFiles = compareLargePDFFiles;
+export const parsePDFFile = parseLargePDFFile;
