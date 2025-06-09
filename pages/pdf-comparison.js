@@ -204,9 +204,9 @@ export default function PDFComparison() {
         isActive: false
       });
 
-      // Navigate to results
+      // Navigate to PDF results
       setTimeout(() => {
-        router.push('/track-comparison');
+        router.push('/pdf-results');
       }, 1500);
 
     } catch (error) {
