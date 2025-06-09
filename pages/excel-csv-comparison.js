@@ -17,6 +17,7 @@ export default function ExcelCSVComparison() {
   const [fileType, setFileType] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasInitialized, setHasInitialized] = useState(false); // ✅ ADD: Prevent multiple initializations
 
   // Sheet selection state
   const [showSheetSelector, setShowSheetSelector] = useState(false);
@@ -32,8 +33,12 @@ export default function ExcelCSVComparison() {
   const [sampleData2, setSampleData2] = useState([]);
 
   useEffect(() => {
-    loadFileData();
-  }, []);
+    // ✅ CRITICAL: Prevent multiple initializations
+    if (!hasInitialized) {
+      setHasInitialized(true);
+      loadFileData();
+    }
+  }, [hasInitialized]);
 
   const base64ToFile = (base64Data, fileName, mimeType) => {
     try {
@@ -69,6 +74,14 @@ export default function ExcelCSVComparison() {
 
   const loadFileData = async () => {
     try {
+      console.log('🔄 loadFileData called, isLoading:', isLoading);
+      
+      // ✅ CRITICAL: Prevent multiple simultaneous loads
+      if (isLoading && (showSheetSelector || showHeaderMapper)) {
+        console.log('🚫 File data already loaded or loading, ignoring');
+        return;
+      }
+
       const file1Info = JSON.parse(sessionStorage.getItem('veridiff_file1_info') || 'null');
       const file2Info = JSON.parse(sessionStorage.getItem('veridiff_file2_info') || 'null');
 
@@ -196,8 +209,15 @@ export default function ExcelCSVComparison() {
     try {
       console.log('📋 Sheets selected:', { sheet1, sheet2, types: { sheet1: typeof sheet1, sheet2: typeof sheet2 } });
       
+      // Prevent multiple simultaneous calls
+      if (isLoading) {
+        console.log('🚫 Sheet selection already in progress, ignoring');
+        return;
+      }
+      
       setSelectedSheets({ sheet1, sheet2 });
       setSheetsSelected(true);
+      setShowSheetSelector(false); // ✅ CRITICAL: Hide sheet selector
       setIsLoading(true);
 
       // Determine file types again
@@ -372,6 +392,12 @@ export default function ExcelCSVComparison() {
 
   const handleComparison = async (headerMappings) => {
     try {
+      // ✅ CRITICAL: Prevent multiple simultaneous comparisons
+      if (isLoading) {
+        console.log('🚫 Comparison already in progress, ignoring');
+        return;
+      }
+      
       setIsLoading(true);
       
       // Validate headerMappings parameter
