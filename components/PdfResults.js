@@ -641,7 +641,12 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
         function highlightSearchText(text, searchTerm) {
             if (!searchTerm.trim()) return text;
             
+            const regex = new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\\\]]/g, '\\\\        function highlightSearchText(text, searchTerm) {
+            if (!searchTerm.trim()) return text;
+            
             const regex = new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }') + ')', 'gi');
             return text.replace(regex, '<span class="highlight">$1</span>');
         }
         
