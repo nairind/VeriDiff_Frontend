@@ -15,11 +15,48 @@ export default function Home() {
     console.log('Page view: home');
   }, []);
 
+  // File type detection helper
+  const getFileType = (fileName) => {
+    const extension = fileName.split('.').pop().toLowerCase();
+    if (['xlsx', 'xls', 'xlsm'].includes(extension)) return 'excel';
+    if (extension === 'csv') return 'csv';
+    if (extension === 'pdf') return 'pdf';
+    return 'unknown';
+  };
+
   const handleFilesReady = async ({ file1, file2 }) => {
     try {
-      // Files are already stored in sessionStorage by the UploadZone component
-      // Navigate to comparison page
-      await router.push('/comparison');
+      // Detect file types
+      const file1Type = getFileType(file1.name);
+      const file2Type = getFileType(file2.name);
+      
+      console.log('🔍 File types detected:', { file1Type, file2Type });
+
+      // Route based on file type combination
+      if (file1Type === 'pdf' && file2Type === 'pdf') {
+        console.log('📕 Routing to PDF comparison...');
+        await router.push('/pdf-comparison');
+        
+      } else if (['excel', 'csv'].includes(file1Type) && ['excel', 'csv'].includes(file2Type)) {
+        console.log('📊 Routing to Excel/CSV comparison...');
+        await router.push('/excel-csv-comparison');
+        
+      } else {
+        // Handle invalid file type combinations
+        let errorMessage = '';
+        
+        if (file1Type === 'unknown' || file2Type === 'unknown') {
+          errorMessage = 'Unsupported file type detected. Please upload PDF, Excel (.xlsx/.xls), or CSV files only.';
+        } else if ((file1Type === 'pdf' && file2Type !== 'pdf') || (file1Type !== 'pdf' && file2Type === 'pdf')) {
+          errorMessage = 'Cannot mix PDF with other file types. Please upload two PDF files or two data files (Excel/CSV).';
+        } else {
+          errorMessage = `Unexpected file combination: ${file1Type} and ${file2Type}. Please contact support.`;
+        }
+        
+        console.error('❌ Invalid file combination:', { file1Type, file2Type });
+        alert(errorMessage);
+      }
+      
     } catch (error) {
       console.error('Error navigating to comparison:', error);
       alert('Error proceeding to comparison. Please try again.');
@@ -151,7 +188,7 @@ export default function Home() {
                 marginTop: '1.5rem',
                 marginBottom: 0
               }}>
-                Supports: Excel ↔ Excel • CSV ↔ CSV • Excel ↔ CSV cross-format
+                Supports: Excel ↔ Excel • CSV ↔ CSV • Excel ↔ CSV cross-format • PDF ↔ PDF
               </p>
             </div>
           </div>
