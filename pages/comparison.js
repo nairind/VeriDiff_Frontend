@@ -204,7 +204,14 @@ export default function Comparison() {
           getExcelFileInfo(file2)
         ]);
 
-        // Set up file info for SheetSelector
+        console.log('📋 Excel file info loaded:', {
+          file1Sheets: file1ExcelInfo.sheets.length,
+          file2Sheets: file2ExcelInfo.sheets.length,
+          file1Hidden: file1ExcelInfo.sheets.filter(s => s.isHidden).length,
+          file2Hidden: file2ExcelInfo.sheets.filter(s => s.isHidden).length
+        });
+
+        // Set up file info for SheetSelector FIRST
         setFile1Info(file1ExcelInfo);
         setFile2Info(file2ExcelInfo);
 
@@ -220,13 +227,23 @@ export default function Comparison() {
           file1ExcelInfo.sheets.some(s => s.isHidden) ||
           file2ExcelInfo.sheets.some(s => s.isHidden);
 
+        console.log('🤔 Sheet selector needed?', {
+          needsSheetSelector,
+          file1HasMultiple: file1ExcelInfo.sheets.length > 1,
+          file2HasMultiple: file2ExcelInfo.sheets.length > 1,
+          file1HasHidden: file1ExcelInfo.sheets.some(s => s.isHidden),
+          file2HasHidden: file2ExcelInfo.sheets.some(s => s.isHidden)
+        });
+
         if (needsSheetSelector) {
-          console.log('📋 Multiple sheets detected, showing sheet selector');
+          console.log('📋 Multiple/hidden sheets detected, showing sheet selector');
           setSheets(sheetsData);
           setShowSheetSelector(true);
           setIsLoading(false);
           return; // Stop here, let user select sheets
         }
+
+        console.log('📋 Single sheet detected, proceeding to headers');
 
         // Single sheet - proceed directly to headers
         const defaultSheet1 = file1ExcelInfo.defaultSheet || file1ExcelInfo.sheets[0]?.name;
@@ -308,34 +325,48 @@ export default function Comparison() {
         // Get Excel info
         const excelInfo = await getExcelFileInfo(excelFile);
 
+        console.log('📋 Mixed format Excel info:', {
+          isFile1Excel,
+          excelSheets: excelInfo.sheets.length,
+          excelHidden: excelInfo.sheets.filter(s => s.isHidden).length
+        });
+
+        // Set up file info for SheetSelector FIRST
+        if (isFile1Excel) {
+          setFile1Info(excelInfo);
+          setFile2Info({ 
+            fileName: fileInfo2.name,
+            sheets: [{ name: 'CSV Data', index: 0, hasData: true, isHidden: false }],
+            defaultSheet: 'CSV Data'
+          });
+        } else {
+          setFile1Info({ 
+            fileName: fileInfo1.name,
+            sheets: [{ name: 'CSV Data', index: 0, hasData: true, isHidden: false }],
+            defaultSheet: 'CSV Data'
+          });
+          setFile2Info(excelInfo);
+        }
+
         // Check if Excel file needs sheet selector
         const needsSheetSelector = 
           (excelInfo.sheets.length > 1) || 
           excelInfo.sheets.some(s => s.isHidden);
 
+        console.log('🤔 Mixed format sheet selector needed?', {
+          needsSheetSelector,
+          excelHasMultiple: excelInfo.sheets.length > 1,
+          excelHasHidden: excelInfo.sheets.some(s => s.isHidden)
+        });
+
         if (needsSheetSelector) {
-          console.log('📋 Excel file has multiple sheets, showing sheet selector');
-          
-          if (isFile1Excel) {
-            setFile1Info(excelInfo);
-            setFile2Info({ 
-              fileName: fileInfo2.name,
-              sheets: [{ name: 'CSV Data', index: 0, hasData: true, isHidden: false }],
-              defaultSheet: 'CSV Data'
-            });
-          } else {
-            setFile1Info({ 
-              fileName: fileInfo1.name,
-              sheets: [{ name: 'CSV Data', index: 0, hasData: true, isHidden: false }],
-              defaultSheet: 'CSV Data'
-            });
-            setFile2Info(excelInfo);
-          }
-          
+          console.log('📋 Excel file has multiple/hidden sheets, showing sheet selector');
           setShowSheetSelector(true);
           setIsLoading(false);
           return; // Stop here, let user select sheets
         }
+
+        console.log('📋 Single Excel sheet, proceeding to headers');
 
         // Single sheet - proceed directly  
         const defaultExcelSheet = excelInfo.defaultSheet || excelInfo.sheets[0]?.name;
@@ -372,13 +403,6 @@ export default function Comparison() {
             file1: defaultExcelSheet, 
             file2: 'CSV Data' 
           });
-
-          setFile1Info(excelInfo);
-          setFile2Info({ 
-            fileName: fileInfo2.name,
-            sheets: [{ name: 'CSV Data', index: 0, hasData: true, isHidden: false }],
-            defaultSheet: 'CSV Data'
-          });
         } else {
           // File 1 is CSV, File 2 is Excel  
           sheetsData = {
@@ -399,13 +423,6 @@ export default function Comparison() {
             file1: 'CSV Data', 
             file2: defaultExcelSheet 
           });
-
-          setFile1Info({ 
-            fileName: fileInfo1.name,
-            sheets: [{ name: 'CSV Data', index: 0, hasData: true, isHidden: false }],
-            defaultSheet: 'CSV Data'
-          });
-          setFile2Info(excelInfo);
         }
       }
 
