@@ -1898,7 +1898,6 @@ ${line}`;
 
           {/* Side-by-Side Document Panels */}
           <div 
-            className="side-by-side-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
@@ -1908,7 +1907,6 @@ ${line}`;
           >
             {/* Document 1 Panel */}
             <div 
-              className="side-by-side-panel"
               style={{
                 border: '1px solid #e5e7eb',
                 borderRadius: '12px',
@@ -2014,7 +2012,6 @@ ${line}`;
 
             {/* Document 2 Panel */}
             <div 
-              className="side-by-side-panel"
               style={{
                 border: '1px solid #e5e7eb',
                 borderRadius: '12px',
