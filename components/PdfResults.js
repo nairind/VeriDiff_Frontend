@@ -97,22 +97,90 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
   };
 
   const renderSummaryStats = () => (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-        <div className="text-2xl font-bold text-blue-700">{data.similarity_score}%</div>
-        <div className="text-sm text-blue-600">Similarity</div>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '20px',
+      marginBottom: '30px'
+    }}>
+      <div style={{
+        background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+        padding: '20px',
+        borderRadius: '12px',
+        border: '2px solid #3b82f6',
+        textAlign: 'center'
+      }}>
+        <div style={{ 
+          fontSize: '2.5rem', 
+          fontWeight: '700', 
+          color: '#1d4ed8',
+          marginBottom: '5px'
+        }}>
+          {data.similarity_score}%
+        </div>
+        <div style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: '600' }}>
+          Similarity Score
+        </div>
       </div>
-      <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
-        <div className="text-2xl font-bold text-orange-700">{data.differences_found}</div>
-        <div className="text-sm text-orange-600">Changes Found</div>
+      
+      <div style={{
+        background: 'linear-gradient(135deg, #fed7aa, #fdba74)',
+        padding: '20px',
+        borderRadius: '12px',
+        border: '2px solid #f97316',
+        textAlign: 'center'
+      }}>
+        <div style={{ 
+          fontSize: '2.5rem', 
+          fontWeight: '700', 
+          color: '#c2410c',
+          marginBottom: '5px'
+        }}>
+          {data.differences_found}
+        </div>
+        <div style={{ fontSize: '0.9rem', color: '#ea580c', fontWeight: '600' }}>
+          Changes Found
+        </div>
       </div>
-      <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-        <div className="text-2xl font-bold text-green-700">{data.page_differences?.length || 0}</div>
-        <div className="text-sm text-green-600">Pages Modified</div>
+      
+      <div style={{
+        background: 'linear-gradient(135deg, #bbf7d0, #86efac)',
+        padding: '20px',
+        borderRadius: '12px',
+        border: '2px solid #22c55e',
+        textAlign: 'center'
+      }}>
+        <div style={{ 
+          fontSize: '2.5rem', 
+          fontWeight: '700', 
+          color: '#15803d',
+          marginBottom: '5px'
+        }}>
+          {data.page_differences?.length || 0}
+        </div>
+        <div style={{ fontSize: '0.9rem', color: '#166534', fontWeight: '600' }}>
+          Pages Modified
+        </div>
       </div>
-      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-        <div className="text-2xl font-bold text-purple-700">{data.total_pages}</div>
-        <div className="text-sm text-purple-600">Total Pages</div>
+      
+      <div style={{
+        background: 'linear-gradient(135deg, #e9d5ff, #d8b4fe)',
+        padding: '20px',
+        borderRadius: '12px',
+        border: '2px solid #a855f7',
+        textAlign: 'center'
+      }}>
+        <div style={{ 
+          fontSize: '2.5rem', 
+          fontWeight: '700', 
+          color: '#7c3aed',
+          marginBottom: '5px'
+        }}>
+          {data.total_pages}
+        </div>
+        <div style={{ fontSize: '0.9rem', color: '#6d28d9', fontWeight: '600' }}>
+          Total Pages
+        </div>
       </div>
     </div>
   );
@@ -127,77 +195,219 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
       }
     };
 
-    const getChangeColor = (type) => {
+    const getChangeColors = (type) => {
       switch (type) {
-        case 'added': return 'border-green-200 bg-green-50';
-        case 'removed': return 'border-red-200 bg-red-50';
-        case 'modified': return 'border-orange-200 bg-orange-50';
-        default: return 'border-gray-200 bg-gray-50';
+        case 'added': 
+          return {
+            background: '#dcfce7',
+            border: '#22c55e',
+            badgeColor: '#166534',
+            badgeBg: '#bbf7d0'
+          };
+        case 'removed': 
+          return {
+            background: '#fee2e2',
+            border: '#ef4444',
+            badgeColor: '#dc2626',
+            badgeBg: '#fca5a5'
+          };
+        case 'modified': 
+          return {
+            background: '#fef3c7',
+            border: '#f59e0b',
+            badgeColor: '#d97706',
+            badgeBg: '#fed7aa'
+          };
+        default: 
+          return {
+            background: '#f3f4f6',
+            border: '#6b7280',
+            badgeColor: '#374151',
+            badgeBg: '#e5e7eb'
+          };
       }
     };
 
+    const colors = getChangeColors(change.type);
+
     return (
-      <div key={index} className={`border rounded-lg p-4 ${getChangeColor(change.type)}`}>
+      <div key={index} style={{
+        background: colors.background,
+        border: `2px solid ${colors.border}`,
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '16px'
+      }}>
         {/* Change Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{getChangeIcon(change.type)}</span>
-            <span className="font-semibold text-gray-800">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '15px',
+          flexWrap: 'wrap',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '1.2rem' }}>{getChangeIcon(change.type)}</span>
+            <span style={{ 
+              fontWeight: '600', 
+              color: '#1f2937',
+              fontSize: '1rem'
+            }}>
               Page {change.page}, Paragraph {change.paragraph}
             </span>
-            <span className={`px-2 py-1 rounded text-xs font-medium ${
-              change.type === 'added' ? 'bg-green-100 text-green-800' :
-              change.type === 'removed' ? 'bg-red-100 text-red-800' :
-              'bg-orange-100 text-orange-800'
-            }`}>
-              {change.type.toUpperCase()}
+            <span style={{
+              background: colors.badgeBg,
+              color: colors.badgeColor,
+              padding: '4px 10px',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              fontWeight: '600',
+              textTransform: 'uppercase'
+            }}>
+              {change.type}
             </span>
           </div>
           <button
             onClick={() => setSelectedPage(change.page)}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            style={{
+              background: 'white',
+              color: '#2563eb',
+              border: '1px solid #3b82f6',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
           >
             View Page →
           </button>
         </div>
 
-        {/* Context Before (if enabled) */}
+        {/* Context Before */}
         {showContext && change.context_before && (
-          <div className="mb-2 text-sm text-gray-600">
-            <span className="font-medium">Context:</span> ...{change.context_before}...
+          <div style={{
+            marginBottom: '12px',
+            fontSize: '0.9rem',
+            color: '#6b7280',
+            fontStyle: 'italic'
+          }}>
+            <strong>Context:</strong> ...{change.context_before}...
           </div>
         )}
 
         {/* Change Content */}
-        <div className="space-y-2">
+        <div style={{ marginBottom: '12px' }}>
           {change.type === 'modified' ? (
-            <>
-              <div className="bg-red-100 border border-red-200 rounded p-3">
-                <div className="text-red-800 font-medium text-sm mb-1">Original:</div>
-                <div className="text-red-900 font-mono text-sm">"{change.old_text}"</div>
+            <div>
+              <div style={{
+                background: '#fee2e2',
+                border: '1px solid #fca5a5',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '8px'
+              }}>
+                <div style={{ 
+                  color: '#dc2626', 
+                  fontWeight: '600', 
+                  fontSize: '0.9rem',
+                  marginBottom: '8px'
+                }}>
+                  ❌ Original:
+                </div>
+                <div style={{ 
+                  color: '#7f1d1d', 
+                  fontFamily: 'monospace', 
+                  fontSize: '0.9rem',
+                  lineHeight: '1.4'
+                }}>
+                  "{change.old_text}"
+                </div>
               </div>
-              <div className="bg-green-100 border border-green-200 rounded p-3">
-                <div className="text-green-800 font-medium text-sm mb-1">Changed to:</div>
-                <div className="text-green-900 font-mono text-sm">"{change.new_text}"</div>
+              <div style={{
+                background: '#dcfce7',
+                border: '1px solid #a7f3d0',
+                borderRadius: '8px',
+                padding: '12px'
+              }}>
+                <div style={{ 
+                  color: '#166534', 
+                  fontWeight: '600', 
+                  fontSize: '0.9rem',
+                  marginBottom: '8px'
+                }}>
+                  ✅ New:
+                </div>
+                <div style={{ 
+                  color: '#14532d', 
+                  fontFamily: 'monospace', 
+                  fontSize: '0.9rem',
+                  lineHeight: '1.4'
+                }}>
+                  "{change.new_text}"
+                </div>
               </div>
-            </>
+            </div>
           ) : change.type === 'added' ? (
-            <div className="bg-green-100 border border-green-200 rounded p-3">
-              <div className="text-green-800 font-medium text-sm mb-1">Added:</div>
-              <div className="text-green-900 font-mono text-sm">"{change.new_text}"</div>
+            <div style={{
+              background: '#dcfce7',
+              border: '1px solid #a7f3d0',
+              borderRadius: '8px',
+              padding: '12px'
+            }}>
+              <div style={{ 
+                color: '#166534', 
+                fontWeight: '600', 
+                fontSize: '0.9rem',
+                marginBottom: '8px'
+              }}>
+                ✅ Added:
+              </div>
+              <div style={{ 
+                color: '#14532d', 
+                fontFamily: 'monospace', 
+                fontSize: '0.9rem',
+                lineHeight: '1.4'
+              }}>
+                "{change.new_text}"
+              </div>
             </div>
           ) : (
-            <div className="bg-red-100 border border-red-200 rounded p-3">
-              <div className="text-red-800 font-medium text-sm mb-1">Removed:</div>
-              <div className="text-red-900 font-mono text-sm">"{change.old_text}"</div>
+            <div style={{
+              background: '#fee2e2',
+              border: '1px solid #fca5a5',
+              borderRadius: '8px',
+              padding: '12px'
+            }}>
+              <div style={{ 
+                color: '#dc2626', 
+                fontWeight: '600', 
+                fontSize: '0.9rem',
+                marginBottom: '8px'
+              }}>
+                ❌ Removed:
+              </div>
+              <div style={{ 
+                color: '#7f1d1d', 
+                fontFamily: 'monospace', 
+                fontSize: '0.9rem',
+                lineHeight: '1.4'
+              }}>
+                "{change.old_text}"
+              </div>
             </div>
           )}
         </div>
 
-        {/* Context After (if enabled) */}
+        {/* Context After */}
         {showContext && change.context_after && (
-          <div className="mt-2 text-sm text-gray-600">
-            <span className="font-medium">Continues:</span> ...{change.context_after}...
+          <div style={{
+            fontSize: '0.9rem',
+            color: '#6b7280',
+            fontStyle: 'italic'
+          }}>
+            <strong>Continues:</strong> ...{change.context_after}...
           </div>
         )}
       </div>
@@ -207,24 +417,52 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
   const renderChangesView = () => (
     <div>
       {/* Controls */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">
-          Changes Found ({data.text_changes?.length || 0})
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '25px',
+        flexWrap: 'wrap',
+        gap: '15px'
+      }}>
+        <h3 style={{
+          fontSize: '1.3rem',
+          fontWeight: '600',
+          color: '#1f2937',
+          margin: 0
+        }}>
+          📋 Changes Found ({data.text_changes?.length || 0})
         </h3>
-        <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 text-sm">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <label style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            fontSize: '0.9rem',
+            color: '#374151',
+            cursor: 'pointer'
+          }}>
             <input
               type="checkbox"
               checked={showContext}
               onChange={(e) => setShowContext(e.target.checked)}
-              className="rounded"
+              style={{ 
+                width: '16px', 
+                height: '16px',
+                borderRadius: '4px'
+              }}
             />
             Show context
           </label>
           <select 
-            className="px-3 py-1 border border-gray-300 rounded text-sm"
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              background: 'white'
+            }}
             onChange={(e) => {
-              // Filter changes by type
               console.log('Filter by:', e.target.value);
             }}
           >
@@ -237,12 +475,27 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
       </div>
 
       {/* Changes List */}
-      <div className="space-y-4">
+      <div>
         {data.text_changes?.map((change, index) => renderChangeItem(change, index)) || (
-          <div className="text-center py-8 text-gray-500">
-            <div className="text-4xl mb-2">🎉</div>
-            <div className="text-lg font-medium">No differences found!</div>
-            <div className="text-sm">The documents are identical.</div>
+          <div style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            background: '#f0fdf4',
+            borderRadius: '12px',
+            border: '2px solid #22c55e'
+          }}>
+            <div style={{ fontSize: '4rem', marginBottom: '15px' }}>🎉</div>
+            <div style={{ 
+              fontSize: '1.5rem', 
+              fontWeight: '600',
+              color: '#166534',
+              marginBottom: '8px'
+            }}>
+              No differences found!
+            </div>
+            <div style={{ fontSize: '1rem', color: '#15803d' }}>
+              The documents are identical.
+            </div>
           </div>
         )}
       </div>
@@ -309,31 +562,43 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
           return {
             backgroundColor: '#dcfce7',
             borderLeft: '4px solid #22c55e',
-            padding: '8px 12px',
-            margin: '4px 0',
-            borderRadius: '4px'
+            padding: '12px 16px',
+            margin: '6px 0',
+            borderRadius: '6px',
+            fontFamily: 'monospace',
+            fontSize: '0.9rem',
+            lineHeight: '1.5'
           };
         case 'removed':
           return {
             backgroundColor: '#fee2e2',
             borderLeft: '4px solid #ef4444',
-            padding: '8px 12px',
-            margin: '4px 0',
-            borderRadius: '4px'
+            padding: '12px 16px',
+            margin: '6px 0',
+            borderRadius: '6px',
+            fontFamily: 'monospace',
+            fontSize: '0.9rem',
+            lineHeight: '1.5'
           };
         case 'modified':
           return {
             backgroundColor: '#fef3c7',
             borderLeft: '4px solid #f59e0b',
-            padding: '8px 12px',
-            margin: '4px 0',
-            borderRadius: '4px'
+            padding: '12px 16px',
+            margin: '6px 0',
+            borderRadius: '6px',
+            fontFamily: 'monospace',
+            fontSize: '0.9rem',
+            lineHeight: '1.5'
           };
         default:
           return {
-            padding: '8px 12px',
-            margin: '4px 0',
-            lineHeight: '1.5'
+            padding: '12px 16px',
+            margin: '6px 0',
+            lineHeight: '1.5',
+            fontFamily: 'monospace',
+            fontSize: '0.9rem',
+            color: '#374151'
           };
       }
     };
@@ -341,43 +606,97 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
     return (
       <div>
         {/* Legend */}
-        <div className="flex justify-center gap-6 mb-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-100 border-l-4 border-green-500 rounded"></div>
-            <span>Added</span>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '30px',
+          marginBottom: '25px',
+          fontSize: '0.9rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              width: '20px',
+              height: '16px',
+              background: '#dcfce7',
+              borderLeft: '4px solid #22c55e',
+              borderRadius: '3px'
+            }}></div>
+            <span style={{ fontWeight: '500' }}>Added</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-100 border-l-4 border-red-500 rounded"></div>
-            <span>Removed</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              width: '20px',
+              height: '16px',
+              background: '#fee2e2',
+              borderLeft: '4px solid #ef4444',
+              borderRadius: '3px'
+            }}></div>
+            <span style={{ fontWeight: '500' }}>Removed</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-orange-100 border-l-4 border-orange-500 rounded"></div>
-            <span>Modified</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              width: '20px',
+              height: '16px',
+              background: '#fef3c7',
+              borderLeft: '4px solid #f59e0b',
+              borderRadius: '3px'
+            }}></div>
+            <span style={{ fontWeight: '500' }}>Modified</span>
           </div>
         </div>
 
         {/* Synchronized Side-by-Side Panels */}
-        <div className="grid grid-cols-2 gap-4 h-96">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '20px',
+          height: '500px'
+        }}>
           {/* Left Document */}
-          <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-            <div className="bg-gray-100 px-4 py-3 font-semibold text-gray-800 border-b">
+          <div style={{
+            border: '2px solid #e5e7eb',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            background: 'white',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+              padding: '15px 20px',
+              fontWeight: '600',
+              color: '#1f2937',
+              borderBottom: '1px solid #e5e7eb',
+              fontSize: '1.1rem'
+            }}>
               📄 {file1Name || 'Document 1'} (Original)
             </div>
             <div 
               ref={leftPaneRef}
-              className="h-80 overflow-y-auto p-4"
+              style={{
+                height: '440px',
+                overflowY: 'auto',
+                padding: '20px'
+              }}
               onScroll={(e) => handleScroll(e.target, rightPaneRef)}
             >
               {mockPages.map((page) => (
-                <div key={`left-${page.page}`} className="mb-6">
-                  <div className="bg-blue-50 px-3 py-2 text-blue-800 font-medium text-sm rounded mb-3">
-                    Page {page.page}
+                <div key={`left-${page.page}`} style={{ marginBottom: '30px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                    padding: '10px 15px',
+                    color: '#1d4ed8',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    borderRadius: '8px',
+                    marginBottom: '15px'
+                  }}>
+                    📄 Page {page.page}
                   </div>
                   {page.doc1_content.map((item, index) => (
                     <div 
                       key={`left-${page.page}-${index}`} 
                       style={getHighlightStyle(item.type)}
-                      className="font-mono text-sm"
                     >
                       {item.text}
                     </div>
@@ -388,25 +707,49 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
           </div>
 
           {/* Right Document */}
-          <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-            <div className="bg-gray-100 px-4 py-3 font-semibold text-gray-800 border-b">
+          <div style={{
+            border: '2px solid #e5e7eb',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            background: 'white',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
+              padding: '15px 20px',
+              fontWeight: '600',
+              color: '#1f2937',
+              borderBottom: '1px solid #e5e7eb',
+              fontSize: '1.1rem'
+            }}>
               📄 {file2Name || 'Document 2'} (Updated)
             </div>
             <div 
               ref={rightPaneRef}
-              className="h-80 overflow-y-auto p-4"
+              style={{
+                height: '440px',
+                overflowY: 'auto',
+                padding: '20px'
+              }}
               onScroll={(e) => handleScroll(e.target, leftPaneRef)}
             >
               {mockPages.map((page) => (
-                <div key={`right-${page.page}`} className="mb-6">
-                  <div className="bg-blue-50 px-3 py-2 text-blue-800 font-medium text-sm rounded mb-3">
-                    Page {page.page}
+                <div key={`right-${page.page}`} style={{ marginBottom: '30px' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                    padding: '10px 15px',
+                    color: '#1d4ed8',
+                    fontWeight: '600',
+                    fontSize: '0.9rem',
+                    borderRadius: '8px',
+                    marginBottom: '15px'
+                  }}>
+                    📄 Page {page.page}
                   </div>
                   {page.doc2_content.map((item, index) => (
                     <div 
                       key={`right-${page.page}-${index}`} 
                       style={getHighlightStyle(item.type)}
-                      className="font-mono text-sm"
                     >
                       {item.text}
                     </div>
@@ -418,21 +761,33 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
         </div>
 
         {/* Quick Navigation */}
-        <div className="mt-4 flex justify-center">
-          <div className="flex gap-2">
+        <div style={{
+          marginTop: '20px',
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
             <button 
               onClick={() => {
                 if (leftPaneRef.current) leftPaneRef.current.scrollTop = 0;
                 if (rightPaneRef.current) rightPaneRef.current.scrollTop = 0;
               }}
-              className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
+              style={{
+                padding: '8px 16px',
+                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                color: '#1d4ed8',
+                border: '1px solid #3b82f6',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
             >
               ⬆️ Top
             </button>
             <button 
               onClick={() => {
                 const scrollToNext = () => {
-                  // Find next change and scroll to it
                   if (leftPaneRef.current && rightPaneRef.current) {
                     const currentScroll = leftPaneRef.current.scrollTop;
                     leftPaneRef.current.scrollTop = currentScroll + 200;
@@ -441,7 +796,16 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
                 };
                 scrollToNext();
               }}
-              className="px-3 py-1 bg-orange-100 text-orange-700 rounded text-sm hover:bg-orange-200"
+              style={{
+                padding: '8px 16px',
+                background: 'linear-gradient(135deg, #fed7aa, #fdba74)',
+                color: '#c2410c',
+                border: '1px solid #f97316',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
             >
               🔍 Next Change
             </button>
@@ -453,7 +817,16 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
                   rightPaneRef.current.scrollTop = maxScroll;
                 }
               }}
-              className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
+              style={{
+                padding: '8px 16px',
+                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                color: '#1d4ed8',
+                border: '1px solid #3b82f6',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
             >
               ⬇️ Bottom
             </button>
@@ -464,50 +837,118 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div style={{
+      maxWidth: '1200px',
+      margin: '0 auto',
+      background: 'white',
+      borderRadius: '16px',
+      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e5e7eb',
+      overflow: 'hidden'
+    }}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
-        <div className="flex items-center justify-between">
+      <div style={{
+        background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+        color: 'white',
+        padding: '30px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '20px'
+        }}>
           <div>
-            <h1 className="text-2xl font-bold mb-1">📊 PDF Comparison Results</h1>
-            <div className="text-blue-100 text-sm">
+            <h1 style={{ 
+              fontSize: '2rem', 
+              fontWeight: '700', 
+              marginBottom: '8px',
+              margin: 0
+            }}>
+              📊 PDF Comparison Results
+            </h1>
+            <div style={{ 
+              color: 'rgba(255, 255, 255, 0.9)', 
+              fontSize: '1.1rem'
+            }}>
               {file1Name || 'Document 1'} vs {file2Name || 'Document 2'}
             </div>
           </div>
           <button
             onClick={downloadReport}
             disabled={isGeneratingDownload}
-            className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 disabled:opacity-50 flex items-center gap-2"
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              padding: '12px 24px',
+              borderRadius: '10px',
+              fontSize: '1rem',
+              fontWeight: '600',
+              cursor: isGeneratingDownload ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              opacity: isGeneratingDownload ? 0.7 : 1
+            }}
           >
             {isGeneratingDownload ? '⏳ Generating...' : '📥 Download Report'}
           </button>
         </div>
       </div>
 
-      <div className="p-6">
+      <div style={{ padding: '30px' }}>
         {/* Summary Statistics */}
         {renderSummaryStats()}
 
         {/* View Toggle */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="flex bg-gray-100 rounded-lg p-1">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px',
+          marginBottom: '30px',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{
+            display: 'flex',
+            background: '#f3f4f6',
+            borderRadius: '10px',
+            padding: '4px',
+            border: '1px solid #e5e7eb'
+          }}>
             <button
               onClick={() => setViewMode('changes')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode === 'changes' 
-                  ? 'bg-white text-blue-600 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
+              style={{
+                background: viewMode === 'changes' ? 'white' : 'transparent',
+                border: 'none',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                color: viewMode === 'changes' ? '#2563eb' : '#6b7280',
+                boxShadow: viewMode === 'changes' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
             >
               📋 Changes List
             </button>
             <button
               onClick={() => setViewMode('sideBySide')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode === 'sideBySide' 
-                  ? 'bg-white text-blue-600 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
+              style={{
+                background: viewMode === 'sideBySide' ? 'white' : 'transparent',
+                border: 'none',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                color: viewMode === 'sideBySide' ? '#2563eb' : '#6b7280',
+                boxShadow: viewMode === 'sideBySide' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                transition: 'all 0.2s ease'
+              }}
             >
               📄 Side-by-Side
             </button>
@@ -518,10 +959,17 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name }) => {
         {viewMode === 'changes' ? renderChangesView() : renderSideBySideView()}
 
         {/* Footer */}
-        <div className="mt-8 pt-4 border-t border-gray-200 text-sm text-gray-600">
-          Processed in {data.processing_time?.total_time_ms}ms • 
-          {data.file1_metadata?.totalPages} pages • 
-          {data.file1_metadata?.totalWords} words analyzed
+        <div style={{
+          marginTop: '30px',
+          paddingTop: '20px',
+          borderTop: '1px solid #e5e7eb',
+          fontSize: '0.9rem',
+          color: '#6b7280',
+          textAlign: 'center'
+        }}>
+          ⚡ Processed in {data.processing_time?.total_time_ms}ms • 
+          📄 {data.file1_metadata?.totalPages} pages • 
+          📝 {data.file1_metadata?.totalWords} words analyzed
         </div>
       </div>
     </div>
