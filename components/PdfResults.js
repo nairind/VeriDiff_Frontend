@@ -111,6 +111,25 @@ ${(results.page_differences || []).map(page =>
     return baseStyle;
   };
 
+  // Enhanced helper functions for rich change display
+  const getChangeColor = (type) => {
+    switch (type) {
+      case 'added': return '#22c55e';
+      case 'removed': return '#ef4444';
+      case 'modified': return '#f59e0b';
+      default: return '#6b7280';
+    }
+  };
+
+  const getChangeBackground = (type) => {
+    switch (type) {
+      case 'added': return '#dcfce7';
+      case 'removed': return '#fee2e2';
+      case 'modified': return '#fef3c7';
+      default: return '#f3f4f6';
+    }
+  };
+
   if (!results) {
     return (
       <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
@@ -142,6 +161,13 @@ ${(results.page_differences || []).map(page =>
             <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
               <div>📊 {results.file1_metadata?.totalPages || 0} pages</div>
               <div>📝 {results.file1_metadata?.totalWords || 0} words</div>
+              <div>💾 {results.file1_metadata?.fileSize ? `${(results.file1_metadata.fileSize / 1024 / 1024).toFixed(1)}MB` : 'N/A'}</div>
+              {results.file1_metadata?.author && (
+                <div>👤 Author: {results.file1_metadata.author}</div>
+              )}
+              {results.file1_metadata?.createdDate && (
+                <div>📅 Created: {new Date(results.file1_metadata.createdDate).toLocaleDateString()}</div>
+              )}
             </div>
           </div>
           
@@ -157,6 +183,13 @@ ${(results.page_differences || []).map(page =>
             <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
               <div>📊 {results.file2_metadata?.totalPages || 0} pages</div>
               <div>📝 {results.file2_metadata?.totalWords || 0} words</div>
+              <div>💾 {results.file2_metadata?.fileSize ? `${(results.file2_metadata.fileSize / 1024 / 1024).toFixed(1)}MB` : 'N/A'}</div>
+              {results.file2_metadata?.author && (
+                <div>👤 Author: {results.file2_metadata.author}</div>
+              )}
+              {results.file2_metadata?.createdDate && (
+                <div>📅 Created: {new Date(results.file2_metadata.createdDate).toLocaleDateString()}</div>
+              )}
             </div>
           </div>
         </div>
@@ -198,27 +231,68 @@ ${(results.page_differences || []).map(page =>
 
             <div>
               <div style={{ fontSize: '0.95rem', marginBottom: '8px' }}>
-                <strong>📊 Summary:</strong>
+                <strong>📊 Comparison Summary:</strong>
               </div>
               <div style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
-                • <strong>{results.differences_found || 0}</strong> differences<br/>
+                • <strong>{results.differences_found || 0}</strong> differences found<br/>
+                • <strong>{results.matches_found || 0}</strong> matching elements<br/>
                 • <strong>{results.page_differences?.length || 0}</strong> pages with changes<br/>
-                • <strong>{results.total_pages || 0}</strong> total pages
+                • <strong>{results.total_pages || 0}</strong> total pages compared
               </div>
             </div>
 
             <div>
               <div style={{ fontSize: '0.95rem', marginBottom: '8px' }}>
-                <strong>🔄 Changes:</strong>
+                <strong>🔄 Change Breakdown:</strong>
               </div>
               <div style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
                 • <span style={{ color: '#22c55e' }}>➕ {results.added_count || 0} added</span><br/>
                 • <span style={{ color: '#ef4444' }}>➖ {results.removed_count || 0} removed</span><br/>
-                • <span style={{ color: '#f59e0b' }}>✏️ {results.modified_count || 0} modified</span>
+                • <span style={{ color: '#f59e0b' }}>✏️ {results.modified_count || 0} modified</span><br/>
+                • ⚡ Processed in {results.processing_time?.total_time_ms || 'N/A'}ms
               </div>
             </div>
           </div>
         </div>
+
+        {/* Word Count Analysis */}
+        {results.word_changes && (
+          <div style={{
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '25px'
+          }}>
+            <h3 style={{
+              fontSize: '1.2rem',
+              fontWeight: '600',
+              margin: '0 0 15px 0',
+              color: '#1f2937'
+            }}>
+              📊 Word Count Analysis
+            </h3>
+            
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '15px'
+            }}>
+              <div>
+                <strong>File 1:</strong> {results.word_changes.file1_words || 0} words
+              </div>
+              <div>
+                <strong>File 2:</strong> {results.word_changes.file2_words || 0} words
+              </div>
+              <div>
+                <strong>Difference:</strong> {results.word_changes.word_difference || 0} words
+              </div>
+              <div>
+                <strong>Change:</strong> {results.word_changes.word_change_percentage || 0}%
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Page Changes */}
         {results.page_differences && results.page_differences.length > 0 ? (
@@ -289,7 +363,18 @@ ${(results.page_differences || []).map(page =>
                         fontSize: '0.9rem',
                         color: '#6b7280'
                       }}>
-                        {page.summary}
+                        {page.summary} • {page.page1_paragraphs || 0} → {page.page2_paragraphs || 0} paragraphs
+                        {page.changes_count && (
+                          <span style={{ 
+                            marginLeft: '8px',
+                            background: '#e5e7eb',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            fontSize: '0.8rem'
+                          }}>
+                            {page.changes_count} change{page.changes_count > 1 ? 's' : ''}
+                          </span>
+                        )}
                       </div>
                     </div>
                     
@@ -302,73 +387,138 @@ ${(results.page_differences || []).map(page =>
                     </div>
                   </div>
 
-                  {expandedPages.has(page.page_number) && (
-                    <div style={{ padding: '20px' }}>
-                      {results.text_changes
-                        ?.filter(change => change.page === page.page_number)
-                        ?.map((change, changeIndex) => (
-                          <div
-                            key={changeIndex}
-                            style={{
-                              background: change.type === 'added' ? '#dcfce7' :
-                                         change.type === 'removed' ? '#fee2e2' :
-                                         change.type === 'modified' ? '#fef3c7' : '#f3f4f6',
-                              border: `1px solid ${change.type === 'added' ? '#166534' :
-                                                  change.type === 'removed' ? '#dc2626' :
-                                                  change.type === 'modified' ? '#d97706' : '#d1d5db'}`,
-                              borderRadius: '6px',
-                              padding: '15px',
-                              marginBottom: '12px'
-                            }}
-                          >
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              marginBottom: '10px'
-                            }}>
-                              <span style={{
-                                background: change.type === 'added' ? '#166534' :
-                                           change.type === 'removed' ? '#dc2626' :
-                                           change.type === 'modified' ? '#d97706' : '#6b7280',
-                                color: 'white',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                fontSize: '0.8rem',
-                                fontWeight: '600',
-                                textTransform: 'uppercase'
+                    {expandedPages.has(page.page_number) && (
+                      <div style={{ padding: '20px' }}>
+                        {results.text_changes
+                          ?.filter(change => change.page === page.page_number)
+                          ?.map((change, changeIndex) => (
+                            <div
+                              key={changeIndex}
+                              style={{
+                                background: getChangeBackground(change.type),
+                                border: `1px solid ${getChangeColor(change.type)}`,
+                                borderRadius: '6px',
+                                padding: '15px',
+                                marginBottom: changeIndex < results.text_changes.filter(c => c.page === page.page_number).length - 1 ? '12px' : '0'
+                              }}
+                            >
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginBottom: '10px'
                               }}>
-                                {change.type}
-                              </span>
-                              <span style={{
-                                fontSize: '0.9rem',
-                                color: '#6b7280'
-                              }}>
-                                Paragraph {change.paragraph}
-                              </span>
-                            </div>
+                                <span style={{
+                                  background: getChangeColor(change.type),
+                                  color: 'white',
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '0.8rem',
+                                  fontWeight: '600',
+                                  textTransform: 'uppercase'
+                                }}>
+                                  {change.type}
+                                </span>
+                                <span style={{
+                                  fontSize: '0.9rem',
+                                  color: '#6b7280'
+                                }}>
+                                  Paragraph {change.paragraph}
+                                </span>
+                                {change.char_count && (
+                                  <span style={{
+                                    fontSize: '0.8rem',
+                                    color: '#9ca3af',
+                                    background: '#f3f4f6',
+                                    padding: '2px 6px',
+                                    borderRadius: '3px'
+                                  }}>
+                                    {change.char_count} chars
+                                  </span>
+                                )}
+                              </div>
 
-                            <div style={{
-                              fontSize: '0.9rem',
-                              fontFamily: 'monospace',
-                              lineHeight: '1.4',
-                              color: '#374151'
-                            }}>
-                              "{change.text || change.old_text || 'No text available'}"
+                              {change.type === 'modified' ? (
+                                <div style={{ fontSize: '0.9rem' }}>
+                                  <div style={{
+                                    background: '#fee2e2',
+                                    padding: '10px',
+                                    borderRadius: '4px',
+                                    marginBottom: '8px',
+                                    border: '1px solid #fca5a5'
+                                  }}>
+                                    <strong style={{ color: '#dc2626' }}>❌ Original:</strong>
+                                    <div style={{ marginTop: '5px', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                                      "{change.old_text || 'No original text available'}"
+                                    </div>
+                                  </div>
+                                  <div style={{
+                                    background: '#dcfce7',
+                                    padding: '10px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #a7f3d0'
+                                  }}>
+                                    <strong style={{ color: '#166534' }}>✅ New:</strong>
+                                    <div style={{ marginTop: '5px', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                                      "{change.new_text || 'No new text available'}"
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div style={{
+                                  fontSize: '0.9rem',
+                                  fontFamily: 'monospace',
+                                  lineHeight: '1.4',
+                                  color: '#374151',
+                                  background: 'rgba(255, 255, 255, 0.5)',
+                                  padding: '8px',
+                                  borderRadius: '4px'
+                                }}>
+                                  "{change.text || 'No text available'}"
+                                </div>
+                              )}
+
+                              {/* Additional metadata */}
+                              {(change.file || change.char_count_old || change.char_count_new) && (
+                                <div style={{
+                                  marginTop: '10px',
+                                  padding: '8px',
+                                  background: 'rgba(255, 255, 255, 0.7)',
+                                  borderRadius: '4px',
+                                  fontSize: '0.8rem',
+                                  color: '#6b7280',
+                                  borderTop: '1px solid rgba(0, 0, 0, 0.1)'
+                                }}>
+                                  {change.file && (
+                                    <span style={{ marginRight: '12px' }}>
+                                      📂 Source: {change.file}
+                                    </span>
+                                  )}
+                                  {change.char_count_old && (
+                                    <span style={{ marginRight: '12px' }}>
+                                      📏 Old: {change.char_count_old} chars
+                                    </span>
+                                  )}
+                                  {change.char_count_new && (
+                                    <span>
+                                      📏 New: {change.char_count_new} chars
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        )) || (
-                          <div style={{
-                            padding: '20px',
-                            textAlign: 'center',
-                            color: '#6b7280',
-                            fontStyle: 'italic'
-                          }}>
-                            No detailed changes available for this page
-                          </div>
-                        )}
-                    </div>
-                  )}
+                          )) || (
+                            <div style={{
+                              padding: '20px',
+                              textAlign: 'center',
+                              color: '#6b7280',
+                              fontStyle: 'italic'
+                            }}>
+                              No detailed changes available for this page
+                            </div>
+                          )}
+                      </div>
+                    )}
                 </div>
               ))}
             </div>
