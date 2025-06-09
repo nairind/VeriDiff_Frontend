@@ -137,6 +137,15 @@ export default function Comparison() {
         setIsLoading(false);
       } else if (['excel', 'csv'].includes(file1Type) && ['excel', 'csv'].includes(file2Type)) {
         setComparisonType('tabular');
+        
+        // DEBUG: Check what we're passing to detectFileType
+        console.log('🔍 DEBUG - About to call detectFileType with:', {
+          file1Info: file1Info,
+          file2Info: file2Info,
+          file1InfoName: file1Info?.name,
+          file2InfoName: file2Info?.name
+        });
+        
         const detectedFileType = detectFileType(file1Info, file2Info);
         setFileType(detectedFileType);
         await loadSheetsAndHeaders();
