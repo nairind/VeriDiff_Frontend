@@ -1,4 +1,4 @@
-// components/PdfResults.js - MINIMAL Download Enhancement Only
+// components/PdfResults.js - Simplified Enhanced Version
 import { useState } from 'react';
 import PDFSideBySideView from '../components/PDFSideBySideView';
 
@@ -8,140 +8,47 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   const [viewMode, setViewMode] = useState('summary'); // 'summary' | 'sideBySide'
   const [downloadDropdownOpen, setDownloadDropdownOpen] = useState(false);
 
-  // ENHANCED: Now view-aware download options
+  // ENHANCED: Download options now include viewType
   const downloadOptions = [
     {
-      id: 'html-current',
+      id: 'html',
       label: `📄 ${viewMode === 'summary' ? 'Summary' : 'Side-by-Side'} HTML Report`,
       description: `Professional web page with ${viewMode === 'summary' ? 'detailed summary view' : 'side-by-side comparison'}`,
       format: 'html',
       viewType: viewMode
     },
     {
-      id: 'csv-current',
+      id: 'excel',
       label: `📊 ${viewMode === 'summary' ? 'Summary' : 'Side-by-Side'} CSV Export`,
-      description: `Structured data optimized for ${viewMode === 'summary' ? 'summary analysis' : 'side-by-side comparison'}`,
+      description: `Structured data with ${viewMode === 'summary' ? 'summary analysis' : 'side-by-side comparison'}`,
+      format: 'xlsx',
+      viewType: viewMode
+    },
+    {
+      id: 'csv',
+      label: `📋 ${viewMode === 'summary' ? 'Summary' : 'Side-by-Side'} CSV Data`,
+      description: `Raw comparison data for ${viewMode === 'summary' ? 'summary' : 'side-by-side'} analysis`,
       format: 'csv',
       viewType: viewMode
     },
     {
-      id: 'html-other',
-      label: `📄 ${viewMode === 'summary' ? 'Side-by-Side' : 'Summary'} HTML Report`,
-      description: `Alternative view: ${viewMode === 'summary' ? 'side-by-side comparison' : 'detailed summary view'}`,
-      format: 'html',
-      viewType: viewMode === 'summary' ? 'sideBySide' : 'summary'
-    },
-    {
       id: 'text',
-      label: '📝 Complete Text Report',
-      description: 'Comprehensive text-based report with all details',
+      label: '📝 Text Report',
+      description: 'Detailed text-based comparison report',
       format: 'txt'
     }
   ];
 
-  // ENHANCED: Now accepts viewType parameter
+  // ENHANCED: Simplified HTML report - now accepts viewType parameter
   const generateHTMLReport = (viewType = 'summary') => {
     const timestamp = new Date().toLocaleString();
-    
-    // Generate view-specific content section
-    const generateViewSpecificContent = () => {
-      if (viewType === 'sideBySide') {
-        return `
-        <div style="margin: 30px 0;">
-          <h2 style="text-align: center; margin-bottom: 30px; color: #1f2937;">📄 Side-by-Side Document Comparison</h2>
-          
-          <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; font-size: 0.9rem;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div style="width: 16px; height: 16px; background: #dcfce7; border: 1px solid #166534; border-radius: 3px;"></div>
-              <span>Added Content</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div style="width: 16px; height: 16px; background: #fee2e2; border: 1px solid #dc2626; border-radius: 3px;"></div>
-              <span>Removed Content</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div style="width: 16px; height: 16px; background: #fef3c7; border: 1px solid #d97706; border-radius: 3px;"></div>
-              <span>Modified Content</span>
-            </div>
-          </div>
-
-          <div class="side-by-side">
-            <div class="document-panel">
-              <div class="document-header">📄 ${file1Name || 'Document 1'}</div>
-              <div class="document-content">
-                ${(results.file1_pages || []).map(page => `
-                  <div class="page">
-                    <div class="page-header">Page ${page.page_number}</div>
-                    ${(page.paragraphs || []).map((para, index) => {
-                      const change = (results.text_changes || []).find(c => 
-                        c.page === page.page_number && c.paragraph === index
-                      );
-                      const changeClass = change ? change.type : '';
-                      return `<div class="paragraph ${changeClass}">${para.text}</div>`;
-                    }).join('')}
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-            
-            <div class="document-panel">
-              <div class="document-header">📄 ${file2Name || 'Document 2'}</div>
-              <div class="document-content">
-                ${(results.file2_pages || []).map(page => `
-                  <div class="page">
-                    <div class="page-header">Page ${page.page_number}</div>
-                    ${(page.paragraphs || []).map((para, index) => {
-                      const change = (results.text_changes || []).find(c => 
-                        c.page === page.page_number && c.paragraph === index
-                      );
-                      const changeClass = change ? change.type : '';
-                      return `<div class="paragraph ${changeClass}">${para.text}</div>`;
-                    }).join('')}
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          </div>
-        </div>`;
-      } else {
-        // Summary view - detailed changes list
-        return `
-        <div style="margin: 30px 0;">
-          <h2 style="text-align: center; margin-bottom: 30px; color: #1f2937;">📊 Summary View Analysis</h2>
-          
-          <div style="margin-bottom: 30px;">
-            <h3 style="color: #1f2937; margin-bottom: 20px;">📋 Detailed Changes List</h3>
-            ${(results.text_changes || []).map((change, index) => `
-              <div style="background: ${change.type === 'added' ? '#dcfce7' : change.type === 'removed' ? '#fee2e2' : change.type === 'modified' ? '#fef3c7' : '#f3f4f6'}; 
-                          border: 1px solid ${change.type === 'added' ? '#166534' : change.type === 'removed' ? '#dc2626' : change.type === 'modified' ? '#d97706' : '#d1d5db'}; 
-                          margin-bottom: 15px; padding: 15px; border-radius: 8px;">
-                <div style="font-weight: 600; margin-bottom: 8px; color: #1f2937;">
-                  ${change.type === 'added' ? '➕' : change.type === 'removed' ? '➖' : change.type === 'modified' ? '✏️' : '📝'} 
-                  Page ${change.page}, Paragraph ${change.paragraph} - ${change.type.toUpperCase()}
-                </div>
-                ${change.type === 'modified' ? `
-                  <div style="margin-bottom: 8px;">
-                    <strong style="color: #dc2626;">Original:</strong> "${change.old_text}"
-                  </div>
-                  <div>
-                    <strong style="color: #166534;">New:</strong> "${change.new_text}"
-                  </div>
-                ` : `
-                  <div style="font-family: monospace;">"${change.text || change.old_text || change.new_text}"</div>
-                `}
-              </div>
-            `).join('')}
-          </div>
-        </div>`;
-      }
-    };
     
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Comparison Report (${viewType === 'sideBySide' ? 'Side-by-Side' : 'Summary'}) - ${file1Name} vs ${file2Name}</title>
+    <title>PDF Comparison Report - ${file1Name} vs ${file2Name}</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
@@ -265,6 +172,23 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             border-radius: 6px; 
             font-weight: 500; 
         }
+        .legend { 
+            display: flex; 
+            justify-content: center; 
+            gap: 20px; 
+            margin: 20px 0; 
+            font-size: 0.9rem; 
+        }
+        .legend-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        .legend-box { 
+            width: 16px; 
+            height: 16px; 
+            border-radius: 3px; 
+        }
         .footer { 
             margin-top: 40px; 
             padding-top: 20px; 
@@ -295,7 +219,7 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
 <body>
     <div class="container">
         <div class="header">
-            <h1 class="title">📑 PDF Comparison Report (${viewType === 'sideBySide' ? 'Side-by-Side View' : 'Summary View'})</h1>
+            <h1 class="title">📑 PDF Comparison Report</h1>
             <p class="subtitle">Generated on ${timestamp}</p>
             <p><strong>${file1Name || 'Document 1'}</strong> vs <strong>${file2Name || 'Document 2'}</strong></p>
         </div>
@@ -327,12 +251,62 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             </div>
         </div>
 
-        ${generateViewSpecificContent()}
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="background: #dcfce7; border: 1px solid #166534;"></div>
+                <span>Added Content</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #fee2e2; border: 1px solid #dc2626;"></div>
+                <span>Removed Content</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #fef3c7; border: 1px solid #d97706;"></div>
+                <span>Modified Content</span>
+            </div>
+        </div>
+
+        <div class="side-by-side">
+            <div class="document-panel">
+                <div class="document-header">📄 ${file1Name || 'Document 1'}</div>
+                <div class="document-content">
+                    ${(results.file1_pages || []).map(page => `
+                        <div class="page">
+                            <div class="page-header">Page ${page.page_number}</div>
+                            ${(page.paragraphs || []).map((para, index) => {
+                                const change = (results.text_changes || []).find(c => 
+                                    c.page === page.page_number && c.paragraph === index
+                                );
+                                const changeClass = change ? change.type : '';
+                                return `<div class="paragraph ${changeClass}">${para.text}</div>`;
+                            }).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div class="document-panel">
+                <div class="document-header">📄 ${file2Name || 'Document 2'}</div>
+                <div class="document-content">
+                    ${(results.file2_pages || []).map(page => `
+                        <div class="page">
+                            <div class="page-header">Page ${page.page_number}</div>
+                            ${(page.paragraphs || []).map((para, index) => {
+                                const change = (results.text_changes || []).find(c => 
+                                    c.page === page.page_number && c.paragraph === index
+                                );
+                                const changeClass = change ? change.type : '';
+                                return `<div class="paragraph ${changeClass}">${para.text}</div>`;
+                            }).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
 
         <div class="footer">
             <p>Generated by VeriDiff - Professional File Comparison Tool</p>
-            <p>View Type: ${viewType === 'sideBySide' ? 'Side-by-Side Comparison' : 'Summary Analysis'} | 
-               Processing time: ${results.processing_time?.total_time_ms || 'N/A'}ms | 
+            <p>Processing time: ${results.processing_time?.total_time_ms || 'N/A'}ms | 
                Quality: ${Math.round((results.quality_metrics?.overall_success_rate || 1) * 100)}%</p>
             <div class="powered-by">
                 🚀 Powered by VeriDiff
@@ -343,82 +317,32 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
 </html>`;
   };
 
-  // ENHANCED: Now accepts viewType parameter for different CSV formats
+  // ENHANCED: Generate CSV export with VeriDiff branding - now accepts viewType parameter
   const generateCSVData = (viewType = 'summary') => {
-    if (viewType === 'sideBySide') {
-      // Side-by-side CSV: parallel content comparison
-      const headers = ['Page', 'Paragraph', 'Document_1_Content', 'Document_2_Content', 'Change_Type', 'Change_Details'];
-      const rows = [headers];
+    const headers = ['Page', 'Paragraph', 'Change_Type', 'Original_Text', 'New_Text', 'Character_Count', 'File_Source'];
+    const rows = [headers];
 
-      const maxPages = Math.max(
-        (results.file1_pages || []).length,
-        (results.file2_pages || []).length
-      );
+    (results.text_changes || []).forEach(change => {
+      rows.push([
+        change.page,
+        change.paragraph,
+        change.type,
+        change.type === 'modified' ? change.old_text : change.text,
+        change.type === 'modified' ? change.new_text : '',
+        change.char_count || change.char_count_old || 0,
+        change.file
+      ]);
+    });
 
-      for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
-        const page1 = (results.file1_pages || []).find(p => p.page_number === pageNum);
-        const page2 = (results.file2_pages || []).find(p => p.page_number === pageNum);
-        
-        const maxParas = Math.max(
-          (page1?.paragraphs || []).length,
-          (page2?.paragraphs || []).length
-        );
+    // Add VeriDiff branding as comment at the end
+    rows.push(['']);
+    rows.push(['# Generated by VeriDiff - Professional File Comparison Tool']);
+    rows.push([`# Report generated on ${new Date().toLocaleString()}`]);
 
-        for (let paraIndex = 0; paraIndex < maxParas; paraIndex++) {
-          const para1 = page1?.paragraphs?.[paraIndex]?.text || '';
-          const para2 = page2?.paragraphs?.[paraIndex]?.text || '';
-          
-          const change = (results.text_changes || []).find(c => 
-            c.page === pageNum && c.paragraph === paraIndex
-          );
-          
-          const changeType = change?.type || 'unchanged';
-          const changeDetails = change ? 
-            (change.type === 'modified' ? `Old: "${change.old_text}" | New: "${change.new_text}"` : 
-             `"${change.text || change.old_text || change.new_text}"`) : '';
-
-          rows.push([
-            pageNum,
-            paraIndex + 1,
-            para1,
-            para2,
-            changeType,
-            changeDetails
-          ]);
-        }
-      }
-
-      rows.push(['']);
-      rows.push(['# Side-by-Side Comparison Export']);
-      rows.push([`# Generated by VeriDiff on ${new Date().toLocaleString()}`]);
-
-      return rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-    } else {
-      // Original summary format - unchanged
-      const headers = ['Page', 'Paragraph', 'Change_Type', 'Original_Text', 'New_Text', 'Character_Count', 'File_Source'];
-      const rows = [headers];
-
-      (results.text_changes || []).forEach(change => {
-        rows.push([
-          change.page,
-          change.paragraph,
-          change.type,
-          change.type === 'modified' ? change.old_text : change.text,
-          change.type === 'modified' ? change.new_text : '',
-          change.char_count || change.char_count_old || 0,
-          change.file
-        ]);
-      });
-
-      rows.push(['']);
-      rows.push(['# Generated by VeriDiff - Professional File Comparison Tool']);
-      rows.push([`# Report generated on ${new Date().toLocaleString()}`]);
-
-      return rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-    }
+    return rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
   };
 
-  // Original generateDetailedReport function - UNCHANGED
+  // Generate comprehensive text report with VeriDiff branding
   const generateDetailedReport = () => {
     const timestamp = new Date().toLocaleString();
     const line = '='.repeat(80);
@@ -495,7 +419,7 @@ END OF REPORT
 ${line}`;
   };
 
-  // Original downloadBlob function - UNCHANGED
+  // Helper function to trigger download
   const downloadBlob = (blob, filename) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -507,10 +431,9 @@ ${line}`;
     URL.revokeObjectURL(url);
   };
 
-  // ENHANCED: Now handles viewType parameter
-  const downloadComparisonData = async (format, viewType) => {
+  // ENHANCED: Simplified download function with 4 stable options - now passes viewType
+  const downloadComparisonData = async (format) => {
     const timestamp = new Date().toISOString().split('T')[0];
-    const viewLabel = viewType === 'sideBySide' ? 'SideBySide' : 'Summary';
     
     try {
       setIsGeneratingDownload(true);
@@ -518,16 +441,22 @@ ${line}`;
       
       switch (format) {
         case 'html':
-          const htmlContent = generateHTMLReport(viewType);
+          const htmlContent = generateHTMLReport(viewMode);
           const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
-          downloadBlob(htmlBlob, `PDF_Comparison_${viewLabel}_${timestamp}.html`);
+          downloadBlob(htmlBlob, `PDF_Comparison_Report_${timestamp}.html`);
           break;
 
         case 'excel':
-        case 'csv':
-          const csvContent = generateCSVData(viewType);
+          // Enhanced CSV format for Excel compatibility
+          const csvContent = generateCSVData(viewMode);
           const csvBlob = new Blob([csvContent], { type: 'text/csv' });
-          downloadBlob(csvBlob, `PDF_Comparison_${viewLabel}_${timestamp}.csv`);
+          downloadBlob(csvBlob, `PDF_Comparison_Data_${timestamp}.csv`);
+          break;
+
+        case 'csv':
+          const csvData = generateCSVData(viewMode);
+          const csvDataBlob = new Blob([csvData], { type: 'text/csv' });
+          downloadBlob(csvDataBlob, `PDF_Changes_${timestamp}.csv`);
           break;
 
         case 'text':
@@ -545,7 +474,7 @@ ${line}`;
     }
   };
 
-  // ALL REMAINING FUNCTIONS ARE COMPLETELY UNCHANGED FROM ORIGINAL
+  // Toggle page expansion
   const togglePageExpansion = (pageNumber) => {
     const newExpanded = new Set(expandedPages);
     if (newExpanded.has(pageNumber)) {
@@ -556,6 +485,7 @@ ${line}`;
     setExpandedPages(newExpanded);
   };
 
+  // Expand/collapse all pages
   const toggleAllPages = () => {
     if (expandedPages.size === results.page_differences?.length) {
       setExpandedPages(new Set());
@@ -565,6 +495,7 @@ ${line}`;
     }
   };
 
+  // Get status color for different change types
   const getChangeColor = (type) => {
     switch (type) {
       case 'added': return '#22c55e';
@@ -574,6 +505,7 @@ ${line}`;
     }
   };
 
+  // Get status background color
   const getChangeBackground = (type) => {
     switch (type) {
       case 'added': return '#dcfce7';
@@ -666,7 +598,7 @@ ${line}`;
             </button>
           </div>
 
-          {/* ENHANCED: Download Dropdown with view-aware options */}
+          {/* Simplified Download Dropdown */}
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <button
               onClick={() => setDownloadDropdownOpen(!downloadDropdownOpen)}
@@ -686,7 +618,7 @@ ${line}`;
               }}
             >
               {isGeneratingDownload ? '⏳' : '📥'} 
-              {isGeneratingDownload ? 'Generating...' : `Download ${viewMode === 'summary' ? 'Summary' : 'Side-by-Side'}`} ⌄
+              {isGeneratingDownload ? 'Generating...' : 'Download Report'} ⌄
             </button>
 
             {downloadDropdownOpen && (
@@ -699,24 +631,13 @@ ${line}`;
                 borderRadius: '8px',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                 zIndex: 1000,
-                minWidth: '320px',
+                minWidth: '300px',
                 marginTop: '4px'
               }}>
-                <div style={{
-                  padding: '12px 16px',
-                  borderBottom: '1px solid #f3f4f6',
-                  fontSize: '0.85rem',
-                  fontWeight: '600',
-                  color: '#374151',
-                  background: '#f8fafc'
-                }}>
-                  Current View: {viewMode === 'summary' ? '📊 Summary' : '📄 Side-by-Side'}
-                </div>
-                
                 {downloadOptions.map(option => (
                   <button
                     key={option.id}
-                    onClick={() => downloadComparisonData(option.format, option.viewType)}
+                    onClick={() => downloadComparisonData(option.format)}
                     style={{
                       width: '100%',
                       background: 'none',
@@ -744,7 +665,7 @@ ${line}`;
         </div>
       </div>
 
-      {/* ALL REMAINING CONTENT IS EXACTLY THE SAME AS YOUR ORIGINAL - NO CHANGES TO DISPLAY LOGIC */}
+      {/* Conditional View Rendering */}
       {viewMode === 'summary' ? (
         /* SUMMARY VIEW - All existing functionality preserved */
         <>
@@ -1111,7 +1032,7 @@ ${line}`;
           </div>
         </>
       ) : (
-        /* SIDE-BY-SIDE VIEW - Uses the existing PDFSideBySideView component - COMPLETELY UNCHANGED */
+        /* SIDE-BY-SIDE VIEW - Uses the existing PDFSideBySideView component */
         <PDFSideBySideView 
           results={results} 
           file1Name={file1Name} 
