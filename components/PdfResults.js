@@ -36,7 +36,7 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     }
   ];
 
-  // Simplified HTML report - removed complex JavaScript
+  // ENHANCED: HTML report with synchronized scrolling
   const generateHTMLReport = () => {
     const timestamp = new Date().toLocaleString();
     
@@ -186,6 +186,25 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             height: 16px; 
             border-radius: 3px; 
         }
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .nav-button {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1d4ed8;
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .nav-button:hover {
+            background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+        }
         .footer { 
             margin-top: 40px; 
             padding-top: 20px; 
@@ -210,6 +229,7 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
         @media print {
             body { background: white; }
             .container { box-shadow: none; }
+            .nav-buttons { display: none; }
         }
     </style>
 </head>
@@ -263,10 +283,17 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             </div>
         </div>
 
+        <!-- Navigation Buttons -->
+        <div class="nav-buttons">
+            <button class="nav-button" onclick="scrollToTop()">⬆️ Top</button>
+            <button class="nav-button" onclick="scrollDown()">🔍 Next Section</button>
+            <button class="nav-button" onclick="scrollToBottom()">⬇️ Bottom</button>
+        </div>
+
         <div class="side-by-side">
             <div class="document-panel">
                 <div class="document-header">📄 ${file1Name || 'Document 1'}</div>
-                <div class="document-content">
+                <div class="document-content" id="leftPanel">
                     ${(results.file1_pages || []).map(page => `
                         <div class="page">
                             <div class="page-header">Page ${page.page_number}</div>
@@ -284,7 +311,7 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             
             <div class="document-panel">
                 <div class="document-header">📄 ${file2Name || 'Document 2'}</div>
-                <div class="document-content">
+                <div class="document-content" id="rightPanel">
                     ${(results.file2_pages || []).map(page => `
                         <div class="page">
                             <div class="page-header">Page ${page.page_number}</div>
@@ -310,6 +337,60 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             </div>
         </div>
     </div>
+
+    <script>
+        // Synchronized scrolling for downloaded HTML report
+        let isScrolling = false;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const leftPanel = document.getElementById('leftPanel');
+            const rightPanel = document.getElementById('rightPanel');
+            
+            if (leftPanel && rightPanel) {
+                leftPanel.addEventListener('scroll', function() {
+                    if (isScrolling) return;
+                    isScrolling = true;
+                    rightPanel.scrollTop = leftPanel.scrollTop;
+                    setTimeout(() => { isScrolling = false; }, 10);
+                });
+                
+                rightPanel.addEventListener('scroll', function() {
+                    if (isScrolling) return;
+                    isScrolling = true;
+                    leftPanel.scrollTop = rightPanel.scrollTop;
+                    setTimeout(() => { isScrolling = false; }, 10);
+                });
+            }
+        });
+        
+        // Navigation functions
+        function scrollToTop() {
+            const leftPanel = document.getElementById('leftPanel');
+            const rightPanel = document.getElementById('rightPanel');
+            if (leftPanel) leftPanel.scrollTop = 0;
+            if (rightPanel) rightPanel.scrollTop = 0;
+        }
+        
+        function scrollDown() {
+            const leftPanel = document.getElementById('leftPanel');
+            const rightPanel = document.getElementById('rightPanel');
+            if (leftPanel && rightPanel) {
+                const currentScroll = leftPanel.scrollTop;
+                leftPanel.scrollTop = currentScroll + 200;
+                rightPanel.scrollTop = currentScroll + 200;
+            }
+        }
+        
+        function scrollToBottom() {
+            const leftPanel = document.getElementById('leftPanel');
+            const rightPanel = document.getElementById('rightPanel');
+            if (leftPanel && rightPanel) {
+                const maxScroll = leftPanel.scrollHeight - leftPanel.clientHeight;
+                leftPanel.scrollTop = maxScroll;
+                rightPanel.scrollTop = maxScroll;
+            }
+        }
+    </script>
 </body>
 </html>`;
   };
@@ -634,7 +715,7 @@ ${line}`;
                 {downloadOptions.map(option => (
                   <button
                     key={option.id}
-                    onClick={() => downloadComparisonData(option.id)}
+                    onClick={() => downloadComparisonData(option.format)}
                     style={{
                       width: '100%',
                       background: 'none',
