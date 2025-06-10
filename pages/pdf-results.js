@@ -1,6 +1,6 @@
 // components/PdfResults.js - Simplified Enhanced Version
 import { useState } from 'react';
-import PDFSideBySideView from './PDFSideBySideView';
+import PDFSideBySideView from '../components/PDFSideBySideView';
 
 const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   const [expandedPages, setExpandedPages] = useState(new Set());
