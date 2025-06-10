@@ -2,6 +2,7 @@
 import { useState } from 'react';
 
 const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
+  console.log('🔍 DEBUG - PdfResults received:', { results, file1Name, file2Name }); 
   const [viewMode, setViewMode] = useState('changes'); // 'changes' | 'sideBySide'
   const [showContext, setShowContext] = useState(true);
   const [changeFilter, setChangeFilter] = useState('all');
