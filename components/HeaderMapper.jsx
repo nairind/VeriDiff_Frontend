@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm, onRun, sampleData1, sampleData2, isProcessing }) => {
   const [mappings, setMappings] = useState([]);
-  const [autoRerunEnabled, setAutoRerunEnabled] = useState(false); // Start disabled for stable UI
+  const [autoRerunEnabled, setAutoRerunEnabled] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
   const lastAutoRunRef = useRef(0);
 
@@ -71,7 +71,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
       onConfirm(mappings);
       setTimeout(() => {
         if (!isProcessing) {
-          onRun(mappings);  // 🔧 FIXED: Now passing mappings
+          onRun();
         }
       }, 100);
     }, 1000);
@@ -122,7 +122,7 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
     console.log('🔄 Manual run triggered');
     setAutoRerunEnabled(false);
     lastAutoRunRef.current = Date.now();
-    onRun(mappings);  // 🔧 FIXED: Now passing mappings
+    onRun();
     
     setTimeout(() => {
       setAutoRerunEnabled(true);
