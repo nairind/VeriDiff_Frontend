@@ -634,7 +634,7 @@ ${line}`;
                 {downloadOptions.map(option => (
                   <button
                     key={option.id}
-                    onClick={() => downloadComparisonData(option.format)}
+                    onClick={() => downloadComparisonData(option.id)}
                     style={{
                       width: '100%',
                       background: 'none',
