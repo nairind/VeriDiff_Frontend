@@ -8,28 +8,25 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   const [viewMode, setViewMode] = useState('summary'); // 'summary' | 'sideBySide'
   const [downloadDropdownOpen, setDownloadDropdownOpen] = useState(false);
 
-  // ENHANCED: Download options now include viewType
+  // Simplified download options - removed interactive HTML
   const downloadOptions = [
     {
       id: 'html',
-      label: `📄 ${viewMode === 'summary' ? 'Summary' : 'Side-by-Side'} HTML Report`,
-      description: `Professional web page with ${viewMode === 'summary' ? 'detailed summary view' : 'side-by-side comparison'}`,
-      format: 'html',
-      viewType: viewMode
+      label: '📄 HTML Report',
+      description: 'Professional web page with side-by-side comparison',
+      format: 'html'
     },
     {
       id: 'excel',
-      label: `📊 ${viewMode === 'summary' ? 'Summary' : 'Side-by-Side'} CSV Export`,
-      description: `Structured data with ${viewMode === 'summary' ? 'summary analysis' : 'side-by-side comparison'}`,
-      format: 'xlsx',
-      viewType: viewMode
+      label: '📊 Excel Export',
+      description: 'Structured data with change analysis',
+      format: 'xlsx'
     },
     {
       id: 'csv',
-      label: `📋 ${viewMode === 'summary' ? 'Summary' : 'Side-by-Side'} CSV Data`,
-      description: `Raw comparison data for ${viewMode === 'summary' ? 'summary' : 'side-by-side'} analysis`,
-      format: 'csv',
-      viewType: viewMode
+      label: '📋 CSV Data',
+      description: 'Raw comparison data for analysis',
+      format: 'csv'
     },
     {
       id: 'text',
@@ -39,8 +36,8 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     }
   ];
 
-  // ENHANCED: Simplified HTML report - now accepts viewType parameter
-  const generateHTMLReport = (viewType = 'summary') => {
+  // Simplified HTML report - removed complex JavaScript
+  const generateHTMLReport = () => {
     const timestamp = new Date().toLocaleString();
     
     return `<!DOCTYPE html>
@@ -317,8 +314,8 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
 </html>`;
   };
 
-  // ENHANCED: Generate CSV export with VeriDiff branding - now accepts viewType parameter
-  const generateCSVData = (viewType = 'summary') => {
+  // Generate CSV export with VeriDiff branding
+  const generateCSVData = () => {
     const headers = ['Page', 'Paragraph', 'Change_Type', 'Original_Text', 'New_Text', 'Character_Count', 'File_Source'];
     const rows = [headers];
 
@@ -431,7 +428,7 @@ ${line}`;
     URL.revokeObjectURL(url);
   };
 
-  // ENHANCED: Simplified download function with 4 stable options - now passes viewType
+  // Simplified download function with 4 stable options
   const downloadComparisonData = async (format) => {
     const timestamp = new Date().toISOString().split('T')[0];
     
@@ -441,20 +438,20 @@ ${line}`;
       
       switch (format) {
         case 'html':
-          const htmlContent = generateHTMLReport(viewMode);
+          const htmlContent = generateHTMLReport();
           const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
           downloadBlob(htmlBlob, `PDF_Comparison_Report_${timestamp}.html`);
           break;
 
         case 'excel':
           // Enhanced CSV format for Excel compatibility
-          const csvContent = generateCSVData(viewMode);
+          const csvContent = generateCSVData();
           const csvBlob = new Blob([csvContent], { type: 'text/csv' });
           downloadBlob(csvBlob, `PDF_Comparison_Data_${timestamp}.csv`);
           break;
 
         case 'csv':
-          const csvData = generateCSVData(viewMode);
+          const csvData = generateCSVData();
           const csvDataBlob = new Blob([csvData], { type: 'text/csv' });
           downloadBlob(csvDataBlob, `PDF_Changes_${timestamp}.csv`);
           break;
