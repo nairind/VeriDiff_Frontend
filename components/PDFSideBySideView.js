@@ -1,6 +1,26 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 
 const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
+  // Refs for synchronized scrolling
+  const leftPaneRef = useRef(null);
+  const rightPaneRef = useRef(null);
+  const isScrollingRef = useRef(false);
+
+  // Synchronized scrolling function
+  const handleScroll = useCallback((scrollingPane, otherPaneRef) => {
+    if (isScrollingRef.current) return;
+    
+    isScrollingRef.current = true;
+    if (otherPaneRef.current) {
+      otherPaneRef.current.scrollTop = scrollingPane.scrollTop;
+    }
+    
+    // Reset the flag after a brief delay
+    setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 10);
+  }, []);
+
   const findParagraphChange = (pageNumber, paragraphIndex, fileNumber) => {
     const allChanges = results?.text_changes || [];
     return allChanges.find(change => 
@@ -151,7 +171,7 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         </div>
       </div>
 
-      {/* Side-by-Side Layout */}
+      {/* Side-by-Side Layout with Synchronized Scrolling */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1fr 1fr',
@@ -177,13 +197,17 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
             </span>
           </div>
           
-          <div style={{
-            height: '600px',
-            overflowY: 'auto',
-            padding: '20px',
-            fontSize: '0.9rem',
-            lineHeight: '1.6'
-          }}>
+          <div 
+            ref={leftPaneRef}
+            style={{
+              height: '600px',
+              overflowY: 'auto',
+              padding: '20px',
+              fontSize: '0.9rem',
+              lineHeight: '1.6'
+            }}
+            onScroll={(e) => handleScroll(e.target, rightPaneRef)}
+          >
             {renderDocument(file1Pages, file1Name, 1)}
           </div>
         </div>
@@ -208,15 +232,92 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
             </span>
           </div>
           
-          <div style={{
-            height: '600px',
-            overflowY: 'auto',
-            padding: '20px',
-            fontSize: '0.9rem',
-            lineHeight: '1.6'
-          }}>
+          <div 
+            ref={rightPaneRef}
+            style={{
+              height: '600px',
+              overflowY: 'auto',
+              padding: '20px',
+              fontSize: '0.9rem',
+              lineHeight: '1.6'
+            }}
+            onScroll={(e) => handleScroll(e.target, leftPaneRef)}
+          >
             {renderDocument(file2Pages, file2Name, 2)}
           </div>
+        </div>
+      </div>
+
+      {/* Quick Navigation */}
+      <div style={{
+        marginTop: '20px',
+        display: 'flex',
+        justifyContent: 'center'
+      }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            onClick={() => {
+              if (leftPaneRef.current) leftPaneRef.current.scrollTop = 0;
+              if (rightPaneRef.current) rightPaneRef.current.scrollTop = 0;
+            }}
+            style={{
+              padding: '8px 16px',
+              background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+              color: '#1d4ed8',
+              border: '1px solid #3b82f6',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            ⬆️ Top
+          </button>
+          <button 
+            onClick={() => {
+              const scrollToNext = () => {
+                if (leftPaneRef.current && rightPaneRef.current) {
+                  const currentScroll = leftPaneRef.current.scrollTop;
+                  leftPaneRef.current.scrollTop = currentScroll + 200;
+                  rightPaneRef.current.scrollTop = currentScroll + 200;
+                }
+              };
+              scrollToNext();
+            }}
+            style={{
+              padding: '8px 16px',
+              background: 'linear-gradient(135deg, #fed7aa, #fdba74)',
+              color: '#c2410c',
+              border: '1px solid #f97316',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            🔍 Next Change
+          </button>
+          <button 
+            onClick={() => {
+              if (leftPaneRef.current && rightPaneRef.current) {
+                const maxScroll = leftPaneRef.current.scrollHeight - leftPaneRef.current.clientHeight;
+                leftPaneRef.current.scrollTop = maxScroll;
+                rightPaneRef.current.scrollTop = maxScroll;
+              }
+            }}
+            style={{
+              padding: '8px 16px',
+              background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+              color: '#1d4ed8',
+              border: '1px solid #3b82f6',
+              borderRadius: '6px',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            ⬇️ Bottom
+          </button>
         </div>
       </div>
 
