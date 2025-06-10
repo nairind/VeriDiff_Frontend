@@ -1,1069 +1,198 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+// components/PdfResults.js - Recreated from Screenshot
+import { useState } from 'react';
 
-const ImprovedPdfResults = ({ results, file1Name, file2Name, rawDocuments }) => {
-  const [isGeneratingDownload, setIsGeneratingDownload] = useState(false);
-  const [viewMode, setViewMode] = useState('changes');
-  const [selectedPage, setSelectedPage] = useState(null);
+const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
+  const [viewMode, setViewMode] = useState('changes'); // 'changes' | 'sideBySide'
   const [showContext, setShowContext] = useState(true);
+  const [changeFilter, setChangeFilter] = useState('all');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadDropdownOpen, setDownloadDropdownOpen] = useState(false);
+
+  // Extract data from your smart_changes format
+  const smartChanges = results?.smart_changes || [];
+  const similarity = results?.similarity || 86;
+  const totalChanges = smartChanges.length;
   
-  // Refs for synchronized scrolling
-  const leftPaneRef = useRef(null);
-  const rightPaneRef = useRef(null);
-  const isScrollingRef = useRef(false);
+  // Count different change types from smart_changes
+  const changeTypeCounts = smartChanges.reduce((acc, change) => {
+    const type = change.type || 'modified';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
 
-  // Mock data to demonstrate the improved design (your original mock data)
-  const mockResults = {
-    similarity_score: 86, // Improved score without alignment issues
-    differences_found: 11, // Fewer due to better alignment 
-    total_pages: 2,
-    page_differences: [
-      {
-        page_number: 1,
-        summary: "Content changes detected with proper alignment",
-        changes_count: 11
-      }
-    ],
-    text_changes: [
-      {
-        page: 1,
-        paragraph: 1,
-        type: 'unchanged',
-        text: 'Customer Information:',
-        context_before: '',
-        context_after: 'Item 1: Service A - $100.00'
-      },
-      {
-        page: 1,
-        paragraph: 2,
-        type: 'unchanged', 
-        text: 'Item 1: Service A - $100.00',
-        context_before: 'Customer Information:',
-        context_after: 'Item 2: Service B - $200.00'
-      },
-      {
-        page: 1,
-        paragraph: 3,
-        type: 'unchanged',
-        text: 'Item 2: Service B - $200.00',
-        context_before: 'Item 1: Service A - $100.00', 
-        context_after: 'SSL Certificate (1 year) 1 $75.00 $75.00'
-      },
-      // Fixed alignment - SSL Certificate properly identified as removed
-      {
-        page: 1,
-        paragraph: 4,
-        type: 'removed',
-        old_text: 'SSL Certificate (1 year) 1 $75.00 $75.00',
-        context_before: 'Item 2: Service B - $200.00',
-        context_after: 'Subtotal: $7,725.00'
-      },
-      // Subtotal properly aligned with subtotal
-      {
-        page: 1,
-        paragraph: 5,
-        type: 'modified',
-        old_text: 'Subtotal: $7,725.00',
-        new_text: 'Subtotal: $6,500.00',
-        context_before: 'SSL Certificate (1 year) 1 $75.00 $75.00',
-        context_after: 'Tax (8.25%): $637.31'
-      },
-      // Tax properly identified as modified
-      {
-        page: 1,
-        paragraph: 6,
-        type: 'modified',
-        old_text: 'Tax (8.25%): $637.31',
-        new_text: 'Tax (8.25%): $536.25',
-        context_before: 'Subtotal: $7,725.00',
-        context_after: 'TOTAL AMOUNT DUE: $8,362.31'
-      },
-      // Total properly aligned with total
-      {
-        page: 1,
-        paragraph: 7,
-        type: 'modified',
-        old_text: 'TOTAL AMOUNT DUE: $8,362.31', 
-        new_text: 'TOTAL AMOUNT DUE: $7,036.25',
-        context_before: 'Tax (8.25%): $637.31',
-        context_after: ''
-      }
-    ],
-    processing_time: { total_time_ms: 1247 },
-    file1_metadata: { totalPages: 2, totalWords: 48 },
-    file2_metadata: { totalPages: 2, totalWords: 56 },
-    processing_method: 'Enhanced SmartDiff with Content-Aware Alignment'
+  // Get unique pages that have changes
+  const pagesWithChanges = [...new Set(smartChanges.map(change => change.page))].length;
+  const totalPages = Math.max(...smartChanges.map(change => change.page || 1), 2);
+
+  // Download options
+  const downloadOptions = [
+    { id: 'html', label: '📄 HTML Report', description: 'Web page with side-by-side view' },
+    { id: 'csv', label: '📋 CSV Data', description: 'Raw comparison data for analysis' },
+    { id: 'text', label: '📝 Text Report', description: 'Detailed text-based report' }
+  ];
+
+  // Simple download functions
+  const generateHTMLReport = () => {
+    return `<!DOCTYPE html>
+<html><head><title>PDF Comparison Report</title></head>
+<body>
+<h1>PDF Comparison Report</h1>
+<p>Similarity: ${similarity}%</p>
+<p>Changes: ${totalChanges}</p>
+<h2>Changes:</h2>
+${smartChanges.map(change => `
+<div>
+  <strong>Page ${change.page}, ${change.type}:</strong><br>
+  ${change.content || change.new_content || 'No content'}
+</div>
+`).join('')}
+<p>Generated by VeriDiff</p>
+</body></html>`;
   };
 
-  // Use provided results or fall back to mock data
-  const data = results || mockResults;
+  const generateCSVData = () => {
+    const headers = ['Page', 'Type', 'Content', 'Confidence'];
+    const rows = [headers];
+    smartChanges.forEach(change => {
+      rows.push([
+        change.page || '',
+        change.type || 'modified',
+        (change.content || change.new_content || '').replace(/"/g, '""'),
+        change.alignment_confidence || ''
+      ]);
+    });
+    return rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+  };
 
-  // Synchronized scrolling functions
-  const handleScroll = useCallback((scrollingPane, otherPaneRef) => {
-    if (isScrollingRef.current) return;
+  const generateTextReport = () => {
+    return `PDF COMPARISON REPORT
+=====================
+Files: ${file1Name} vs ${file2Name}
+Similarity: ${similarity}%
+Total Changes: ${totalChanges}
+Pages Modified: ${pagesWithChanges}
+
+CHANGES:
+${smartChanges.map((change, i) => `
+${i + 1}. Page ${change.page} - ${change.type}
+   ${change.content || change.new_content || 'No content'}
+`).join('')}
+
+Generated by VeriDiff`;
+  };
+
+  const downloadBlob = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownload = async (format) => {
+    setIsDownloading(true);
+    setDownloadDropdownOpen(false);
     
-    isScrollingRef.current = true;
-    if (otherPaneRef.current) {
-      otherPaneRef.current.scrollTop = scrollingPane.scrollTop;
+    try {
+      const timestamp = new Date().toISOString().split('T')[0];
+      
+      switch (format) {
+        case 'html':
+          const htmlContent = generateHTMLReport();
+          downloadBlob(new Blob([htmlContent], { type: 'text/html' }), `PDF_Report_${timestamp}.html`);
+          break;
+        case 'csv':
+          const csvContent = generateCSVData();
+          downloadBlob(new Blob([csvContent], { type: 'text/csv' }), `PDF_Data_${timestamp}.csv`);
+          break;
+        case 'text':
+          const textContent = generateTextReport();
+          downloadBlob(new Blob([textContent], { type: 'text/plain' }), `PDF_Report_${timestamp}.txt`);
+          break;
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Download failed. Please try again.');
+    } finally {
+      setIsDownloading(false);
     }
-    
-    // Reset the flag after a brief delay
-    setTimeout(() => {
-      isScrollingRef.current = false;
-    }, 10);
-  }, []);
-
-  const downloadReport = () => {
-    setIsGeneratingDownload(true);
-    setTimeout(() => setIsGeneratingDownload(false), 2000);
   };
 
-  const renderSummaryStats = () => {
-    const isEnhancedComparison = data.processing_method?.includes('Enhanced') || 
-                                data.processing_method?.includes('SmartDiff') ||
-                                data.processing_method?.includes('Content-Aware');
-    
-    return (
-      <div>
-        {/* Comparison Method Indicator */}
-        <div style={{
-          background: isEnhancedComparison ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #fee2e2, #fca5a5)',
-          border: `2px solid ${isEnhancedComparison ? '#22c55e' : '#ef4444'}`,
-          borderRadius: '12px',
-          padding: '15px 20px',
-          marginBottom: '25px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '15px'
-        }}>
-          <div>
-            <div style={{ 
-              fontWeight: '600', 
-              fontSize: '1.1rem',
-              color: isEnhancedComparison ? '#166534' : '#dc2626',
-              marginBottom: '5px'
-            }}>
-              {isEnhancedComparison ? '🧠 Enhanced SmartDiff Analysis' : '⚠️ Basic Line-by-Line Comparison'}
-            </div>
-            <div style={{ 
-              fontSize: '0.9rem',
-              color: isEnhancedComparison ? '#15803d' : '#991b1b'
-            }}>
-              {isEnhancedComparison 
-                ? '✅ Content-aware alignment with intelligent change detection'
-                : '❌ Prone to alignment errors when items are added/removed (like SSL Certificate issue)'
-              }
-            </div>
-          </div>
-          {!isEnhancedComparison && (
-            <button
-              onClick={() => window.location.reload()}
-              style={{
-                background: '#ffffff',
-                color: '#dc2626',
-                border: '2px solid #ef4444',
-                padding: '8px 16px',
-                borderRadius: '8px',
-                fontSize: '0.9rem',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              Enable SmartDiff
-            </button>
-          )}
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '20px',
-          marginBottom: '30px'
-        }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-            padding: '20px',
-            borderRadius: '12px',
-            border: '2px solid #3b82f6',
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: '700', 
-              color: '#1d4ed8',
-              marginBottom: '5px'
-            }}>
-              {data.similarity_score}%
-            </div>
-            <div style={{ fontSize: '0.9rem', color: '#1e40af', fontWeight: '600' }}>
-              Similarity Score
-            </div>
-          </div>
-          
-          <div style={{
-            background: 'linear-gradient(135deg, #fed7aa, #fdba74)',
-            padding: '20px',
-            borderRadius: '12px',
-            border: '2px solid #f97316',
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: '700', 
-              color: '#c2410c',
-              marginBottom: '5px'
-            }}>
-              {data.differences_found}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: '#ea580c', fontWeight: '600' }}>
-              Changes Found
-            </div>
-          </div>
-          
-          <div style={{
-            background: 'linear-gradient(135deg, #bbf7d0, #86efac)',
-            padding: '20px',
-            borderRadius: '12px',
-            border: '2px solid #22c55e',
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: '700', 
-              color: '#15803d',
-              marginBottom: '5px'
-            }}>
-              {data.page_differences?.length || 1}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: '#166534', fontWeight: '600' }}>
-              Pages Modified
-            </div>
-          </div>
-          
-          <div style={{
-            background: 'linear-gradient(135deg, #e9d5ff, #d8b4fe)',
-            padding: '20px',
-            borderRadius: '12px',
-            border: '2px solid #a855f7',
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: '700', 
-              color: '#7c3aed',
-              marginBottom: '5px'
-            }}>
-              {data.total_pages}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: '#6d28d9', fontWeight: '600' }}>
-              Total Pages
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const getChangeColor = (type) => {
+    switch (type) {
+      case 'added': return '#22c55e';
+      case 'removed': return '#ef4444';
+      case 'modified': return '#f59e0b';
+      case 'insert': return '#22c55e';
+      case 'delete': return '#ef4444';
+      default: return '#f59e0b';
+    }
   };
 
-  const renderChangeItem = (change, index) => {
-    const getChangeIcon = (type) => {
-      switch (type) {
-        case 'added': return '➕';
-        case 'removed': return '➖';
-        case 'modified': return '✏️';
-        case 'unchanged': return '✅';
-        default: return '📝';
-      }
-    };
-
-    const getChangeColors = (type) => {
-      switch (type) {
-        case 'added': 
-          return {
-            background: '#dcfce7',
-            border: '#22c55e',
-            badgeColor: '#166534',
-            badgeBg: '#bbf7d0'
-          };
-        case 'removed': 
-          return {
-            background: '#fee2e2',
-            border: '#ef4444',
-            badgeColor: '#dc2626',
-            badgeBg: '#fca5a5'
-          };
-        case 'modified': 
-          return {
-            background: '#fef3c7',
-            border: '#f59e0b',
-            badgeColor: '#d97706',
-            badgeBg: '#fed7aa'
-          };
-        case 'unchanged':
-          return {
-            background: '#f0fdf4',
-            border: '#22c55e',
-            badgeColor: '#166534',
-            badgeBg: '#bbf7d0'
-          };
-        default: 
-          return {
-            background: '#f3f4f6',
-            border: '#6b7280',
-            badgeColor: '#374151',
-            badgeBg: '#e5e7eb'
-          };
-      }
-    };
-
-    const colors = getChangeColors(change.type);
-
-    return (
-      <div key={index} style={{
-        background: colors.background,
-        border: `2px solid ${colors.border}`,
-        borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '16px'
-      }}>
-        {/* Change Header */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '15px',
-          flexWrap: 'wrap',
-          gap: '10px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '1.2rem' }}>{getChangeIcon(change.type)}</span>
-            <span style={{ 
-              fontWeight: '600', 
-              color: '#1f2937',
-              fontSize: '1rem'
-            }}>
-              Page {change.page}, Paragraph {change.paragraph}
-            </span>
-            <span style={{
-              background: colors.badgeBg,
-              color: colors.badgeColor,
-              padding: '4px 10px',
-              borderRadius: '6px',
-              fontSize: '0.8rem',
-              fontWeight: '600',
-              textTransform: 'uppercase'
-            }}>
-              {change.type}
-            </span>
-            
-            {/* Enhanced info when available */}
-            {change.confidence && (
-              <span style={{
-                background: change.confidence > 0.8 ? '#dcfce7' : '#fef3c7',
-                color: change.confidence > 0.8 ? '#166534' : '#d97706',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '0.75rem',
-                fontWeight: '500'
-              }}>
-                {(change.confidence * 100).toFixed(0)}% confidence
-              </span>
-            )}
-            
-            {change.content_type && (
-              <span style={{
-                background: '#f0f9ff',
-                color: '#0c4a6e',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '0.75rem'
-              }}>
-                {change.content_type.replace('financial_', '').replace('_', ' ')}
-              </span>
-            )}
-
-            {change.similarity_score && (
-              <span style={{
-                background: '#e2e3e5',
-                color: '#383d41',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '0.75rem'
-              }}>
-                {change.similarity_score}% similar
-              </span>
-            )}
-          </div>
-          
-          <button
-            onClick={() => setSelectedPage(change.page)}
-            style={{
-              background: 'white',
-              color: '#2563eb',
-              border: '1px solid #3b82f6',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}
-          >
-            View Page →
-          </button>
-        </div>
-
-        {/* Context Before */}
-        {showContext && change.context_before && (
-          <div style={{
-            marginBottom: '12px',
-            fontSize: '0.9rem',
-            color: '#6b7280',
-            fontStyle: 'italic'
-          }}>
-            <strong>Context:</strong> ...{change.context_before}...
-          </div>
-        )}
-
-        {/* Change Content */}
-        <div style={{ marginBottom: '12px' }}>
-          {change.type === 'unchanged' ? (
-            <div style={{
-              background: '#f0fdf4',
-              border: '1px solid #a7f3d0',
-              borderRadius: '8px',
-              padding: '12px'
-            }}>
-              <div style={{ 
-                color: '#166534', 
-                fontWeight: '600', 
-                fontSize: '0.9rem',
-                marginBottom: '8px'
-              }}>
-                ✅ Unchanged:
-              </div>
-              <div style={{ 
-                color: '#14532d', 
-                fontFamily: 'monospace', 
-                fontSize: '0.9rem',
-                lineHeight: '1.4'
-              }}>
-                "{change.text}"
-              </div>
-            </div>
-          ) : change.type === 'modified' ? (
-            <div>
-              <div style={{
-                background: '#fee2e2',
-                border: '1px solid #fca5a5',
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '8px'
-              }}>
-                <div style={{ 
-                  color: '#dc2626', 
-                  fontWeight: '600', 
-                  fontSize: '0.9rem',
-                  marginBottom: '8px'
-                }}>
-                  ❌ Original:
-                </div>
-                <div style={{ 
-                  color: '#7f1d1d', 
-                  fontFamily: 'monospace', 
-                  fontSize: '0.9rem',
-                  lineHeight: '1.4'
-                }}>
-                  "{change.old_text}"
-                </div>
-              </div>
-              <div style={{
-                background: '#dcfce7',
-                border: '1px solid #a7f3d0',
-                borderRadius: '8px',
-                padding: '12px'
-              }}>
-                <div style={{ 
-                  color: '#166534', 
-                  fontWeight: '600', 
-                  fontSize: '0.9rem',
-                  marginBottom: '8px'
-                }}>
-                  ✅ New:
-                </div>
-                <div style={{ 
-                  color: '#14532d', 
-                  fontFamily: 'monospace', 
-                  fontSize: '0.9rem',
-                  lineHeight: '1.4'
-                }}>
-                  "{change.new_text}"
-                </div>
-              </div>
-            </div>
-          ) : change.type === 'added' ? (
-            <div style={{
-              background: '#dcfce7',
-              border: '1px solid #a7f3d0',
-              borderRadius: '8px',
-              padding: '12px'
-            }}>
-              <div style={{ 
-                color: '#166534', 
-                fontWeight: '600', 
-                fontSize: '0.9rem',
-                marginBottom: '8px'
-              }}>
-                ✅ Added:
-              </div>
-              <div style={{ 
-                color: '#14532d', 
-                fontFamily: 'monospace', 
-                fontSize: '0.9rem',
-                lineHeight: '1.4'
-              }}>
-                "{change.new_text || change.text}"
-              </div>
-            </div>
-          ) : (
-            <div style={{
-              background: '#fee2e2',
-              border: '1px solid #fca5a5',
-              borderRadius: '8px',
-              padding: '12px'
-            }}>
-              <div style={{ 
-                color: '#dc2626', 
-                fontWeight: '600', 
-                fontSize: '0.9rem',
-                marginBottom: '8px'
-              }}>
-                ❌ Removed:
-              </div>
-              <div style={{ 
-                color: '#7f1d1d', 
-                fontFamily: 'monospace', 
-                fontSize: '0.9rem',
-                lineHeight: '1.4'
-              }}>
-                "{change.old_text || change.text}"
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Context After */}
-        {showContext && change.context_after && (
-          <div style={{
-            fontSize: '0.9rem',
-            color: '#6b7280',
-            fontStyle: 'italic'
-          }}>
-            <strong>Continues:</strong> ...{change.context_after}...
-          </div>
-        )}
-      </div>
-    );
+  const getChangeBackground = (type) => {
+    switch (type) {
+      case 'added': return '#dcfce7';
+      case 'removed': return '#fee2e2';
+      case 'modified': return '#fef3c7';
+      case 'insert': return '#dcfce7';
+      case 'delete': return '#fee2e2';
+      default: return '#fef3c7';
+    }
   };
 
-  const renderChangesView = () => (
-    <div>
-      {/* Controls */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '25px',
-        flexWrap: 'wrap',
-        gap: '15px'
-      }}>
-        <h3 style={{
-          fontSize: '1.3rem',
-          fontWeight: '600',
-          color: '#1f2937',
-          margin: 0
-        }}>
-          📋 Changes Found ({data.text_changes?.length || 0})
-          {data.processing_method?.includes('Enhanced') && (
-            <span style={{
-              marginLeft: '10px',
-              fontSize: '0.8rem',
-              background: '#dcfce7',
-              color: '#166534',
-              padding: '4px 8px',
-              borderRadius: '6px',
-              fontWeight: '500'
-            }}>
-              Enhanced Algorithm
-            </span>
-          )}
-        </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <label style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            fontSize: '0.9rem',
-            color: '#374151',
-            cursor: 'pointer'
-          }}>
-            <input
-              type="checkbox"
-              checked={showContext}
-              onChange={(e) => setShowContext(e.target.checked)}
-              style={{ 
-                width: '16px', 
-                height: '16px',
-                borderRadius: '4px'
-              }}
-            />
-            Show context
-          </label>
-          <select 
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              fontSize: '0.9rem',
-              background: 'white'
-            }}
-            onChange={(e) => {
-              console.log('Filter by:', e.target.value);
-            }}
-          >
-            <option value="all">All changes</option>
-            <option value="added">Added only</option>
-            <option value="removed">Removed only</option>
-            <option value="modified">Modified only</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Enhanced Processing Note */}
-      {data.processing_method?.includes('Enhanced') && (
-        <div style={{
-          background: '#f0f9ff',
-          border: '1px solid #0ea5e9',
-          borderRadius: '8px',
-          padding: '15px',
-          marginBottom: '20px',
-          fontSize: '0.9rem'
-        }}>
-          <div style={{ fontWeight: '600', color: '#0c4a6e', marginBottom: '8px' }}>
-            🎯 Enhanced Analysis Applied:
-          </div>
-          <div style={{ color: '#075985', lineHeight: '1.5' }}>
-            • Content-aware alignment for better accuracy<br/>
-            • Financial document pattern recognition<br/>
-            • Intelligent change detection with confidence scoring<br/>
-            • Improved handling of added/removed sections
-          </div>
-        </div>
-      )}
-
-      {/* Changes List */}
-      <div>
-        {data.text_changes?.map((change, index) => renderChangeItem(change, index)) || (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            background: '#f0fdf4',
-            borderRadius: '12px',
-            border: '2px solid #22c55e'
-          }}>
-            <div style={{ fontSize: '4rem', marginBottom: '15px' }}>🎉</div>
-            <div style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: '600',
-              color: '#166534',
-              marginBottom: '8px'
-            }}>
-              No differences found!
-            </div>
-            <div style={{ fontSize: '1rem', color: '#15803d' }}>
-              The documents are identical.
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderSideBySideView = () => {
-    // Your existing side-by-side implementation with mock data
-    const mockPages = [
-      {
-        page: 1,
-        doc1_content: [
-          { text: "Customer Information:", type: "unchanged" },
-          { text: "Bank: First National Bank", type: "removed" },
-          { text: "Account Type: Business Checking", type: "unchanged" },
-          { text: "Routing Number: 987654321", type: "unchanged" },
-          { text: "Date Opened: January 15, 2024", type: "unchanged" }
-        ],
-        doc2_content: [
-          { text: "Customer Information:", type: "unchanged" },
-          { text: "Account Name: TechCorp Solutions", type: "added" },
-          { text: "Account Type: Business Checking", type: "unchanged" },
-          { text: "Routing Number: 987654321", type: "unchanged" },
-          { text: "Date Opened: January 15, 2024", type: "unchanged" }
-        ]
-      },
-      {
-        page: 2,
-        doc1_content: [
-          { text: "Contact Information:", type: "unchanged" },
-          { text: "Primary Contact: Jane Doe", type: "unchanged" },
-          { text: "Department: IT Operations", type: "unchanged" },
-          { text: "Phone: (555) 123-4567", type: "unchanged" }
-        ],
-        doc2_content: [
-          { text: "Contact Information:", type: "unchanged" },
-          { text: "Primary Contact: Jane Doe", type: "unchanged" },
-          { text: "Emergency Contact: John Smith (555) 123-4567", type: "added" },
-          { text: "Department: IT Operations", type: "unchanged" },
-          { text: "Phone: (555) 123-4567", type: "unchanged" }
-        ]
-      },
-      {
-        page: 3,
-        doc1_content: [
-          { text: "Terms of Service:", type: "unchanged" },
-          { text: "This agreement is valid for 12 months only.", type: "removed" },
-          { text: "All parties agree to the following conditions:", type: "unchanged" },
-          { text: "Payment terms: Net 30 days", type: "unchanged" },
-          { text: "Late fees may apply after 30 days", type: "unchanged" }
-        ],
-        doc2_content: [
-          { text: "Terms of Service:", type: "unchanged" },
-          { text: "All parties agree to the following conditions:", type: "unchanged" },
-          { text: "Payment terms: Net 30 days", type: "unchanged" },
-          { text: "Late fees may apply after 30 days", type: "unchanged" }
-        ]
-      }
-    ];
-
-    const getHighlightStyle = (type) => {
-      switch (type) {
-        case 'added':
-          return {
-            backgroundColor: '#dcfce7',
-            borderLeft: '4px solid #22c55e',
-            padding: '12px 16px',
-            margin: '6px 0',
-            borderRadius: '6px',
-            fontFamily: 'monospace',
-            fontSize: '0.9rem',
-            lineHeight: '1.5'
-          };
-        case 'removed':
-          return {
-            backgroundColor: '#fee2e2',
-            borderLeft: '4px solid #ef4444',
-            padding: '12px 16px',
-            margin: '6px 0',
-            borderRadius: '6px',
-            fontFamily: 'monospace',
-            fontSize: '0.9rem',
-            lineHeight: '1.5'
-          };
-        case 'modified':
-          return {
-            backgroundColor: '#fef3c7',
-            borderLeft: '4px solid #f59e0b',
-            padding: '12px 16px',
-            margin: '6px 0',
-            borderRadius: '6px',
-            fontFamily: 'monospace',
-            fontSize: '0.9rem',
-            lineHeight: '1.5'
-          };
-        default:
-          return {
-            padding: '12px 16px',
-            margin: '6px 0',
-            lineHeight: '1.5',
-            fontFamily: 'monospace',
-            fontSize: '0.9rem',
-            color: '#374151'
-          };
-      }
-    };
-
-    return (
-      <div>
-        {/* Legend */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '30px',
-          marginBottom: '25px',
-          fontSize: '0.9rem',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              width: '20px',
-              height: '16px',
-              background: '#dcfce7',
-              borderLeft: '4px solid #22c55e',
-              borderRadius: '3px'
-            }}></div>
-            <span style={{ fontWeight: '500' }}>Added</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              width: '20px',
-              height: '16px',
-              background: '#fee2e2',
-              borderLeft: '4px solid #ef4444',
-              borderRadius: '3px'
-            }}></div>
-            <span style={{ fontWeight: '500' }}>Removed</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              width: '20px',
-              height: '16px',
-              background: '#fef3c7',
-              borderLeft: '4px solid #f59e0b',
-              borderRadius: '3px'
-            }}></div>
-            <span style={{ fontWeight: '500' }}>Modified</span>
-          </div>
-        </div>
-
-        {/* Synchronized Side-by-Side Panels */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '20px',
-          height: '500px'
-        }}>
-          {/* Left Document */}
-          <div style={{
-            border: '2px solid #e5e7eb',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            background: 'white',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
-          }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
-              padding: '15px 20px',
-              fontWeight: '600',
-              color: '#1f2937',
-              borderBottom: '1px solid #e5e7eb',
-              fontSize: '1.1rem'
-            }}>
-              📄 {file1Name || 'Document 1'} (Original)
-            </div>
-            <div 
-              ref={leftPaneRef}
-              style={{
-                height: '440px',
-                overflowY: 'auto',
-                padding: '20px'
-              }}
-              onScroll={(e) => handleScroll(e.target, rightPaneRef)}
-            >
-              {mockPages.map((page) => (
-                <div key={`left-${page.page}`} style={{ marginBottom: '30px' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                    padding: '10px 15px',
-                    color: '#1d4ed8',
-                    fontWeight: '600',
-                    fontSize: '0.9rem',
-                    borderRadius: '8px',
-                    marginBottom: '15px'
-                  }}>
-                    📄 Page {page.page}
-                  </div>
-                  {page.doc1_content.map((item, index) => (
-                    <div 
-                      key={`left-${page.page}-${index}`} 
-                      style={getHighlightStyle(item.type)}
-                    >
-                      {item.text}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right Document */}
-          <div style={{
-            border: '2px solid #e5e7eb',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            background: 'white',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
-          }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
-              padding: '15px 20px',
-              fontWeight: '600',
-              color: '#1f2937',
-              borderBottom: '1px solid #e5e7eb',
-              fontSize: '1.1rem'
-            }}>
-              📄 {file2Name || 'Document 2'} (Updated)
-            </div>
-            <div 
-              ref={rightPaneRef}
-              style={{
-                height: '440px',
-                overflowY: 'auto',
-                padding: '20px'
-              }}
-              onScroll={(e) => handleScroll(e.target, leftPaneRef)}
-            >
-              {mockPages.map((page) => (
-                <div key={`right-${page.page}`} style={{ marginBottom: '30px' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                    padding: '10px 15px',
-                    color: '#1d4ed8',
-                    fontWeight: '600',
-                    fontSize: '0.9rem',
-                    borderRadius: '8px',
-                    marginBottom: '15px'
-                  }}>
-                    📄 Page {page.page}
-                  </div>
-                  {page.doc2_content.map((item, index) => (
-                    <div 
-                      key={`right-${page.page}-${index}`} 
-                      style={getHighlightStyle(item.type)}
-                    >
-                      {item.text}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Navigation */}
-        <div style={{
-          marginTop: '20px',
-          display: 'flex',
-          justifyContent: 'center'
-        }}>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              onClick={() => {
-                if (leftPaneRef.current) leftPaneRef.current.scrollTop = 0;
-                if (rightPaneRef.current) rightPaneRef.current.scrollTop = 0;
-              }}
-              style={{
-                padding: '8px 16px',
-                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                color: '#1d4ed8',
-                border: '1px solid #3b82f6',
-                borderRadius: '6px',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
-            >
-              ⬆️ Top
-            </button>
-            <button 
-              onClick={() => {
-                const scrollToNext = () => {
-                  if (leftPaneRef.current && rightPaneRef.current) {
-                    const currentScroll = leftPaneRef.current.scrollTop;
-                    leftPaneRef.current.scrollTop = currentScroll + 200;
-                    rightPaneRef.current.scrollTop = currentScroll + 200;
-                  }
-                };
-                scrollToNext();
-              }}
-              style={{
-                padding: '8px 16px',
-                background: 'linear-gradient(135deg, #fed7aa, #fdba74)',
-                color: '#c2410c',
-                border: '1px solid #f97316',
-                borderRadius: '6px',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
-            >
-              🔍 Next Change
-            </button>
-            <button 
-              onClick={() => {
-                if (leftPaneRef.current && rightPaneRef.current) {
-                  const maxScroll = leftPaneRef.current.scrollHeight - leftPaneRef.current.clientHeight;
-                  leftPaneRef.current.scrollTop = maxScroll;
-                  rightPaneRef.current.scrollTop = maxScroll;
-                }
-              }}
-              style={{
-                padding: '8px 16px',
-                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                color: '#1d4ed8',
-                border: '1px solid #3b82f6',
-                borderRadius: '6px',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
-            >
-              ⬇️ Bottom
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const filteredChanges = smartChanges.filter(change => {
+    if (changeFilter === 'all') return true;
+    return change.type === changeFilter;
+  });
 
   return (
     <div style={{
-      maxWidth: '1200px',
-      margin: '0 auto',
       background: 'white',
       borderRadius: '16px',
-      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+      marginTop: '30px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
       border: '1px solid #e5e7eb',
       overflow: 'hidden'
     }}>
-      {/* Header */}
+      {/* Header - Blue Gradient like screenshot */}
       <div style={{
-        background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+        background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
         color: 'white',
-        padding: '30px'
+        padding: '30px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '20px'
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '20px'
-        }}>
-          <div>
-            <h1 style={{ 
-              fontSize: '2rem', 
-              fontWeight: '700', 
-              marginBottom: '8px',
-              margin: 0
-            }}>
-              📊 PDF Comparison Results
-            </h1>
-            <div style={{ 
-              color: 'rgba(255, 255, 255, 0.9)', 
-              fontSize: '1.1rem'
-            }}>
-              {file1Name || 'Document 1'} vs {file2Name || 'Document 2'}
-            </div>
-          </div>
+        <div>
+          <h1 style={{
+            fontSize: '2rem',
+            fontWeight: '700',
+            margin: '0 0 8px 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            📑 PDF Comparison Results
+          </h1>
+          <p style={{
+            margin: 0,
+            opacity: 0.9,
+            fontSize: '1.1rem'
+          }}>
+            {file1Name} vs {file2Name}
+          </p>
+        </div>
+
+        {/* Download Button with Dropdown */}
+        <div style={{ position: 'relative' }}>
           <button
-            onClick={downloadReport}
-            disabled={isGeneratingDownload}
+            onClick={() => setDownloadDropdownOpen(!downloadDropdownOpen)}
+            disabled={isDownloading}
             style={{
               background: 'rgba(255, 255, 255, 0.2)',
               backdropFilter: 'blur(10px)',
@@ -1073,29 +202,174 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name, rawDocuments }) => 
               borderRadius: '10px',
               fontSize: '1rem',
               fontWeight: '600',
-              cursor: isGeneratingDownload ? 'not-allowed' : 'pointer',
+              cursor: isDownloading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              opacity: isGeneratingDownload ? 0.7 : 1
+              opacity: isDownloading ? 0.7 : 1
             }}
           >
-            {isGeneratingDownload ? '⏳ Generating...' : '📥 Download Report'}
+            {isDownloading ? '⏳ Generating...' : '📥 Download Report'} ⌄
           </button>
+
+          {downloadDropdownOpen && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              background: 'white',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              zIndex: 1000,
+              minWidth: '280px',
+              marginTop: '4px'
+            }}>
+              {downloadOptions.map(option => (
+                <button
+                  key={option.id}
+                  onClick={() => handleDownload(option.id)}
+                  style={{
+                    width: '100%',
+                    background: 'none',
+                    border: 'none',
+                    padding: '12px 16px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid #f3f4f6',
+                    color: '#1f2937'
+                  }}
+                  onMouseEnter={(e) => e.target.style.background = '#f8fafc'}
+                  onMouseLeave={(e) => e.target.style.background = 'none'}
+                >
+                  <div style={{ fontWeight: '500', marginBottom: '2px' }}>
+                    {option.label}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                    {option.description}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       <div style={{ padding: '30px' }}>
-        {/* Summary Statistics */}
-        {renderSummaryStats()}
+        {/* Dashboard Cards - Exactly like screenshot */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '20px',
+          marginBottom: '30px'
+        }}>
+          {/* Similarity Score - Blue */}
+          <div style={{
+            background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+            padding: '30px 20px',
+            borderRadius: '12px',
+            textAlign: 'center',
+            border: '2px solid #3b82f6'
+          }}>
+            <div style={{
+              fontSize: '3rem',
+              fontWeight: '700',
+              color: '#1d4ed8',
+              marginBottom: '8px'
+            }}>
+              {similarity}%
+            </div>
+            <div style={{
+              fontSize: '1.1rem',
+              color: '#1e40af',
+              fontWeight: '600'
+            }}>
+              Similarity Score
+            </div>
+          </div>
 
-        {/* View Toggle */}
+          {/* Changes Found - Orange */}
+          <div style={{
+            background: 'linear-gradient(135deg, #fed7aa, #fdba74)',
+            padding: '30px 20px',
+            borderRadius: '12px',
+            textAlign: 'center',
+            border: '2px solid #f97316'
+          }}>
+            <div style={{
+              fontSize: '3rem',
+              fontWeight: '700',
+              color: '#c2410c',
+              marginBottom: '8px'
+            }}>
+              {totalChanges}
+            </div>
+            <div style={{
+              fontSize: '1.1rem',
+              color: '#ea580c',
+              fontWeight: '600'
+            }}>
+              Changes Found
+            </div>
+          </div>
+
+          {/* Pages Modified - Green */}
+          <div style={{
+            background: 'linear-gradient(135deg, #bbf7d0, #86efac)',
+            padding: '30px 20px',
+            borderRadius: '12px',
+            textAlign: 'center',
+            border: '2px solid #22c55e'
+          }}>
+            <div style={{
+              fontSize: '3rem',
+              fontWeight: '700',
+              color: '#15803d',
+              marginBottom: '8px'
+            }}>
+              {pagesWithChanges}
+            </div>
+            <div style={{
+              fontSize: '1.1rem',
+              color: '#166534',
+              fontWeight: '600'
+            }}>
+              Pages Modified
+            </div>
+          </div>
+
+          {/* Total Pages - Purple */}
+          <div style={{
+            background: 'linear-gradient(135deg, #e9d5ff, #d8b4fe)',
+            padding: '30px 20px',
+            borderRadius: '12px',
+            textAlign: 'center',
+            border: '2px solid #a855f7'
+          }}>
+            <div style={{
+              fontSize: '3rem',
+              fontWeight: '700',
+              color: '#7c3aed',
+              marginBottom: '8px'
+            }}>
+              {totalPages}
+            </div>
+            <div style={{
+              fontSize: '1.1rem',
+              color: '#6d28d9',
+              fontWeight: '600'
+            }}>
+              Total Pages
+            </div>
+          </div>
+        </div>
+
+        {/* View Toggle - Like screenshot */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '20px',
-          marginBottom: '30px',
-          flexWrap: 'wrap'
+          marginBottom: '30px'
         }}>
           <div style={{
             display: 'flex',
@@ -1116,7 +390,10 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name, rawDocuments }) => 
                 cursor: 'pointer',
                 color: viewMode === 'changes' ? '#2563eb' : '#6b7280',
                 boxShadow: viewMode === 'changes' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
               }}
             >
               📋 Changes List
@@ -1133,7 +410,10 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name, rawDocuments }) => 
                 cursor: 'pointer',
                 color: viewMode === 'sideBySide' ? '#2563eb' : '#6b7280',
                 boxShadow: viewMode === 'sideBySide' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
               }}
             >
               📄 Side-by-Side
@@ -1141,8 +421,331 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name, rawDocuments }) => 
           </div>
         </div>
 
-        {/* Content */}
-        {viewMode === 'changes' ? renderChangesView() : renderSideBySideView()}
+        {/* Content Based on View Mode */}
+        {viewMode === 'changes' ? (
+          // Changes List View - Like screenshot
+          <div>
+            {/* Controls */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '25px',
+              flexWrap: 'wrap',
+              gap: '15px'
+            }}>
+              <h3 style={{
+                fontSize: '1.3rem',
+                fontWeight: '600',
+                color: '#1f2937',
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                📋 Changes Found ({filteredChanges.length})
+              </h3>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.9rem',
+                  color: '#374151',
+                  cursor: 'pointer'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={showContext}
+                    onChange={(e) => setShowContext(e.target.checked)}
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                  Show context
+                </label>
+                
+                <select
+                  value={changeFilter}
+                  onChange={(e) => setChangeFilter(e.target.value)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    background: 'white'
+                  }}
+                >
+                  <option value="all">All changes</option>
+                  <option value="added">Added only</option>
+                  <option value="removed">Removed only</option>
+                  <option value="modified">Modified only</option>
+                  <option value="insert">Insert only</option>
+                  <option value="delete">Delete only</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Changes List */}
+            <div>
+              {filteredChanges.length === 0 ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '60px 20px',
+                  background: '#f0fdf4',
+                  borderRadius: '12px',
+                  border: '2px solid #22c55e'
+                }}>
+                  <div style={{ fontSize: '4rem', marginBottom: '15px' }}>🎉</div>
+                  <div style={{
+                    fontSize: '1.5rem',
+                    fontWeight: '600',
+                    color: '#166534',
+                    marginBottom: '8px'
+                  }}>
+                    No changes found!
+                  </div>
+                  <div style={{ fontSize: '1rem', color: '#15803d' }}>
+                    The documents appear to be identical.
+                  </div>
+                </div>
+              ) : (
+                filteredChanges.map((change, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      background: getChangeBackground(change.type),
+                      border: `2px solid ${getChangeColor(change.type)}`,
+                      borderRadius: '12px',
+                      padding: '20px',
+                      marginBottom: '16px'
+                    }}
+                  >
+                    {/* Change Header */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginBottom: '15px',
+                      flexWrap: 'wrap'
+                    }}>
+                      <span style={{
+                        background: getChangeColor(change.type),
+                        color: 'white',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        textTransform: 'uppercase'
+                      }}>
+                        {change.type}
+                      </span>
+                      <span style={{
+                        fontWeight: '600',
+                        color: '#1f2937',
+                        fontSize: '1rem'
+                      }}>
+                        Page {change.page}
+                      </span>
+                      {change.alignment_confidence && (
+                        <span style={{
+                          background: 'rgba(0,0,0,0.1)',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '0.8rem',
+                          color: '#4b5563'
+                        }}>
+                          {(change.alignment_confidence * 100).toFixed(0)}% confidence
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Change Content */}
+                    <div style={{
+                      fontSize: '0.95rem',
+                      lineHeight: '1.6',
+                      color: '#1f2937'
+                    }}>
+                      <div style={{
+                        background: 'rgba(255,255,255,0.7)',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        fontFamily: 'monospace',
+                        fontSize: '0.9rem'
+                      }}>
+                        "{change.content || change.new_content || 'No content available'}"
+                      </div>
+                      
+                      {showContext && change.old_content && change.type === 'modified' && (
+                        <div style={{
+                          marginTop: '10px',
+                          fontSize: '0.85rem',
+                          color: '#6b7280',
+                          fontStyle: 'italic'
+                        }}>
+                          <strong>Previous:</strong> "{change.old_content}"
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        ) : (
+          // Side-by-Side View
+          <div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '20px',
+              height: '500px'
+            }}>
+              {/* Left Document */}
+              <div style={{
+                border: '2px solid #e5e7eb',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                background: 'white',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+              }}>
+                <div style={{
+                  background: '#f8fafc',
+                  padding: '15px 20px',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  borderBottom: '1px solid #e5e7eb',
+                  fontSize: '1.1rem'
+                }}>
+                  📄 {file1Name || 'Document 1'}
+                </div>
+                <div style={{
+                  height: '440px',
+                  overflowY: 'auto',
+                  padding: '20px'
+                }}>
+                  {smartChanges.map((change, index) => (
+                    <div
+                      key={`left-${index}`}
+                      style={{
+                        marginBottom: '15px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        ...((change.type === 'removed' || change.type === 'delete') ? {
+                          background: '#fee2e2',
+                          border: '1px solid #fca5a5',
+                          color: '#7f1d1d'
+                        } : {
+                          background: '#f9fafb',
+                          border: '1px solid #e5e7eb',
+                          color: '#374151'
+                        })
+                      }}
+                    >
+                      <div style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '5px' }}>
+                        Page {change.page} • {change.type}
+                      </div>
+                      <div style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
+                        {change.old_content || change.content || 'No content'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Document */}
+              <div style={{
+                border: '2px solid #e5e7eb',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                background: 'white',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+              }}>
+                <div style={{
+                  background: '#f8fafc',
+                  padding: '15px 20px',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  borderBottom: '1px solid #e5e7eb',
+                  fontSize: '1.1rem'
+                }}>
+                  📄 {file2Name || 'Document 2'}
+                </div>
+                <div style={{
+                  height: '440px',
+                  overflowY: 'auto',
+                  padding: '20px'
+                }}>
+                  {smartChanges.map((change, index) => (
+                    <div
+                      key={`right-${index}`}
+                      style={{
+                        marginBottom: '15px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        ...((change.type === 'added' || change.type === 'insert') ? {
+                          background: '#dcfce7',
+                          border: '1px solid #a7f3d0',
+                          color: '#14532d'
+                        } : {
+                          background: '#f9fafb',
+                          border: '1px solid #e5e7eb',
+                          color: '#374151'
+                        })
+                      }}
+                    >
+                      <div style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '5px' }}>
+                        Page {change.page} • {change.type}
+                      </div>
+                      <div style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
+                        {change.new_content || change.content || 'No content'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '25px',
+              marginTop: '20px',
+              fontSize: '0.9rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  background: '#dcfce7',
+                  border: '1px solid #a7f3d0',
+                  borderRadius: '3px'
+                }}></div>
+                <span>Added</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  background: '#fee2e2',
+                  border: '1px solid #fca5a5',
+                  borderRadius: '3px'
+                }}></div>
+                <span>Removed</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  background: '#fef3c7',
+                  border: '1px solid #fcd34d',
+                  borderRadius: '3px'
+                }}></div>
+                <span>Modified</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div style={{
@@ -1153,13 +756,12 @@ const ImprovedPdfResults = ({ results, file1Name, file2Name, rawDocuments }) => 
           color: '#6b7280',
           textAlign: 'center'
         }}>
-          ⚡ Processed in {data.processing_time?.total_time_ms}ms • 
-          📄 {data.file1_metadata?.totalPages} pages • 
-          📝 {data.file1_metadata?.totalWords} words analyzed
+          ⚡ Processed {totalChanges} changes across {totalPages} pages • 
+          🚀 <strong>Powered by VeriDiff</strong>
         </div>
       </div>
     </div>
   );
 };
 
-export default ImprovedPdfResults;
+export default PdfResults;
