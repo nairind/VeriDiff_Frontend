@@ -1,6 +1,7 @@
 // /pages/excel-csv-results.js - EXCEL/CSV RESULTS ONLY (Clean Split)
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
@@ -9,6 +10,8 @@ import Footer from '../components/layout/Footer';
 
 export default function ExcelCSVResultsPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [fileInfo, setFileInfo] = useState({ file1: null, file2: null });
@@ -16,6 +19,42 @@ export default function ExcelCSVResultsPage() {
   const [tabularResults, setTabularResults] = useState(null);
   const [headerMappings, setHeaderMappings] = useState(null);
   const [toleranceSettings, setToleranceSettings] = useState(null);
+
+  // If not authenticated, show auth prompt
+  if (status === 'unauthenticated') {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+        <Header />
+        <div style={{ maxWidth: '800px', margin: '100px auto', padding: '40px', background: 'white', borderRadius: '12px', textAlign: 'center' }}>
+          <h2>🔒 Sign in to view results</h2>
+          <p>Please sign in to access your Excel/CSV comparison results.</p>
+          
+          {/* Screenshot preview */}
+          <div style={{ margin: '30px 0', border: '2px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
+            <img 
+              src="/images/results-preview.png" 
+              alt="Excel/CSV Results Preview" 
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+            />
+          </div>
+          
+          <button onClick={() => router.push('/auth/signin')} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer' }}>
+            Sign In to View Your Results
+          </button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // If loading auth, show loading
+  if (status === 'loading') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     loadExcelCSVResults();
