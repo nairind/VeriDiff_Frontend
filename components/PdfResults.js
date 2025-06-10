@@ -586,13 +586,13 @@ ${line}`;
     }
   };
 
-  // NEW: Login CTA Component (Only Addition)
+  // NEW: Enhanced Login CTA Component with Report Preview
   const LoginCTA = () => (
     <div style={{
       background: 'linear-gradient(135deg, #fef3c7, #fed7aa)',
       border: '2px solid #f59e0b',
       borderRadius: '12px',
-      padding: '20px',
+      padding: '25px',
       textAlign: 'center',
       margin: '20px 0'
     }}>
@@ -603,16 +603,223 @@ ${line}`;
         color: '#92400e',
         margin: '0 0 10px 0'
       }}>
-        Sign in to Download Full Reports
+        Sign in to Download Professional Reports
       </h3>
       <p style={{
         color: '#92400e',
         fontSize: '0.95rem',
-        marginBottom: '15px',
+        marginBottom: '20px',
         lineHeight: '1.5'
       }}>
-        Create a free account to access professional HTML, Excel, and detailed comparison reports.
+        Get beautifully formatted HTML reports with side-by-side comparison view
       </p>
+
+      {/* Mini Report Preview */}
+      <div style={{
+        background: 'white',
+        borderRadius: '8px',
+        padding: '15px',
+        margin: '15px 0 20px 0',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        border: '1px solid #e5e7eb',
+        maxWidth: '500px',
+        marginLeft: 'auto',
+        marginRight: 'auto'
+      }}>
+        {/* Mini Header */}
+        <div style={{
+          fontSize: '0.9rem',
+          fontWeight: '600',
+          color: '#2563eb',
+          marginBottom: '10px',
+          textAlign: 'center'
+        }}>
+          📑 PDF Comparison Report
+        </div>
+        
+        {/* Mini Stats */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '8px',
+          marginBottom: '12px'
+        }}>
+          <div style={{
+            background: '#f8fafc',
+            padding: '6px',
+            borderRadius: '4px',
+            fontSize: '0.7rem',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontWeight: '600', color: '#f59e0b' }}>86%</div>
+            <div style={{ color: '#6b7280' }}>Similarity</div>
+          </div>
+          <div style={{
+            background: '#f8fafc',
+            padding: '6px',
+            borderRadius: '4px',
+            fontSize: '0.7rem',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontWeight: '600', color: '#2563eb' }}>2</div>
+            <div style={{ color: '#6b7280' }}>Pages</div>
+          </div>
+          <div style={{
+            background: '#f8fafc',
+            padding: '6px',
+            borderRadius: '4px',
+            fontSize: '0.7rem',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontWeight: '600', color: '#7c3aed' }}>11</div>
+            <div style={{ color: '#6b7280' }}>Changes</div>
+          </div>
+          <div style={{
+            background: '#f8fafc',
+            padding: '6px',
+            borderRadius: '4px',
+            fontSize: '0.7rem',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontWeight: '600', color: '#059669' }}>0%</div>
+            <div style={{ color: '#6b7280' }}>Word Δ</div>
+          </div>
+        </div>
+
+        {/* Mini Side-by-Side */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '6px',
+          fontSize: '0.65rem'
+        }}>
+          <div style={{
+            border: '1px solid #e5e7eb',
+            borderRadius: '4px',
+            padding: '8px',
+            background: '#fafafa'
+          }}>
+            <div style={{
+              background: '#f3f4f6',
+              padding: '3px 6px',
+              borderRadius: '3px',
+              marginBottom: '6px',
+              fontWeight: '600',
+              fontSize: '0.6rem'
+            }}>
+              📄 Document 1
+            </div>
+            <div style={{ lineHeight: '1.3', color: '#374151' }}>
+              Invoice #INV-001<br/>
+              TechCorp Solutions<br/>
+              <span style={{
+                background: '#fef3c7',
+                padding: '1px 3px',
+                borderRadius: '2px',
+                border: '1px solid #d97706'
+              }}>
+                Date: 12/15/2024
+              </span><br/>
+              <span style={{
+                background: '#fef3c7',
+                padding: '1px 3px',
+                borderRadius: '2px',
+                border: '1px solid #d97706'
+              }}>
+                Due: 01/15/2025
+              </span>
+            </div>
+          </div>
+          
+          <div style={{
+            border: '1px solid #e5e7eb',
+            borderRadius: '4px',
+            padding: '8px',
+            background: '#fafafa'
+          }}>
+            <div style={{
+              background: '#f3f4f6',
+              padding: '3px 6px',
+              borderRadius: '3px',
+              marginBottom: '6px',
+              fontWeight: '600',
+              fontSize: '0.6rem'
+            }}>
+              📄 Document 2
+            </div>
+            <div style={{ lineHeight: '1.3', color: '#374151' }}>
+              Invoice #INV-002<br/>
+              TechCorp Solutions<br/>
+              <span style={{
+                background: '#fef3c7',
+                padding: '1px 3px',
+                borderRadius: '2px',
+                border: '1px solid #d97706'
+              }}>
+                Date: 12/20/2024
+              </span><br/>
+              <span style={{
+                background: '#fef3c7',
+                padding: '1px 3px',
+                borderRadius: '2px',
+                border: '1px solid #d97706'
+              }}>
+                Due: 01/20/2025
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Mini Legend */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '8px',
+          marginTop: '8px',
+          fontSize: '0.6rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              background: '#fef3c7',
+              border: '1px solid #d97706',
+              borderRadius: '2px'
+            }}></div>
+            <span style={{ color: '#6b7280' }}>Modified</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              background: '#dcfce7',
+              border: '1px solid #166534',
+              borderRadius: '2px'
+            }}></div>
+            <span style={{ color: '#6b7280' }}>Added</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              background: '#fee2e2',
+              border: '1px solid #dc2626',
+              borderRadius: '2px'
+            }}></div>
+            <span style={{ color: '#6b7280' }}>Removed</span>
+          </div>
+        </div>
+      </div>
+
+      <p style={{
+        color: '#92400e',
+        fontSize: '0.85rem',
+        marginBottom: '15px',
+        fontStyle: 'italic'
+      }}>
+        ↑ Preview of your professional HTML download
+      </p>
+
       <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
         <button
           onClick={() => window.location.href = '/auth/signup'}
