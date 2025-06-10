@@ -392,6 +392,12 @@ export default function TrackComparison() {
               filteredResultsLength={filteredResults.length}
             />
 
+            <ExportSection 
+              onDownloadExcel={onDownloadExcel}
+              onDownloadCSV={onDownloadCSV}
+              onDownloadHTMLDiff={onDownloadHTMLDiff}
+            />
+
             {/* Results Display */}
             <ResultsDisplay 
               filteredResults={filteredResults}
@@ -410,12 +416,6 @@ export default function TrackComparison() {
               setSortDirection={setSortDirection}
               preserveScroll={scrollManager.preserveScroll}
               results={results}
-            />
-
-            <ExportSection 
-              onDownloadExcel={onDownloadExcel}
-              onDownloadCSV={onDownloadCSV}
-              onDownloadHTMLDiff={onDownloadHTMLDiff}
             />
           </div>
         </section>
