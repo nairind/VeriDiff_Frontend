@@ -1042,41 +1042,40 @@ ${line}`;
           {/* Paywall for remaining changes */}
           {remainingCount > 0 && (
             <div style={{
-              background: 'linear-gradient(135deg, #fef3c7, #fed7aa)',
-              border: '2px solid #f59e0b',
-              borderRadius: '12px',
-              padding: '25px',
+              background: '#f8fafc',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '20px',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '2rem', marginBottom: '15px' }}>🔓</div>
+              <div style={{ fontSize: '1.5rem', marginBottom: '10px' }}>🔓</div>
               <h4 style={{
-                fontSize: '1.3rem',
+                fontSize: '1.1rem',
                 fontWeight: '600',
-                color: '#92400e',
-                margin: '0 0 10px 0'
+                color: '#374151',
+                margin: '0 0 8px 0'
               }}>
                 {remainingCount} More Changes Available
               </h4>
               <p style={{
-                color: '#92400e',
-                fontSize: '0.95rem',
-                marginBottom: '20px',
-                lineHeight: '1.5'
+                color: '#6b7280',
+                fontSize: '0.9rem',
+                marginBottom: '15px',
+                lineHeight: '1.4'
               }}>
-                Sign in to see all {allChanges.length} changes with full side-by-side comparison, 
-                advanced filtering, and professional download options.
+                Sign in to see all {allChanges.length} changes with full side-by-side comparison.
               </p>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => window.location.href = '/auth/signup'}
                   style={{
                     background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
                     color: 'white',
                     border: 'none',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '0.95rem',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontSize: '0.85rem',
                     fontWeight: '600',
                     cursor: 'pointer'
                   }}
@@ -1088,10 +1087,10 @@ ${line}`;
                   style={{
                     background: 'white',
                     color: '#2563eb',
-                    border: '2px solid #2563eb',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    fontSize: '0.95rem',
+                    border: '1px solid #2563eb',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontSize: '0.85rem',
                     fontWeight: '600',
                     cursor: 'pointer'
                   }}
@@ -1106,250 +1105,187 @@ ${line}`;
     );
   };
 
-  // NEW: Enhanced Login CTA Component (unchanged)
-  const LoginCTA = () => (
+  // COMPACT: Subtle Login CTA Component
+  const CompactLoginCTA = () => (
     <div style={{
-      background: 'linear-gradient(135deg, #fef3c7, #fed7aa)',
-      border: '2px solid #f59e0b',
-      borderRadius: '12px',
-      padding: '25px',
+      background: 'white',
+      border: '1px solid #e5e7eb',
+      borderRadius: '8px',
+      padding: '15px',
       textAlign: 'center',
-      margin: '20px 0'
+      margin: '20px 0',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
     }}>
-      <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🔒</div>
-      <h3 style={{
-        fontSize: '1.2rem',
-        fontWeight: '600',
-        color: '#92400e',
-        margin: '0 0 10px 0'
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        marginBottom: '10px'
       }}>
-        Sign in to Download Professional Reports
-      </h3>
+        <div style={{ fontSize: '1.2rem' }}>🔒</div>
+        <h4 style={{
+          fontSize: '1rem',
+          fontWeight: '600',
+          color: '#374151',
+          margin: 0
+        }}>
+          Sign in to Download Professional Reports
+        </h4>
+      </div>
+      
       <p style={{
-        color: '#92400e',
-        fontSize: '0.95rem',
-        marginBottom: '20px',
-        lineHeight: '1.5'
+        color: '#6b7280',
+        fontSize: '0.85rem',
+        marginBottom: '15px',
+        lineHeight: '1.4'
       }}>
-        Get beautifully formatted HTML reports with side-by-side comparison view
+        Get beautifully formatted HTML reports with full side-by-side comparison view
       </p>
 
-      {/* Mini Report Preview */}
+      {/* Compact Preview */}
       <div style={{
-        background: 'white',
-        borderRadius: '8px',
-        padding: '15px',
-        margin: '15px 0 20px 0',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        border: '1px solid #e5e7eb',
-        maxWidth: '500px',
+        background: '#f8fafc',
+        borderRadius: '6px',
+        padding: '8px',
+        margin: '10px 0',
+        maxWidth: '300px',
         marginLeft: 'auto',
         marginRight: 'auto'
       }}>
-        {/* Mini Header */}
         <div style={{
-          fontSize: '0.9rem',
+          fontSize: '0.7rem',
           fontWeight: '600',
           color: '#2563eb',
-          marginBottom: '10px',
-          textAlign: 'center'
+          marginBottom: '6px'
         }}>
-          📑 PDF Comparison Report
+          📑 HTML Report Preview
         </div>
         
-        {/* Mini Stats */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '8px',
-          marginBottom: '12px'
+          gap: '4px',
+          marginBottom: '6px'
         }}>
           <div style={{
-            background: '#f8fafc',
-            padding: '6px',
-            borderRadius: '4px',
-            fontSize: '0.7rem',
+            background: 'white',
+            padding: '3px',
+            borderRadius: '3px',
+            fontSize: '0.6rem',
             textAlign: 'center'
           }}>
             <div style={{ fontWeight: '600', color: '#f59e0b' }}>86%</div>
-            <div style={{ color: '#6b7280' }}>Similarity</div>
+            <div style={{ color: '#6b7280', fontSize: '0.5rem' }}>Similarity</div>
           </div>
           <div style={{
-            background: '#f8fafc',
-            padding: '6px',
-            borderRadius: '4px',
-            fontSize: '0.7rem',
+            background: 'white',
+            padding: '3px',
+            borderRadius: '3px',
+            fontSize: '0.6rem',
             textAlign: 'center'
           }}>
             <div style={{ fontWeight: '600', color: '#2563eb' }}>2</div>
-            <div style={{ color: '#6b7280' }}>Pages</div>
+            <div style={{ color: '#6b7280', fontSize: '0.5rem' }}>Pages</div>
           </div>
           <div style={{
-            background: '#f8fafc',
-            padding: '6px',
-            borderRadius: '4px',
-            fontSize: '0.7rem',
+            background: 'white',
+            padding: '3px',
+            borderRadius: '3px',
+            fontSize: '0.6rem',
             textAlign: 'center'
           }}>
             <div style={{ fontWeight: '600', color: '#7c3aed' }}>11</div>
-            <div style={{ color: '#6b7280' }}>Changes</div>
+            <div style={{ color: '#6b7280', fontSize: '0.5rem' }}>Changes</div>
           </div>
           <div style={{
-            background: '#f8fafc',
-            padding: '6px',
-            borderRadius: '4px',
-            fontSize: '0.7rem',
+            background: 'white',
+            padding: '3px',
+            borderRadius: '3px',
+            fontSize: '0.6rem',
             textAlign: 'center'
           }}>
             <div style={{ fontWeight: '600', color: '#059669' }}>0%</div>
-            <div style={{ color: '#6b7280' }}>Word Δ</div>
+            <div style={{ color: '#6b7280', fontSize: '0.5rem' }}>Word Δ</div>
           </div>
         </div>
 
-        {/* Mini Side-by-Side */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: '6px',
-          fontSize: '0.65rem'
+          gap: '3px',
+          fontSize: '0.5rem'
         }}>
           <div style={{
             border: '1px solid #e5e7eb',
-            borderRadius: '4px',
-            padding: '8px',
-            background: '#fafafa'
+            borderRadius: '2px',
+            padding: '4px',
+            background: 'white'
           }}>
             <div style={{
               background: '#f3f4f6',
-              padding: '3px 6px',
-              borderRadius: '3px',
-              marginBottom: '6px',
+              padding: '1px 3px',
+              borderRadius: '2px',
+              marginBottom: '2px',
               fontWeight: '600',
-              fontSize: '0.6rem'
+              fontSize: '0.45rem'
             }}>
-              📄 Document 1
+              📄 Doc 1
             </div>
-            <div style={{ lineHeight: '1.3', color: '#374151' }}>
+            <div style={{ lineHeight: '1.2', color: '#374151' }}>
               Invoice #INV-001<br/>
-              TechCorp Solutions<br/>
               <span style={{
                 background: '#fef3c7',
-                padding: '1px 3px',
-                borderRadius: '2px',
-                border: '1px solid #d97706'
+                padding: '0px 2px',
+                borderRadius: '1px',
+                fontSize: '0.4rem'
               }}>
                 Date: 12/15/2024
-              </span><br/>
-              <span style={{
-                background: '#fef3c7',
-                padding: '1px 3px',
-                borderRadius: '2px',
-                border: '1px solid #d97706'
-              }}>
-                Due: 01/15/2025
               </span>
             </div>
           </div>
           
           <div style={{
             border: '1px solid #e5e7eb',
-            borderRadius: '4px',
-            padding: '8px',
-            background: '#fafafa'
+            borderRadius: '2px',
+            padding: '4px',
+            background: 'white'
           }}>
             <div style={{
               background: '#f3f4f6',
-              padding: '3px 6px',
-              borderRadius: '3px',
-              marginBottom: '6px',
+              padding: '1px 3px',
+              borderRadius: '2px',
+              marginBottom: '2px',
               fontWeight: '600',
-              fontSize: '0.6rem'
+              fontSize: '0.45rem'
             }}>
-              📄 Document 2
+              📄 Doc 2
             </div>
-            <div style={{ lineHeight: '1.3', color: '#374151' }}>
+            <div style={{ lineHeight: '1.2', color: '#374151' }}>
               Invoice #INV-002<br/>
-              TechCorp Solutions<br/>
               <span style={{
                 background: '#fef3c7',
-                padding: '1px 3px',
-                borderRadius: '2px',
-                border: '1px solid #d97706'
+                padding: '0px 2px',
+                borderRadius: '1px',
+                fontSize: '0.4rem'
               }}>
                 Date: 12/20/2024
-              </span><br/>
-              <span style={{
-                background: '#fef3c7',
-                padding: '1px 3px',
-                borderRadius: '2px',
-                border: '1px solid #d97706'
-              }}>
-                Due: 01/20/2025
               </span>
             </div>
           </div>
         </div>
-
-        {/* Mini Legend */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '8px',
-          marginTop: '8px',
-          fontSize: '0.6rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <div style={{
-              width: '8px',
-              height: '8px',
-              background: '#fef3c7',
-              border: '1px solid #d97706',
-              borderRadius: '2px'
-            }}></div>
-            <span style={{ color: '#6b7280' }}>Modified</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <div style={{
-              width: '8px',
-              height: '8px',
-              background: '#dcfce7',
-              border: '1px solid #166534',
-              borderRadius: '2px'
-            }}></div>
-            <span style={{ color: '#6b7280' }}>Added</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <div style={{
-              width: '8px',
-              height: '8px',
-              background: '#fee2e2',
-              border: '1px solid #dc2626',
-              borderRadius: '2px'
-            }}></div>
-            <span style={{ color: '#6b7280' }}>Removed</span>
-          </div>
-        </div>
       </div>
 
-      <p style={{
-        color: '#92400e',
-        fontSize: '0.85rem',
-        marginBottom: '15px',
-        fontStyle: 'italic'
-      }}>
-        ↑ Preview of your professional HTML download
-      </p>
-
-      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
         <button
           onClick={() => window.location.href = '/auth/signup'}
           style={{
             background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
             color: 'white',
             border: 'none',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            fontSize: '0.95rem',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
             fontWeight: '600',
             cursor: 'pointer'
           }}
@@ -1361,10 +1297,10 @@ ${line}`;
           style={{
             background: 'white',
             color: '#2563eb',
-            border: '2px solid #2563eb',
-            padding: '10px 20px',
-            borderRadius: '8px',
-            fontSize: '0.95rem',
+            border: '1px solid #2563eb',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
             fontWeight: '600',
             cursor: 'pointer'
           }}
@@ -1548,15 +1484,15 @@ ${line}`;
         </div>
       </div>
 
-      {/* Show Login CTA if not authenticated */}
-      {!session && <LoginCTA />}
-
       {/* ENHANCED CONTENT WITH EXCEL-STYLE DASHBOARD */}
       {viewMode === 'summary' ? (
         /* NEW EXCEL-STYLE SUMMARY VIEW */
         <>
-          {/* Excel-Style Dashboard */}
+          {/* Excel-Style Dashboard - ALWAYS VISIBLE */}
           <ExcelStyleDashboard />
+
+          {/* Show Compact Login CTA after dashboard if not authenticated */}
+          {!session && <CompactLoginCTA />}
 
           {/* Progressive Changes Preview */}
           {session ? (
