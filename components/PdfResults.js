@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import PDFSideBySideView from '../components/PDFSideBySideView';
+import { useRef, useCallback } from 'react';
 
 const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   const { data: session, status } = useSession();
@@ -16,6 +17,23 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   const [groupSimilar, setGroupSimilar] = useState(true);
   const [ignoreWhitespace, setIgnoreWhitespace] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Refs for managing focus and scroll
+  const searchInputRef = useRef(null);
+  const advancedOptionsRef = useRef(null);
+  
+  // Handle search input with focus preservation
+  const handleSearchChange = useCallback((e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    
+    // Preserve focus after state update
+    setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    }, 0);
+  }, []);
 
   // ALL EXISTING DOWNLOAD OPTIONS AND FUNCTIONS REMAIN EXACTLY THE SAME
   const downloadOptions = [
@@ -876,14 +894,17 @@ ${line}`;
     return (
       <div style={{ marginBottom: '25px' }}>
         {/* ENHANCED Advanced Options Section */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          padding: '25px',
-          marginBottom: '20px',
-          border: '1px solid #e5e7eb',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-        }}>
+        <div 
+          ref={advancedOptionsRef}
+          style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            marginBottom: '20px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}
+        >
           {/* Header */}
           <div style={{
             display: 'flex',
@@ -906,30 +927,41 @@ ${line}`;
             </div>
             <div style={{
               display: 'flex',
-              gap: '8px',
+              gap: '4px',
               alignItems: 'center'
             }}>
-              <span style={{
-                background: '#f3f4f6',
-                color: '#374151',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '0.85rem',
-                fontWeight: '500',
-                border: '1px solid #d1d5db'
-              }}>
+              <button
+                onClick={() => setViewMode('summary')}
+                style={{
+                  background: viewMode === 'summary' ? '#f3f4f6' : 'transparent',
+                  color: viewMode === 'summary' ? '#374151' : '#6b7280',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: '500',
+                  border: viewMode === 'summary' ? '1px solid #d1d5db' : '1px solid transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
                 ☰ Unified
-              </span>
-              <span style={{
-                background: '#2563eb',
-                color: 'white',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '0.85rem',
-                fontWeight: '500'
-              }}>
+              </button>
+              <button
+                onClick={() => setViewMode('sideBySide')}
+                style={{
+                  background: viewMode === 'sideBySide' ? '#2563eb' : 'transparent',
+                  color: viewMode === 'sideBySide' ? 'white' : '#6b7280',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: '500',
+                  border: viewMode === 'sideBySide' ? 'none' : '1px solid transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
                 📄 Side-by-Side
-              </span>
+              </button>
             </div>
           </div>
 
@@ -981,9 +1013,10 @@ ${line}`;
                 🔍 Search Records:
               </label>
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 placeholder="Search changes, content..."
                 style={{
                   background: 'white',
