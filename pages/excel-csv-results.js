@@ -1,4 +1,4 @@
-// /pages/excel-csv-results.js - EXCEL/CSV RESULTS ONLY (Clean Split) with Progressive Auth
+// /pages/excel-csv-results.js - EXCEL/CSV RESULTS ONLY (Clean Split)
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
@@ -7,107 +7,6 @@ import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 // Import your existing Excel/CSV results components here
 // import ExcelCSVResults from '../components/ExcelCSVResults';
-
-// Upgrade Prompt Component
-const UpgradePrompt = ({ totalRecords, visibleRecords, onSignUp }) => (
-  <div style={{
-    position: 'relative',
-    marginTop: '20px'
-  }}>
-    {/* Gradient overlay */}
-    <div style={{
-      position: 'absolute',
-      bottom: '0',
-      left: '0',
-      right: '0',
-      height: '100px',
-      background: 'linear-gradient(transparent, rgba(248, 250, 252, 0.95))',
-      borderRadius: '0 0 8px 8px',
-      display: 'flex',
-      alignItems: 'end',
-      justifyContent: 'center',
-      paddingBottom: '20px',
-      zIndex: 5
-    }}>
-      <button
-        onClick={onSignUp}
-        style={{
-          background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-          color: 'white',
-          border: 'none',
-          padding: '12px 24px',
-          borderRadius: '8px',
-          fontSize: '1rem',
-          fontWeight: '600',
-          cursor: 'pointer',
-          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}
-      >
-        🔓 View All {totalRecords} Records
-      </button>
-    </div>
-    
-    {/* Info banner */}
-    <div style={{
-      background: 'linear-gradient(135deg, #f0f9ff, #ecfdf5)',
-      border: '1px solid #c7d2fe',
-      borderRadius: '8px',
-      padding: '15px',
-      textAlign: 'center',
-      marginTop: '15px'
-    }}>
-      <div style={{
-        fontSize: '0.9rem',
-        color: '#374151',
-        marginBottom: '10px'
-      }}>
-        📊 Showing {visibleRecords} of {totalRecords} records • 
-        <span style={{ fontWeight: '600', color: '#3b82f6' }}>
-          {' '}Sign up to see all results + export features
-        </span>
-      </div>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '15px',
-        flexWrap: 'wrap'
-      }}>
-        <button
-          onClick={onSignUp}
-          style={{
-            background: '#10b981',
-            color: 'white',
-            border: 'none',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            fontSize: '0.9rem',
-            fontWeight: '500',
-            cursor: 'pointer'
-          }}
-        >
-          🚀 Sign Up Free
-        </button>
-        <button
-          onClick={() => window.location.href = '/auth/signin'}
-          style={{
-            background: 'white',
-            color: '#6b7280',
-            border: '1px solid #d1d5db',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            fontSize: '0.9rem',
-            cursor: 'pointer'
-          }}
-        >
-          📧 Have an account?
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 export default function ExcelCSVResultsPage() {
   const router = useRouter();
@@ -270,9 +169,10 @@ export default function ExcelCSVResultsPage() {
       );
     }
 
-    // Determine how many records to show based on authentication
-    const maxRecords = isAuthenticated ? tabularResults.results.length : 3;
-    const visibleResults = tabularResults.results.slice(0, maxRecords);
+    // Progressive disclosure: limit records for non-authenticated users
+    const maxRecordsToShow = isAuthenticated ? tabularResults.results.length : 3;
+    const visibleResults = tabularResults.results.slice(0, maxRecordsToShow);
+    const hasMoreRecords = tabularResults.results.length > maxRecordsToShow;
 
     return (
       <div style={{
@@ -350,7 +250,7 @@ export default function ExcelCSVResultsPage() {
               {tabularResults.differences_found}
             </div>
             <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
-              Differences Found
+              Records with Differences
             </div>
             {!isAuthenticated && (
               <div style={{
@@ -363,7 +263,7 @@ export default function ExcelCSVResultsPage() {
                 padding: '2px 6px',
                 borderRadius: '4px'
               }}>
-                Full Details
+                Pro
               </div>
             )}
           </div>
@@ -380,7 +280,7 @@ export default function ExcelCSVResultsPage() {
               {tabularResults.matches_found}
             </div>
             <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
-              Matches Found
+              Perfect Matches
             </div>
           </div>
 
@@ -498,9 +398,9 @@ export default function ExcelCSVResultsPage() {
               alignItems: 'center'
             }}>
               <span>
-                Showing {Math.min(maxRecords, tabularResults.results.length)} of {tabularResults.results.length} records
+                Showing {Math.min(maxRecordsToShow, tabularResults.results.length)} of {tabularResults.results.length} records
               </span>
-              {!isAuthenticated && tabularResults.results.length > 3 && (
+              {!isAuthenticated && hasMoreRecords && (
                 <span style={{
                   background: '#3b82f6',
                   color: 'white',
@@ -599,16 +499,109 @@ export default function ExcelCSVResultsPage() {
               </div>
             ))}
 
-            {/* Show upgrade prompt for non-authenticated users */}
-            {!isAuthenticated && tabularResults.results.length > 3 && (
-              <UpgradePrompt 
-                totalRecords={tabularResults.results.length}
-                visibleRecords={3}
-                onSignUp={handleSignUp}
-              />
+            {/* Upgrade prompt for non-authenticated users */}
+            {!isAuthenticated && hasMoreRecords && (
+              <div style={{
+                position: 'absolute',
+                bottom: '0',
+                left: '0',
+                right: '0',
+                height: '120px',
+                background: 'linear-gradient(transparent, rgba(248, 250, 252, 0.95))',
+                display: 'flex',
+                alignItems: 'end',
+                justifyContent: 'center',
+                paddingBottom: '20px'
+              }}>
+                <button 
+                  onClick={handleSignUp}
+                  style={{
+                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  🔓 Unlock All {tabularResults.results.length} Records
+                </button>
+              </div>
             )}
           </div>
         </div>
+
+        {/* Upgrade CTA for non-authenticated users */}
+        {!isAuthenticated && hasMoreRecords && (
+          <div style={{
+            marginTop: '30px',
+            padding: '20px',
+            background: 'linear-gradient(135deg, #f0f9ff, #ecfdf5)',
+            borderRadius: '8px',
+            border: '1px solid #e0f2fe',
+            textAlign: 'center'
+          }}>
+            <h4 style={{
+              fontSize: '1.2rem',
+              fontWeight: '600',
+              marginBottom: '10px',
+              color: '#1f2937'
+            }}>
+              🎯 Get Complete Analysis & More
+            </h4>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '15px',
+              marginBottom: '20px',
+              fontSize: '0.9rem',
+              color: '#374151'
+            }}>
+              <div>✅ View all {tabularResults.results.length} detailed records</div>
+              <div>📊 Export to Excel/CSV</div>
+              <div>🔍 Advanced filtering & search</div>
+              <div>📈 Custom tolerance settings</div>
+            </div>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button 
+                onClick={handleSignUp}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                🚀 Sign Up Free
+              </button>
+              <button 
+                onClick={() => router.push('/auth/signin')}
+                style={{
+                  background: 'white',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                📧 Already have an account?
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Your existing ExcelCSVResults component would replace this section */}
         {/* <ExcelCSVResults 
@@ -739,51 +732,6 @@ export default function ExcelCSVResultsPage() {
           margin: '0 auto',
           padding: '20px'
         }}>
-          {/* Sticky Auth Banner for non-authenticated users */}
-          {!isAuthenticated && !isLoading && !error && tabularResults && (
-            <div style={{
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              color: 'white',
-              padding: '12px 20px',
-              borderRadius: '8px',
-              marginBottom: '20px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-              position: 'sticky',
-              top: '0',
-              zIndex: 10
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.2rem' }}>🚀</span>
-                <div>
-                  <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>
-                    Free Preview Mode
-                  </div>
-                  <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>
-                    Sign up to see all {tabularResults.results?.length || 0} records and export features
-                  </div>
-                </div>
-              </div>
-              <button 
-                onClick={handleSignUp}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  color: 'white',
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                Sign Up Free
-              </button>
-            </div>
-          )}
-
           {/* Page Header */}
           <div style={{
             textAlign: 'center',
