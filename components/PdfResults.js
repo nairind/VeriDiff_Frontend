@@ -1813,12 +1813,14 @@ ${line}`;
       </div>
 
       {/* ENHANCED CONTENT WITH EXCEL-STYLE DASHBOARD */}
-      {viewMode === 'summary' ? (
-        /* NEW EXCEL-STYLE SUMMARY VIEW */
-        <>
-          {/* Excel-Style Dashboard - ALWAYS VISIBLE */}
-          <ExcelStyleDashboard />
+      
+      {/* Excel-Style Dashboard - ALWAYS VISIBLE REGARDLESS OF VIEW MODE */}
+      <ExcelStyleDashboard />
 
+      {/* VIEW-SPECIFIC CONTENT */}
+      {viewMode === 'summary' ? (
+        /* SUMMARY VIEW: Advanced Options + Progressive Changes */
+        <>
           {/* Progressive Changes Preview */}
           {session ? (
             /* AUTHENTICATED: Show all changes as before */
@@ -2092,12 +2094,14 @@ ${line}`;
           )}
         </>
       ) : (
-        /* SIDE-BY-SIDE VIEW - COMPLETELY UNCHANGED */
-        <PDFSideBySideView 
-          results={results} 
-          file1Name={file1Name} 
-          file2Name={file2Name} 
-        />
+        /* SIDE-BY-SIDE VIEW: Just the side-by-side component (dashboard already shown above) */
+        <div style={{ marginTop: '20px' }}>
+          <PDFSideBySideView 
+            results={results} 
+            file1Name={file1Name} 
+            file2Name={file2Name} 
+          />
+        </div>
       )}
     </div>
   );
