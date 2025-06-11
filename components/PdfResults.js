@@ -9,6 +9,13 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   const [isGeneratingDownload, setIsGeneratingDownload] = useState(false);
   const [viewMode, setViewMode] = useState('summary'); // 'summary' | 'sideBySide'
   const [downloadDropdownOpen, setDownloadDropdownOpen] = useState(false);
+  
+  // Advanced Options State
+  const [filterMode, setFilterMode] = useState('all'); // 'all', 'changes', 'matches'
+  const [focusMode, setFocusMode] = useState(false);
+  const [groupSimilar, setGroupSimilar] = useState(true);
+  const [ignoreWhitespace, setIgnoreWhitespace] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // ALL EXISTING DOWNLOAD OPTIONS AND FUNCTIONS REMAIN EXACTLY THE SAME
   const downloadOptions = [
@@ -806,11 +813,35 @@ ${line}`;
     );
   };
 
-  // ENHANCED: Progressive Display Component with Preview
+  // ENHANCED: Progressive Display Component with Enhanced Advanced Options
   const ProgressiveChangesPreview = () => {
     const allChanges = results.text_changes || [];
-    const previewChanges = allChanges.slice(0, 3); // Show first 3 changes
-    const remainingCount = Math.max(0, allChanges.length - 3);
+    
+    // Apply filtering logic
+    let filteredChanges = allChanges;
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filteredChanges = filteredChanges.filter(change => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          change.text?.toLowerCase().includes(searchLower) ||
+          change.old_text?.toLowerCase().includes(searchLower) ||
+          change.new_text?.toLowerCase().includes(searchLower) ||
+          change.type?.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+    
+    // Apply filter mode
+    if (filterMode === 'changes') {
+      filteredChanges = filteredChanges.filter(change => change.type !== 'unchanged');
+    } else if (filterMode === 'matches') {
+      filteredChanges = filteredChanges.filter(change => change.type === 'unchanged');
+    }
+    
+    const previewChanges = session ? filteredChanges : filteredChanges.slice(0, 3);
+    const remainingCount = session ? 0 : Math.max(0, allChanges.length - 3);
 
     if (allChanges.length === 0) {
       return (
@@ -844,49 +875,57 @@ ${line}`;
 
     return (
       <div style={{ marginBottom: '25px' }}>
-        {/* Advanced Options Header */}
+        {/* ENHANCED Advanced Options Section */}
         <div style={{
           background: 'white',
           borderRadius: '12px',
-          padding: '20px',
+          padding: '25px',
           marginBottom: '20px',
-          border: '1px solid #e5e7eb'
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
         }}>
+          {/* Header */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '15px'
+            marginBottom: '20px',
+            paddingBottom: '15px',
+            borderBottom: '1px solid #e5e7eb'
           }}>
-            <h3 style={{
-              fontSize: '1.2rem',
-              fontWeight: '600',
-              margin: 0,
-              color: '#1f2937'
-            }}>
-              🔍 Advanced Options
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '1.2rem' }}>🔍</span>
+              <h3 style={{
+                fontSize: '1.3rem',
+                fontWeight: '600',
+                margin: 0,
+                color: '#1f2937'
+              }}>
+                Advanced Options
+              </h3>
+            </div>
             <div style={{
               display: 'flex',
-              gap: '10px',
+              gap: '8px',
               alignItems: 'center'
             }}>
               <span style={{
                 background: '#f3f4f6',
                 color: '#374151',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                fontSize: '0.8rem',
-                fontWeight: '500'
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.85rem',
+                fontWeight: '500',
+                border: '1px solid #d1d5db'
               }}>
                 ☰ Unified
               </span>
               <span style={{
                 background: '#2563eb',
                 color: 'white',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                fontSize: '0.8rem',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.85rem',
                 fontWeight: '500'
               }}>
                 📄 Side-by-Side
@@ -894,60 +933,236 @@ ${line}`;
             </div>
           </div>
 
+          {/* Controls Row 1 - Filter and Search */}
           <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr auto',
+            gap: '20px',
             alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '15px'
+            marginBottom: '20px'
           }}>
-            <div style={{
-              display: 'flex',
-              gap: '15px',
-              alignItems: 'center',
-              flexWrap: 'wrap'
-            }}>
-              <div style={{
-                background: '#f8fafc',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                fontSize: '0.85rem',
-                color: '#6b7280'
+            {/* Filter Results Dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <label style={{
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                color: '#374151',
+                whiteSpace: 'nowrap'
               }}>
-                🔧 Filter Results: <strong>Show All Records</strong>
-              </div>
-              <div style={{
-                background: '#f8fafc',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                fontSize: '0.85rem',
-                color: '#6b7280'
-              }}>
-                🔍 Search Records
-              </div>
+                🗂️ Filter Results:
+              </label>
+              <select
+                value={filterMode}
+                onChange={(e) => setFilterMode(e.target.value)}
+                style={{
+                  background: 'white',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  fontSize: '0.9rem',
+                  minWidth: '180px',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">Show All Records</option>
+                <option value="changes">Only Changes</option>
+                <option value="matches">Only Matches</option>
+              </select>
             </div>
             
+            {/* Search Box */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', maxWidth: '400px' }}>
+              <label style={{
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                color: '#374151',
+                whiteSpace: 'nowrap'
+              }}>
+                🔍 Search Records:
+              </label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search changes, content..."
+                style={{
+                  background: 'white',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
+                  fontSize: '0.9rem',
+                  width: '100%',
+                  outline: 'none'
+                }}
+              />
+            </div>
+
+            {/* Results Counter */}
             <div style={{
-              display: 'flex',
-              gap: '8px',
-              alignItems: 'center',
+              background: '#f8fafc',
+              padding: '8px 16px',
+              borderRadius: '6px',
               fontSize: '0.85rem',
-              color: '#6b7280'
+              color: '#374151',
+              border: '1px solid #e5e7eb',
+              whiteSpace: 'nowrap'
             }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input type="checkbox" style={{ transform: 'scale(0.9)' }} />
-                Focus Mode (highlight changes only)
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input type="checkbox" defaultChecked style={{ transform: 'scale(0.9)' }} />
-                Group Similar Fields
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input type="checkbox" style={{ transform: 'scale(0.9)' }} />
-                Ignore Whitespace
-              </label>
+              <strong>{filteredChanges.length}</strong> of <strong>{allChanges.length}</strong> changes
             </div>
           </div>
+          
+          {/* Controls Row 2 - Checkboxes */}
+          <div style={{
+            display: 'flex',
+            gap: '25px',
+            alignItems: 'center',
+            flexWrap: 'wrap'
+          }}>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              color: '#374151',
+              cursor: 'pointer'
+            }}>
+              <input 
+                type="checkbox" 
+                checked={focusMode}
+                onChange={(e) => setFocusMode(e.target.checked)}
+                style={{ transform: 'scale(1.1)' }} 
+              />
+              Focus Mode (highlight changes only)
+            </label>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              color: '#374151',
+              cursor: 'pointer'
+            }}>
+              <input 
+                type="checkbox" 
+                checked={groupSimilar}
+                onChange={(e) => setGroupSimilar(e.target.checked)}
+                style={{ transform: 'scale(1.1)' }} 
+              />
+              Group Similar Fields
+            </label>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              color: '#374151',
+              cursor: 'pointer'
+            }}>
+              <input 
+                type="checkbox" 
+                checked={ignoreWhitespace}
+                onChange={(e) => setIgnoreWhitespace(e.target.checked)}
+                style={{ transform: 'scale(1.1)' }} 
+              />
+              Ignore Whitespace
+            </label>
+          </div>
+
+          {/* Active Filters Display */}
+          {(filterMode !== 'all' || searchTerm || focusMode || !groupSimilar || ignoreWhitespace) && (
+            <div style={{
+              background: '#f0f9ff',
+              border: '1px solid #bae6fd',
+              borderRadius: '6px',
+              padding: '12px',
+              marginTop: '15px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#0369a1' }}>
+                  🎯 Active Filters:
+                </span>
+                <button
+                  onClick={() => {
+                    setFilterMode('all');
+                    setSearchTerm('');
+                    setFocusMode(false);
+                    setGroupSimilar(true);
+                    setIgnoreWhitespace(false);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#0369a1',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Clear All
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {filterMode !== 'all' && (
+                  <span style={{
+                    background: '#0369a1',
+                    color: 'white',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem'
+                  }}>
+                    Filter: {filterMode === 'changes' ? 'Only Changes' : 'Only Matches'}
+                  </span>
+                )}
+                {searchTerm && (
+                  <span style={{
+                    background: '#0369a1',
+                    color: 'white',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem'
+                  }}>
+                    Search: "{searchTerm}"
+                  </span>
+                )}
+                {focusMode && (
+                  <span style={{
+                    background: '#0369a1',
+                    color: 'white',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem'
+                  }}>
+                    Focus Mode
+                  </span>
+                )}
+                {!groupSimilar && (
+                  <span style={{
+                    background: '#0369a1',
+                    color: 'white',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem'
+                  }}>
+                    No Grouping
+                  </span>
+                )}
+                {ignoreWhitespace && (
+                  <span style={{
+                    background: '#0369a1',
+                    color: 'white',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem'
+                  }}>
+                    Ignore Whitespace
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Preview Changes */}
@@ -963,12 +1178,12 @@ ${line}`;
             margin: '0 0 20px 0',
             color: '#1f2937'
           }}>
-            📋 Changes Preview ({allChanges.length} total)
+            📋 Changes {session ? `(${filteredChanges.length} total)` : `Preview (${allChanges.length} total)`}
           </h3>
 
-          {/* Show first 3 changes */}
+          {/* Show filtered changes */}
           <div style={{ marginBottom: '20px' }}>
-            {previewChanges.map((change, index) => (
+            {previewChanges.length > 0 ? previewChanges.map((change, index) => (
               <div
                 key={index}
                 style={{
@@ -1036,7 +1251,22 @@ ${line}`;
                   </div>
                 )}
               </div>
-            ))}
+            )) : (
+              <div style={{
+                padding: '40px',
+                textAlign: 'center',
+                color: '#6b7280',
+                background: '#f9fafb',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🔍</div>
+                <h4 style={{ margin: '0 0 5px 0', color: '#374151' }}>No Results Found</h4>
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>
+                  Try adjusting your filters or search terms.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Paywall for remaining changes */}
@@ -1490,9 +1720,6 @@ ${line}`;
         <>
           {/* Excel-Style Dashboard - ALWAYS VISIBLE */}
           <ExcelStyleDashboard />
-
-          {/* Show Compact Login CTA after dashboard if not authenticated */}
-          {!session && <CompactLoginCTA />}
 
           {/* Progressive Changes Preview */}
           {session ? (
