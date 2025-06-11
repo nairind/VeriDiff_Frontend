@@ -20,6 +20,10 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
   
   // Refs for managing focus and scroll
   const searchInputRef = useRef(null);
+  const filterSelectRef = useRef(null);
+  const focusModeRef = useRef(null);
+  const groupSimilarRef = useRef(null);
+  const ignoreWhitespaceRef = useRef(null);
   const advancedOptionsRef = useRef(null);
   
   // Handle search input with focus preservation
@@ -33,6 +37,67 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
         searchInputRef.current.focus();
       }
     }, 0);
+  }, []);
+
+  // Handle filter dropdown with focus preservation
+  const handleFilterChange = useCallback((e) => {
+    const value = e.target.value;
+    setFilterMode(value);
+    
+    // Preserve focus after state update
+    setTimeout(() => {
+      if (filterSelectRef.current) {
+        filterSelectRef.current.focus();
+      }
+    }, 0);
+  }, []);
+
+  // Handle focus mode checkbox with focus preservation
+  const handleFocusModeChange = useCallback((e) => {
+    const checked = e.target.checked;
+    setFocusMode(checked);
+    
+    // Preserve focus after state update
+    setTimeout(() => {
+      if (focusModeRef.current) {
+        focusModeRef.current.focus();
+      }
+    }, 0);
+  }, []);
+
+  // Handle group similar checkbox with focus preservation
+  const handleGroupSimilarChange = useCallback((e) => {
+    const checked = e.target.checked;
+    setGroupSimilar(checked);
+    
+    // Preserve focus after state update
+    setTimeout(() => {
+      if (groupSimilarRef.current) {
+        groupSimilarRef.current.focus();
+      }
+    }, 0);
+  }, []);
+
+  // Handle ignore whitespace checkbox with focus preservation
+  const handleIgnoreWhitespaceChange = useCallback((e) => {
+    const checked = e.target.checked;
+    setIgnoreWhitespace(checked);
+    
+    // Preserve focus after state update
+    setTimeout(() => {
+      if (ignoreWhitespaceRef.current) {
+        ignoreWhitespaceRef.current.focus();
+      }
+    }, 0);
+  }, []);
+
+  // Handle clear all filters
+  const handleClearAllFilters = useCallback(() => {
+    setFilterMode('all');
+    setSearchTerm('');
+    setFocusMode(false);
+    setGroupSimilar(true);
+    setIgnoreWhitespace(false);
   }, []);
 
   // ALL EXISTING DOWNLOAD OPTIONS AND FUNCTIONS REMAIN EXACTLY THE SAME
@@ -984,8 +1049,9 @@ ${line}`;
                 🗂️ Filter Results:
               </label>
               <select
+                ref={filterSelectRef}
                 value={filterMode}
-                onChange={(e) => setFilterMode(e.target.value)}
+                onChange={handleFilterChange}
                 style={{
                   background: 'white',
                   border: '1px solid #d1d5db',
@@ -993,7 +1059,8 @@ ${line}`;
                   padding: '8px 12px',
                   fontSize: '0.9rem',
                   minWidth: '180px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  outline: 'none'
                 }}
               >
                 <option value="all">Show All Records</option>
@@ -1061,10 +1128,11 @@ ${line}`;
               cursor: 'pointer'
             }}>
               <input 
+                ref={focusModeRef}
                 type="checkbox" 
                 checked={focusMode}
-                onChange={(e) => setFocusMode(e.target.checked)}
-                style={{ transform: 'scale(1.1)' }} 
+                onChange={handleFocusModeChange}
+                style={{ transform: 'scale(1.1)', outline: 'none' }} 
               />
               Focus Mode (highlight changes only)
             </label>
@@ -1078,10 +1146,11 @@ ${line}`;
               cursor: 'pointer'
             }}>
               <input 
+                ref={groupSimilarRef}
                 type="checkbox" 
                 checked={groupSimilar}
-                onChange={(e) => setGroupSimilar(e.target.checked)}
-                style={{ transform: 'scale(1.1)' }} 
+                onChange={handleGroupSimilarChange}
+                style={{ transform: 'scale(1.1)', outline: 'none' }} 
               />
               Group Similar Fields
             </label>
@@ -1095,10 +1164,11 @@ ${line}`;
               cursor: 'pointer'
             }}>
               <input 
+                ref={ignoreWhitespaceRef}
                 type="checkbox" 
                 checked={ignoreWhitespace}
-                onChange={(e) => setIgnoreWhitespace(e.target.checked)}
-                style={{ transform: 'scale(1.1)' }} 
+                onChange={handleIgnoreWhitespaceChange}
+                style={{ transform: 'scale(1.1)', outline: 'none' }} 
               />
               Ignore Whitespace
             </label>
@@ -1118,20 +1188,15 @@ ${line}`;
                   🎯 Active Filters:
                 </span>
                 <button
-                  onClick={() => {
-                    setFilterMode('all');
-                    setSearchTerm('');
-                    setFocusMode(false);
-                    setGroupSimilar(true);
-                    setIgnoreWhitespace(false);
-                  }}
+                  onClick={handleClearAllFilters}
                   style={{
                     background: 'none',
                     border: 'none',
                     color: '#0369a1',
                     fontSize: '0.8rem',
                     cursor: 'pointer',
-                    textDecoration: 'underline'
+                    textDecoration: 'underline',
+                    outline: 'none'
                   }}
                 >
                   Clear All
