@@ -1,4 +1,4 @@
-// components/PdfResults.js - With Authentication Gate (MINIMAL CHANGES)
+// components/PdfResults.js - Excel-Style Dashboard with Progressive Display
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import PDFSideBySideView from '../components/PDFSideBySideView';
@@ -586,7 +586,527 @@ ${line}`;
     }
   };
 
-  // NEW: Enhanced Login CTA Component with Report Preview
+  // ENHANCED: Excel-Style Dashboard Component
+  const ExcelStyleDashboard = () => {
+    // Calculate metrics
+    const totalChanges = results.differences_found || 0;
+    const differencesFound = results.differences_found || 0;
+    const perfectMatches = results.matches_found || 0;
+    const similarityScore = results.similarity_score || 0;
+
+    return (
+      <div style={{
+        background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
+        border: '2px solid #22c55e',
+        borderRadius: '16px',
+        padding: '30px',
+        marginBottom: '30px'
+      }}>
+        {/* Excel-Style Header */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: '30px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '15px',
+            marginBottom: '15px'
+          }}>
+            <div style={{ fontSize: '2.5rem' }}>📄</div>
+            <h2 style={{
+              fontSize: '2.2rem',
+              fontWeight: '700',
+              margin: 0,
+              background: 'linear-gradient(135deg, #059669, #047857)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              Comparison Complete!
+            </h2>
+          </div>
+          
+          <div style={{
+            background: 'white',
+            borderRadius: '8px',
+            padding: '12px 20px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontSize: '1rem',
+            fontWeight: '500',
+            color: '#059669',
+            border: '1px solid #d1fae5'
+          }}>
+            <span style={{ fontWeight: '600' }}>{file1Name || 'Document 1'}</span>
+            <span style={{ color: '#6b7280' }}>vs</span>
+            <span style={{ fontWeight: '600' }}>{file2Name || 'Document 2'}</span>
+            <span style={{
+              background: '#3b82f6',
+              color: 'white',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              fontSize: '0.8rem',
+              marginLeft: '8px'
+            }}>
+              Preview Mode
+            </span>
+          </div>
+        </div>
+
+        {/* Excel-Style Metric Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '20px',
+          marginBottom: '25px'
+        }}>
+          {/* Total Changes Card */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            textAlign: 'center',
+            border: '2px solid #bfdbfe',
+            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)'
+          }}>
+            <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>📊</div>
+            <div style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              color: '#2563eb',
+              marginBottom: '5px'
+            }}>
+              {totalChanges}
+            </div>
+            <div style={{
+              fontSize: '0.9rem',
+              color: '#2563eb',
+              fontWeight: '600'
+            }}>
+              Total Changes
+            </div>
+          </div>
+
+          {/* Differences Found Card */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            textAlign: 'center',
+            border: '2px solid #fed7aa',
+            boxShadow: '0 4px 12px rgba(251, 146, 60, 0.15)'
+          }}>
+            <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>⚠️</div>
+            <div style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              color: '#ea580c',
+              marginBottom: '5px'
+            }}>
+              {differencesFound}
+            </div>
+            <div style={{
+              fontSize: '0.9rem',
+              color: '#ea580c',
+              fontWeight: '600'
+            }}>
+              Differences Found
+            </div>
+          </div>
+
+          {/* Perfect Matches Card */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            textAlign: 'center',
+            border: '2px solid #bbf7d0',
+            boxShadow: '0 4px 12px rgba(34, 197, 94, 0.15)'
+          }}>
+            <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>✨</div>
+            <div style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              color: '#059669',
+              marginBottom: '5px'
+            }}>
+              {perfectMatches}
+            </div>
+            <div style={{
+              fontSize: '0.9rem',
+              color: '#059669',
+              fontWeight: '600'
+            }}>
+              Perfect Matches
+            </div>
+          </div>
+
+          {/* Similarity Score Card */}
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '25px',
+            textAlign: 'center',
+            border: '2px solid #fde68a',
+            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.15)'
+          }}>
+            <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>🎯</div>
+            <div style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              color: '#d97706',
+              marginBottom: '5px'
+            }}>
+              {similarityScore}%
+            </div>
+            <div style={{
+              fontSize: '0.9rem',
+              color: '#d97706',
+              fontWeight: '600'
+            }}>
+              Match Rate
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Stats Bar */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.7)',
+          borderRadius: '8px',
+          padding: '15px',
+          display: 'flex',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '15px',
+          fontSize: '0.9rem',
+          color: '#059669'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontWeight: '600' }}>📄</span>
+            <span>{results.total_pages || 0} Pages</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontWeight: '600' }}>⏱️</span>
+            <span>{results.processing_time?.total_time_ms || 'N/A'}ms</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontWeight: '600' }}>✅</span>
+            <span>{Math.round((results.quality_metrics?.overall_success_rate || 1) * 100)}% Quality</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontWeight: '600' }}>📝</span>
+            <span>{(results.word_changes?.word_change_percentage || 0)}% Word Change</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ENHANCED: Progressive Display Component with Preview
+  const ProgressiveChangesPreview = () => {
+    const allChanges = results.text_changes || [];
+    const previewChanges = allChanges.slice(0, 3); // Show first 3 changes
+    const remainingCount = Math.max(0, allChanges.length - 3);
+
+    if (allChanges.length === 0) {
+      return (
+        <div style={{
+          background: '#f0fdf4',
+          border: '2px solid #22c55e',
+          borderRadius: '12px',
+          padding: '30px',
+          textAlign: 'center',
+          marginBottom: '25px'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🎉</div>
+          <h3 style={{
+            fontSize: '1.4rem',
+            fontWeight: '600',
+            color: '#166534',
+            margin: '0 0 10px 0'
+          }}>
+            Perfect Match!
+          </h3>
+          <p style={{
+            margin: 0,
+            color: '#166534',
+            fontSize: '1rem'
+          }}>
+            No differences were found between the PDF documents. The content appears to be identical.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ marginBottom: '25px' }}>
+        {/* Advanced Options Header */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '20px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '15px'
+          }}>
+            <h3 style={{
+              fontSize: '1.2rem',
+              fontWeight: '600',
+              margin: 0,
+              color: '#1f2937'
+            }}>
+              🔍 Advanced Options
+            </h3>
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              alignItems: 'center'
+            }}>
+              <span style={{
+                background: '#f3f4f6',
+                color: '#374151',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '0.8rem',
+                fontWeight: '500'
+              }}>
+                ☰ Unified
+              </span>
+              <span style={{
+                background: '#2563eb',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '0.8rem',
+                fontWeight: '500'
+              }}>
+                📄 Side-by-Side
+              </span>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '15px'
+          }}>
+            <div style={{
+              display: 'flex',
+              gap: '15px',
+              alignItems: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{
+                background: '#f8fafc',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                fontSize: '0.85rem',
+                color: '#6b7280'
+              }}>
+                🔧 Filter Results: <strong>Show All Records</strong>
+              </div>
+              <div style={{
+                background: '#f8fafc',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                fontSize: '0.85rem',
+                color: '#6b7280'
+              }}>
+                🔍 Search Records
+              </div>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              alignItems: 'center',
+              fontSize: '0.85rem',
+              color: '#6b7280'
+            }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <input type="checkbox" style={{ transform: 'scale(0.9)' }} />
+                Focus Mode (highlight changes only)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <input type="checkbox" defaultChecked style={{ transform: 'scale(0.9)' }} />
+                Group Similar Fields
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <input type="checkbox" style={{ transform: 'scale(0.9)' }} />
+                Ignore Whitespace
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Preview Changes */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '25px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <h3 style={{
+            fontSize: '1.3rem',
+            fontWeight: '600',
+            margin: '0 0 20px 0',
+            color: '#1f2937'
+          }}>
+            📋 Changes Preview ({allChanges.length} total)
+          </h3>
+
+          {/* Show first 3 changes */}
+          <div style={{ marginBottom: '20px' }}>
+            {previewChanges.map((change, index) => (
+              <div
+                key={index}
+                style={{
+                  background: getChangeBackground(change.type),
+                  border: `1px solid ${getChangeColor(change.type)}`,
+                  borderRadius: '8px',
+                  padding: '15px',
+                  marginBottom: '12px'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '10px'
+                }}>
+                  <span style={{
+                    background: getChangeColor(change.type),
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.8rem',
+                    fontWeight: '600',
+                    textTransform: 'uppercase'
+                  }}>
+                    {change.type}
+                  </span>
+                  <span style={{
+                    fontSize: '0.9rem',
+                    color: '#6b7280'
+                  }}>
+                    Page {change.page} • Paragraph {change.paragraph}
+                  </span>
+                </div>
+
+                {change.type === 'modified' ? (
+                  <div style={{ fontSize: '0.9rem' }}>
+                    <div style={{
+                      background: '#fee2e2',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      marginBottom: '6px',
+                      border: '1px solid #fca5a5',
+                      fontSize: '0.85rem'
+                    }}>
+                      <strong style={{ color: '#dc2626' }}>Before:</strong> "{change.old_text?.substring(0, 120)}{change.old_text?.length > 120 ? '...' : ''}"
+                    </div>
+                    <div style={{
+                      background: '#dcfce7',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      border: '1px solid #a7f3d0',
+                      fontSize: '0.85rem'
+                    }}>
+                      <strong style={{ color: '#166534' }}>After:</strong> "{change.new_text?.substring(0, 120)}{change.new_text?.length > 120 ? '...' : ''}"
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    fontSize: '0.85rem',
+                    lineHeight: '1.4',
+                    color: '#374151'
+                  }}>
+                    "{change.text?.substring(0, 150)}{change.text?.length > 150 ? '...' : ''}"
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Paywall for remaining changes */}
+          {remainingCount > 0 && (
+            <div style={{
+              background: 'linear-gradient(135deg, #fef3c7, #fed7aa)',
+              border: '2px solid #f59e0b',
+              borderRadius: '12px',
+              padding: '25px',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '2rem', marginBottom: '15px' }}>🔓</div>
+              <h4 style={{
+                fontSize: '1.3rem',
+                fontWeight: '600',
+                color: '#92400e',
+                margin: '0 0 10px 0'
+              }}>
+                {remainingCount} More Changes Available
+              </h4>
+              <p style={{
+                color: '#92400e',
+                fontSize: '0.95rem',
+                marginBottom: '20px',
+                lineHeight: '1.5'
+              }}>
+                Sign in to see all {allChanges.length} changes with full side-by-side comparison, 
+                advanced filtering, and professional download options.
+              </p>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => window.location.href = '/auth/signup'}
+                  style={{
+                    background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '0.95rem',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  📝 Sign Up Free
+                </button>
+                <button
+                  onClick={() => window.location.href = '/auth/signin'}
+                  style={{
+                    background: 'white',
+                    color: '#2563eb',
+                    border: '2px solid #2563eb',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    fontSize: '0.95rem',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔑 Sign In
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // NEW: Enhanced Login CTA Component (unchanged)
   const LoginCTA = () => (
     <div style={{
       background: 'linear-gradient(135deg, #fef3c7, #fed7aa)',
@@ -894,7 +1414,7 @@ ${line}`;
         </h2>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* View Toggle Buttons - UNCHANGED */}
+          {/* View Toggle Buttons */}
           <div style={{
             display: 'flex',
             background: '#f3f4f6',
@@ -938,9 +1458,9 @@ ${line}`;
             </button>
           </div>
 
-          {/* CONDITIONAL DOWNLOAD SECTION - ONLY CHANGE */}
+          {/* CONDITIONAL DOWNLOAD SECTION */}
           {session ? (
-            /* AUTHENTICATED: Show Download Dropdown - EXISTING CODE */
+            /* AUTHENTICATED: Show Download Dropdown */
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <button
                 onClick={() => setDownloadDropdownOpen(!downloadDropdownOpen)}
@@ -1031,371 +1551,284 @@ ${line}`;
       {/* Show Login CTA if not authenticated */}
       {!session && <LoginCTA />}
 
-      {/* ALL EXISTING CONTENT REMAINS EXACTLY THE SAME */}
+      {/* ENHANCED CONTENT WITH EXCEL-STYLE DASHBOARD */}
       {viewMode === 'summary' ? (
-        /* SUMMARY VIEW - COMPLETELY UNCHANGED */
+        /* NEW EXCEL-STYLE SUMMARY VIEW */
         <>
-          {/* File Information */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '20px',
-            marginBottom: '25px'
-          }}>
-            <div style={{
-              background: '#f8fafc',
-              padding: '20px',
-              borderRadius: '12px',
-              border: '2px solid #e2e8f0'
-            }}>
-              <h3 style={{ margin: '0 0 10px 0', color: '#1e40af', fontSize: '1.1rem' }}>
-                📄 File 1: {file1Name || 'Document 1'}
-              </h3>
-              <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
-                <div>📊 {results.file1_metadata?.totalPages || 0} pages</div>
-                <div>📝 {results.file1_metadata?.totalWords || 0} words</div>
-                <div>💾 {results.file1_metadata?.fileSize ? `${(results.file1_metadata.fileSize / 1024 / 1024).toFixed(1)}MB` : 'N/A'}</div>
-              </div>
-            </div>
+          {/* Excel-Style Dashboard */}
+          <ExcelStyleDashboard />
 
-            <div style={{
-              background: '#f8fafc',
-              padding: '20px',
-              borderRadius: '12px',
-              border: '2px solid #e2e8f0'
-            }}>
-              <h3 style={{ margin: '0 0 10px 0', color: '#1e40af', fontSize: '1.1rem' }}>
-                📄 File 2: {file2Name || 'Document 2'}
-              </h3>
-              <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
-                <div>📊 {results.file2_metadata?.totalPages || 0} pages</div>
-                <div>📝 {results.file2_metadata?.totalWords || 0} words</div>
-                <div>💾 {results.file2_metadata?.fileSize ? `${(results.file2_metadata.fileSize / 1024 / 1024).toFixed(1)}MB` : 'N/A'}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Comparison Summary */}
-          <div style={{
-            background: results.similarity_score >= 90 ? '#f0fdf4' : 
-                       results.similarity_score >= 70 ? '#fefce8' : '#fef2f2',
-            border: `2px solid ${results.similarity_score >= 90 ? '#22c55e' : 
-                                 results.similarity_score >= 70 ? '#eab308' : '#ef4444'}`,
-            borderRadius: '12px',
-            padding: '25px',
-            marginBottom: '25px'
-          }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '20px',
-              alignItems: 'center'
-            }}>
-              <div style={{ textAlign: 'center' }}>
+          {/* Progressive Changes Preview */}
+          {session ? (
+            /* AUTHENTICATED: Show all changes as before */
+            results.page_differences && results.page_differences.length > 0 ? (
+              <div>
                 <div style={{
-                  fontSize: '2.5rem',
-                  fontWeight: '700',
-                  color: results.similarity_score >= 90 ? '#166534' : 
-                         results.similarity_score >= 70 ? '#a16207' : '#dc2626'
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '20px'
                 }}>
-                  {results.similarity_score || 0}%
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '600',
+                    margin: 0,
+                    color: '#1f2937'
+                  }}>
+                    📋 Page-by-Page Changes ({results.page_differences.length} pages affected)
+                  </h3>
+                  
+                  <button
+                    onClick={toggleAllPages}
+                    style={{
+                      background: '#f3f4f6',
+                      border: '1px solid #d1d5db',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer',
+                      color: '#374151'
+                    }}
+                  >
+                    {expandedPages.size === results.page_differences.length ? '📕 Collapse All' : '📖 Expand All'}
+                  </button>
                 </div>
-                <div style={{ 
-                  fontSize: '0.9rem', 
-                  color: results.similarity_score >= 90 ? '#166534' : 
-                         results.similarity_score >= 70 ? '#a16207' : '#dc2626',
-                  fontWeight: '600'
-                }}>
-                  Similarity Score
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  {results.page_differences.map((page, index) => (
+                    <div
+                      key={page.page_number}
+                      style={{
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      {/* Page Header */}
+                      <div
+                        onClick={() => togglePageExpansion(page.page_number)}
+                        style={{
+                          background: '#f8fafc',
+                          padding: '15px 20px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          borderBottom: expandedPages.has(page.page_number) ? '1px solid #e5e7eb' : 'none'
+                        }}
+                      >
+                        <div>
+                          <h4 style={{
+                            margin: 0,
+                            fontSize: '1.1rem',
+                            fontWeight: '600',
+                            color: '#1f2937'
+                          }}>
+                            📄 Page {page.page_number}
+                          </h4>
+                          <p style={{
+                            margin: '5px 0 0 0',
+                            fontSize: '0.9rem',
+                            color: '#6b7280'
+                          }}>
+                            {page.summary} • {page.page1_paragraphs || 0} → {page.page2_paragraphs || 0} paragraphs
+                          </p>
+                        </div>
+                        
+                        <div style={{
+                          fontSize: '1.2rem',
+                          transform: expandedPages.has(page.page_number) ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s'
+                        }}>
+                          ⌄
+                        </div>
+                      </div>
+
+                      {/* Page Details */}
+                      {expandedPages.has(page.page_number) && (
+                        <div style={{ padding: '20px' }}>
+                          {results.text_changes
+                            ?.filter(change => change.page === page.page_number)
+                            ?.map((change, changeIndex) => (
+                              <div
+                                key={changeIndex}
+                                style={{
+                                  background: getChangeBackground(change.type),
+                                  border: `1px solid ${getChangeColor(change.type)}`,
+                                  borderRadius: '6px',
+                                  padding: '15px',
+                                  marginBottom: changeIndex < results.text_changes.filter(c => c.page === page.page_number).length - 1 ? '12px' : '0'
+                                }}
+                              >
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  marginBottom: '10px'
+                                }}>
+                                  <span style={{
+                                    background: getChangeColor(change.type),
+                                    color: 'white',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: '600',
+                                    textTransform: 'uppercase'
+                                  }}>
+                                    {change.type}
+                                  </span>
+                                  <span style={{
+                                    fontSize: '0.9rem',
+                                    color: '#6b7280'
+                                  }}>
+                                    Paragraph {change.paragraph}
+                                  </span>
+                                </div>
+
+                                {change.type === 'modified' ? (
+                                  <div style={{ fontSize: '0.9rem' }}>
+                                    <div style={{
+                                      background: '#fee2e2',
+                                      padding: '10px',
+                                      borderRadius: '4px',
+                                      marginBottom: '8px',
+                                      border: '1px solid #fca5a5'
+                                    }}>
+                                      <strong style={{ color: '#dc2626' }}>❌ Original:</strong>
+                                      <div style={{ marginTop: '5px', fontFamily: 'monospace' }}>
+                                        "{change.old_text}"
+                                      </div>
+                                    </div>
+                                    <div style={{
+                                      background: '#dcfce7',
+                                      padding: '10px',
+                                      borderRadius: '4px',
+                                      border: '1px solid #a7f3d0'
+                                    }}>
+                                      <strong style={{ color: '#166534' }}>✅ New:</strong>
+                                      <div style={{ marginTop: '5px', fontFamily: 'monospace' }}>
+                                        "{change.new_text}"
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div style={{
+                                    fontSize: '0.9rem',
+                                    fontFamily: 'monospace',
+                                    lineHeight: '1.4',
+                                    color: '#374151'
+                                  }}>
+                                    "{change.text}"
+                                  </div>
+                                )}
+                              </div>
+                            )) || (
+                              <div style={{
+                                padding: '20px',
+                                textAlign: 'center',
+                                color: '#6b7280',
+                                fontStyle: 'italic'
+                              }}>
+                                No detailed changes available for this page
+                              </div>
+                            )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              <div>
-                <div style={{ fontSize: '0.95rem', marginBottom: '8px' }}>
-                  <strong>📊 Comparison Summary:</strong>
-                </div>
-                <div style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  • <strong>{results.differences_found || 0}</strong> differences found<br/>
-                  • <strong>{results.matches_found || 0}</strong> matching elements<br/>
-                  • <strong>{results.page_differences?.length || 0}</strong> pages with changes<br/>
-                  • <strong>{results.total_pages || 0}</strong> total pages compared
-                </div>
-              </div>
-
-              <div>
-                <div style={{ fontSize: '0.95rem', marginBottom: '8px' }}>
-                  <strong>🔄 Change Breakdown:</strong>
-                </div>
-                <div style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  • <span style={{ color: '#22c55e' }}>➕ {results.added_count || 0} added</span><br/>
-                  • <span style={{ color: '#ef4444' }}>➖ {results.removed_count || 0} removed</span><br/>
-                  • <span style={{ color: '#f59e0b' }}>✏️ {results.modified_count || 0} modified</span><br/>
-                  • ⚡ Processed in {results.processing_time?.total_time_ms || 'N/A'}ms
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Page Differences Section - COMPLETELY UNCHANGED */}
-          {results.page_differences && results.page_differences.length > 0 ? (
-            <div>
+            ) : (
               <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '20px'
+                background: '#f0fdf4',
+                border: '2px solid #22c55e',
+                borderRadius: '12px',
+                padding: '25px',
+                textAlign: 'center'
               }}>
+                <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎉</div>
                 <h3 style={{
                   fontSize: '1.3rem',
                   fontWeight: '600',
-                  margin: 0,
-                  color: '#1f2937'
+                  color: '#166534',
+                  margin: '0 0 10px 0'
                 }}>
-                  📋 Page-by-Page Changes ({results.page_differences.length} pages affected)
+                  Perfect Match!
                 </h3>
-                
-                <button
-                  onClick={toggleAllPages}
-                  style={{
-                    background: '#f3f4f6',
-                    border: '1px solid #d1d5db',
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    color: '#374151'
-                  }}
-                >
-                  {expandedPages.size === results.page_differences.length ? '📕 Collapse All' : '📖 Expand All'}
-                </button>
+                <p style={{
+                  margin: 0,
+                  color: '#166534',
+                  fontSize: '1rem'
+                }}>
+                  No differences were found between the PDF documents. The content appears to be identical.
+                </p>
               </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                {results.page_differences.map((page, index) => (
-                  <div
-                    key={page.page_number}
-                    style={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    {/* Page Header */}
-                    <div
-                      onClick={() => togglePageExpansion(page.page_number)}
-                      style={{
-                        background: '#f8fafc',
-                        padding: '15px 20px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        borderBottom: expandedPages.has(page.page_number) ? '1px solid #e5e7eb' : 'none'
-                      }}
-                    >
-                      <div>
-                        <h4 style={{
-                          margin: 0,
-                          fontSize: '1.1rem',
-                          fontWeight: '600',
-                          color: '#1f2937'
-                        }}>
-                          📄 Page {page.page_number}
-                        </h4>
-                        <p style={{
-                          margin: '5px 0 0 0',
-                          fontSize: '0.9rem',
-                          color: '#6b7280'
-                        }}>
-                          {page.summary} • {page.page1_paragraphs || 0} → {page.page2_paragraphs || 0} paragraphs
-                        </p>
-                      </div>
-                      
-                      <div style={{
-                        fontSize: '1.2rem',
-                        transform: expandedPages.has(page.page_number) ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 0.2s'
-                      }}>
-                        ⌄
-                      </div>
-                    </div>
-
-                    {/* Page Details */}
-                    {expandedPages.has(page.page_number) && (
-                      <div style={{ padding: '20px' }}>
-                        {results.text_changes
-                          ?.filter(change => change.page === page.page_number)
-                          ?.map((change, changeIndex) => (
-                            <div
-                              key={changeIndex}
-                              style={{
-                                background: getChangeBackground(change.type),
-                                border: `1px solid ${getChangeColor(change.type)}`,
-                                borderRadius: '6px',
-                                padding: '15px',
-                                marginBottom: changeIndex < results.text_changes.filter(c => c.page === page.page_number).length - 1 ? '12px' : '0'
-                              }}
-                            >
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                marginBottom: '10px'
-                              }}>
-                                <span style={{
-                                  background: getChangeColor(change.type),
-                                  color: 'white',
-                                  padding: '4px 8px',
-                                  borderRadius: '4px',
-                                  fontSize: '0.8rem',
-                                  fontWeight: '600',
-                                  textTransform: 'uppercase'
-                                }}>
-                                  {change.type}
-                                </span>
-                                <span style={{
-                                  fontSize: '0.9rem',
-                                  color: '#6b7280'
-                                }}>
-                                  Paragraph {change.paragraph}
-                                </span>
-                              </div>
-
-                              {change.type === 'modified' ? (
-                                <div style={{ fontSize: '0.9rem' }}>
-                                  <div style={{
-                                    background: '#fee2e2',
-                                    padding: '10px',
-                                    borderRadius: '4px',
-                                    marginBottom: '8px',
-                                    border: '1px solid #fca5a5'
-                                  }}>
-                                    <strong style={{ color: '#dc2626' }}>❌ Original:</strong>
-                                    <div style={{ marginTop: '5px', fontFamily: 'monospace' }}>
-                                      "{change.old_text}"
-                                    </div>
-                                  </div>
-                                  <div style={{
-                                    background: '#dcfce7',
-                                    padding: '10px',
-                                    borderRadius: '4px',
-                                    border: '1px solid #a7f3d0'
-                                  }}>
-                                    <strong style={{ color: '#166534' }}>✅ New:</strong>
-                                    <div style={{ marginTop: '5px', fontFamily: 'monospace' }}>
-                                      "{change.new_text}"
-                                    </div>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div style={{
-                                  fontSize: '0.9rem',
-                                  fontFamily: 'monospace',
-                                  lineHeight: '1.4',
-                                  color: '#374151'
-                                }}>
-                                  "{change.text}"
-                                </div>
-                              )}
-                            </div>
-                          )) || (
-                            <div style={{
-                              padding: '20px',
-                              textAlign: 'center',
-                              color: '#6b7280',
-                              fontStyle: 'italic'
-                            }}>
-                              No detailed changes available for this page
-                            </div>
-                          )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            )
           ) : (
-            <div style={{
-              background: '#f0fdf4',
-              border: '2px solid #22c55e',
-              borderRadius: '12px',
-              padding: '25px',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎉</div>
-              <h3 style={{
-                fontSize: '1.3rem',
-                fontWeight: '600',
-                color: '#166534',
-                margin: '0 0 10px 0'
-              }}>
-                Perfect Match!
-              </h3>
-              <p style={{
-                margin: 0,
-                color: '#166534',
-                fontSize: '1rem'
-              }}>
-                No differences were found between the PDF documents. The content appears to be identical.
-              </p>
-            </div>
+            /* NOT AUTHENTICATED: Show progressive preview */
+            <ProgressiveChangesPreview />
           )}
 
-          {/* Word Count Analysis - UNCHANGED */}
-          {results.word_changes && (
-            <div style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '20px',
-              marginTop: '25px'
-            }}>
-              <h3 style={{
-                fontSize: '1.2rem',
-                fontWeight: '600',
-                margin: '0 0 15px 0',
-                color: '#1f2937'
-              }}>
-                📊 Word Count Analysis
-              </h3>
-              
+          {/* Processing Information - UNCHANGED for authenticated users */}
+          {session && (
+            <>
+              {/* Word Count Analysis */}
+              {results.word_changes && (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginTop: '25px'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.2rem',
+                    fontWeight: '600',
+                    margin: '0 0 15px 0',
+                    color: '#1f2937'
+                  }}>
+                    📊 Word Count Analysis
+                  </h3>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '15px'
+                  }}>
+                    <div>
+                      <strong>File 1:</strong> {results.word_changes.file1_words} words
+                    </div>
+                    <div>
+                      <strong>File 2:</strong> {results.word_changes.file2_words} words
+                    </div>
+                    <div>
+                      <strong>Difference:</strong> {results.word_changes.word_difference} words
+                    </div>
+                    <div>
+                      <strong>Change:</strong> {results.word_changes.word_change_percentage}%
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Processing Information */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '15px'
+                background: '#f9fafb',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                padding: '15px',
+                marginTop: '20px',
+                fontSize: '0.85rem',
+                color: '#6b7280'
               }}>
-                <div>
-                  <strong>File 1:</strong> {results.word_changes.file1_words} words
-                </div>
-                <div>
-                  <strong>File 2:</strong> {results.word_changes.file2_words} words
-                </div>
-                <div>
-                  <strong>Difference:</strong> {results.word_changes.word_difference} words
-                </div>
-                <div>
-                  <strong>Change:</strong> {results.word_changes.word_change_percentage}%
-                </div>
+                <strong>Processing Info:</strong> {results.processing_note || 'PDF comparison completed'} •
+                Quality: {Math.round((results.quality_metrics?.overall_success_rate || 1) * 100)}% •
+                Time: {results.processing_time?.total_time_ms || 'N/A'}ms •
+                Type: {results.comparison_type || 'PDF Document'} •
+                🚀 <strong>Powered by VeriDiff</strong>
               </div>
-            </div>
+            </>
           )}
-
-          {/* Processing Information - UNCHANGED */}
-          <div style={{
-            background: '#f9fafb',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '15px',
-            marginTop: '20px',
-            fontSize: '0.85rem',
-            color: '#6b7280'
-          }}>
-            <strong>Processing Info:</strong> {results.processing_note || 'PDF comparison completed'} •
-            Quality: {Math.round((results.quality_metrics?.overall_success_rate || 1) * 100)}% •
-            Time: {results.processing_time?.total_time_ms || 'N/A'}ms •
-            Type: {results.comparison_type || 'PDF Document'} •
-            🚀 <strong>Powered by VeriDiff</strong>
-          </div>
         </>
       ) : (
         /* SIDE-BY-SIDE VIEW - COMPLETELY UNCHANGED */
