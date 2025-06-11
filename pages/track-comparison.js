@@ -1,6 +1,7 @@
 // /pages/track-comparison.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
@@ -22,6 +23,8 @@ const trackAnalytics = async (eventType, data = {}) => {
 
 export default function TrackComparison() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
   const [scrollManager] = useState(() => createScrollManager());
   
   // Core states
@@ -154,8 +157,12 @@ export default function TrackComparison() {
     setExpandedGroups(newExpanded);
   };
 
-  // Get filtered results
+  // Get filtered results with progressive disclosure
   const filteredResults = getFilteredResults(results, resultsFilter, searchTerm, sortField, sortDirection);
+  
+  // Apply progressive disclosure - limit records for non-authenticated users
+  const displayResults = isAuthenticated ? filteredResults : filteredResults.slice(0, 3);
+  const hasMoreRecords = !isAuthenticated && filteredResults.length > 3;
 
   // Export handlers
   const onDownloadExcel = () => {
@@ -324,6 +331,18 @@ export default function TrackComparison() {
                 margin: '0 0 20px 0'
               }}>
                 <strong>{file1?.name}</strong> vs <strong>{file2?.name}</strong>
+                {!isAuthenticated && (
+                  <span style={{
+                    background: '#3b82f6',
+                    color: 'white',
+                    fontSize: '0.8rem',
+                    padding: '4px 8px',
+                    borderRadius: '12px',
+                    marginLeft: '10px'
+                  }}>
+                    Preview Mode
+                  </span>
+                )}
               </p>
 
               <div style={{
@@ -389,12 +408,12 @@ export default function TrackComparison() {
               onIgnoreWhitespaceToggle={handleIgnoreWhitespaceToggle}
               showCharacterDiff={showCharacterDiff}
               onCharacterDiffToggle={handleCharacterDiffToggle}
-              filteredResultsLength={filteredResults.length}
+              filteredResultsLength={displayResults.length}
             />
 
             {/* Results Display */}
             <ResultsDisplay 
-              filteredResults={filteredResults}
+              filteredResults={displayResults}
               viewMode={viewMode}
               file1={file1}
               file2={file2}
@@ -411,6 +430,66 @@ export default function TrackComparison() {
               preserveScroll={scrollManager.preserveScroll}
               results={results}
             />
+
+            {/* Upgrade prompt for non-authenticated users */}
+            {hasMoreRecords && (
+              <div style={{
+                marginTop: '20px',
+                padding: '25px',
+                background: 'linear-gradient(135deg, #f0f9ff, #ecfdf5)',
+                borderRadius: '12px',
+                border: '2px solid #3b82f6',
+                textAlign: 'center'
+              }}>
+                <h3 style={{
+                  fontSize: '1.3rem',
+                  fontWeight: '600',
+                  marginBottom: '10px',
+                  color: '#1f2937'
+                }}>
+                  🔓 See All {filteredResults.length} Records
+                </h3>
+                <p style={{
+                  color: '#6b7280',
+                  marginBottom: '20px',
+                  fontSize: '1rem'
+                }}>
+                  You're viewing {displayResults.length} of {filteredResults.length} records. Sign up to see complete results + export features.
+                </p>
+                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button 
+                    onClick={() => router.push('/auth/signup')}
+                    style={{
+                      background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🚀 Sign Up Free
+                  </button>
+                  <button 
+                    onClick={() => router.push('/auth/signin')}
+                    style={{
+                      background: 'white',
+                      color: '#3b82f6',
+                      border: '2px solid #3b82f6',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📧 Already have an account?
+                  </button>
+                </div>
+              </div>
+            )}
 
             <ExportSection 
               onDownloadExcel={onDownloadExcel}
