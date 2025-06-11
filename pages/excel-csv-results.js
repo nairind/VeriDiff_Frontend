@@ -1,14 +1,119 @@
-// /pages/excel-csv-results.js - EXCEL/CSV RESULTS ONLY (Clean Split)
+// /pages/excel-csv-results.js - EXCEL/CSV RESULTS ONLY (Clean Split) with Progressive Auth
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 // Import your existing Excel/CSV results components here
 // import ExcelCSVResults from '../components/ExcelCSVResults';
 
+// Upgrade Prompt Component
+const UpgradePrompt = ({ totalRecords, visibleRecords, onSignUp }) => (
+  <div style={{
+    position: 'relative',
+    marginTop: '20px'
+  }}>
+    {/* Gradient overlay */}
+    <div style={{
+      position: 'absolute',
+      bottom: '0',
+      left: '0',
+      right: '0',
+      height: '100px',
+      background: 'linear-gradient(transparent, rgba(248, 250, 252, 0.95))',
+      borderRadius: '0 0 8px 8px',
+      display: 'flex',
+      alignItems: 'end',
+      justifyContent: 'center',
+      paddingBottom: '20px',
+      zIndex: 5
+    }}>
+      <button
+        onClick={onSignUp}
+        style={{
+          background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+          color: 'white',
+          border: 'none',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          fontSize: '1rem',
+          fontWeight: '600',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        🔓 View All {totalRecords} Records
+      </button>
+    </div>
+    
+    {/* Info banner */}
+    <div style={{
+      background: 'linear-gradient(135deg, #f0f9ff, #ecfdf5)',
+      border: '1px solid #c7d2fe',
+      borderRadius: '8px',
+      padding: '15px',
+      textAlign: 'center',
+      marginTop: '15px'
+    }}>
+      <div style={{
+        fontSize: '0.9rem',
+        color: '#374151',
+        marginBottom: '10px'
+      }}>
+        📊 Showing {visibleRecords} of {totalRecords} records • 
+        <span style={{ fontWeight: '600', color: '#3b82f6' }}>
+          {' '}Sign up to see all results + export features
+        </span>
+      </div>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '15px',
+        flexWrap: 'wrap'
+      }}>
+        <button
+          onClick={onSignUp}
+          style={{
+            background: '#10b981',
+            color: 'white',
+            border: 'none',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '0.9rem',
+            fontWeight: '500',
+            cursor: 'pointer'
+          }}
+        >
+          🚀 Sign Up Free
+        </button>
+        <button
+          onClick={() => window.location.href = '/auth/signin'}
+          style={{
+            background: 'white',
+            color: '#6b7280',
+            border: '1px solid #d1d5db',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '0.9rem',
+            cursor: 'pointer'
+          }}
+        >
+          📧 Have an account?
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 export default function ExcelCSVResultsPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
+  
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [fileInfo, setFileInfo] = useState({ file1: null, file2: null });
@@ -142,6 +247,10 @@ export default function ExcelCSVResultsPage() {
     router.push('/excel-csv-comparison');
   };
 
+  const handleSignUp = () => {
+    router.push('/auth/signup');
+  };
+
   const renderTabularResults = () => {
     if (!tabularResults) {
       return (
@@ -160,6 +269,10 @@ export default function ExcelCSVResultsPage() {
         </div>
       );
     }
+
+    // Determine how many records to show based on authentication
+    const maxRecords = isAuthenticated ? tabularResults.results.length : 3;
+    const visibleResults = tabularResults.results.slice(0, maxRecords);
 
     return (
       <div style={{
@@ -229,7 +342,8 @@ export default function ExcelCSVResultsPage() {
             padding: '20px',
             borderRadius: '8px',
             textAlign: 'center',
-            border: '1px solid #fecaca'
+            border: '1px solid #fecaca',
+            position: 'relative'
           }}>
             <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🔄</div>
             <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#dc2626' }}>
@@ -238,6 +352,20 @@ export default function ExcelCSVResultsPage() {
             <div style={{ fontSize: '0.9rem', color: '#6b7280' }}>
               Differences Found
             </div>
+            {!isAuthenticated && (
+              <div style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                background: '#3b82f6',
+                color: 'white',
+                fontSize: '0.7rem',
+                padding: '2px 6px',
+                borderRadius: '4px'
+              }}>
+                Full Details
+              </div>
+            )}
           </div>
 
           <div style={{
@@ -341,7 +469,7 @@ export default function ExcelCSVResultsPage() {
         )}
 
         {/* Results Preview */}
-        <div style={{ marginTop: '30px' }}>
+        <div style={{ marginTop: '30px', position: 'relative' }}>
           <h3 style={{
             fontSize: '1.3rem',
             fontWeight: '600',
@@ -355,7 +483,8 @@ export default function ExcelCSVResultsPage() {
             background: '#f8fafc',
             border: '1px solid #e5e7eb',
             borderRadius: '8px',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            position: 'relative'
           }}>
             <div style={{
               padding: '15px',
@@ -363,15 +492,31 @@ export default function ExcelCSVResultsPage() {
               borderBottom: '1px solid #e5e7eb',
               fontWeight: '600',
               fontSize: '0.9rem',
-              color: '#374151'
+              color: '#374151',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
             }}>
-              Showing first {Math.min(5, tabularResults.results.length)} of {tabularResults.results.length} records
+              <span>
+                Showing {Math.min(maxRecords, tabularResults.results.length)} of {tabularResults.results.length} records
+              </span>
+              {!isAuthenticated && tabularResults.results.length > 3 && (
+                <span style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  fontSize: '0.75rem',
+                  padding: '4px 8px',
+                  borderRadius: '4px'
+                }}>
+                  Preview Mode
+                </span>
+              )}
             </div>
             
-            {tabularResults.results.slice(0, 5).map((record, index) => (
+            {visibleResults.map((record, index) => (
               <div key={index} style={{
                 padding: '12px 15px',
-                borderBottom: index < 4 ? '1px solid #f1f5f9' : 'none',
+                borderBottom: index < visibleResults.length - 1 ? '1px solid #f1f5f9' : 'none',
                 fontSize: '0.9rem'
               }}>
                 <div style={{ 
@@ -453,6 +598,15 @@ export default function ExcelCSVResultsPage() {
                 </div>
               </div>
             ))}
+
+            {/* Show upgrade prompt for non-authenticated users */}
+            {!isAuthenticated && tabularResults.results.length > 3 && (
+              <UpgradePrompt 
+                totalRecords={tabularResults.results.length}
+                visibleRecords={3}
+                onSignUp={handleSignUp}
+              />
+            )}
           </div>
         </div>
 
@@ -585,6 +739,51 @@ export default function ExcelCSVResultsPage() {
           margin: '0 auto',
           padding: '20px'
         }}>
+          {/* Sticky Auth Banner for non-authenticated users */}
+          {!isAuthenticated && !isLoading && !error && tabularResults && (
+            <div style={{
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              color: 'white',
+              padding: '12px 20px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+              position: 'sticky',
+              top: '0',
+              zIndex: 10
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '1.2rem' }}>🚀</span>
+                <div>
+                  <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>
+                    Free Preview Mode
+                  </div>
+                  <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>
+                    Sign up to see all {tabularResults.results?.length || 0} records and export features
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={handleSignUp}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  color: 'white',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                Sign Up Free
+              </button>
+            </div>
+          )}
+
           {/* Page Header */}
           <div style={{
             textAlign: 'center',
@@ -629,6 +828,18 @@ export default function ExcelCSVResultsPage() {
                   <span>📊 <strong>{fileInfo.file1?.name}</strong></span>
                   <span style={{ color: '#10b981' }}>vs</span>
                   <span>📊 <strong>{fileInfo.file2?.name}</strong></span>
+                  {!isAuthenticated && (
+                    <span style={{
+                      background: '#3b82f6',
+                      color: 'white',
+                      fontSize: '0.8rem',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      marginLeft: '8px'
+                    }}>
+                      Preview
+                    </span>
+                  )}
                 </div>
               </div>
             )}
