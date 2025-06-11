@@ -208,6 +208,7 @@ export async function compareExcelCSVFiles(excelFile, csvFile, finalMappings = [
       }
       
       const fieldResults = {};
+      let recordHasDifferences = false;
 
       for (const key of keysToProcess) {
         const val1 = row1[key] ?? '';
@@ -234,11 +235,16 @@ export async function compareExcelCSVFiles(excelFile, csvFile, finalMappings = [
           isAutoDetectedAmount: FEATURES.AUTO_DETECTION && autoDetectAmounts && mapping?.isAmountField && !finalMappings.find(m => m.file1Header === key)?.isAmountField
         };
 
-        if (status === 'match' || status === 'acceptable') {
-          matches++;
-        } else {
-          differences++;
+        if (status !== 'match' && status !== 'acceptable') {
+          recordHasDifferences = true;
         }
+      }
+
+      // Count at record level
+      if (recordHasDifferences) {
+        differences++;
+      } else {
+        matches++;
       }
 
       results.push({
