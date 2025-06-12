@@ -1,4 +1,4 @@
-// /pages/pdf-comparison.js - PDF ONLY (WITH DEBUG)
+// /pages/pdf-comparison.js - PDF ONLY (WITH DEBUG AND FEEDBACK FIX)
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -204,6 +204,9 @@ export default function PDFComparison() {
       // FEEDBACK TRIGGER
       if (window.triggerFeedbackCheck) {
         console.log('🎯 DEBUG: Calling triggerFeedbackCheck now!');
+        // Set the current count variable that the feedback function expects
+        window.u = parseInt(localStorage.getItem('trialComparisonCount') || '0');
+        console.log('🎯 DEBUG: Set window.u to:', window.u);
         window.triggerFeedbackCheck();
         console.log('🎯 DEBUG: triggerFeedbackCheck called successfully');
       } else {
