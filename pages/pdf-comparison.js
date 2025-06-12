@@ -84,6 +84,207 @@ export default function PDFComparison() {
     }
   };
 
+  // Simple PDF Feedback Popup Function
+  const showPdfFeedbackPopup = () => {
+    // Create popup container
+    const popupContainer = document.createElement('div');
+    popupContainer.id = 'pdf-feedback-popup';
+    popupContainer.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    // Create popup content
+    popupContainer.innerHTML = `
+      <div style="
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow: auto;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+      ">
+        <div style="text-align: center; margin-bottom: 25px;">
+          <div style="font-size: 3rem; margin-bottom: 15px;">🎉</div>
+          <h2 style="
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+          ">
+            Thanks for using VeriDiff PDF Comparison!
+          </h2>
+          <p style="color: #6b7280; line-height: 1.6;">
+            You've completed your 3rd PDF comparison! We'd love your feedback to help improve our service.
+          </p>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+          <label style="
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+          ">
+            How would you rate your PDF comparison experience?
+          </label>
+          <div style="
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+          " id="star-rating">
+            <button onclick="selectRating(1)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="1">⭐</button>
+            <button onclick="selectRating(2)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="2">⭐</button>
+            <button onclick="selectRating(3)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="3">⭐</button>
+            <button onclick="selectRating(4)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="4">⭐</button>
+            <button onclick="selectRating(5)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="5">⭐</button>
+          </div>
+
+          <label style="
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+          ">
+            Any suggestions for PDF comparison features? (Optional)
+          </label>
+          <textarea
+            id="pdf-feedback-comments"
+            placeholder="Tell us what you think about our PDF comparison tool..."
+            style="
+              width: 100%;
+              min-height: 80px;
+              padding: 12px;
+              border: 2px solid #e5e7eb;
+              border-radius: 8px;
+              font-size: 0.9rem;
+              resize: vertical;
+              box-sizing: border-box;
+            "
+          ></textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button
+            onclick="closePdfFeedback(false)"
+            style="
+              padding: 10px 20px;
+              border: 2px solid #e5e7eb;
+              background: white;
+              color: #6b7280;
+              border-radius: 8px;
+              font-size: 0.9rem;
+              font-weight: 500;
+              cursor: pointer;
+            "
+          >
+            Skip
+          </button>
+          <button
+            onclick="submitPdfFeedback()"
+            style="
+              padding: 10px 20px;
+              border: none;
+              background: linear-gradient(135deg, #2563eb, #7c3aed);
+              color: white;
+              border-radius: 8px;
+              font-size: 0.9rem;
+              font-weight: 500;
+              cursor: pointer;
+            "
+          >
+            Submit Feedback
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Add to page
+    document.body.appendChild(popupContainer);
+
+    // Global functions for popup interaction
+    window.selectedPdfRating = 0;
+    
+    window.selectRating = (rating) => {
+      window.selectedPdfRating = rating;
+      // Update star display
+      const stars = document.querySelectorAll('#star-rating button');
+      stars.forEach((star, index) => {
+        star.style.opacity = index < rating ? '1' : '0.3';
+      });
+    };
+
+    window.closePdfFeedback = (submitted = false) => {
+      console.log('🎯 PDF FEEDBACK: Closing popup, submitted:', submitted);
+      
+      // Mark as shown
+      localStorage.setItem('pdf_feedback_shown', 'true');
+      
+      // Remove popup
+      const popup = document.getElementById('pdf-feedback-popup');
+      if (popup) {
+        popup.remove();
+      }
+    };
+
+    window.submitPdfFeedback = async () => {
+      const rating = window.selectedPdfRating || 0;
+      const comments = document.getElementById('pdf-feedback-comments')?.value || '';
+      const pdfCount = parseInt(localStorage.getItem('pdf_comparison_count') || '3');
+      
+      console.log('🎯 PDF FEEDBACK: Submitting feedback:', { rating, comments, pdfCount });
+      
+      try {
+        // Prepare feedback text with rating and PDF context
+        const feedbackText = rating > 0 
+          ? `PDF Comparison Feedback (${rating}/5 stars): ${comments}`.trim()
+          : `PDF Comparison Feedback: ${comments}`.trim();
+
+        // Send to your existing feedback API with all required fields
+        const response = await fetch('/api/feedback/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            feedback_text: feedbackText,
+            comparisonCount: pdfCount,
+            email: null, // No email collected in PDF feedback
+            selected_reasons: [] // Empty array for PDF feedback (since we don't have predefined reasons)
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('🎯 PDF FEEDBACK: Successfully submitted to dashboard:', result);
+          alert('Thank you for your PDF comparison feedback! 🙏');
+        } else {
+          const errorData = await response.json();
+          console.error('🎯 PDF FEEDBACK: API error:', response.status, errorData);
+          alert('Thank you for your feedback! (Note: There was an issue saving to our system, but we appreciate your input)');
+        }
+      } catch (error) {
+        console.error('🎯 PDF FEEDBACK: Submit error:', error);
+        alert('Thank you for your feedback! (Note: There was an issue saving to our system, but we appreciate your input)');
+      }
+      
+      window.closePdfFeedback(true);
+    };
+  };
+
   const handlePDFComparison = async () => {
     try {
       setIsLoading(true);
@@ -197,21 +398,31 @@ export default function PDFComparison() {
       sessionStorage.setItem('veridiff_comparison_type', 'pdf');
       sessionStorage.setItem('veridiff_pdf_options', JSON.stringify(pdfOptions));
 
-      // DEBUG: Test feedback trigger
-      console.log('🎯 DEBUG: About to trigger feedback check');
-      console.log('🎯 DEBUG: window.triggerFeedbackCheck exists?', typeof window.triggerFeedbackCheck);
+      // SIMPLE PDF FEEDBACK SYSTEM
+      console.log('🎯 PDF FEEDBACK: Checking if feedback should be shown...');
       
-      // FEEDBACK TRIGGER
-      if (window.triggerFeedbackCheck) {
-        console.log('🎯 DEBUG: Calling triggerFeedbackCheck now!');
-        // Set the current count variable that the feedback function expects
-        window.u = parseInt(localStorage.getItem('trialComparisonCount') || '0');
-        console.log('🎯 DEBUG: Set window.u to:', window.u);
-        window.triggerFeedbackCheck();
-        console.log('🎯 DEBUG: triggerFeedbackCheck called successfully');
+      // Get current PDF comparison count
+      let pdfComparisonCount = parseInt(localStorage.getItem('pdf_comparison_count') || '0');
+      console.log('🎯 PDF FEEDBACK: Current PDF comparison count:', pdfComparisonCount);
+      
+      // Increment the count
+      pdfComparisonCount += 1;
+      localStorage.setItem('pdf_comparison_count', pdfComparisonCount.toString());
+      console.log('🎯 PDF FEEDBACK: Updated PDF comparison count to:', pdfComparisonCount);
+      
+      // Check if we should show feedback (on 3rd comparison)
+      const hasShownPdfFeedback = localStorage.getItem('pdf_feedback_shown') === 'true';
+      console.log('🎯 PDF FEEDBACK: Has shown feedback before:', hasShownPdfFeedback);
+      
+      if (pdfComparisonCount >= 3 && !hasShownPdfFeedback) {
+        console.log('🎯 PDF FEEDBACK: Showing feedback popup now!');
+        
+        // Small delay to ensure page is ready
+        setTimeout(() => {
+          showPdfFeedbackPopup();
+        }, 1000);
       } else {
-        console.log('🎯 DEBUG: triggerFeedbackCheck not found on window object');
-        console.log('🎯 DEBUG: Available window properties:', Object.keys(window).filter(key => key.includes('trigger')));
+        console.log('🎯 PDF FEEDBACK: Not showing feedback - Count:', pdfComparisonCount, 'Already shown:', hasShownPdfFeedback);
       }
 
       setProcessingProgress({
