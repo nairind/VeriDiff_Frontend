@@ -368,6 +368,11 @@ export default function Comparison() {
       // Store results and navigate to track-comparison page
       sessionStorage.setItem('veridiff_results', JSON.stringify(result));
       sessionStorage.setItem('veridiff_file_type', fileType);
+
+      // FEEDBACK TRIGGER - ADD THIS LINE
+      if (window.triggerFeedbackCheck) {
+        window.triggerFeedbackCheck();
+      }
       
       console.log('Comparison completed:', {
         total_records: result.total_records,
