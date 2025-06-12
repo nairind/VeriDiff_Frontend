@@ -1,34 +1,27 @@
-// File: components/HeaderMapper.jsx - Updated to match landing page aesthetic
-
+// /components/HeaderMapper.js
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm, onRun, sampleData1, sampleData2, isProcessing }) => {
   const [mappings, setMappings] = useState([]);
   const [autoRerunEnabled, setAutoRerunEnabled] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false); // ✅ NEW: Track initialization
-  const lastAutoRunRef = useRef(0); // ✅ NEW: Prevent rapid auto-runs
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const lastAutoRunRef = useRef(0);
 
   // Auto-detect amount fields based on name and sample data
   const isLikelyAmountField = useCallback((fieldName, sampleValues = []) => {
-    // Check field name patterns
     const numericFieldNames = /amount|price|cost|total|sum|value|balance|fee|qty|quantity|rate|charge|payment|invoice|bill|salary|wage|revenue|profit|expense|budget/i;
     const hasNumericName = numericFieldNames.test(fieldName);
     
-    // Check if values look like numbers (even as text)
     const cleanNumericValues = sampleValues.filter(val => {
       if (!val && val !== 0) return false;
-      // Clean common formatting
       const cleaned = String(val).replace(/[$,\s€£¥]/g, '');
       return !isNaN(parseFloat(cleaned)) && isFinite(cleaned);
     });
     
     const percentNumeric = cleanNumericValues.length / Math.max(sampleValues.length, 1);
-    
-    // Auto-detect if field name suggests numbers OR >70% of values are numeric
     return hasNumericName || percentNumeric > 0.7;
   }, []);
 
-  // Get sample values for a field from both datasets
   const getSampleValues = useCallback((fieldName, file2FieldName) => {
     const samples1 = sampleData1 ? sampleData1.slice(0, 10).map(row => row[fieldName]).filter(v => v != null) : [];
     const samples2 = sampleData2 ? sampleData2.slice(0, 10).map(row => row[file2FieldName]).filter(v => v != null) : [];
@@ -52,21 +45,17 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
     });
     setMappings(enriched);
     
-    // ✅ NEW: Mark as initialized after setting initial mappings
     setTimeout(() => {
       setHasInitialized(true);
       console.log('🎯 HeaderMapper initialized with', enriched.length, 'mappings');
     }, 500);
   }, [suggestedMappings, isLikelyAmountField, getSampleValues]);
 
-  // ✅ FIXED: Auto-rerun comparison when mappings change (with better protection)
   useEffect(() => {
-    // Don't auto-run during initialization or when already processing
     if (!hasInitialized || isProcessing || !autoRerunEnabled || mappings.length === 0) {
       return;
     }
 
-    // Prevent rapid auto-runs (minimum 2 seconds between runs)
     const now = Date.now();
     if (now - lastAutoRunRef.current < 2000) {
       console.log('🚫 Auto-run skipped - too soon after last run');
@@ -80,13 +69,12 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
       lastAutoRunRef.current = Date.now();
       
       onConfirm(mappings);
-      // Auto-run comparison after confirming mappings
       setTimeout(() => {
-        if (!isProcessing) { // Double-check we're not already processing
+        if (!isProcessing) {
           onRun();
         }
       }, 100);
-    }, 1000); // 1 second debounce
+    }, 1000);
 
     return () => {
       clearTimeout(timer);
@@ -97,12 +85,10 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
     const updated = [...mappings];
     updated[index][key] = value;
     
-    // If user manually changes amount field setting, remove auto-detected flag
     if (key === 'isAmountField') {
       updated[index].isAutoDetected = false;
     }
     
-    // If enabling amount field without tolerance, set default
     if (key === 'isAmountField' && value && !updated[index].toleranceValue) {
       updated[index].toleranceValue = '0.01';
     }
@@ -134,11 +120,10 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
     }
     
     console.log('🔄 Manual run triggered');
-    setAutoRerunEnabled(false); // Disable auto-rerun temporarily
+    setAutoRerunEnabled(false);
     lastAutoRunRef.current = Date.now();
     onRun();
     
-    // Re-enable auto-rerun after 3 seconds
     setTimeout(() => {
       setAutoRerunEnabled(true);
       console.log('✅ Auto-rerun re-enabled');
@@ -442,8 +427,6 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
                         transition: 'all 0.2s ease',
                         opacity: isProcessing ? 0.7 : 1
                       }}
-                      onMouseOver={(e) => !isProcessing && (e.target.style.background = '#dc2626')}
-                      onMouseOut={(e) => !isProcessing && (e.target.style.background = '#ef4444')}
                     >
                       Remove
                     </button>
@@ -476,18 +459,6 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
               transition: 'all 0.3s ease',
               opacity: isProcessing ? 0.7 : 1
             }}
-            onMouseOver={(e) => {
-              if (!isProcessing) {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 15px rgba(107, 114, 128, 0.3)';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!isProcessing) {
-                e.target.style.transform = 'none';
-                e.target.style.boxShadow = 'none';
-              }
-            }}
           >
             Add Mapping
           </button>
@@ -506,18 +477,6 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
               fontWeight: '500',
               transition: 'all 0.3s ease',
               opacity: isProcessing ? 0.7 : 1
-            }}
-            onMouseOver={(e) => {
-              if (!isProcessing) {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 15px rgba(37, 99, 235, 0.3)';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!isProcessing) {
-                e.target.style.transform = 'none';
-                e.target.style.boxShadow = 'none';
-              }
             }}
           >
             Confirm Mapping
@@ -538,18 +497,6 @@ const HeaderMapper = ({ file1Headers, file2Headers, suggestedMappings, onConfirm
               fontWeight: '500',
               transition: 'all 0.3s ease',
               opacity: isProcessing ? 0.7 : 1
-            }}
-            onMouseOver={(e) => {
-              if (!isProcessing) {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!isProcessing) {
-                e.target.style.transform = 'none';
-                e.target.style.boxShadow = 'none';
-              }
             }}
           >
             {isProcessing ? '⏳ Processing...' : '🔄 Run Comparison'}

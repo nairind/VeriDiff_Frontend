@@ -1,6 +1,4 @@
-// File: components/SheetSelector.jsx
-// Updated to match landing page professional aesthetic
-
+// /components/SheetSelector.js
 import React, { useState, useEffect } from 'react';
 
 const SheetSelector = ({ file1Info, file2Info, onSheetSelect, fileType }) => {
@@ -8,7 +6,6 @@ const SheetSelector = ({ file1Info, file2Info, onSheetSelect, fileType }) => {
   const [selectedSheet2, setSelectedSheet2] = useState('');
 
   useEffect(() => {
-    // Set default selections
     if (file1Info?.defaultSheet) {
       setSelectedSheet1(file1Info.defaultSheet);
     }
@@ -18,18 +15,15 @@ const SheetSelector = ({ file1Info, file2Info, onSheetSelect, fileType }) => {
   }, [file1Info, file2Info]);
 
   useEffect(() => {
-    // Notify parent of sheet selections
     if (selectedSheet1 && selectedSheet2) {
       onSheetSelect(selectedSheet1, selectedSheet2);
     }
   }, [selectedSheet1, selectedSheet2, onSheetSelect]);
 
-  // Only show for Excel files
   if (fileType !== 'excel' && fileType !== 'excel_csv') {
     return null;
   }
 
-  // Only show if we have sheet info and multiple sheets
   const showFile1Selector = file1Info?.sheets?.length > 1;
   const showFile2Selector = file2Info?.sheets?.length > 1 && fileType === 'excel';
 
@@ -106,14 +100,6 @@ const SheetSelector = ({ file1Info, file2Info, onSheetSelect, fileType }) => {
                 transition: 'all 0.2s ease',
                 cursor: 'pointer'
               }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#2563eb';
-                e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#d1d5db';
-                e.target.style.boxShadow = 'none';
-              }}
             >
               {file1Info.sheets.map(sheet => (
                 <option key={sheet.name} value={sheet.name}>
@@ -179,14 +165,6 @@ const SheetSelector = ({ file1Info, file2Info, onSheetSelect, fileType }) => {
                 color: '#374151',
                 transition: 'all 0.2s ease',
                 cursor: 'pointer'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#2563eb';
-                e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#d1d5db';
-                e.target.style.boxShadow = 'none';
               }}
             >
               {file2Info.sheets.map(sheet => (
