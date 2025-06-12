@@ -270,6 +270,7 @@ const compareExcelData = (data1, data2, finalMappings = [], autoDetectAmounts = 
     }
     
     const fieldResults = {};
+    let recordHasDifferences = false;
 
     for (const key of keysToProcess) {
       const val1 = row1[key] ?? '';
@@ -296,11 +297,16 @@ const compareExcelData = (data1, data2, finalMappings = [], autoDetectAmounts = 
         isAutoDetectedAmount: autoDetectAmounts && mapping?.isAmountField && !finalMappings.find(m => m.file1Header === key)?.isAmountField
       };
 
-      if (status === 'match' || status === 'acceptable') {
-        matches++;
-      } else {
-        differences++;
+      if (status !== 'match' && status !== 'acceptable') {
+        recordHasDifferences = true;
       }
+    }
+
+    // Count at record level
+    if (recordHasDifferences) {
+      differences++;
+    } else {
+      matches++;
     }
 
     results.push({

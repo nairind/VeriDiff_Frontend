@@ -88,6 +88,7 @@ export const compareFiles = async (file1, file2, finalMappings = []) => {
     }
     
     const fieldResults = {};
+    let recordHasDifferences = false;
 
     for (const key of keysToProcess) {
       const val1 = row1[key] ?? '';
@@ -115,11 +116,16 @@ export const compareFiles = async (file1, file2, finalMappings = []) => {
           : ''
       };
 
-      if (status === 'match' || status === 'acceptable') {
-        matches++;
-      } else {
-        differences++;
+      if (status !== 'match' && status !== 'acceptable') {
+        recordHasDifferences = true;
       }
+    }
+
+    // Count at record level
+    if (recordHasDifferences) {
+      differences++;
+    } else {
+      matches++;
     }
 
     results.push({
