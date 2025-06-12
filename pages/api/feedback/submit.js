@@ -1,113 +1,84 @@
-// pages/api/feedback/submit.js - Adapted for your existing table structure
+// pages/api/feedback/submit.js - Fixed version
 import jwt from 'jsonwebtoken';
 import { query } from '../../../lib/db';
 
 export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { feedback_text, email } = req.body;
-  const token = req.headers.authorization?.replace('Bearer ', '');
-
   try {
+    const { feedback_text, email, comparisonCount } = req.body;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+
     let userId = null;
-    let userEmail = email;
-    let comparisonCount = 0;
+    let userEmail = email || null;
+    let finalComparisonCount = comparisonCount || 3;
     
+    // Try to decode token if provided
     if (token) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         userId = decoded.userId;
         
-        // Get user's comparison count from your existing file_comparisons table
+        // Get user's actual comparison count from database
         const result = await query(`
           SELECT COUNT(*) as count 
           FROM file_comparisons 
           WHERE user_id = $1
         `, [userId]);
         
-        comparisonCount = parseInt(result.rows[0].count);
-      } catch (error) {
-        // Invalid token, treat as trial user
-        comparisonCount = req.body.comparisonCount || 3;
+        finalComparisonCount = parseInt(result.rows[0].count);
+      } catch (jwtError) {
+        console.log('JWT decode failed, treating as trial user:', jwtError.message);
+        // Continue as trial user
       }
-    } else {
-      // Trial user
-      comparisonCount = req.body.comparisonCount || 3;
     }
 
-    // Insert into your existing user_feedback table structure
-    await query(`
+    // Insert feedback into database
+    const insertResult = await query(`
       INSERT INTO user_feedback (
         user_id, 
         email, 
         feedback_text, 
         comparison_count, 
-        feedback_type, 
-        selected_reasons
+        feedback_type
       )
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id
     `, [
       userId, 
       userEmail, 
-      feedback_text, 
-      comparisonCount, 
-      'improvement_suggestion',  // Using your feedback_type field
-      []  // Empty array for selected_reasons since this is free text
+      feedback_text || '', 
+      finalComparisonCount, 
+      'improvement_suggestion'
     ]);
 
-    res.status(200).json({ message: 'Thank you for your feedback!' });
+    console.log('Feedback inserted successfully:', insertResult.rows[0]);
+
+    res.status(200).json({ 
+      message: 'Thank you for your feedback!',
+      success: true 
+    });
+
   } catch (error) {
     console.error('Feedback submission error:', error);
-    res.status(500).json({ error: 'Failed to submit feedback' });
-  }
-}
-
-// pages/api/admin/feedback.js - Simple admin endpoint to view feedback
-import { query } from '../../../lib/db';
-
-export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Add your admin authentication check here if needed
-  // const token = req.headers.authorization?.replace('Bearer ', '');
-  // ... verify admin token ...
-
-  try {
-    // Get recent feedback
-    const result = await query(`
-      SELECT 
-        feedback_text, 
-        comparison_count, 
-        created_at, 
-        user_id,
-        email,
-        feedback_type
-      FROM user_feedback 
-      WHERE feedback_text IS NOT NULL AND feedback_text != ''
-      ORDER BY created_at DESC 
-      LIMIT 50
-    `);
-
-    // Get some basic stats
-    const stats = await query(`
-      SELECT 
-        COUNT(*) as total_feedback,
-        COUNT(CASE WHEN user_id IS NOT NULL THEN 1 END) as authenticated_users,
-        COUNT(CASE WHEN user_id IS NULL THEN 1 END) as trial_users,
-        AVG(comparison_count) as avg_comparisons
-      FROM user_feedback
-    `);
-
-    res.status(200).json({
-      feedback: result.rows,
-      stats: stats.rows[0]
+    
+    // Return more specific error info for debugging
+    res.status(500).json({ 
+      error: 'Failed to submit feedback',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
-  } catch (error) {
-    console.error('Error fetching feedback:', error);
-    res.status(500).json({ error: 'Failed to fetch feedback' });
   }
 }
