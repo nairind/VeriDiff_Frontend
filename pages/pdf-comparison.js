@@ -86,6 +86,9 @@ export default function PDFComparison() {
 
   // Simple PDF Feedback Popup Function
   const showPdfFeedbackPopup = () => {
+    // Get current count from localStorage
+    const currentCount = localStorage.getItem('pdf_comparison_count') || '3';
+    
     // Create popup container
     const popupContainer = document.createElement('div');
     popupContainer.id = 'pdf-feedback-popup';
@@ -125,7 +128,7 @@ export default function PDFComparison() {
             Help us improve VeriDiff PDF Comparison!
           </h2>
           <p style="color: #6b7280; line-height: 1.6;">
-            You've completed ${pdfComparisonCount} PDF comparisons! Your feedback helps us make the tool better for everyone.
+            You've completed ${currentCount} PDF comparisons! Your feedback helps us make the tool better for everyone.
           </p>
         </div>
 
