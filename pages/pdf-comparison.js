@@ -197,6 +197,11 @@ export default function PDFComparison() {
       sessionStorage.setItem('veridiff_comparison_type', 'pdf');
       sessionStorage.setItem('veridiff_pdf_options', JSON.stringify(pdfOptions));
 
+      // FEEDBACK TRIGGER - ADD THIS LINE
+      if (window.triggerFeedbackCheck) {
+        window.triggerFeedbackCheck();
+      }
+
       setProcessingProgress({
         stage: 'Complete',
         progress: 100,
