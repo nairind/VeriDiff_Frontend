@@ -115,17 +115,17 @@ export default function PDFComparison() {
         box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
       ">
         <div style="text-align: center; margin-bottom: 25px;">
-          <div style="font-size: 3rem; margin-bottom: 15px;">🎉</div>
+          <div style="font-size: 3rem; margin-bottom: 15px;">🚀</div>
           <h2 style="
             font-size: 1.5rem;
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 10px;
           ">
-            Thanks for using VeriDiff PDF Comparison!
+            Help us improve VeriDiff PDF Comparison!
           </h2>
           <p style="color: #6b7280; line-height: 1.6;">
-            You've completed your 3rd PDF comparison! We'd love your feedback to help improve our service.
+            You've completed ${pdfComparisonCount} PDF comparisons! Your feedback helps us make the tool better for everyone.
           </p>
         </div>
 
@@ -191,7 +191,7 @@ export default function PDFComparison() {
               cursor: pointer;
             "
           >
-            Skip
+            Maybe Later
           </button>
           <button
             onclick="submitPdfFeedback()"
@@ -206,7 +206,7 @@ export default function PDFComparison() {
               cursor: pointer;
             "
           >
-            Submit Feedback
+            🚀 Help Us Improve
           </button>
         </div>
       </div>
@@ -230,8 +230,13 @@ export default function PDFComparison() {
     window.closePdfFeedback = (submitted = false) => {
       console.log('🎯 PDF FEEDBACK: Closing popup, submitted:', submitted);
       
-      // Mark as shown
-      localStorage.setItem('pdf_feedback_shown', 'true');
+      // LAUNCH STRATEGY: Only set flag if actually submitted, not if skipped
+      if (submitted) {
+        localStorage.setItem('pdf_feedback_submitted', 'true');
+        console.log('🎯 PDF FEEDBACK: Marked as submitted - won\'t ask again');
+      } else {
+        console.log('🎯 PDF FEEDBACK: User skipped - will ask again next time');
+      }
       
       // Remove popup
       const popup = document.getElementById('pdf-feedback-popup');
@@ -270,7 +275,7 @@ export default function PDFComparison() {
         if (response.ok) {
           const result = await response.json();
           console.log('🎯 PDF FEEDBACK: Successfully submitted to dashboard:', result);
-          alert('Thank you for your PDF comparison feedback! 🙏');
+          alert('Thank you for your feedback! This helps us improve VeriDiff for everyone. 🙏');
         } else {
           const errorData = await response.json();
           console.error('🎯 PDF FEEDBACK: API error:', response.status, errorData);
@@ -281,6 +286,7 @@ export default function PDFComparison() {
         alert('Thank you for your feedback! (Note: There was an issue saving to our system, but we appreciate your input)');
       }
       
+      // Mark as submitted and close
       window.closePdfFeedback(true);
     };
   };
@@ -398,7 +404,7 @@ export default function PDFComparison() {
       sessionStorage.setItem('veridiff_comparison_type', 'pdf');
       sessionStorage.setItem('veridiff_pdf_options', JSON.stringify(pdfOptions));
 
-      // SIMPLE PDF FEEDBACK SYSTEM
+      // LAUNCH-OPTIMIZED PDF FEEDBACK SYSTEM
       console.log('🎯 PDF FEEDBACK: Checking if feedback should be shown...');
       
       // Get current PDF comparison count
@@ -410,19 +416,20 @@ export default function PDFComparison() {
       localStorage.setItem('pdf_comparison_count', pdfComparisonCount.toString());
       console.log('🎯 PDF FEEDBACK: Updated PDF comparison count to:', pdfComparisonCount);
       
-      // Check if we should show feedback (on 3rd comparison)
-      const hasShownPdfFeedback = localStorage.getItem('pdf_feedback_shown') === 'true';
-      console.log('🎯 PDF FEEDBACK: Has shown feedback before:', hasShownPdfFeedback);
+      // CHECK: Has user actually SUBMITTED feedback? (not just seen popup)
+      const hasSubmittedFeedback = localStorage.getItem('pdf_feedback_submitted') === 'true';
+      console.log('🎯 PDF FEEDBACK: Has submitted feedback before:', hasSubmittedFeedback);
       
-      if (pdfComparisonCount >= 3 && !hasShownPdfFeedback) {
-        console.log('🎯 PDF FEEDBACK: Showing feedback popup now!');
+      // LAUNCH STRATEGY: Ask on every comparison after 3rd until they submit feedback
+      if (pdfComparisonCount >= 3 && !hasSubmittedFeedback) {
+        console.log('🎯 PDF FEEDBACK: Showing feedback popup - count:', pdfComparisonCount, 'submitted:', hasSubmittedFeedback);
         
         // Small delay to ensure page is ready
         setTimeout(() => {
           showPdfFeedbackPopup();
         }, 1000);
       } else {
-        console.log('🎯 PDF FEEDBACK: Not showing feedback - Count:', pdfComparisonCount, 'Already shown:', hasShownPdfFeedback);
+        console.log('🎯 PDF FEEDBACK: Not showing feedback - Count:', pdfComparisonCount, 'Already submitted:', hasSubmittedFeedback);
       }
 
       setProcessingProgress({
