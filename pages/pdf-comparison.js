@@ -1,4 +1,4 @@
-// /pages/pdf-comparison.js - PDF ONLY (WORKING - DO NOT CHANGE)
+// /pages/pdf-comparison.js - PDF ONLY (WITH DEBUG)
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -197,9 +197,18 @@ export default function PDFComparison() {
       sessionStorage.setItem('veridiff_comparison_type', 'pdf');
       sessionStorage.setItem('veridiff_pdf_options', JSON.stringify(pdfOptions));
 
-      // FEEDBACK TRIGGER - ADD THIS LINE
+      // DEBUG: Test feedback trigger
+      console.log('🎯 DEBUG: About to trigger feedback check');
+      console.log('🎯 DEBUG: window.triggerFeedbackCheck exists?', typeof window.triggerFeedbackCheck);
+      
+      // FEEDBACK TRIGGER
       if (window.triggerFeedbackCheck) {
+        console.log('🎯 DEBUG: Calling triggerFeedbackCheck now!');
         window.triggerFeedbackCheck();
+        console.log('🎯 DEBUG: triggerFeedbackCheck called successfully');
+      } else {
+        console.log('🎯 DEBUG: triggerFeedbackCheck not found on window object');
+        console.log('🎯 DEBUG: Available window properties:', Object.keys(window).filter(key => key.includes('trigger')));
       }
 
       setProcessingProgress({
@@ -210,7 +219,9 @@ export default function PDFComparison() {
       });
 
       // Navigate to PDF results
+      console.log('🎯 DEBUG: About to redirect to /pdf-results in 1.5 seconds');
       setTimeout(() => {
+        console.log('🎯 DEBUG: Redirecting to /pdf-results now');
         router.push('/pdf-results');
       }, 1500);
 
