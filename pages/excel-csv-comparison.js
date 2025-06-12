@@ -327,6 +327,216 @@ export default function Comparison() {
     console.log('Mappings confirmed:', mappings.length, 'mappings');
   };
 
+  // Clean Excel/CSV Feedback Popup Function (matches PDF approach)
+  const showExcelCsvFeedbackPopup = () => {
+    // Get current count from localStorage
+    const currentCount = localStorage.getItem('excel_csv_comparison_count') || '3';
+    
+    // Create popup container
+    const popupContainer = document.createElement('div');
+    popupContainer.id = 'excel-csv-feedback-popup';
+    popupContainer.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    // Create popup content
+    popupContainer.innerHTML = `
+      <div style="
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow: auto;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+      ">
+        <div style="text-align: center; margin-bottom: 25px;">
+          <div style="font-size: 3rem; margin-bottom: 15px;">📊</div>
+          <h2 style="
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+          ">
+            Help us improve VeriDiff Excel/CSV Comparison!
+          </h2>
+          <p style="color: #6b7280; line-height: 1.6;">
+            You've completed ${currentCount} Excel/CSV comparisons! Your feedback helps us make the tool better for everyone.
+          </p>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+          <label style="
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+          ">
+            How would you rate your Excel/CSV comparison experience?
+          </label>
+          <div style="
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+          " id="excel-star-rating">
+            <button onclick="selectExcelRating(1)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="1">⭐</button>
+            <button onclick="selectExcelRating(2)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="2">⭐</button>
+            <button onclick="selectExcelRating(3)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="3">⭐</button>
+            <button onclick="selectExcelRating(4)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="4">⭐</button>
+            <button onclick="selectExcelRating(5)" style="font-size: 1.5rem; background: none; border: none; cursor: pointer; padding: 5px;" data-rating="5">⭐</button>
+          </div>
+
+          <label style="
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+          ">
+            Any suggestions for Excel/CSV comparison features? (Optional)
+          </label>
+          <textarea
+            id="excel-csv-feedback-comments"
+            placeholder="Tell us what you think about our Excel/CSV comparison tool..."
+            style="
+              width: 100%;
+              min-height: 80px;
+              padding: 12px;
+              border: 2px solid #e5e7eb;
+              border-radius: 8px;
+              font-size: 0.9rem;
+              resize: vertical;
+              box-sizing: border-box;
+            "
+          ></textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button
+            onclick="closeExcelCsvFeedback(false)"
+            style="
+              padding: 10px 20px;
+              border: 2px solid #e5e7eb;
+              background: white;
+              color: #6b7280;
+              border-radius: 8px;
+              font-size: 0.9rem;
+              font-weight: 500;
+              cursor: pointer;
+            "
+          >
+            Maybe Later
+          </button>
+          <button
+            onclick="submitExcelCsvFeedback()"
+            style="
+              padding: 10px 20px;
+              border: none;
+              background: linear-gradient(135deg, #2563eb, #7c3aed);
+              color: white;
+              border-radius: 8px;
+              font-size: 0.9rem;
+              font-weight: 500;
+              cursor: pointer;
+            "
+          >
+            📊 Help Us Improve
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Add to page
+    document.body.appendChild(popupContainer);
+
+    // Global functions for popup interaction
+    window.selectedExcelRating = 0;
+    
+    window.selectExcelRating = (rating) => {
+      window.selectedExcelRating = rating;
+      // Update star display
+      const stars = document.querySelectorAll('#excel-star-rating button');
+      stars.forEach((star, index) => {
+        star.style.opacity = index < rating ? '1' : '0.3';
+      });
+    };
+
+    window.closeExcelCsvFeedback = (submitted = false) => {
+      console.log('📊 EXCEL/CSV FEEDBACK: Closing popup, submitted:', submitted);
+      
+      // LAUNCH STRATEGY: Only set flag if actually submitted, not if skipped
+      if (submitted) {
+        localStorage.setItem('excel_csv_feedback_submitted', 'true');
+        console.log('📊 EXCEL/CSV FEEDBACK: Marked as submitted - won\'t ask again');
+      } else {
+        console.log('📊 EXCEL/CSV FEEDBACK: User skipped - will ask again next time');
+      }
+      
+      // Remove popup
+      const popup = document.getElementById('excel-csv-feedback-popup');
+      if (popup) {
+        popup.remove();
+      }
+    };
+
+    window.submitExcelCsvFeedback = async () => {
+      const rating = window.selectedExcelRating || 0;
+      const comments = document.getElementById('excel-csv-feedback-comments')?.value || '';
+      const excelCsvCount = parseInt(localStorage.getItem('excel_csv_comparison_count') || '3');
+      
+      console.log('📊 EXCEL/CSV FEEDBACK: Submitting feedback:', { rating, comments, excelCsvCount });
+      
+      try {
+        // Prepare feedback text with rating and Excel/CSV context
+        const feedbackText = rating > 0 
+          ? `Excel/CSV Comparison Feedback (${rating}/5 stars): ${comments}`.trim()
+          : `Excel/CSV Comparison Feedback: ${comments}`.trim();
+
+        // Send to your existing feedback API with all required fields
+        const response = await fetch('/api/feedback/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            feedback_text: feedbackText,
+            comparisonCount: excelCsvCount,
+            email: null, // No email collected in Excel/CSV feedback
+            selected_reasons: [] // Empty array for Excel/CSV feedback
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('📊 EXCEL/CSV FEEDBACK: Successfully submitted to dashboard:', result);
+          alert('Thank you for your feedback! This helps us improve VeriDiff for everyone. 🙏');
+        } else {
+          const errorData = await response.json();
+          console.error('📊 EXCEL/CSV FEEDBACK: API error:', response.status, errorData);
+          alert('Thank you for your feedback! (Note: There was an issue saving to our system, but we appreciate your input)');
+        }
+      } catch (error) {
+        console.error('📊 EXCEL/CSV FEEDBACK: Submit error:', error);
+        alert('Thank you for your feedback! (Note: There was an issue saving to our system, but we appreciate your input)');
+      }
+      
+      // Mark as submitted and close
+      window.closeExcelCsvFeedback(true);
+    };
+  };
+
   // Run actual comparison
   const handleRunComparison = async () => {
     if (!file1 || !file2) {
@@ -369,9 +579,32 @@ export default function Comparison() {
       sessionStorage.setItem('veridiff_results', JSON.stringify(result));
       sessionStorage.setItem('veridiff_file_type', fileType);
 
-      // FEEDBACK TRIGGER - ADD THIS LINE
-      if (window.triggerFeedbackCheck) {
-        window.triggerFeedbackCheck();
+      // LAUNCH-OPTIMIZED EXCEL/CSV FEEDBACK SYSTEM
+      console.log('📊 EXCEL/CSV FEEDBACK: Checking if feedback should be shown...');
+
+      // Get current Excel/CSV comparison count
+      let excelCsvComparisonCount = parseInt(localStorage.getItem('excel_csv_comparison_count') || '0');
+      console.log('📊 EXCEL/CSV FEEDBACK: Current Excel/CSV comparison count:', excelCsvComparisonCount);
+
+      // Increment the count
+      excelCsvComparisonCount += 1;
+      localStorage.setItem('excel_csv_comparison_count', excelCsvComparisonCount.toString());
+      console.log('📊 EXCEL/CSV FEEDBACK: Updated Excel/CSV comparison count to:', excelCsvComparisonCount);
+
+      // CHECK: Has user actually SUBMITTED feedback? (not just seen popup)
+      const hasSubmittedExcelCsvFeedback = localStorage.getItem('excel_csv_feedback_submitted') === 'true';
+      console.log('📊 EXCEL/CSV FEEDBACK: Has submitted feedback before:', hasSubmittedExcelCsvFeedback);
+
+      // LAUNCH STRATEGY: Ask on every comparison after 3rd until they submit feedback
+      if (excelCsvComparisonCount >= 3 && !hasSubmittedExcelCsvFeedback) {
+        console.log('📊 EXCEL/CSV FEEDBACK: Showing feedback popup - count:', excelCsvComparisonCount, 'submitted:', hasSubmittedExcelCsvFeedback);
+        
+        // Small delay to ensure page is ready
+        setTimeout(() => {
+          showExcelCsvFeedbackPopup();
+        }, 1000);
+      } else {
+        console.log('📊 EXCEL/CSV FEEDBACK: Not showing feedback - Count:', excelCsvComparisonCount, 'Already submitted:', hasSubmittedExcelCsvFeedback);
       }
       
       console.log('Comparison completed:', {
