@@ -1,4 +1,4 @@
-// pages/api/feedback/submit.js - Fixed version
+// pages/api/feedback/submit.js - Updated with selected_reasons support
 import jwt from 'jsonwebtoken';
 import { query } from '../../../lib/db';
 
@@ -18,12 +18,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { feedback_text, email, comparisonCount } = req.body;
+    const { feedback_text, email, comparisonCount, selected_reasons } = req.body;
     const token = req.headers.authorization?.replace('Bearer ', '');
 
     let userId = null;
     let userEmail = email || null;
     let finalComparisonCount = comparisonCount || 3;
+    let feedbackReasons = selected_reasons || [];
     
     // Try to decode token if provided
     if (token) {
@@ -45,23 +46,25 @@ export default async function handler(req, res) {
       }
     }
 
-    // Insert feedback into database
+    // Insert feedback into database with selected_reasons
     const insertResult = await query(`
       INSERT INTO user_feedback (
         user_id, 
         email, 
         feedback_text, 
         comparison_count, 
-        feedback_type
+        feedback_type,
+        selected_reasons
       )
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id
     `, [
       userId, 
       userEmail, 
       feedback_text || '', 
       finalComparisonCount, 
-      'improvement_suggestion'
+      'improvement_suggestion',
+      feedbackReasons
     ]);
 
     console.log('Feedback inserted successfully:', insertResult.rows[0]);
