@@ -92,9 +92,232 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
     }
   };
 
-  const renderSmartDiffDocument = (pages, fileName, fileNumber) => {
+  // Create unified alignment structure from SmartDiff data
+  const createUnifiedAlignment = () => {
     const smartChanges = results?.smart_changes || [];
+    const alignedRows = [];
     
+    if (smartChanges.length === 0) {
+      return null; // Fall back to positional rendering
+    }
+    
+    console.log('🔄 Creating unified alignment from SmartDiff data...');
+    
+    // Group changes by page
+    const pageGroups = {};
+    smartChanges.forEach(change => {
+      const pageNum = change.page;
+      if (!pageGroups[pageNum]) {
+        pageGroups[pageNum] = [];
+      }
+      pageGroups[pageNum].push(change);
+    });
+    
+    // Process each page
+    Object.keys(pageGroups).sort((a, b) => parseInt(a) - parseInt(b)).forEach(pageNum => {
+      const pageChanges = pageGroups[pageNum];
+      
+      // Add page header row
+      alignedRows.push({
+        type: 'page_header',
+        pageNumber: parseInt(pageNum),
+        leftContent: `Page ${pageNum}`,
+        rightContent: `Page ${pageNum}`
+      });
+      
+      // Sort changes by paragraph index to maintain order
+      pageChanges.sort((a, b) => {
+        const aIndex = a.paragraph || a.metadata?.original_position_1 || 0;
+        const bIndex = b.paragraph || b.metadata?.original_position_1 || 0;
+        return aIndex - bIndex;
+      });
+      
+      // Create aligned rows from changes
+      pageChanges.forEach(change => {
+        let leftContent = null;
+        let rightContent = null;
+        let changeType = change.type;
+        
+        if (change.type === 'page_added' || change.change_type === 'addition') {
+          // Content only on right side
+          rightContent = {
+            text: change.new_content || change.content,
+            changeType: change.type,
+            confidence: change.confidence,
+            contentType: change.content_type
+          };
+        } else if (change.type === 'page_removed' || change.change_type === 'deletion') {
+          // Content only on left side
+          leftContent = {
+            text: change.old_content || change.content,
+            changeType: change.type,
+            confidence: change.confidence,
+            contentType: change.content_type
+          };
+        } else {
+          // Content on both sides (modified or unchanged)
+          leftContent = {
+            text: change.old_content,
+            changeType: change.type,
+            confidence: change.confidence,
+            contentType: change.content_type
+          };
+          rightContent = {
+            text: change.new_content,
+            changeType: change.type,
+            confidence: change.confidence,
+            contentType: change.content_type
+          };
+        }
+        
+        alignedRows.push({
+          type: 'content_row',
+          pageNumber: parseInt(pageNum),
+          leftContent: leftContent,
+          rightContent: rightContent,
+          changeType: changeType,
+          similarity: change.similarity,
+          confidence: change.confidence,
+          contentType: change.content_type
+        });
+      });
+    });
+    
+    console.log(`✅ Created ${alignedRows.length} unified alignment rows`);
+    return alignedRows;
+  };
+
+  const renderUnifiedAlignment = () => {
+    const alignedRows = createUnifiedAlignment();
+    
+    if (!alignedRows) {
+      return null; // Fall back to original rendering
+    }
+    
+    return alignedRows.map((row, index) => {
+      if (row.type === 'page_header') {
+        return (
+          <div key={`page-${row.pageNumber}`} style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '20px',
+            marginBottom: '15px'
+          }}>
+            <div style={{
+              background: '#f3f4f6',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              fontSize: '0.9rem',
+              fontWeight: '600'
+            }}>
+              {row.leftContent}
+            </div>
+            <div style={{
+              background: '#f3f4f6',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              fontSize: '0.9rem',
+              fontWeight: '600'
+            }}>
+              {row.rightContent}
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div key={`row-${index}`} style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '20px',
+          marginBottom: '12px'
+        }}>
+          {/* Left side content */}
+          <div style={row.leftContent ? {
+            ...getChangeStyle(row.leftContent.changeType),
+            minHeight: '20px'
+          } : {
+            padding: '8px 12px',
+            minHeight: '20px',
+            background: '#f9fafb',
+            border: '1px dashed #e5e7eb',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#9ca3af',
+            fontSize: '0.8rem',
+            fontStyle: 'italic'
+          }}>
+            {row.leftContent ? (
+              <>
+                {row.leftContent.text}
+                {row.leftContent.contentType && (
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: '#6b7280',
+                    marginTop: '4px',
+                    fontStyle: 'italic'
+                  }}>
+                    SmartDiff: {row.leftContent.contentType} • {Math.round((row.similarity || 0) * 100)}% confidence
+                  </div>
+                )}
+              </>
+            ) : (
+              '[no content]'
+            )}
+          </div>
+          
+          {/* Right side content */}
+          <div style={row.rightContent ? {
+            ...getChangeStyle(row.rightContent.changeType),
+            minHeight: '20px'
+          } : {
+            padding: '8px 12px',
+            minHeight: '20px',
+            background: '#f9fafb',
+            border: '1px dashed #e5e7eb',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#9ca3af',
+            fontSize: '0.8rem',
+            fontStyle: 'italic'
+          }}>
+            {row.rightContent ? (
+              <>
+                {row.rightContent.text}
+                {row.rightContent.contentType && (
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: '#6b7280',
+                    marginTop: '4px',
+                    fontStyle: 'italic'
+                  }}>
+                    SmartDiff: {row.rightContent.contentType} • {Math.round((row.similarity || 0) * 100)}% confidence
+                  </div>
+                )}
+              </>
+            ) : (
+              '[no content]'
+            )}
+          </div>
+        </div>
+      );
+    });
+  };
+
+  const renderDocument = (pages, fileName, fileNumber) => {
+    // This function is now only used for fallback when no SmartDiff data
+    if (!pages || pages.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+          No pages available for {fileName}
+        </div>
+      );
+    }
+
     return (
       <div>
         {pages.map((page) => (
@@ -111,35 +334,13 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
             </div>
             
             {(page.paragraphs || []).map((para, paraIndex) => {
-              // Find SmartDiff change for this paragraph
-              const smartChange = smartChanges.find(change => 
-                change.page === page.page_number && 
-                (change.paragraph === paraIndex || 
-                 change.metadata?.original_position_1 === paraIndex ||
-                 change.metadata?.original_position_2 === paraIndex)
-              );
-              
-              const changeType = smartChange?.type || 'unchanged';
+              const change = findParagraphChange(page.page_number, paraIndex, fileNumber);
+              const changeType = change?.type;
               const style = getChangeStyle(changeType);
-              
-              // Use content from SmartDiff if available, otherwise use original
-              const content = fileNumber === 1 
-                ? (smartChange?.old_content || para.text)
-                : (smartChange?.new_content || para.text);
               
               return (
                 <div key={paraIndex} style={{ marginBottom: '12px', ...style }}>
-                  {content}
-                  {smartChange && (
-                    <div style={{
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      marginTop: '4px',
-                      fontStyle: 'italic'
-                    }}>
-                      SmartDiff: {smartChange.content_type} • {Math.round((smartChange.similarity || 0) * 100)}% confidence
-                    </div>
-                  )}
+                  {para.text}
                 </div>
               );
             })}
@@ -147,56 +348,6 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         ))}
       </div>
     );
-  };
-
-  const renderDocument = (pages, fileName, fileNumber) => {
-    if (!pages || pages.length === 0) {
-      return (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-          No pages available for {fileName}
-        </div>
-      );
-    }
-
-    // Check if we have SmartDiff data to use for intelligent alignment
-    const hasSmartDiff = !!(results?.smart_changes && results?.smart_changes.length > 0);
-    
-    if (hasSmartDiff) {
-      console.log(`🧠 Rendering ${fileName} with SmartDiff alignment`);
-      return renderSmartDiffDocument(pages, fileName, fileNumber);
-    } else {
-      console.log(`📄 Rendering ${fileName} with positional alignment`);
-      return (
-        <div>
-          {pages.map((page) => (
-            <div key={page.page_number} style={{ marginBottom: '30px' }}>
-              <div style={{
-                background: '#f3f4f6',
-                padding: '8px 12px',
-                borderRadius: '4px',
-                fontSize: '0.9rem',
-                fontWeight: '600',
-                marginBottom: '15px'
-              }}>
-                Page {page.page_number}
-              </div>
-              
-              {(page.paragraphs || []).map((para, paraIndex) => {
-                const change = findParagraphChange(page.page_number, paraIndex, fileNumber);
-                const changeType = change?.type;
-                const style = getChangeStyle(changeType);
-                
-                return (
-                  <div key={paraIndex} style={{ marginBottom: '12px', ...style }}>
-                    {para.text}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      );
-    }
   };
 
   const file1Pages = results?.file1_pages || [];
@@ -401,12 +552,8 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
       </div>
 
       {/* Side-by-Side Layout with Synchronized Scrolling */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1fr 1fr',
-        gap: '20px'
-      }}>
-        {/* Left Panel - Document 1 */}
+      {hasSmartDiff ? (
+        /* UNIFIED ALIGNMENT VIEW - Using SmartDiff data */
         <div style={{
           background: 'white',
           border: '1px solid #e5e7eb',
@@ -418,137 +565,188 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
             padding: '15px',
             borderBottom: '1px solid #e5e7eb',
             fontWeight: '600',
-            fontSize: '1rem'
+            fontSize: '1rem',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '20px'
           }}>
-            📄 {file1Name || 'Document 1'}
-            <span style={{ fontSize: '0.8rem', color: '#6b7280', marginLeft: '10px' }}>
-              ({file1Pages.length} pages)
-            </span>
+            <div>
+              📄 {file1Name || 'Document 1'}
+              <span style={{ fontSize: '0.8rem', color: '#6b7280', marginLeft: '10px' }}>
+                ({file1Pages.length} pages)
+              </span>
+            </div>
+            <div>
+              📄 {file2Name || 'Document 2'}
+              <span style={{ fontSize: '0.8rem', color: '#6b7280', marginLeft: '10px' }}>
+                ({file2Pages.length} pages)
+              </span>
+            </div>
           </div>
           
-          <div 
-            ref={leftPaneRef}
-            style={{
-              height: '600px',
-              overflowY: 'auto',
-              padding: '20px',
-              fontSize: '0.9rem',
-              lineHeight: '1.6'
-            }}
-            onScroll={(e) => handleScroll(e.target, rightPaneRef)}
-          >
-            {renderDocument(file1Pages, file1Name, 1)}
+          <div style={{
+            height: '600px',
+            overflowY: 'auto',
+            padding: '20px',
+            fontSize: '0.9rem',
+            lineHeight: '1.6'
+          }}>
+            {renderUnifiedAlignment()}
           </div>
         </div>
+      ) : (
+        /* ORIGINAL SIDE-BY-SIDE VIEW - Fallback for non-SmartDiff data */
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1fr 1fr',
+          gap: '20px'
+        }}>
+          {/* Left Panel - Document 1 */}
+          <div style={{
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              background: '#f8fafc',
+              padding: '15px',
+              borderBottom: '1px solid #e5e7eb',
+              fontWeight: '600',
+              fontSize: '1rem'
+            }}>
+              📄 {file1Name || 'Document 1'}
+              <span style={{ fontSize: '0.8rem', color: '#6b7280', marginLeft: '10px' }}>
+                ({file1Pages.length} pages)
+              </span>
+            </div>
+            
+            <div 
+              ref={leftPaneRef}
+              style={{
+                height: '600px',
+                overflowY: 'auto',
+                padding: '20px',
+                fontSize: '0.9rem',
+                lineHeight: '1.6'
+              }}
+              onScroll={(e) => handleScroll(e.target, rightPaneRef)}
+            >
+              {renderDocument(file1Pages, file1Name, 1)}
+            </div>
+          </div>
 
-        {/* Right Panel - Document 2 */}
-        <div style={{
-          background: 'white',
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
-          overflow: 'hidden'
-        }}>
+          {/* Right Panel - Document 2 */}
           <div style={{
-            background: '#f8fafc',
-            padding: '15px',
-            borderBottom: '1px solid #e5e7eb',
-            fontWeight: '600',
-            fontSize: '1rem'
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            overflow: 'hidden'
           }}>
-            📄 {file2Name || 'Document 2'}
-            <span style={{ fontSize: '0.8rem', color: '#6b7280', marginLeft: '10px' }}>
-              ({file2Pages.length} pages)
-            </span>
-          </div>
-          
-          <div 
-            ref={rightPaneRef}
-            style={{
-              height: '600px',
-              overflowY: 'auto',
-              padding: '20px',
-              fontSize: '0.9rem',
-              lineHeight: '1.6'
-            }}
-            onScroll={(e) => handleScroll(e.target, leftPaneRef)}
-          >
-            {renderDocument(file2Pages, file2Name, 2)}
+            <div style={{
+              background: '#f8fafc',
+              padding: '15px',
+              borderBottom: '1px solid #e5e7eb',
+              fontWeight: '600',
+              fontSize: '1rem'
+            }}>
+              📄 {file2Name || 'Document 2'}
+              <span style={{ fontSize: '0.8rem', color: '#6b7280', marginLeft: '10px' }}>
+                ({file2Pages.length} pages)
+              </span>
+            </div>
+            
+            <div 
+              ref={rightPaneRef}
+              style={{
+                height: '600px',
+                overflowY: 'auto',
+                padding: '20px',
+                fontSize: '0.9rem',
+                lineHeight: '1.6'
+              }}
+              onScroll={(e) => handleScroll(e.target, leftPaneRef)}
+            >
+              {renderDocument(file2Pages, file2Name, 2)}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Quick Navigation */}
-      <div style={{
-        marginTop: '20px',
-        display: 'flex',
-        justifyContent: 'center'
-      }}>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button 
-            onClick={() => {
-              if (leftPaneRef.current) leftPaneRef.current.scrollTop = 0;
-              if (rightPaneRef.current) rightPaneRef.current.scrollTop = 0;
-            }}
-            style={{
-              padding: '8px 16px',
-              background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-              color: '#1d4ed8',
-              border: '1px solid #3b82f6',
-              borderRadius: '6px',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}
-          >
-            ⬆️ Top
-          </button>
-          <button 
-            onClick={() => {
-              const scrollToNext = () => {
+      {!hasSmartDiff && (
+        <div style={{
+          marginTop: '20px',
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => {
+                if (leftPaneRef.current) leftPaneRef.current.scrollTop = 0;
+                if (rightPaneRef.current) rightPaneRef.current.scrollTop = 0;
+              }}
+              style={{
+                padding: '8px 16px',
+                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                color: '#1d4ed8',
+                border: '1px solid #3b82f6',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
+            >
+              ⬆️ Top
+            </button>
+            <button 
+              onClick={() => {
+                const scrollToNext = () => {
+                  if (leftPaneRef.current && rightPaneRef.current) {
+                    const currentScroll = leftPaneRef.current.scrollTop;
+                    leftPaneRef.current.scrollTop = currentScroll + 200;
+                    rightPaneRef.current.scrollTop = currentScroll + 200;
+                  }
+                };
+                scrollToNext();
+              }}
+              style={{
+                padding: '8px 16px',
+                background: 'linear-gradient(135deg, #fed7aa, #fdba74)',
+                color: '#c2410c',
+                border: '1px solid #f97316',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
+            >
+              🔍 Next Change
+            </button>
+            <button 
+              onClick={() => {
                 if (leftPaneRef.current && rightPaneRef.current) {
-                  const currentScroll = leftPaneRef.current.scrollTop;
-                  leftPaneRef.current.scrollTop = currentScroll + 200;
-                  rightPaneRef.current.scrollTop = currentScroll + 200;
+                  const maxScroll = leftPaneRef.current.scrollHeight - leftPaneRef.current.clientHeight;
+                  leftPaneRef.current.scrollTop = maxScroll;
+                  rightPaneRef.current.scrollTop = maxScroll;
                 }
-              };
-              scrollToNext();
-            }}
-            style={{
-              padding: '8px 16px',
-              background: 'linear-gradient(135deg, #fed7aa, #fdba74)',
-              color: '#c2410c',
-              border: '1px solid #f97316',
-              borderRadius: '6px',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}
-          >
-            🔍 Next Change
-          </button>
-          <button 
-            onClick={() => {
-              if (leftPaneRef.current && rightPaneRef.current) {
-                const maxScroll = leftPaneRef.current.scrollHeight - leftPaneRef.current.clientHeight;
-                leftPaneRef.current.scrollTop = maxScroll;
-                rightPaneRef.current.scrollTop = maxScroll;
-              }
-            }}
-            style={{
-              padding: '8px 16px',
-              background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-              color: '#1d4ed8',
-              border: '1px solid #3b82f6',
-              borderRadius: '6px',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}
-          >
-            ⬇️ Bottom
-          </button>
+              }}
+              style={{
+                padding: '8px 16px',
+                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+                color: '#1d4ed8',
+                border: '1px solid #3b82f6',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
+            >
+              ⬇️ Bottom
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Enhanced Footer */}
       <div style={{
