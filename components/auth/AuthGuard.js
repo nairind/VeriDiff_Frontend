@@ -1,22 +1,32 @@
+// components/AuthGuard.js - Updated to use modal instead of redirect
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
+import AuthModal from './AuthModal'
 
 export default function AuthGuard({ children }) {
   const { data: session, status } = useSession()
-  const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [showAuthModal, setShowAuthModal] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return // Still loading
 
     if (status === 'unauthenticated') {
-      // Redirect to signup page
-      router.push('/auth/signup')
+      // Show modal instead of redirecting
+      setShowAuthModal(true)
+      setLoading(false)
     } else {
       setLoading(false)
     }
-  }, [status, router])
+  }, [status])
+
+  const handleAuthModalClose = () => {
+    // Only close modal if user is now authenticated
+    if (status === 'authenticated') {
+      setShowAuthModal(false)
+    }
+    // If still unauthenticated, keep modal open
+  }
 
   if (status === 'loading' || loading) {
     return (
@@ -36,13 +46,31 @@ export default function AuthGuard({ children }) {
   }
 
   if (status === 'unauthenticated') {
-    return null // Will redirect
+    return (
+      <>
+        {/* Show page content in background (blurred/disabled) */}
+        <div style={{ 
+          filter: 'blur(3px)', 
+          pointerEvents: 'none',
+          opacity: 0.5 
+        }}>
+          {children}
+        </div>
+        
+        {/* Auth Modal */}
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={handleAuthModalClose}
+          initialMode="signup"
+        />
+      </>
+    )
   }
 
   return children
 }
 
-// Usage tracking hook
+// Usage tracking hook (unchanged)
 export function useUsageTracking() {
   const { data: session } = useSession()
   const [usage, setUsage] = useState(null)
