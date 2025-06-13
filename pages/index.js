@@ -483,8 +483,7 @@ export default function Home() {
         </section>              
 
                   
-        <FeatureSection />          
-        <FeatureSection />
+       <FeatureSection />
         
         <PricingSection 
           file1={null} 
