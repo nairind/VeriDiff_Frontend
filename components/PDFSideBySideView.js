@@ -1,6 +1,26 @@
 import React, { useRef, useCallback } from 'react';
 
 const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
+  // Safety check - return early if no results
+  if (!results) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+        No comparison results available
+      </div>
+    );
+  }
+
+  // Debug logging - REMOVE AFTER TESTING
+  console.log('🔍 PDFSideBySideView Debug:', {
+    hasResults: !!results,
+    comparison_method: results?.comparison_method,
+    smart_changes_exists: !!results?.smart_changes,
+    smart_changes_count: results?.smart_changes?.length,
+    text_changes_count: results?.text_changes?.length,
+    overall_similarity: results?.overall_similarity,
+    similarity_score: results?.similarity_score
+  });
+
   // Refs for synchronized scrolling
   const leftPaneRef = useRef(null);
   const rightPaneRef = useRef(null);
