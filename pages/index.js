@@ -394,90 +394,168 @@ export default function Home() {
               Partnership Program Details
             </h2>
 
-            <div style={{
+           <div style={{
               background: 'white',
               borderRadius: '1rem',
-              padding: '2.5rem',
+              padding: '3rem',
               boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
               textAlign: 'left'
             }}>
               <h3 style={{
-                fontSize: '1.3rem',
-                fontWeight: '600',
+                fontSize: '1.5rem',
+                fontWeight: '700',
                 color: '#1f2937',
-                marginBottom: '1.5rem'
+                marginBottom: '2rem',
+                textAlign: 'center'
               }}>
                 How It Works
               </h3>
               
-              <ul style={{
-                listStyle: 'none',
-                padding: 0,
-                margin: 0
+              <div style={{
+                display: 'grid',
+                gap: '1.5rem',
+                marginBottom: '2rem'
               }}>
-                <li style={{
+                <div style={{
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '1rem',
-                  marginBottom: '1rem',
-                  fontSize: '1rem',
-                  color: '#6b7280'
+                  padding: '1rem',
+                  background: '#f8fafc',
+                  borderRadius: '0.75rem',
+                  border: '1px solid #e2e8f0'
                 }}>
-                  <span style={{ color: '#059669', fontWeight: '600', minWidth: '20px' }}>1.</span>
-                  <span>Use VeriDiff for your real work - unlimited comparisons, all features unlocked</span>
-                </li>
-                <li style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '1rem',
-                  marginBottom: '1rem',
-                  fontSize: '1rem',
-                  color: '#6b7280'
-                }}>
-                  <span style={{ color: '#059669', fontWeight: '600', minWidth: '20px' }}>2.</span>
-                  <span>Share feedback through the in-app system when you encounter interesting cases</span>
-                </li>
-                <li style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '1rem',
-                  marginBottom: '1rem',
-                  fontSize: '1rem',
-                  color: '#6b7280'
-                }}>
-                  <span style={{ color: '#059669', fontWeight: '600', minWidth: '20px' }}>3.</span>
-                  <span>Get 6 months Individual Plan free after providing meaningful insights</span>
-                </li>
-                <li style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '1rem',
-                  fontSize: '1rem',
-                  color: '#6b7280'
-                }}>
-                  <span style={{ color: '#059669', fontWeight: '600', minWidth: '20px' }}>4.</span>
-                  <span>Continue using VeriDiff with full access while we build features you've influenced</span>
-               </li>
-             </ul>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    flexShrink: 0
+                  }}>1</div>
+                  <span style={{ fontSize: '1rem', color: '#374151', lineHeight: '1.5' }}>
+                    Use VeriDiff for your real work - unlimited comparisons, all features unlocked
+                  </span>
+                </div>
 
-             <div style={{
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  padding: '1rem',
+                  background: '#f8fafc',
+                  borderRadius: '0.75rem',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    flexShrink: 0
+                  }}>2</div>
+                  <span style={{ fontSize: '1rem', color: '#374151', lineHeight: '1.5' }}>
+                    Share feedback through the in-app system when you encounter interesting cases
+                  </span>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  padding: '1rem',
+                  background: '#f8fafc',
+                  borderRadius: '0.75rem',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    flexShrink: 0
+                  }}>3</div>
+                  <span style={{ fontSize: '1rem', color: '#374151', lineHeight: '1.5' }}>
+                    Get 6 months Individual Plan free after providing meaningful insights
+                  </span>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  padding: '1rem',
+                  background: '#f8fafc',
+                  borderRadius: '0.75rem',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    flexShrink: 0
+                  }}>4</div>
+                  <span style={{ fontSize: '1rem', color: '#374151', lineHeight: '1.5' }}>
+                    Continue using VeriDiff with full access while we build features you've influenced
+                  </span>
+                </div>
+              </div>
+
+              <div style={{
                 marginTop: '2rem',
                 padding: '1.5rem',
-                background: '#f8fafc',
-                borderRadius: '0.5rem',
-                border: '1px solid #e5e7eb'
+                background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                borderRadius: '0.75rem',
+                border: '2px solid #10b981'
               }}>
-                <p style={{
-                  margin: 0,
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem',
                   fontSize: '0.9rem',
-                  color: '#6b7280',
-                  lineHeight: '1.5'
+                  color: '#047857',
+                  lineHeight: '1.6'
                 }}>
-                  <strong style={{ color: '#1f2937' }}>Program ends:</strong> July 11th, 2025<br/>
-                  <strong style={{ color: '#1f2937' }}>Commitment:</strong> Use the tool for real work, share honest feedback<br/>
-                  <strong style={{ color: '#1f2937' }}>Time investment:</strong> Whatever you're comfortable with - no minimums
-                </p>
+                  <div>
+                    <strong style={{ color: '#065f46' }}>Program ends:</strong><br/>
+                    July 11th, 2025
+                  </div>
+                  <div>
+                    <strong style={{ color: '#065f46' }}>Commitment:</strong><br/>
+                    Use for real work, share honest feedback
+                  </div>
+                  <div>
+                    <strong style={{ color: '#065f46' }}>Time investment:</strong><br/>
+                    Whatever you're comfortable with - no minimums
+                  </div>
+                </div>
               </div>
+            </div>     
+           
             </div>
           </div>
         </section>              
