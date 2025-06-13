@@ -215,24 +215,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Why Your Expertise Matters */}
-        <section style={{
-          padding: '2.5rem 0',
-          background: 'white'
-        }}>
-          <div style={{
-            maxWidth: '800px',
-            margin: '0 auto',
-            padding: '0 20px',
-            textAlign: 'center'
-          }}>
-            <h2 style={{
-              fontSize: '2.5rem',
-              fontWeight: '700',
-              marginBottom: '2rem',
-              color: '#1f2937'
-            }}>
-              
              {/* Why Your Expertise Matters */}
         <section style={{
           padding: '2.5rem 0',
