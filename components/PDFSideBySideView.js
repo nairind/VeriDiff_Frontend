@@ -111,6 +111,11 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
   const file1Pages = results?.file1_pages || [];
   const file2Pages = results?.file2_pages || [];
   const allChanges = results?.text_changes || [];
+  
+  // SmartDiff detection (minimal addition)
+  const hasSmartDiff = !!(results?.smart_changes && results?.smart_changes.length >= 0);
+  const smartChanges = results?.smart_changes || [];
+  const overallSimilarity = results?.overall_similarity || results?.similarity_score || 0;
 
   return (
     <div>
@@ -123,10 +128,10 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         textAlign: 'center'
       }}>
         <h3 style={{ margin: '0 0 10px 0', fontSize: '1.3rem', color: '#1f2937' }}>
-          📄 Side-by-Side Document Comparison
+          📄 {hasSmartDiff ? 'SmartDiff Enhanced ' : ''}Side-by-Side Document Comparison
         </h3>
         <p style={{ margin: 0, color: '#6b7280', fontSize: '0.95rem' }}>
-          <strong>{allChanges.length} changes found</strong> • {results?.similarity_score || 0}% similarity
+          <strong>{hasSmartDiff ? smartChanges.length : allChanges.length} changes found</strong> • {overallSimilarity}% similarity
         </p>
       </div>
 
@@ -331,9 +336,10 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         color: '#6b7280',
         textAlign: 'center'
       }}>
-        {allChanges.length > 0 ? (
+        {(hasSmartDiff ? smartChanges.length : allChanges.length) > 0 ? (
           <span>
-            <strong>{allChanges.length} changes highlighted</strong> across {results?.total_pages || 0} pages
+            <strong>{hasSmartDiff ? smartChanges.length : allChanges.length} changes highlighted</strong> across {results?.total_pages || 0} pages
+            {hasSmartDiff && <span style={{ color: '#059669', marginLeft: '8px' }}>• SmartDiff Active</span>}
           </span>
         ) : (
           <span>
@@ -341,7 +347,7 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
           </span>
         )}
         <div style={{ marginTop: '5px', fontSize: '0.8rem' }}>
-          🚀 <strong>Powered by VeriDiff</strong>
+          🚀 <strong>Powered by VeriDiff{hasSmartDiff ? ' SmartDiff' : ''}</strong>
         </div>
       </div>
     </div>
