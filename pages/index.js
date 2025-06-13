@@ -103,7 +103,28 @@ export default function Home() {
         color: '#1f2937',
         background: '#f8fafc'
       }}>
-        
+      {/* Partnership Header */}
+<div style={{
+  background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+  borderBottom: '2px solid #f59e0b',
+  padding: '0.75rem 0',
+  textAlign: 'center'
+}}>
+  <div style={{
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 20px'
+  }}>
+    <p style={{
+      margin: 0,
+      fontSize: '0.9rem',
+      color: '#92400e',
+      fontWeight: '600'
+    }}>
+      🎯 Get 6 Months Free + Shape the future of data comparison • Partnership Program ends July 11th, 2025
+    </p>
+  </div>
+</div>    
         <Header />
 
         {/* Trust Banner */}
