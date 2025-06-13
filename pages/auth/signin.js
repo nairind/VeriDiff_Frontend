@@ -38,9 +38,12 @@ export default function SignIn() {
       })
 
       if (result?.ok) {
-        // Check for redirect parameter, fallback to dashboard/home
-        const redirectTo = router.query.redirect || '/dashboard'
-        router.push(redirectTo)
+        // Check for redirect parameter, fallback to going back to previous page
+        if (router.query.redirect) {
+          router.push(router.query.redirect)
+        } else {
+          router.back()
+        }
       } else {
         setError('Invalid email or password')
       }
