@@ -1,18 +1,27 @@
-// /pages/pdf-results.js - PDF RESULTS ONLY (Clean Split)
+// /pages/pdf-results.js - PDF RESULTS WITH MODAL AUTH
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import PdfResults from '../components/PdfResults';
+import AuthModal from '../components/AuthModal'; // Import the modal
 
 export default function PDFResultsPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
+  
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [fileInfo, setFileInfo] = useState({ file1: null, file2: null });
   const [pdfResults, setPdfResults] = useState(null);
   const [pdfOptions, setPdfOptions] = useState(null);
+
+  // Modal state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState('signup'); // 'signin' or 'signup'
 
   useEffect(() => {
     loadPDFResults();
@@ -101,6 +110,22 @@ export default function PDFResultsPage() {
     sessionStorage.removeItem('veridiff_pdf_results');
     sessionStorage.removeItem('veridiff_pdf_options');
     router.push('/pdf-comparison');
+  };
+
+  // Modal handlers - replace any future auth redirects
+  const handleSignUp = () => {
+    setAuthMode('signup');
+    setShowAuthModal(true);
+  };
+
+  const handleSignIn = () => {
+    setAuthMode('signin');
+    setShowAuthModal(true);
+  };
+
+  const handleAuthModalClose = () => {
+    setShowAuthModal(false);
+    // The page will automatically re-render with isAuthenticated = true after successful auth
   };
 
   const renderLoadingState = () => (
@@ -216,6 +241,13 @@ export default function PDFResultsPage() {
       <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
         <Header />
         
+        {/* Auth Modal */}
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={handleAuthModalClose}
+          initialMode={authMode}
+        />
+        
         <div style={{
           maxWidth: '1400px',
           margin: '0 auto',
@@ -265,6 +297,18 @@ export default function PDFResultsPage() {
                   <span>📄 <strong>{fileInfo.file1?.name}</strong></span>
                   <span style={{ color: '#dc2626' }}>vs</span>
                   <span>📄 <strong>{fileInfo.file2?.name}</strong></span>
+                  {!isAuthenticated && (
+                    <span style={{
+                      background: '#3b82f6',
+                      color: 'white',
+                      fontSize: '0.8rem',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      marginLeft: '8px'
+                    }}>
+                      Preview
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -329,6 +373,9 @@ export default function PDFResultsPage() {
               file1Name={fileInfo.file1?.name}
               file2Name={fileInfo.file2?.name}
               options={pdfOptions}
+              isAuthenticated={isAuthenticated}
+              onSignUp={handleSignUp}
+              onSignIn={handleSignIn}
             />
           )}
         </div>
