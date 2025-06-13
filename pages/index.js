@@ -215,8 +215,6 @@ export default function Home() {
           </div>
         </section>
 
-        </section>
-
         {/* Why Your Expertise Matters */}
         <section style={{
           padding: '4rem 0',
