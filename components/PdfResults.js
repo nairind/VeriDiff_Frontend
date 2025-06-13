@@ -1,10 +1,18 @@
-// components/PdfResults.js - Excel-Style Dashboard with Progressive Display
+// components/PdfResults.js - Updated to use modal props instead of redirects
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import PDFSideBySideView from '../components/PDFSideBySideView';
 import { useRef, useCallback } from 'react';
 
-const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
+const PdfResults = ({ 
+  results, 
+  file1Name, 
+  file2Name, 
+  options = {},
+  isAuthenticated = false,
+  onSignUp = () => {},
+  onSignIn = () => {}
+}) => {
   const { data: session, status } = useSession();
   const [expandedPages, setExpandedPages] = useState(new Set());
   const [isGeneratingDownload, setIsGeneratingDownload] = useState(false);
@@ -39,7 +47,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     }, 0);
   }, []);
 
-  // Handle filter dropdown with focus preservation
   const handleFilterChange = useCallback((e) => {
     const value = e.target.value;
     setFilterMode(value);
@@ -52,7 +59,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     }, 0);
   }, []);
 
-  // Handle focus mode checkbox with focus preservation
   const handleFocusModeChange = useCallback((e) => {
     const checked = e.target.checked;
     setFocusMode(checked);
@@ -65,7 +71,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     }, 0);
   }, []);
 
-  // Handle group similar checkbox with focus preservation
   const handleGroupSimilarChange = useCallback((e) => {
     const checked = e.target.checked;
     setGroupSimilar(checked);
@@ -78,7 +83,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     }, 0);
   }, []);
 
-  // Handle ignore whitespace checkbox with focus preservation
   const handleIgnoreWhitespaceChange = useCallback((e) => {
     const checked = e.target.checked;
     setIgnoreWhitespace(checked);
@@ -91,7 +95,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     }, 0);
   }, []);
 
-  // Handle clear all filters
   const handleClearAllFilters = useCallback(() => {
     setFilterMode('all');
     setSearchTerm('');
@@ -100,7 +103,7 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     setIgnoreWhitespace(false);
   }, []);
 
-  // DOWNLOAD OPTIONS AND FUNCTIONS
+  // DOWNLOAD OPTIONS AND FUNCTIONS (keeping all existing functions)
   const downloadOptions = [
     {
       id: 'html',
@@ -128,22 +131,20 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     }
   ];
 
-  // UPDATED HTML REPORT GENERATOR WITH UNIFIED ALIGNMENT
+  // [Keep all existing download and rendering functions exactly the same]
   const generateHTMLReport = () => {
     const timestamp = new Date().toLocaleString();
     
-    // Create unified alignment for HTML (similar to React component)
     const createHTMLUnifiedAlignment = () => {
       const smartChanges = results?.smart_changes || [];
       const alignedRows = [];
       
       if (smartChanges.length === 0) {
-        return null; // Fall back to positional rendering
+        return null;
       }
       
       console.log('🔄 Creating HTML unified alignment from SmartDiff data...');
       
-      // Get all unique page numbers from both documents
       const file1Pages = results?.file1_pages || [];
       const file2Pages = results?.file2_pages || [];
       const allPageNumbers = new Set([
@@ -155,7 +156,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
         const page1 = file1Pages.find(p => p.page_number === pageNum);
         const page2 = file2Pages.find(p => p.page_number === pageNum);
         
-        // Add page header row
         alignedRows.push({
           type: 'page_header',
           pageNumber: pageNum,
@@ -163,13 +163,9 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
           rightContent: `Page ${pageNum}`
         });
         
-        // Get SmartDiff changes for this page
         const pageSmartChanges = smartChanges.filter(change => change.page === pageNum);
-        
-        // Create a map of processed paragraph positions
         const processedPositions = new Set();
         
-        // First, process SmartDiff changes
         pageSmartChanges.forEach(change => {
           const pos1 = change.metadata?.original_position_1;
           const pos2 = change.metadata?.original_position_2;
@@ -221,7 +217,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
           });
         });
         
-        // Then, process remaining paragraphs not covered by SmartDiff
         const maxParas = Math.max(
           page1?.paragraphs?.length || 0,
           page2?.paragraphs?.length || 0
@@ -231,7 +226,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
           const pos1Key = `1-${paraIndex}`;
           const pos2Key = `2-${paraIndex}`;
           
-          // Skip if already processed by SmartDiff
           if (processedPositions.has(pos1Key) && processedPositions.has(pos2Key)) {
             continue;
           }
@@ -239,7 +233,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
           const para1 = page1?.paragraphs?.[paraIndex];
           const para2 = page2?.paragraphs?.[paraIndex];
           
-          // Add remaining unprocessed content
           if (para1 || para2) {
             alignedRows.push({
               type: 'content_row',
@@ -269,7 +262,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
       return alignedRows;
     };
 
-    // Generate CSS for change types
     const getChangeCSS = (changeType) => {
       switch (changeType) {
         case 'added':
@@ -288,12 +280,10 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
       }
     };
 
-    // Generate content HTML
     const generateContentHTML = () => {
       const hasSmartDiff = !!(results?.smart_changes && results?.smart_changes.length > 0);
       
       if (hasSmartDiff) {
-        // Use unified alignment for SmartDiff data
         const alignedRows = createHTMLUnifiedAlignment();
         
         if (!alignedRows) {
@@ -357,7 +347,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
       }
     };
 
-    // Fallback HTML generation for non-SmartDiff data
     const generateFallbackHTML = () => {
       return `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -564,7 +553,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             </div>
         </div>
 
-        <!-- UNIFIED ALIGNMENT CONTENT -->
         <div style="margin-top: 30px;">
             ${generateContentHTML()}
         </div>
@@ -733,7 +721,7 @@ ${line}`;
     }
   };
 
-  // ALL OTHER EXISTING FUNCTIONS REMAIN EXACTLY THE SAME
+  // [Keep all existing UI helper functions]
   const togglePageExpansion = (pageNumber) => {
     const newExpanded = new Set(expandedPages);
     if (newExpanded.has(pageNumber)) {
@@ -771,9 +759,8 @@ ${line}`;
     }
   };
 
-  // ENHANCED: Excel-Style Dashboard Component
+  // Excel-Style Dashboard Component
   const ExcelStyleDashboard = () => {
-    // Calculate metrics
     const totalChanges = results.differences_found || 0;
     const differencesFound = results.differences_found || 0;
     const perfectMatches = results.matches_found || 0;
@@ -787,7 +774,6 @@ ${line}`;
         padding: '30px',
         marginBottom: '30px'
       }}>
-        {/* Excel-Style Header */}
         <div style={{
           textAlign: 'center',
           marginBottom: '30px'
@@ -841,14 +827,12 @@ ${line}`;
           </div>
         </div>
 
-        {/* Excel-Style Metric Cards */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '20px',
           marginBottom: '25px'
         }}>
-          {/* Total Changes Card */}
           <div style={{
             background: 'white',
             borderRadius: '12px',
@@ -875,7 +859,6 @@ ${line}`;
             </div>
           </div>
 
-          {/* Differences Found Card */}
           <div style={{
             background: 'white',
             borderRadius: '12px',
@@ -902,7 +885,6 @@ ${line}`;
             </div>
           </div>
 
-          {/* Perfect Matches Card */}
           <div style={{
             background: 'white',
             borderRadius: '12px',
@@ -929,7 +911,6 @@ ${line}`;
             </div>
           </div>
 
-          {/* Similarity Score Card */}
           <div style={{
             background: 'white',
             borderRadius: '12px',
@@ -957,7 +938,6 @@ ${line}`;
           </div>
         </div>
 
-        {/* Quick Stats Bar */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.7)',
           borderRadius: '8px',
@@ -991,14 +971,12 @@ ${line}`;
     );
   };
 
-  // ENHANCED: Progressive Display Component with Enhanced Advanced Options
+  // Progressive Changes Preview
   const ProgressiveChangesPreview = () => {
     const allChanges = results.text_changes || [];
     
-    // Apply filtering logic
     let filteredChanges = allChanges;
     
-    // Apply search filter
     if (searchTerm.trim()) {
       filteredChanges = filteredChanges.filter(change => {
         const searchLower = searchTerm.toLowerCase();
@@ -1011,7 +989,6 @@ ${line}`;
       });
     }
     
-    // Apply filter mode
     if (filterMode === 'changes') {
       filteredChanges = filteredChanges.filter(change => change.type !== 'unchanged');
     } else if (filterMode === 'matches') {
@@ -1053,7 +1030,6 @@ ${line}`;
 
     return (
       <div style={{ marginBottom: '25px' }}>
-        {/* ENHANCED Advanced Options Section */}
         <div 
           ref={advancedOptionsRef}
           style={{
@@ -1065,7 +1041,6 @@ ${line}`;
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
           }}
         >
-          {/* Header */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -1125,7 +1100,6 @@ ${line}`;
             </div>
           </div>
 
-          {/* Controls Row 1 - Filter and Search */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'auto 1fr auto',
@@ -1133,7 +1107,6 @@ ${line}`;
             alignItems: 'center',
             marginBottom: '20px'
           }}>
-            {/* Filter Results Dropdown */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <label style={{
                 fontSize: '0.9rem',
@@ -1164,7 +1137,6 @@ ${line}`;
               </select>
             </div>
             
-            {/* Search Box */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', maxWidth: '400px' }}>
               <label style={{
                 fontSize: '0.9rem',
@@ -1192,7 +1164,6 @@ ${line}`;
               />
             </div>
 
-            {/* Results Counter */}
             <div style={{
               background: '#f8fafc',
               padding: '8px 16px',
@@ -1206,7 +1177,6 @@ ${line}`;
             </div>
           </div>
           
-          {/* Controls Row 2 - Checkboxes */}
           <div style={{
             display: 'flex',
             gap: '25px',
@@ -1269,7 +1239,6 @@ ${line}`;
             </label>
           </div>
 
-          {/* Active Filters Display */}
           {(filterMode !== 'all' || searchTerm || focusMode || !groupSimilar || ignoreWhitespace) && (
             <div style={{
               background: '#f0f9ff',
@@ -1358,7 +1327,6 @@ ${line}`;
           )}
         </div>
 
-        {/* Preview Changes */}
         <div style={{
           background: 'white',
           borderRadius: '12px',
@@ -1374,7 +1342,6 @@ ${line}`;
             📋 Changes {session ? `(${filteredChanges.length} total)` : `Preview (${allChanges.length} total)`}
           </h3>
 
-          {/* Show filtered changes */}
           <div style={{ marginBottom: '20px' }}>
             {previewChanges.length > 0 ? previewChanges.map((change, index) => (
               <div
@@ -1462,7 +1429,6 @@ ${line}`;
             )}
           </div>
 
-          {/* Paywall for remaining changes */}
           {remainingCount > 0 && (
             <div style={{
               background: '#f8fafc',
@@ -1491,7 +1457,7 @@ ${line}`;
 
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button
-                  onClick={() => window.location.href = '/auth/signup'}
+                  onClick={onSignUp}
                   style={{
                     background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
                     color: 'white',
@@ -1506,7 +1472,7 @@ ${line}`;
                   📝 Sign Up Free
                 </button>
                 <button
-                  onClick={() => window.location.href = '/auth/signin'}
+                  onClick={onSignIn}
                   style={{
                     background: 'white',
                     color: '#2563eb',
@@ -1528,7 +1494,7 @@ ${line}`;
     );
   };
 
-  // COMPACT: Subtle Login CTA Component
+  // Compact Login CTA Component
   const CompactLoginCTA = () => (
     <div style={{
       background: 'white',
@@ -1566,7 +1532,6 @@ ${line}`;
         Get beautifully formatted HTML reports with full side-by-side comparison view
       </p>
 
-      {/* Compact Preview */}
       <div style={{
         background: '#f8fafc',
         borderRadius: '6px',
@@ -1701,7 +1666,7 @@ ${line}`;
 
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
         <button
-          onClick={() => window.location.href = '/auth/signup'}
+          onClick={onSignUp}
           style={{
             background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
             color: 'white',
@@ -1716,7 +1681,7 @@ ${line}`;
           📝 Sign Up Free
         </button>
         <button
-          onClick={() => window.location.href = '/auth/signin'}
+          onClick={onSignIn}
           style={{
             background: 'white',
             color: '#2563eb',
@@ -1773,7 +1738,6 @@ ${line}`;
         </h2>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* View Toggle Buttons */}
           <div style={{
             display: 'flex',
             background: '#f3f4f6',
@@ -1886,7 +1850,7 @@ ${line}`;
           ) : (
             /* NOT AUTHENTICATED: Show Login Button */
             <button
-              onClick={() => window.location.href = '/auth/signin'}
+              onClick={onSignIn}
               style={{
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 color: 'white',
@@ -1909,14 +1873,10 @@ ${line}`;
 
       {/* ENHANCED CONTENT WITH EXCEL-STYLE DASHBOARD */}
       {viewMode === 'summary' ? (
-        /* NEW EXCEL-STYLE SUMMARY VIEW */
         <>
-          {/* Excel-Style Dashboard - ALWAYS VISIBLE */}
           <ExcelStyleDashboard />
 
-          {/* Progressive Changes Preview */}
           {session ? (
-            /* AUTHENTICATED: Show all changes as before */
             results.page_differences && results.page_differences.length > 0 ? (
               <div>
                 <div style={{
@@ -1960,7 +1920,6 @@ ${line}`;
                         overflow: 'hidden'
                       }}
                     >
-                      {/* Page Header */}
                       <div
                         onClick={() => togglePageExpansion(page.page_number)}
                         style={{
@@ -2000,7 +1959,6 @@ ${line}`;
                         </div>
                       </div>
 
-                      {/* Page Details */}
                       {expandedPages.has(page.page_number) && (
                         <div style={{ padding: '20px' }}>
                           {results.text_changes
@@ -2121,14 +2079,11 @@ ${line}`;
               </div>
             )
           ) : (
-            /* NOT AUTHENTICATED: Show progressive preview */
             <ProgressiveChangesPreview />
           )}
 
-          {/* Processing Information - UNCHANGED for authenticated users */}
           {session && (
             <>
-              {/* Word Count Analysis */}
               {results.word_changes && (
                 <div style={{
                   background: '#f8fafc',
@@ -2167,7 +2122,6 @@ ${line}`;
                 </div>
               )}
 
-              {/* Processing Information */}
               <div style={{
                 background: '#f9fafb',
                 border: '1px solid #e5e7eb',
@@ -2187,7 +2141,6 @@ ${line}`;
           )}
         </>
       ) : (
-        /* SIDE-BY-SIDE VIEW - COMPLETELY UNCHANGED */
         <PDFSideBySideView 
           results={results} 
           file1Name={file1Name} 
