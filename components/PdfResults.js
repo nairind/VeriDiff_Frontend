@@ -100,7 +100,7 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     setIgnoreWhitespace(false);
   }, []);
 
-  // ALL EXISTING DOWNLOAD OPTIONS AND FUNCTIONS REMAIN EXACTLY THE SAME
+  // DOWNLOAD OPTIONS AND FUNCTIONS
   const downloadOptions = [
     {
       id: 'html',
@@ -128,10 +128,278 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
     }
   ];
 
-  // ALL EXISTING DOWNLOAD FUNCTIONS REMAIN EXACTLY THE SAME
+  // UPDATED HTML REPORT GENERATOR WITH UNIFIED ALIGNMENT
   const generateHTMLReport = () => {
     const timestamp = new Date().toLocaleString();
     
+    // Create unified alignment for HTML (similar to React component)
+    const createHTMLUnifiedAlignment = () => {
+      const smartChanges = results?.smart_changes || [];
+      const alignedRows = [];
+      
+      if (smartChanges.length === 0) {
+        return null; // Fall back to positional rendering
+      }
+      
+      console.log('🔄 Creating HTML unified alignment from SmartDiff data...');
+      
+      // Get all unique page numbers from both documents
+      const file1Pages = results?.file1_pages || [];
+      const file2Pages = results?.file2_pages || [];
+      const allPageNumbers = new Set([
+        ...file1Pages.map(p => p.page_number),
+        ...file2Pages.map(p => p.page_number)
+      ]);
+      
+      Array.from(allPageNumbers).sort((a, b) => a - b).forEach(pageNum => {
+        const page1 = file1Pages.find(p => p.page_number === pageNum);
+        const page2 = file2Pages.find(p => p.page_number === pageNum);
+        
+        // Add page header row
+        alignedRows.push({
+          type: 'page_header',
+          pageNumber: pageNum,
+          leftContent: `Page ${pageNum}`,
+          rightContent: `Page ${pageNum}`
+        });
+        
+        // Get SmartDiff changes for this page
+        const pageSmartChanges = smartChanges.filter(change => change.page === pageNum);
+        
+        // Create a map of processed paragraph positions
+        const processedPositions = new Set();
+        
+        // First, process SmartDiff changes
+        pageSmartChanges.forEach(change => {
+          const pos1 = change.metadata?.original_position_1;
+          const pos2 = change.metadata?.original_position_2;
+          
+          if (pos1 !== undefined) processedPositions.add(`1-${pos1}`);
+          if (pos2 !== undefined) processedPositions.add(`2-${pos2}`);
+          
+          let leftContent = null;
+          let rightContent = null;
+          
+          if (change.type === 'page_added' || change.change_type === 'addition') {
+            rightContent = {
+              text: change.new_content || change.content,
+              changeType: change.type,
+              confidence: change.confidence,
+              contentType: change.content_type
+            };
+          } else if (change.type === 'page_removed' || change.change_type === 'deletion') {
+            leftContent = {
+              text: change.old_content || change.content,
+              changeType: change.type,
+              confidence: change.confidence,
+              contentType: change.content_type
+            };
+          } else {
+            leftContent = {
+              text: change.old_content,
+              changeType: change.type,
+              confidence: change.confidence,
+              contentType: change.content_type
+            };
+            rightContent = {
+              text: change.new_content,
+              changeType: change.type,
+              confidence: change.confidence,
+              contentType: change.content_type
+            };
+          }
+          
+          alignedRows.push({
+            type: 'content_row',
+            pageNumber: pageNum,
+            leftContent: leftContent,
+            rightContent: rightContent,
+            changeType: change.type,
+            similarity: change.similarity,
+            confidence: change.confidence,
+            contentType: change.content_type
+          });
+        });
+        
+        // Then, process remaining paragraphs not covered by SmartDiff
+        const maxParas = Math.max(
+          page1?.paragraphs?.length || 0,
+          page2?.paragraphs?.length || 0
+        );
+        
+        for (let paraIndex = 0; paraIndex < maxParas; paraIndex++) {
+          const pos1Key = `1-${paraIndex}`;
+          const pos2Key = `2-${paraIndex}`;
+          
+          // Skip if already processed by SmartDiff
+          if (processedPositions.has(pos1Key) && processedPositions.has(pos2Key)) {
+            continue;
+          }
+          
+          const para1 = page1?.paragraphs?.[paraIndex];
+          const para2 = page2?.paragraphs?.[paraIndex];
+          
+          // Add remaining unprocessed content
+          if (para1 || para2) {
+            alignedRows.push({
+              type: 'content_row',
+              pageNumber: pageNum,
+              leftContent: para1 ? {
+                text: para1.text,
+                changeType: 'unchanged',
+                confidence: 'medium',
+                contentType: 'general_text'
+              } : null,
+              rightContent: para2 ? {
+                text: para2.text,
+                changeType: 'unchanged',
+                confidence: 'medium',
+                contentType: 'general_text'
+              } : null,
+              changeType: 'unchanged',
+              similarity: para1 && para2 && para1.text === para2.text ? 1.0 : 0.5,
+              confidence: 'medium',
+              contentType: 'general_text'
+            });
+          }
+        }
+      });
+      
+      console.log(`✅ Created ${alignedRows.length} HTML unified alignment rows`);
+      return alignedRows;
+    };
+
+    // Generate CSS for change types
+    const getChangeCSS = (changeType) => {
+      switch (changeType) {
+        case 'added':
+        case 'paragraph_added':
+        case 'page_added':
+          return 'background: #dcfce7; border: 1px solid #166534; color: #166534; padding: 8px 12px; border-radius: 6px; font-weight: 500;';
+        case 'removed':
+        case 'paragraph_removed':
+        case 'page_removed':
+          return 'background: #fee2e2; border: 1px solid #dc2626; color: #dc2626; padding: 8px 12px; border-radius: 6px; font-weight: 500;';
+        case 'modified':
+        case 'replaced':
+          return 'background: #fef3c7; border: 1px solid #d97706; color: #92400e; padding: 8px 12px; border-radius: 6px; font-weight: 500;';
+        default:
+          return 'padding: 4px 8px; color: #374151;';
+      }
+    };
+
+    // Generate content HTML
+    const generateContentHTML = () => {
+      const hasSmartDiff = !!(results?.smart_changes && results?.smart_changes.length > 0);
+      
+      if (hasSmartDiff) {
+        // Use unified alignment for SmartDiff data
+        const alignedRows = createHTMLUnifiedAlignment();
+        
+        if (!alignedRows) {
+          return generateFallbackHTML();
+        }
+        
+        return alignedRows.map(row => {
+          if (row.type === 'page_header') {
+            return `
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                <div style="background: #f3f4f6; padding: 8px 12px; border-radius: 4px; font-size: 0.9rem; font-weight: 600;">
+                  ${row.leftContent}
+                </div>
+                <div style="background: #f3f4f6; padding: 8px 12px; border-radius: 4px; font-size: 0.9rem; font-weight: 600;">
+                  ${row.rightContent}
+                </div>
+              </div>
+            `;
+          }
+          
+          const leftHTML = row.leftContent ? `
+            <div style="${getChangeCSS(row.leftContent.changeType)} margin-bottom: 12px; min-height: 20px;">
+              ${row.leftContent.text}
+              ${row.leftContent.contentType ? `
+                <div style="font-size: 0.75rem; color: #6b7280; margin-top: 4px; font-style: italic;">
+                  SmartDiff: ${row.leftContent.contentType} • ${Math.round((row.similarity || 0) * 100)}% confidence
+                </div>
+              ` : ''}
+            </div>
+          ` : `
+            <div style="padding: 8px 12px; min-height: 20px; background: #f9fafb; border: 1px dashed #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 0.8rem; font-style: italic; margin-bottom: 12px;">
+              [no content]
+            </div>
+          `;
+          
+          const rightHTML = row.rightContent ? `
+            <div style="${getChangeCSS(row.rightContent.changeType)} margin-bottom: 12px; min-height: 20px;">
+              ${row.rightContent.text}
+              ${row.rightContent.contentType ? `
+                <div style="font-size: 0.75rem; color: #6b7280; margin-top: 4px; font-style: italic;">
+                  SmartDiff: ${row.rightContent.contentType} • ${Math.round((row.similarity || 0) * 100)}% confidence
+                </div>
+              ` : ''}
+            </div>
+          ` : `
+            <div style="padding: 8px 12px; min-height: 20px; background: #f9fafb; border: 1px dashed #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 0.8rem; font-style: italic; margin-bottom: 12px;">
+              [no content]
+            </div>
+          `;
+          
+          return `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
+              ${leftHTML}
+              ${rightHTML}
+            </div>
+          `;
+        }).join('');
+        
+      } else {
+        return generateFallbackHTML();
+      }
+    };
+
+    // Fallback HTML generation for non-SmartDiff data
+    const generateFallbackHTML = () => {
+      return `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="document-panel">
+            <div class="document-header">📄 ${file1Name || 'Document 1'}</div>
+            <div class="document-content">
+              ${(results.file1_pages || []).map(page => `
+                <div class="page">
+                  <div class="page-header">Page ${page.page_number}</div>
+                  ${(page.paragraphs || []).map((para, index) => {
+                    const change = (results.text_changes || []).find(c => 
+                      c.page === page.page_number && c.paragraph === index
+                    );
+                    const changeClass = change ? change.type : '';
+                    return `<div class="paragraph ${changeClass}">${para.text}</div>`;
+                  }).join('')}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="document-panel">
+            <div class="document-header">📄 ${file2Name || 'Document 2'}</div>
+            <div class="document-content">
+              ${(results.file2_pages || []).map(page => `
+                <div class="page">
+                  <div class="page-header">Page ${page.page_number}</div>
+                  ${(page.paragraphs || []).map((para, index) => {
+                    const change = (results.text_changes || []).find(c => 
+                      c.page === page.page_number && c.paragraph === index
+                    );
+                    const changeClass = change ? change.type : '';
+                    return `<div class="paragraph ${changeClass}">${para.text}</div>`;
+                  }).join('')}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,7 +415,7 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             line-height: 1.6;
         }
         .container { 
-            max-width: 1200px; 
+            max-width: 1400px; 
             margin: 0 auto; 
             background: white; 
             padding: 30px; 
@@ -199,68 +467,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
         .similarity-high { color: #22c55e; }
         .similarity-medium { color: #f59e0b; }
         .similarity-low { color: #ef4444; }
-        .side-by-side { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
-            margin: 30px 0; 
-        }
-        .document-panel { 
-            border: 1px solid #e5e7eb; 
-            border-radius: 8px; 
-            overflow: hidden; 
-        }
-        .document-header { 
-            background: #f8fafc; 
-            padding: 15px; 
-            font-weight: 600; 
-            border-bottom: 1px solid #e5e7eb; 
-        }
-        .document-content { 
-            padding: 20px; 
-            max-height: 600px; 
-            overflow-y: auto; 
-        }
-        .page { 
-            margin-bottom: 30px; 
-        }
-        .page-header { 
-            background: #f3f4f6; 
-            padding: 8px 12px; 
-            border-radius: 4px; 
-            font-weight: 600; 
-            margin-bottom: 15px; 
-            font-size: 0.9rem; 
-        }
-        .paragraph { 
-            margin-bottom: 12px; 
-            padding: 8px 0; 
-            line-height: 1.6; 
-        }
-        .added { 
-            background: #dcfce7; 
-            border: 1px solid #166534; 
-            color: #166534; 
-            padding: 8px 12px; 
-            border-radius: 6px; 
-            font-weight: 500; 
-        }
-        .removed { 
-            background: #fee2e2; 
-            border: 1px solid #dc2626; 
-            color: #dc2626; 
-            padding: 8px 12px; 
-            border-radius: 6px; 
-            font-weight: 500; 
-        }
-        .modified { 
-            background: #fef3c7; 
-            border: 1px solid #d97706; 
-            color: #92400e; 
-            padding: 8px 12px; 
-            border-radius: 6px; 
-            font-weight: 500; 
-        }
         .legend { 
             display: flex; 
             justify-content: center; 
@@ -277,25 +483,6 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             width: 16px; 
             height: 16px; 
             border-radius: 3px; 
-        }
-        .nav-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        .nav-button {
-            padding: 8px 16px;
-            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-            color: #1d4ed8;
-            border: 1px solid #3b82f6;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .nav-button:hover {
-            background: linear-gradient(135deg, #bfdbfe, #93c5fd);
         }
         .footer { 
             margin-top: 40px; 
@@ -314,21 +501,19 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             color: #374151;
         }
         @media (max-width: 768px) {
-            .side-by-side { grid-template-columns: 1fr; }
             .summary-grid { grid-template-columns: 1fr; }
             .container { padding: 20px; }
         }
         @media print {
             body { background: white; }
             .container { box-shadow: none; }
-            .nav-buttons { display: none; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1 class="title">📑 PDF Comparison Report</h1>
+            <h1 class="title">📑 PDF Comparison Report - ${results?.smart_changes?.length > 0 ? 'SmartDiff Enhanced' : 'Standard'}</h1>
             <p class="subtitle">Generated on ${timestamp}</p>
             <p><strong>${file1Name || 'Document 1'}</strong> vs <strong>${file2Name || 'Document 2'}</strong></p>
         </div>
@@ -373,51 +558,15 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
                 <div class="legend-box" style="background: #fef3c7; border: 1px solid #d97706;"></div>
                 <span>Modified Content</span>
             </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #f9fafb; border: 1px dashed #e5e7eb;"></div>
+                <span>No Content (Empty Space)</span>
+            </div>
         </div>
 
-        <!-- Navigation Buttons -->
-        <div class="nav-buttons">
-            <button class="nav-button" onclick="scrollToTop()">⬆️ Top</button>
-            <button class="nav-button" onclick="scrollDown()">🔍 Next Section</button>
-            <button class="nav-button" onclick="scrollToBottom()">⬇️ Bottom</button>
-        </div>
-
-        <div class="side-by-side">
-            <div class="document-panel">
-                <div class="document-header">📄 ${file1Name || 'Document 1'}</div>
-                <div class="document-content" id="leftPanel">
-                    ${(results.file1_pages || []).map(page => `
-                        <div class="page">
-                            <div class="page-header">Page ${page.page_number}</div>
-                            ${(page.paragraphs || []).map((para, index) => {
-                                const change = (results.text_changes || []).find(c => 
-                                    c.page === page.page_number && c.paragraph === index
-                                );
-                                const changeClass = change ? change.type : '';
-                                return `<div class="paragraph ${changeClass}">${para.text}</div>`;
-                            }).join('')}
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            
-            <div class="document-panel">
-                <div class="document-header">📄 ${file2Name || 'Document 2'}</div>
-                <div class="document-content" id="rightPanel">
-                    ${(results.file2_pages || []).map(page => `
-                        <div class="page">
-                            <div class="page-header">Page ${page.page_number}</div>
-                            ${(page.paragraphs || []).map((para, index) => {
-                                const change = (results.text_changes || []).find(c => 
-                                    c.page === page.page_number && c.paragraph === index
-                                );
-                                const changeClass = change ? change.type : '';
-                                return `<div class="paragraph ${changeClass}">${para.text}</div>`;
-                            }).join('')}
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
+        <!-- UNIFIED ALIGNMENT CONTENT -->
+        <div style="margin-top: 30px;">
+            ${generateContentHTML()}
         </div>
 
         <div class="footer">
@@ -425,64 +574,10 @@ const PdfResults = ({ results, file1Name, file2Name, options = {} }) => {
             <p>Processing time: ${results.processing_time?.total_time_ms || 'N/A'}ms | 
                Quality: ${Math.round((results.quality_metrics?.overall_success_rate || 1) * 100)}%</p>
             <div class="powered-by">
-                🚀 Powered by VeriDiff
+                🚀 Powered by VeriDiff ${results?.smart_changes?.length > 0 ? 'SmartDiff' : ''} - Industry-Leading Accuracy
             </div>
         </div>
     </div>
-
-    <script>
-        // Synchronized scrolling for downloaded HTML report
-        let isScrolling = false;
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const leftPanel = document.getElementById('leftPanel');
-            const rightPanel = document.getElementById('rightPanel');
-            
-            if (leftPanel && rightPanel) {
-                leftPanel.addEventListener('scroll', function() {
-                    if (isScrolling) return;
-                    isScrolling = true;
-                    rightPanel.scrollTop = leftPanel.scrollTop;
-                    setTimeout(() => { isScrolling = false; }, 10);
-                });
-                
-                rightPanel.addEventListener('scroll', function() {
-                    if (isScrolling) return;
-                    isScrolling = true;
-                    leftPanel.scrollTop = rightPanel.scrollTop;
-                    setTimeout(() => { isScrolling = false; }, 10);
-                });
-            }
-        });
-        
-        // Navigation functions
-        function scrollToTop() {
-            const leftPanel = document.getElementById('leftPanel');
-            const rightPanel = document.getElementById('rightPanel');
-            if (leftPanel) leftPanel.scrollTop = 0;
-            if (rightPanel) rightPanel.scrollTop = 0;
-        }
-        
-        function scrollDown() {
-            const leftPanel = document.getElementById('leftPanel');
-            const rightPanel = document.getElementById('rightPanel');
-            if (leftPanel && rightPanel) {
-                const currentScroll = leftPanel.scrollTop;
-                leftPanel.scrollTop = currentScroll + 200;
-                rightPanel.scrollTop = currentScroll + 200;
-            }
-        }
-        
-        function scrollToBottom() {
-            const leftPanel = document.getElementById('leftPanel');
-            const rightPanel = document.getElementById('rightPanel');
-            if (leftPanel && rightPanel) {
-                const maxScroll = leftPanel.scrollHeight - leftPanel.clientHeight;
-                leftPanel.scrollTop = maxScroll;
-                rightPanel.scrollTop = maxScroll;
-            }
-        }
-    </script>
 </body>
 </html>`;
   };
@@ -741,7 +836,7 @@ ${line}`;
               fontSize: '0.8rem',
               marginLeft: '8px'
             }}>
-              Preview Mode
+              {session ? 'Full View' : 'Preview Mode'}
             </span>
           </div>
         </div>
