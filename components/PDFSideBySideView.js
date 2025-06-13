@@ -53,6 +53,8 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
   const getChangeStyle = (changeType) => {
     switch (changeType) {
       case 'added':
+      case 'paragraph_added':
+      case 'page_added':
         return {
           background: '#dcfce7',
           border: '1px solid #166534',
@@ -62,6 +64,8 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
           fontWeight: '500'
         };
       case 'removed':
+      case 'paragraph_removed':
+      case 'page_removed':
         return {
           background: '#fee2e2',
           border: '1px solid #dc2626',
@@ -71,6 +75,7 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
           fontWeight: '500'
         };
       case 'modified':
+      case 'replaced':
         return {
           background: '#fef3c7',
           border: '1px solid #d97706',
@@ -87,15 +92,9 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
     }
   };
 
-  const renderDocument = (pages, fileName, fileNumber) => {
-    if (!pages || pages.length === 0) {
-      return (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-          No pages available for {fileName}
-        </div>
-      );
-    }
-
+  const renderSmartDiffDocument = (pages, fileName, fileNumber) => {
+    const smartChanges = results?.smart_changes || [];
+    
     return (
       <div>
         {pages.map((page) => (
@@ -112,13 +111,35 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
             </div>
             
             {(page.paragraphs || []).map((para, paraIndex) => {
-              const change = findParagraphChange(page.page_number, paraIndex, fileNumber);
-              const changeType = change?.type;
+              // Find SmartDiff change for this paragraph
+              const smartChange = smartChanges.find(change => 
+                change.page === page.page_number && 
+                (change.paragraph === paraIndex || 
+                 change.metadata?.original_position_1 === paraIndex ||
+                 change.metadata?.original_position_2 === paraIndex)
+              );
+              
+              const changeType = smartChange?.type || 'unchanged';
               const style = getChangeStyle(changeType);
+              
+              // Use content from SmartDiff if available, otherwise use original
+              const content = fileNumber === 1 
+                ? (smartChange?.old_content || para.text)
+                : (smartChange?.new_content || para.text);
               
               return (
                 <div key={paraIndex} style={{ marginBottom: '12px', ...style }}>
-                  {para.text}
+                  {content}
+                  {smartChange && (
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: '#6b7280',
+                      marginTop: '4px',
+                      fontStyle: 'italic'
+                    }}>
+                      SmartDiff: {smartChange.content_type} • {Math.round((smartChange.similarity || 0) * 100)}% confidence
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -126,6 +147,56 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         ))}
       </div>
     );
+  };
+
+  const renderDocument = (pages, fileName, fileNumber) => {
+    if (!pages || pages.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+          No pages available for {fileName}
+        </div>
+      );
+    }
+
+    // Check if we have SmartDiff data to use for intelligent alignment
+    const hasSmartDiff = !!(results?.smart_changes && results?.smart_changes.length > 0);
+    
+    if (hasSmartDiff) {
+      console.log(`🧠 Rendering ${fileName} with SmartDiff alignment`);
+      return renderSmartDiffDocument(pages, fileName, fileNumber);
+    } else {
+      console.log(`📄 Rendering ${fileName} with positional alignment`);
+      return (
+        <div>
+          {pages.map((page) => (
+            <div key={page.page_number} style={{ marginBottom: '30px' }}>
+              <div style={{
+                background: '#f3f4f6',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                fontSize: '0.9rem',
+                fontWeight: '600',
+                marginBottom: '15px'
+              }}>
+                Page {page.page_number}
+              </div>
+              
+              {(page.paragraphs || []).map((para, paraIndex) => {
+                const change = findParagraphChange(page.page_number, paraIndex, fileNumber);
+                const changeType = change?.type;
+                const style = getChangeStyle(changeType);
+                
+                return (
+                  <div key={paraIndex} style={{ marginBottom: '12px', ...style }}>
+                    {para.text}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      );
+    }
   };
 
   const file1Pages = results?.file1_pages || [];
