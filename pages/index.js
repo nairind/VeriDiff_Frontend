@@ -215,6 +215,52 @@ export default function Home() {
           </div>
         </section>
 
+        </section>
+
+        {/* Why Your Expertise Matters */}
+        <section style={{
+          padding: '4rem 0',
+          background: 'white'
+        }}>
+          <div style={{
+            maxWidth: '800px',
+            margin: '0 auto',
+            padding: '0 20px',
+            textAlign: 'center'
+          }}>
+            <h2 style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '2rem',
+              color: '#1f2937'
+            }}>
+              Why Your Professional Expertise Matters
+            </h2>
+            
+            <p style={{
+              fontSize: '1.2rem',
+              color: '#6b7280',
+              lineHeight: '1.7',
+              marginBottom: '2rem'
+            }}>
+              We're building VeriDiff for professionals who understand the critical importance of accurate data comparison. 
+              Your real-world experience with Excel files, CSV data, and document analysis is exactly what we need to 
+              create a market-leading solution.
+            </p>
+
+            <p style={{
+              fontSize: '1.2rem',
+              color: '#6b7280',
+              lineHeight: '1.7'
+            }}>
+              Every comparison you run, every edge case you encounter, and every suggestion you share helps us build 
+              features that matter for professional workflows. This isn't just testing—it's collaborative development 
+              with industry experts.
+            </p>
+          </div>
+        </section>
+
+        <FeatureSection />          
         <FeatureSection />
         
         <PricingSection 
