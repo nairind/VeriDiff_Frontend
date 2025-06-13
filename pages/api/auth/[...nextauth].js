@@ -1,3 +1,4 @@
+// pages/api/auth/[...nextauth].js - Updated for modal-only auth
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { query } from '../../../lib/db'
@@ -55,10 +56,11 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   
-  pages: {
-    signIn: '/auth/signin',
-    signUp: '/auth/signup'
-  },
+  // REMOVED: pages config since we're using modals only
+  // pages: {
+  //   signIn: '/auth/signin',
+  //   signUp: '/auth/signup'
+  // },
   
   callbacks: {
     async jwt({ token, user }) {
