@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
+import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
-export default function SignIn() {
+export default function SignUp() {
   const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -24,13 +26,46 @@ export default function SignIn() {
     setError('')
     setLoading(true)
 
-    if (!formData.email || !formData.password) {
-      setError('Email and password are required')
+    // Validation
+    if (!formData.fullName || !formData.email || !formData.password) {
+      setError('All fields are required')
+      setLoading(false)
+      return
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters')
       setLoading(false)
       return
     }
 
     try {
+      // Create user account
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          password: formData.password
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Registration failed')
+        setLoading(false)
+        return
+      }
+
+      // Auto sign in after successful registration
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
@@ -38,9 +73,11 @@ export default function SignIn() {
       })
 
       if (result?.ok) {
-        router.push('/compare')
+        // Check for redirect parameter, fallback to dashboard/home
+        const redirectTo = router.query.redirect || '/dashboard'
+        router.push(redirectTo)
       } else {
-        setError('Invalid email or password')
+        setError('Registration successful, but login failed. Please try signing in.')
       }
 
     } catch (error) {
@@ -50,10 +87,10 @@ export default function SignIn() {
     }
   }
 
-  const handleForgotPassword = () => {
-    // For now, show alert. You can implement email reset later
-    alert('Password reset functionality will be available soon. Please contact support if needed.')
-  }
+  // Preserve redirect parameter in sign-in link
+  const signInUrl = router.query.redirect 
+    ? `/auth/signin?redirect=${encodeURIComponent(router.query.redirect)}`
+    : '/auth/signin'
 
   return (
     <div style={{
@@ -74,10 +111,10 @@ export default function SignIn() {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', margin: 0 }}>
-            Welcome Back
+            Create Account
           </h1>
           <p style={{ color: '#6b7280', margin: '0.5rem 0 0' }}>
-            Sign in to your VeriDiff account
+            Start comparing files for free
           </p>
         </div>
 
@@ -95,6 +132,28 @@ export default function SignIn() {
         )}
 
         <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#374151' }}>
+              Full Name
+            </label>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              required
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                boxSizing: 'border-box'
+              }}
+              placeholder="Enter your full name"
+            />
+          </div>
+
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#374151' }}>
               Email Address
@@ -135,25 +194,30 @@ export default function SignIn() {
                 fontSize: '1rem',
                 boxSizing: 'border-box'
               }}
-              placeholder="Enter your password"
+              placeholder="Create a password (min 6 characters)"
             />
           </div>
 
-          <div style={{ textAlign: 'right', marginBottom: '1.5rem' }}>
-            <button
-              type="button"
-              onClick={handleForgotPassword}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', fontWeight: '500', marginBottom: '0.5rem', color: '#374151' }}>
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
               style={{
-                background: 'none',
-                border: 'none',
-                color: '#2563eb',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-                textDecoration: 'underline'
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.5rem',
+                fontSize: '1rem',
+                boxSizing: 'border-box'
               }}
-            >
-              Forgot password?
-            </button>
+              placeholder="Confirm your password"
+            />
           </div>
 
           <button
@@ -172,15 +236,49 @@ export default function SignIn() {
               marginBottom: '1rem'
             }}
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', color: '#6b7280' }}>
-          Don't have an account?{' '}
-          <Link href="/auth/signup" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
-            Sign Up
+          Already have an account?{' '}
+          <Link href={signInUrl} style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
+            Sign In
           </Link>
+        </div>
+
+        {/* Privacy-focused messaging */}
+        <div style={{
+          background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+          border: '2px solid #3b82f6',
+          padding: '1.25rem',
+          borderRadius: '0.75rem',
+          marginTop: '1.5rem'
+        }}>
+          <div style={{
+            textAlign: 'center',
+            color: '#1e40af',
+            fontSize: '0.95rem',
+            lineHeight: '1.4'
+          }}>
+            <div style={{ 
+              fontSize: '1rem',
+              fontWeight: '700',
+              marginBottom: '0.25rem'
+            }}>
+              🔒 Privacy at its highest
+            </div>
+            <div style={{ fontWeight: '600' }}>
+              Comparison data <strong>never leaves your browser</strong>
+            </div>
+            <div style={{ 
+              fontSize: '0.85rem',
+              marginTop: '0.25rem',
+              opacity: '0.9'
+            }}>
+              100% client-side processing • Your files stay private
+            </div>
+          </div>
         </div>
       </div>
     </div>
