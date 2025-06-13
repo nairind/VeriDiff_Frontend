@@ -372,7 +372,91 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>          
+        </section>    
+
+        {/* Partnership Details */}
+        <section style={{
+          padding: '4rem 0',
+          background: '#f8fafc'
+        }}>
+          <div style={{
+            maxWidth: '800px',
+            margin: '0 auto',
+            padding: '0 20px',
+            textAlign: 'center'
+          }}>
+            <h2 style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '2rem',
+              color: '#1f2937'
+            }}>
+              Partnership Program Details
+            </h2>
+
+            <div style={{
+              background: 'white',
+              borderRadius: '1rem',
+              padding: '2.5rem',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+              textAlign: 'left'
+            }}>
+              <h3 style={{
+                fontSize: '1.3rem',
+                fontWeight: '600',
+                color: '#1f2937',
+                marginBottom: '1.5rem'
+              }}>
+                How It Works
+              </h3>
+              
+              <ul style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0
+              }}>
+                <li style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                  fontSize: '1rem',
+                  color: '#6b7280'
+                }}>
+                  <span style={{ color: '#059669', fontWeight: '600', minWidth: '20px' }}>1.</span>
+                  <span>Use VeriDiff for your real work - unlimited comparisons, all features unlocked</span>
+                </li>
+                <li style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                  fontSize: '1rem',
+                  color: '#6b7280'
+                }}>
+                  <span style={{ color: '#059669', fontWeight: '600', minWidth: '20px' }}>2.</span>
+                  <span>Share feedback through the in-app system when you encounter interesting cases</span>
+                </li>
+                <li style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                  fontSize: '1rem',
+                  color: '#6b7280'
+                }}>
+                  <span style={{ color: '#059669', fontWeight: '600', minWidth: '20px' }}>3.</span>
+                  <span>Get 6 months Individual Plan free after providing meaningful insights</span>
+                </li>
+                <li style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem',
+                  fontSize: '1rem',
+                  color: '#6b7280'
+                }}>
+                  <span style={{ color: '#059669', fontWeight: '600', minWidth: '20px' }}>4.</span>
+                  <span>Continue using VeriDiff with full access while we build features you've influenced</span            
         <FeatureSection />          
         <FeatureSection />
         
