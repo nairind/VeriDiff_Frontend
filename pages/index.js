@@ -234,28 +234,109 @@ export default function Home() {
             }}>
               Why Your Professional Expertise Matters
             </h2>
-            
-            <p style={{
-              fontSize: '1.2rem',
-              color: '#6b7280',
-              lineHeight: '1.7',
+
+             {/* Why Your Expertise Matters */}
+        <section style={{
+          padding: '2.5rem 0',
+          background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)'
+        }}>
+          <div style={{
+            maxWidth: '800px',
+            margin: '0 auto',
+            padding: '0 20px',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+              border: '2px solid #3b82f6',
+              borderRadius: '50px',
+              padding: '0.5rem 1.5rem',
               marginBottom: '2rem'
             }}>
-              We're building VeriDiff for professionals who understand the critical importance of accurate data comparison. 
-              Your real-world experience with Excel files, CSV data, and document analysis is exactly what we need to 
-              create a market-leading solution.
-            </p>
+              <span style={{ fontSize: '1.2rem' }}>🤝</span>
+              <span style={{ fontWeight: '700', color: '#1e40af' }}>Professional Collaboration</span>
+            </div>
 
-            <p style={{
-              fontSize: '1.2rem',
-              color: '#6b7280',
-              lineHeight: '1.7'
+            <h2 style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '2rem',
+              color: '#1f2937'
             }}>
-              Every comparison you run, every edge case you encounter, and every suggestion you share helps us build 
-              features that matter for professional workflows. This isn't just testing—it's collaborative development 
-              with industry experts.
-            </p>
+              Why Your Professional Expertise Matters
+            </h2>
+            
+            <div style={{
+              background: 'white',
+              borderRadius: '1rem',
+              padding: '2.5rem',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              marginBottom: '2rem',
+              border: '1px solid #e5e7eb'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: '2rem'
+              }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                  borderRadius: '50%',
+                  width: '80px',
+                  height: '80px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2.5rem'
+                }}>💼</div>
+              </div>
+
+              <p style={{
+                fontSize: '1.2rem',
+                color: '#6b7280',
+                lineHeight: '1.7',
+                marginBottom: '2rem'
+              }}>
+                We're building VeriDiff for professionals who understand the critical importance of accurate data comparison. 
+                Your real-world experience with Excel files, CSV data, and document analysis is exactly what we need to 
+                create a market-leading solution.
+              </p>
+
+              <div style={{
+                background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                borderRadius: '0.75rem',
+                padding: '1.5rem',
+                border: '2px solid #f59e0b',
+                marginBottom: '1.5rem'
+              }}>
+                <p style={{
+                  fontSize: '1.1rem',
+                  color: '#92400e',
+                  lineHeight: '1.6',
+                  margin: 0,
+                  fontWeight: '500'
+                }}>
+                  💡 <strong>Your Impact:</strong> Every comparison you run, every edge case you encounter, and every suggestion you share 
+                  helps us build features that matter for professional workflows.
+                </p>
+              </div>
+
+              <p style={{
+                fontSize: '1.1rem',
+                color: '#059669',
+                lineHeight: '1.6',
+                fontWeight: '600',
+                fontStyle: 'italic'
+              }}>
+                This isn't just testing—it's collaborative development with industry experts.
+              </p>
+            </div>
           </div>
+        </section>   
+          
         </section>
 
         {/* What You Get in Return */}
