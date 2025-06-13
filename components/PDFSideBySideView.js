@@ -112,10 +112,143 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
   const file2Pages = results?.file2_pages || [];
   const allChanges = results?.text_changes || [];
   
-  // SmartDiff detection (minimal addition)
+  // SmartDiff detection and data extraction
   const hasSmartDiff = !!(results?.smart_changes && results?.smart_changes.length >= 0);
   const smartChanges = results?.smart_changes || [];
   const overallSimilarity = results?.overall_similarity || results?.similarity_score || 0;
+  const changeSummary = results?.change_summary || {};
+
+  // Create SmartDiff-based unified alignment using existing data
+  const createSmartDiffAlignment = useCallback(() => {
+    if (!hasSmartDiff) return null;
+    
+    console.log('🧠 Creating SmartDiff unified alignment...');
+    
+    const aligned = [];
+    const processedChanges = new Set();
+    
+    // Get all unique page numbers
+    const allPageNumbers = new Set([
+      ...file1Pages.map(p => p.page_number),
+      ...file2Pages.map(p => p.page_number)
+    ]);
+    
+    Array.from(allPageNumbers).sort((a, b) => a - b).forEach(pageNum => {
+      const page1 = file1Pages.find(p => p.page_number === pageNum);
+      const page2 = file2Pages.find(p => p.page_number === pageNum);
+      
+      // Add page header
+      aligned.push({
+        type: 'page_header',
+        pageNumber: pageNum,
+        left: page1 ? `Page ${pageNum}` : null,
+        right: page2 ? `Page ${pageNum}` : null
+      });
+      
+      // Get SmartDiff changes for this page
+      const pageSmartChanges = smartChanges.filter(change => 
+        change.page === pageNum && !processedChanges.has(`${change.page}-${change.paragraph}`)
+      );
+      
+      if (pageSmartChanges.length === 0) {
+        // No SmartDiff data for this page, fall back to positional alignment
+        const maxParas = Math.max(
+          page1?.paragraphs?.length || 0, 
+          page2?.paragraphs?.length || 0
+        );
+        
+        for (let i = 0; i < maxParas; i++) {
+          const para1 = page1?.paragraphs?.[i];
+          const para2 = page2?.paragraphs?.[i];
+          
+          aligned.push({
+            type: 'paragraph',
+            pageNumber: pageNum,
+            paragraphIndex: i,
+            alignment_type: 'positional',
+            similarity: para1 && para2 && para1.text === para2.text ? 1.0 : 0.5,
+            left: para1 ? {
+              text: para1.text,
+              changeType: 'unchanged',
+              confidence: 'medium'
+            } : null,
+            right: para2 ? {
+              text: para2.text,
+              changeType: 'unchanged',
+              confidence: 'medium'
+            } : null
+          });
+        }
+      } else {
+        // Use SmartDiff alignment data
+        pageSmartChanges.forEach((change, changeIndex) => {
+          processedChanges.add(`${change.page}-${change.paragraph}`);
+          
+          let leftContent = null;
+          let rightContent = null;
+          
+          // Determine content based on change type
+          if (change.type === 'page_added' || (change.change_type === 'addition' && !change.old_content)) {
+            // Content added to right side
+            rightContent = {
+              text: change.new_content || change.content || '',
+              changeType: change.type,
+              confidence: change.confidence,
+              similarity: change.similarity || 0,
+              contentType: change.content_type,
+              alignmentType: change.alignment_type
+            };
+          } else if (change.type === 'page_removed' || (change.change_type === 'deletion' && !change.new_content)) {
+            // Content removed from left side  
+            leftContent = {
+              text: change.old_content || change.content || '',
+              changeType: change.type,
+              confidence: change.confidence,
+              similarity: change.similarity || 0,
+              contentType: change.content_type,
+              alignmentType: change.alignment_type
+            };
+          } else {
+            // Content exists on both sides (modified or unchanged)
+            leftContent = {
+              text: change.old_content || '',
+              changeType: change.type,
+              confidence: change.confidence,
+              similarity: change.similarity || 0,
+              contentType: change.content_type,
+              alignmentType: change.alignment_type,
+              originalPosition: change.metadata?.original_position_1
+            };
+            
+            rightContent = {
+              text: change.new_content || '',
+              changeType: change.type,
+              confidence: change.confidence,
+              similarity: change.similarity || 0,
+              contentType: change.content_type,
+              alignmentType: change.alignment_type,
+              originalPosition: change.metadata?.original_position_2
+            };
+          }
+          
+          aligned.push({
+            type: 'paragraph',
+            pageNumber: pageNum,
+            paragraphIndex: change.paragraph || changeIndex,
+            similarity: change.similarity || 0,
+            alignment_type: change.alignment_type || 'smartdiff_aligned',
+            content_type: change.content_type,
+            confidence: change.confidence,
+            left: leftContent,
+            right: rightContent
+          });
+        });
+      }
+    });
+    
+    console.log(`✅ SmartDiff alignment created: ${aligned.length} rows`);
+    return aligned;
+  }, [hasSmartDiff, smartChanges, file1Pages, file2Pages]);
 
   return (
     <div>
@@ -326,7 +459,7 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Enhanced Footer */}
       <div style={{
         background: '#f9fafb',
         padding: '15px',
@@ -336,19 +469,40 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         color: '#6b7280',
         textAlign: 'center'
       }}>
-        {(hasSmartDiff ? smartChanges.length : allChanges.length) > 0 ? (
-          <span>
-            <strong>{hasSmartDiff ? smartChanges.length : allChanges.length} changes highlighted</strong> across {results?.total_pages || 0} pages
-            {hasSmartDiff && <span style={{ color: '#059669', marginLeft: '8px' }}>• SmartDiff Active</span>}
-          </span>
+        {hasSmartDiff ? (
+          <>
+            {smartChanges.length > 0 ? (
+              <div>
+                <strong>🧠 SmartDiff Intelligence Active</strong> - {smartChanges.length} changes intelligently aligned with {Math.round(overallSimilarity)}% overall similarity
+                <div style={{ marginTop: '5px', fontSize: '0.8rem', color: '#059669' }}>
+                  {changeSummary.exact_alignments || 0} exact matches • {changeSummary.content_alignments || 0} content matches • {changeSummary.high_confidence || 0} high confidence
+                </div>
+              </div>
+            ) : (
+              <span>
+                <strong>🧠 SmartDiff Analysis Complete</strong> - Documents appear to be identical with perfect content alignment
+              </span>
+            )}
+            <div style={{ marginTop: '8px', fontSize: '0.8rem' }}>
+              🚀 <strong>Powered by VeriDiff SmartDiff</strong> • {results?.diff_algorithm || 'Enhanced Content-Aware Alignment'} • Industry-Leading Accuracy
+            </div>
+          </>
         ) : (
-          <span>
-            <strong>No changes detected</strong> - Documents appear to be identical
-          </span>
+          <>
+            {allChanges.length > 0 ? (
+              <span>
+                <strong>{allChanges.length} changes highlighted</strong> across {results?.total_pages || 0} pages using standard comparison
+              </span>
+            ) : (
+              <span>
+                <strong>No changes detected</strong> - Documents appear to be identical
+              </span>
+            )}
+            <div style={{ marginTop: '5px', fontSize: '0.8rem' }}>
+              🚀 <strong>Powered by VeriDiff</strong> • Standard PDF Comparison
+            </div>
+          </>
         )}
-        <div style={{ marginTop: '5px', fontSize: '0.8rem' }}>
-          🚀 <strong>Powered by VeriDiff{hasSmartDiff ? ' SmartDiff' : ''}</strong>
-        </div>
       </div>
     </div>
   );
