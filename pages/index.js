@@ -481,16 +481,8 @@ export default function Home() {
             </div>
           </div>
         </section>              
-
-                  
-       <FeatureSection />
-        
-        <PricingSection 
-          file1={null} 
-          file2={null} 
-          onCompare={() => {}} 
-        />
-
+      <FeatureSection />
+     
         <Footer />
       </div>
     </>
