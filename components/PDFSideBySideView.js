@@ -92,7 +92,7 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
     }
   };
 
-  // Create unified alignment structure from SmartDiff data
+  // Create unified alignment structure from SmartDiff data AND all document content
   const createUnifiedAlignment = () => {
     const smartChanges = results?.smart_changes || [];
     const alignedRows = [];
@@ -101,45 +101,44 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
       return null; // Fall back to positional rendering
     }
     
-    console.log('🔄 Creating unified alignment from SmartDiff data...');
+    console.log('🔄 Creating unified alignment from SmartDiff data and all document content...');
     
-    // Group changes by page
-    const pageGroups = {};
-    smartChanges.forEach(change => {
-      const pageNum = change.page;
-      if (!pageGroups[pageNum]) {
-        pageGroups[pageNum] = [];
-      }
-      pageGroups[pageNum].push(change);
-    });
+    // Get all unique page numbers from both documents
+    const allPageNumbers = new Set([
+      ...file1Pages.map(p => p.page_number),
+      ...file2Pages.map(p => p.page_number)
+    ]);
     
-    // Process each page
-    Object.keys(pageGroups).sort((a, b) => parseInt(a) - parseInt(b)).forEach(pageNum => {
-      const pageChanges = pageGroups[pageNum];
+    Array.from(allPageNumbers).sort((a, b) => a - b).forEach(pageNum => {
+      const page1 = file1Pages.find(p => p.page_number === pageNum);
+      const page2 = file2Pages.find(p => p.page_number === pageNum);
       
       // Add page header row
       alignedRows.push({
         type: 'page_header',
-        pageNumber: parseInt(pageNum),
+        pageNumber: pageNum,
         leftContent: `Page ${pageNum}`,
         rightContent: `Page ${pageNum}`
       });
       
-      // Sort changes by paragraph index to maintain order
-      pageChanges.sort((a, b) => {
-        const aIndex = a.paragraph || a.metadata?.original_position_1 || 0;
-        const bIndex = b.paragraph || b.metadata?.original_position_1 || 0;
-        return aIndex - bIndex;
-      });
+      // Get SmartDiff changes for this page
+      const pageSmartChanges = smartChanges.filter(change => change.page === pageNum);
       
-      // Create aligned rows from changes
-      pageChanges.forEach(change => {
+      // Create a map of processed paragraph positions
+      const processedPositions = new Set();
+      
+      // First, process SmartDiff changes
+      pageSmartChanges.forEach(change => {
+        const pos1 = change.metadata?.original_position_1;
+        const pos2 = change.metadata?.original_position_2;
+        
+        if (pos1 !== undefined) processedPositions.add(`1-${pos1}`);
+        if (pos2 !== undefined) processedPositions.add(`2-${pos2}`);
+        
         let leftContent = null;
         let rightContent = null;
-        let changeType = change.type;
         
         if (change.type === 'page_added' || change.change_type === 'addition') {
-          // Content only on right side
           rightContent = {
             text: change.new_content || change.content,
             changeType: change.type,
@@ -147,7 +146,6 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
             contentType: change.content_type
           };
         } else if (change.type === 'page_removed' || change.change_type === 'deletion') {
-          // Content only on left side
           leftContent = {
             text: change.old_content || change.content,
             changeType: change.type,
@@ -155,7 +153,6 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
             contentType: change.content_type
           };
         } else {
-          // Content on both sides (modified or unchanged)
           leftContent = {
             text: change.old_content,
             changeType: change.type,
@@ -172,18 +169,61 @@ const PDFSideBySideView = ({ results, file1Name, file2Name }) => {
         
         alignedRows.push({
           type: 'content_row',
-          pageNumber: parseInt(pageNum),
+          pageNumber: pageNum,
           leftContent: leftContent,
           rightContent: rightContent,
-          changeType: changeType,
+          changeType: change.type,
           similarity: change.similarity,
           confidence: change.confidence,
           contentType: change.content_type
         });
       });
+      
+      // Then, process remaining paragraphs not covered by SmartDiff
+      const maxParas = Math.max(
+        page1?.paragraphs?.length || 0,
+        page2?.paragraphs?.length || 0
+      );
+      
+      for (let paraIndex = 0; paraIndex < maxParas; paraIndex++) {
+        const pos1Key = `1-${paraIndex}`;
+        const pos2Key = `2-${paraIndex}`;
+        
+        // Skip if already processed by SmartDiff
+        if (processedPositions.has(pos1Key) && processedPositions.has(pos2Key)) {
+          continue;
+        }
+        
+        const para1 = page1?.paragraphs?.[paraIndex];
+        const para2 = page2?.paragraphs?.[paraIndex];
+        
+        // Add remaining unprocessed content
+        if (para1 || para2) {
+          alignedRows.push({
+            type: 'content_row',
+            pageNumber: pageNum,
+            leftContent: para1 ? {
+              text: para1.text,
+              changeType: 'unchanged',
+              confidence: 'medium',
+              contentType: 'general_text'
+            } : null,
+            rightContent: para2 ? {
+              text: para2.text,
+              changeType: 'unchanged',
+              confidence: 'medium',
+              contentType: 'general_text'
+            } : null,
+            changeType: 'unchanged',
+            similarity: para1 && para2 && para1.text === para2.text ? 1.0 : 0.5,
+            confidence: 'medium',
+            contentType: 'general_text'
+          });
+        }
+      }
     });
     
-    console.log(`✅ Created ${alignedRows.length} unified alignment rows`);
+    console.log(`✅ Created ${alignedRows.length} unified alignment rows (including all content)`);
     return alignedRows;
   };
 
