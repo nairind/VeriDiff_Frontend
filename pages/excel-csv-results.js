@@ -1,12 +1,11 @@
-// /pages/excel-csv-results.js - EXCEL/CSV RESULTS ONLY (Clean Split)
+// /pages/excel-csv-results.js - EXCEL/CSV RESULTS WITH MODAL AUTH
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
-// Import your existing Excel/CSV results components here
-// import ExcelCSVResults from '../components/ExcelCSVResults';
+import AuthModal from '../components/AuthModal'; // Import the modal
 
 export default function ExcelCSVResultsPage() {
   const router = useRouter();
@@ -20,6 +19,10 @@ export default function ExcelCSVResultsPage() {
   const [tabularResults, setTabularResults] = useState(null);
   const [headerMappings, setHeaderMappings] = useState(null);
   const [toleranceSettings, setToleranceSettings] = useState(null);
+
+  // Modal state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState('signup'); // 'signin' or 'signup'
 
   useEffect(() => {
     loadExcelCSVResults();
@@ -146,8 +149,20 @@ export default function ExcelCSVResultsPage() {
     router.push('/excel-csv-comparison');
   };
 
+  // Modal handlers - replace the old router.push calls
   const handleSignUp = () => {
-    router.push('/auth/signup');
+    setAuthMode('signup');
+    setShowAuthModal(true);
+  };
+
+  const handleSignIn = () => {
+    setAuthMode('signin');
+    setShowAuthModal(true);
+  };
+
+  const handleAuthModalClose = () => {
+    setShowAuthModal(false);
+    // The page will automatically re-render with isAuthenticated = true after successful auth
   };
 
   const renderTabularResults = () => {
@@ -585,7 +600,7 @@ export default function ExcelCSVResultsPage() {
                 🚀 Sign Up Free
               </button>
               <button 
-                onClick={() => router.push('/auth/signin')}
+                onClick={handleSignIn}
                 style={{
                   background: 'white',
                   color: '#374151',
@@ -602,14 +617,6 @@ export default function ExcelCSVResultsPage() {
             </div>
           </div>
         )}
-
-        {/* Your existing ExcelCSVResults component would replace this section */}
-        {/* <ExcelCSVResults 
-          results={tabularResults}
-          fileInfo={fileInfo}
-          headerMappings={headerMappings}
-          toleranceSettings={toleranceSettings}
-        /> */}
       </div>
     );
   };
@@ -726,6 +733,13 @@ export default function ExcelCSVResultsPage() {
       
       <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
         <Header />
+        
+        {/* Auth Modal */}
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={handleAuthModalClose}
+          initialMode={authMode}
+        />
         
         <div style={{
           maxWidth: '1400px',
