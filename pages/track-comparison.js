@@ -1,4 +1,4 @@
-// /pages/track-comparison.js
+// /pages/track-comparison.js - Updated with modal authentication
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
@@ -9,6 +9,7 @@ import SummaryCards from '../components/SummaryCards';
 import ControlsBar from '../components/ControlsBar';
 import ExportSection from '../components/ExportSection';
 import ResultsDisplay from '../components/ResultsDisplay';
+import AuthModal from '../components/AuthModal'; // Import the modal
 import { createScrollManager } from '../utils/scrollUtils';
 import { getFilteredResults, groupFields } from '../utils/filterUtils';
 import { getRecordStatus, getStatusConfig } from '../utils/statusUtils';
@@ -33,6 +34,10 @@ export default function TrackComparison() {
   const [file2, setFile2] = useState(null);
   const [fileType, setFileType] = useState(null);
   const [error, setError] = useState(null);
+
+  // Modal state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState('signup'); // 'signin' or 'signup'
 
   // Results display states
   const [resultsFilter, setResultsFilter] = useState('all');
@@ -85,6 +90,22 @@ export default function TrackComparison() {
   useEffect(() => {
     scrollManager.restoreScroll();
   }, [viewMode, resultsFilter, searchTerm, focusMode, fieldGrouping, ignoreWhitespace, showCharacterDiff, sortField, sortDirection, expandedGroups, expandedRows, scrollManager]);
+
+  // Modal handlers
+  const handleSignUp = () => {
+    setAuthMode('signup');
+    setShowAuthModal(true);
+  };
+
+  const handleSignIn = () => {
+    setAuthMode('signin');
+    setShowAuthModal(true);
+  };
+
+  const handleAuthModalClose = () => {
+    setShowAuthModal(false);
+    // The page will automatically re-render with isAuthenticated = true after successful auth
+  };
 
   // Handle new comparison
   const handleNewComparison = () => {
@@ -264,6 +285,13 @@ export default function TrackComparison() {
       }}>
         
         <Header />
+
+        {/* Auth Modal */}
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={handleAuthModalClose}
+          initialMode={authMode}
+        />
 
         {/* Error Display */}
         {error && (
@@ -458,7 +486,7 @@ export default function TrackComparison() {
                 </p>
                 <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button 
-                    onClick={() => router.push('/auth/signup')}
+                    onClick={handleSignUp}
                     style={{
                       background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
                       color: 'white',
@@ -473,7 +501,7 @@ export default function TrackComparison() {
                     🚀 Sign Up Free
                   </button>
                   <button 
-                    onClick={() => router.push('/auth/signin')}
+                    onClick={handleSignIn}
                     style={{
                       background: 'white',
                       color: '#3b82f6',
