@@ -258,6 +258,52 @@ export default function Home() {
           </div>
         </section>
 
+        {/* What You Get in Return */}
+        <section style={{
+          padding: '4rem 0',
+          background: '#f8fafc'
+        }}>
+          <div style={{
+            maxWidth: '800px',
+            margin: '0 auto',
+            padding: '0 20px',
+            textAlign: 'center'
+          }}>
+            <h2 style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '2rem',
+              color: '#1f2937'
+            }}>
+              What You Get in Return
+            </h2>
+
+            <div style={{
+              background: 'white',
+              borderRadius: '1rem',
+              padding: '2.5rem',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+              marginBottom: '2rem'
+            }}>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: '600',
+                color: '#059669',
+                marginBottom: '1rem'
+              }}>
+                6 Months Individual Plan Free (£114 Value)
+              </h3>
+              <p style={{
+                fontSize: '1.1rem',
+                color: '#6b7280',
+                lineHeight: '1.6',
+                marginBottom: '1.5rem'
+              }}>
+                Enterprise competitors charge £150-300 for similar 6-month access. You get VeriDiff's advanced features completely free.
+              </p>
+            </div>
+          </div>
+        </section>        
         <FeatureSection />          
         <FeatureSection />
         
