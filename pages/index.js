@@ -217,7 +217,7 @@ export default function Home() {
 
         {/* Why Your Expertise Matters */}
         <section style={{
-          padding: '4rem 0',
+          padding: '2.5rem 0',
           background: 'white'
         }}>
           <div style={{
@@ -260,7 +260,7 @@ export default function Home() {
 
         {/* What You Get in Return */}
         <section style={{
-          padding: '4rem 0',
+          padding: '2.5rem 0',
           background: '#f8fafc'
         }}>
           <div style={{
@@ -307,7 +307,7 @@ export default function Home() {
 
         {/* How Your Feedback Shapes Development */}
         <section style={{
-          padding: '4rem 0',
+          padding: '2.5rem 0',
           background: 'white'
         }}>
           <div style={{
@@ -376,7 +376,7 @@ export default function Home() {
 
         {/* Partnership Details */}
         <section style={{
-          padding: '4rem 0',
+          padding: '2.5rem 0',
           background: '#f8fafc'
         }}>
           <div style={{
