@@ -459,7 +459,7 @@ export default function HomePage() {
               backdropFilter: 'blur(10px)'
             }}>
               <span style={{ fontSize: '1.2rem' }}>⏰</span>
-              <span style={{ fontWeight: '600' }}>Early Adopter Program - Ends April 11th</span>
+              <span style={{ fontWeight: '600' }}>Early Adopter Program - Ends July 11th</span>
             </div>
             
             <h1 style={{
