@@ -232,9 +232,7 @@ export default function Home() {
               marginBottom: '2rem',
               color: '#1f2937'
             }}>
-              Why Your Professional Expertise Matters
-            </h2>
-
+              
              {/* Why Your Expertise Matters */}
         <section style={{
           padding: '2.5rem 0',
@@ -337,8 +335,6 @@ export default function Home() {
           </div>
         </section>   
           
-        </section>
-
         {/* What You Get in Return */}
         <section style={{
           padding: '2.5rem 0',
