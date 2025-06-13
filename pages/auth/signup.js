@@ -73,7 +73,9 @@ export default function SignUp() {
       })
 
       if (result?.ok) {
-        router.push('/compare')
+        // Check for redirect parameter, fallback to dashboard/home
+        const redirectTo = router.query.redirect || '/dashboard'
+        router.push(redirectTo)
       } else {
         setError('Registration successful, but login failed. Please try signing in.')
       }
@@ -84,6 +86,11 @@ export default function SignUp() {
       setLoading(false)
     }
   }
+
+  // Preserve redirect parameter in sign-in link
+  const signInUrl = router.query.redirect 
+    ? `/auth/signin?redirect=${encodeURIComponent(router.query.redirect)}`
+    : '/auth/signin'
 
   return (
     <div style={{
@@ -235,22 +242,22 @@ export default function SignUp() {
 
         <div style={{ textAlign: 'center', color: '#6b7280' }}>
           Already have an account?{' '}
-          <Link href="/auth/signin" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
+          <Link href={signInUrl} style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>
             Sign In
           </Link>
         </div>
 
-        {/* ✅ UPDATED: Correct free account messaging */}
+        {/* Privacy-focused messaging */}
         <div style={{
-          background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
-          border: '2px solid #22c55e',
+          background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+          border: '2px solid #3b82f6',
           padding: '1.25rem',
           borderRadius: '0.75rem',
           marginTop: '1.5rem'
         }}>
           <div style={{
             textAlign: 'center',
-            color: '#166534',
+            color: '#1e40af',
             fontSize: '0.95rem',
             lineHeight: '1.4'
           }}>
@@ -259,17 +266,17 @@ export default function SignUp() {
               fontWeight: '700',
               marginBottom: '0.25rem'
             }}>
-              ✨ Free Account Benefits:
+              🔒 Privacy at its highest
             </div>
             <div style={{ fontWeight: '600' }}>
-              Excel-Excel comparisons <strong>FREE forever!</strong>
+              Comparison data <strong>never leaves your browser</strong>
             </div>
             <div style={{ 
               fontSize: '0.85rem',
               marginTop: '0.25rem',
               opacity: '0.9'
             }}>
-              No usage limits • Premium formats available
+              100% client-side processing • Your files stay private
             </div>
           </div>
         </div>
