@@ -456,7 +456,33 @@ export default function Home() {
                   color: '#6b7280'
                 }}>
                   <span style={{ color: '#059669', fontWeight: '600', minWidth: '20px' }}>4.</span>
-                  <span>Continue using VeriDiff with full access while we build features you've influenced</span            
+                  <span>Continue using VeriDiff with full access while we build features you've influenced</span>
+               </li>
+             </ul>
+
+             <div style={{
+                marginTop: '2rem',
+                padding: '1.5rem',
+                background: '#f8fafc',
+                borderRadius: '0.5rem',
+                border: '1px solid #e5e7eb'
+              }}>
+                <p style={{
+                  margin: 0,
+                  fontSize: '0.9rem',
+                  color: '#6b7280',
+                  lineHeight: '1.5'
+                }}>
+                  <strong style={{ color: '#1f2937' }}>Program ends:</strong> July 11th, 2025<br/>
+                  <strong style={{ color: '#1f2937' }}>Commitment:</strong> Use the tool for real work, share honest feedback<br/>
+                  <strong style={{ color: '#1f2937' }}>Time investment:</strong> Whatever you're comfortable with - no minimums
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>              
+
+                  
         <FeatureSection />          
         <FeatureSection />
         
