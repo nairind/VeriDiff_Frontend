@@ -304,6 +304,75 @@ export default function Home() {
             </div>
           </div>
         </section>        
+
+        {/* How Your Feedback Shapes Development */}
+        <section style={{
+          padding: '4rem 0',
+          background: 'white'
+        }}>
+          <div style={{
+            maxWidth: '800px',
+            margin: '0 auto',
+            padding: '0 20px',
+            textAlign: 'center'
+          }}>
+            <h2 style={{
+              fontSize: '2.5rem',
+              fontWeight: '700',
+              marginBottom: '2rem',
+              color: '#1f2937'
+            }}>
+              How Your Feedback Shapes Development
+            </h2>
+            
+            <p style={{
+              fontSize: '1.2rem',
+              color: '#6b7280',
+              lineHeight: '1.7',
+              marginBottom: '2rem'
+            }}>
+              This isn't traditional beta testing. We're building VeriDiff's roadmap based on real professional needs. 
+              Your feedback directly influences which features we prioritize and how we implement them.
+            </p>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '2rem',
+              marginTop: '3rem'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🎯</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.5rem' }}>
+                  Feature Requests
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#6b7280', lineHeight: '1.5' }}>
+                  Your workflow needs become our development priorities
+                </p>
+              </div>
+              
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔧</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.5rem' }}>
+                  Usability Improvements
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#6b7280', lineHeight: '1.5' }}>
+                  Interface refinements based on professional usage patterns
+                </p>
+              </div>
+              
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⚡</div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.5rem' }}>
+                  Performance Optimization
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#6b7280', lineHeight: '1.5' }}>
+                  Speed and accuracy improvements for your specific file types
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>          
         <FeatureSection />          
         <FeatureSection />
         
