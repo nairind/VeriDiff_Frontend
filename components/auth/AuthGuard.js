@@ -1,7 +1,7 @@
-// components/AuthGuard.js - Updated to use modal instead of redirect
+// components/auth/AuthGuard.js - Updated to use modal instead of redirect
 import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
-import AuthModal from './AuthModal'
+import AuthModal from '../AuthModal'
 
 export default function AuthGuard({ children }) {
   const { data: session, status } = useSession()
