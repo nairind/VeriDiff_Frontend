@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Header from '../components/layout/Header';
@@ -6,14 +6,52 @@ import Footer from '../components/layout/Footer';
 import UploadZone from '../components/UploadZone';
 import FeatureSection from '../components/FeatureSection';
 import PricingSection from '../components/PricingSection';
+import AuthModal from '../components/AuthModal';
 
 export default function Home() {
   const router = useRouter();
 
+  // Modal state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState('signup');
+  
+  // Cookie consent state
+  const [showCookieBanner, setShowCookieBanner] = useState(false);
+
   useEffect(() => {
     // Simple analytics - just console log for now
     console.log('Page view: home');
+    
+    // Check cookie consent
+    checkCookieConsent();
   }, []);
+
+  const checkCookieConsent = () => {
+    const consent = localStorage.getItem('veridiff_cookie_consent');
+    if (!consent) {
+      setShowCookieBanner(true);
+    }
+  };
+
+  const handleCookieAccept = () => {
+    localStorage.setItem('veridiff_cookie_consent', 'accepted');
+    setShowCookieBanner(false);
+  };
+
+  // Modal handlers
+  const handleSignUp = () => {
+    setAuthMode('signup');
+    setShowAuthModal(true);
+  };
+
+  const handleSignIn = () => {
+    setAuthMode('signin');
+    setShowAuthModal(true);
+  };
+
+  const handleAuthModalClose = () => {
+    setShowAuthModal(false);
+  };
 
   // File type detection helper
   const getFileType = (fileName) => {
@@ -125,7 +163,7 @@ export default function Home() {
     </p>
   </div>
 </div>    
-        <Header />
+        <Header onSignIn={handleSignIn} onSignUp={handleSignUp} />
 
         {/* Trust Banner */}
         <div style={{
@@ -619,6 +657,68 @@ export default function Home() {
       <FeatureSection />
      
         <Footer />
+
+        {/* Cookie Consent Banner */}
+        {showCookieBanner && (
+          <div style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: 'white',
+            borderTop: '1px solid #e5e7eb',
+            padding: '1rem',
+            zIndex: 2000,
+            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{
+              maxWidth: '1200px',
+              margin: '0 auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ flex: 1, minWidth: '300px' }}>
+                <p style={{
+                  margin: 0,
+                  fontSize: '0.9rem',
+                  color: '#374151',
+                  lineHeight: '1.4'
+                }}>
+                  Data privacy is important to us, we only collect minimum required as default. No tracking, no ads, forever. 
+                  <a href="/cookies" style={{ color: '#2563eb', textDecoration: 'underline', marginLeft: '0.5rem' }}>
+                    Show the cookie policy
+                  </a>
+                </p>
+              </div>
+              <button
+                onClick={handleCookieAccept}
+                style={{
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Accept
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Auth Modal */}
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={handleAuthModalClose}
+          initialMode={authMode}
+        />
       </div>
     </>
   );
