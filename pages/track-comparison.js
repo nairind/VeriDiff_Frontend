@@ -284,7 +284,7 @@ export default function TrackComparison() {
         background: '#f8fafc'
       }}>
         
-        <Header />
+        <Header onSignIn={handleSignIn} onSignUp={handleSignUp} />
 
         {/* Auth Modal */}
         <AuthModal 
