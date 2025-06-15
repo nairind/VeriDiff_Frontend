@@ -1,11 +1,9 @@
 // /components/ExportSection.js
 import React from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
 
-const ExportSection = ({ onDownloadExcel, onDownloadCSV, onDownloadHTMLDiff }) => {
+const ExportSection = ({ onDownloadExcel, onDownloadCSV, onDownloadHTMLDiff, onSignIn = () => {} }) => {
   const { data: session, status } = useSession();
-  const router = useRouter();
 
   // If not authenticated, show auth prompt
   if (status === 'unauthenticated') {
@@ -35,7 +33,7 @@ const ExportSection = ({ onDownloadExcel, onDownloadCSV, onDownloadHTMLDiff }) =
         </p>
         
         <button
-          onClick={() => router.push('/auth/signin')}
+          onClick={onSignIn}
           style={{
             background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
             color: 'white',
