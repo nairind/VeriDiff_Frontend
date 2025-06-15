@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 
-const Header = () => {
+const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
   const { data: session } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Navigation handlers
   const handleSignIn = () => {
-    window.location.href = '/api/auth/signin';
+    onSignIn();
   };
 
   const handleSignOut = () => {
