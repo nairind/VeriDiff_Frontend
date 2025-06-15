@@ -2,10 +2,10 @@
 import React from 'react';
 import { useSession } from 'next-auth/react';
 
-const ExportSection = ({ onDownloadExcel, onDownloadCSV, onDownloadHTMLDiff, onSignIn = () => {} }) => {
+const ExportSection = ({ onDownloadExcel, onDownloadCSV, onDownloadHTMLDiff }) => {
   const { data: session, status } = useSession();
 
-  // If not authenticated, show auth prompt
+  // If not authenticated, show message to sign in from header
   if (status === 'unauthenticated') {
     return (
       <div style={{
@@ -26,37 +26,27 @@ const ExportSection = ({ onDownloadExcel, onDownloadCSV, onDownloadHTMLDiff, onS
         </h3>
         <p style={{
           color: '#6b7280',
-          marginBottom: '25px',
-          fontSize: '1rem'
+          marginBottom: '20px',
+          fontSize: '1rem',
+          lineHeight: '1.6'
         }}>
-          Sign in to download detailed comparison results with all analysis data and advanced formatting
+          Sign in from the header above to download detailed comparison results with all analysis data and advanced formatting
         </p>
         
-        <button
-          onClick={onSignIn}
-          style={{
-            background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-            color: 'white',
-            border: 'none',
-            padding: '16px 32px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontWeight: '600',
-            fontSize: '1.1rem',
-            transition: 'all 0.3s ease',
-            minWidth: '180px',
-            boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
-          }}
-        >
-          🚀 Sign In to Export
-        </button>
-        
         <div style={{
-          marginTop: '20px',
-          fontSize: '0.9rem',
-          color: '#6b7280'
+          background: '#f3f4f6',
+          borderRadius: '8px',
+          padding: '20px',
+          marginTop: '20px'
         }}>
-          <strong>Export Features:</strong> Excel Report • CSV Data • HTML Diff Report • Summary statistics • Side-by-side comparison • Color-coded differences
+          <div style={{
+            fontSize: '0.9rem',
+            color: '#6b7280',
+            lineHeight: '1.5'
+          }}>
+            <strong style={{ color: '#374151' }}>Export Features Available:</strong><br/>
+            Excel Report • CSV Data • HTML Diff Report • Summary statistics • Side-by-side comparison • Color-coded differences
+          </div>
         </div>
       </div>
     );
