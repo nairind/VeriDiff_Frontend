@@ -17,14 +17,6 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
     setUserMenuOpen(false);
   };
 
-  const handleDashboard = () => {
-    window.location.href = '/dashboard';
-  };
-
-  const handleAccountSettings = () => {
-    window.location.href = '/account';
-  };
-
   const handleTryDemo = () => {
     window.location.href = '/compare';
   };
@@ -204,34 +196,6 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
                         </div>
                       </div>
                       <div style={{ padding: '0.5rem' }}>
-                        <button onClick={handleDashboard} style={{ 
-                          width: '100%',
-                          textAlign: 'left',
-                          display: 'block',
-                          padding: '0.5rem',
-                          color: '#374151',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          borderRadius: '0.25rem',
-                          transition: 'background 0.2s'
-                        }}>
-                          Dashboard
-                        </button>
-                        <button onClick={handleAccountSettings} style={{ 
-                          width: '100%',
-                          textAlign: 'left',
-                          display: 'block',
-                          padding: '0.5rem',
-                          color: '#374151',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          borderRadius: '0.25rem',
-                          transition: 'background 0.2s'
-                        }}>
-                          Account Settings
-                        </button>
                         <button onClick={handleSignOut} style={{ 
                           width: '100%',
                           textAlign: 'left',
@@ -303,14 +267,9 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
                   Contact
                 </button>
                 {session ? (
-                  <>
-                    <button onClick={handleDashboard} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                      Dashboard
-                    </button>
-                    <button onClick={handleSignOut} style={{ ...navButtonStyle, textAlign: 'left', color: '#dc2626' }}>
-                      Sign Out
-                    </button>
-                  </>
+                  <button onClick={handleSignOut} style={{ ...navButtonStyle, textAlign: 'left', color: '#dc2626' }}>
+                    Sign Out
+                  </button>
                 ) : (
                   <>
                     <button onClick={handleSignIn} style={{ ...navButtonStyle, textAlign: 'left' }}>
