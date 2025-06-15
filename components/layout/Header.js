@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 
-const Header = () => {
+const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
   const { data: session } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Navigation handlers
   const handleSignIn = () => {
-    window.location.href = '/api/auth/signin';
+    onSignIn();
   };
 
   const handleSignOut = () => {
@@ -27,6 +27,10 @@ const Header = () => {
 
   const handleTryDemo = () => {
     window.location.href = '/compare';
+  };
+
+  const handleContact = () => {
+    window.location.href = 'mailto:sales@veridiff.com';
   };
 
   const scrollToSection = (sectionId) => {
@@ -139,6 +143,9 @@ const Header = () => {
               <a href="/faq" style={navLinkStyle}>
                 FAQ
               </a>
+              <button onClick={handleContact} style={navButtonStyle}>
+                Contact
+              </button>
               
               {session ? (
                 <div style={{ position: 'relative' }}>
@@ -292,6 +299,9 @@ const Header = () => {
                 <a href="/faq" style={{ ...navLinkStyle, textAlign: 'left' }}>
                   FAQ
                 </a>
+                <button onClick={handleContact} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                  Contact
+                </button>
                 {session ? (
                   <>
                     <button onClick={handleDashboard} style={{ ...navButtonStyle, textAlign: 'left' }}>
