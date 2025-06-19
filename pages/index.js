@@ -59,6 +59,7 @@ export default function Home() {
     if (['xlsx', 'xls', 'xlsm'].includes(extension)) return 'excel';
     if (extension === 'csv') return 'csv';
     if (extension === 'pdf') return 'pdf';
+    if (['docx', 'doc'].includes(extension)) return 'word';
     return 'unknown';
   };
 
@@ -75,6 +76,10 @@ export default function Home() {
         console.log('📕 Routing to PDF comparison...');
         await router.push('/pdf-comparison');
         
+      } else if (file1Type === 'word' && file2Type === 'word') {
+        console.log('📝 Routing to Word comparison...');
+        await router.push('/word-comparison');
+        
       } else if (['excel', 'csv'].includes(file1Type) && ['excel', 'csv'].includes(file2Type)) {
         console.log('📊 Routing to Excel/CSV comparison...');
         await router.push('/excel-csv-comparison');
@@ -84,9 +89,11 @@ export default function Home() {
         let errorMessage = '';
         
         if (file1Type === 'unknown' || file2Type === 'unknown') {
-          errorMessage = 'Unsupported file type detected. Please upload PDF, Excel (.xlsx/.xls), or CSV files only.';
-        } else if ((file1Type === 'pdf' && file2Type !== 'pdf') || (file1Type !== 'pdf' && file2Type === 'pdf')) {
-          errorMessage = 'Cannot mix PDF with other file types. Please upload two PDF files or two data files (Excel/CSV).';
+          errorMessage = 'Unsupported file type detected. Please upload PDF, Word (.docx/.doc), Excel (.xlsx/.xls), or CSV files only.';
+        } else if ((file1Type === 'pdf' && file2Type !== 'pdf') || 
+                   (file1Type === 'word' && file2Type !== 'word') ||
+                   (file1Type !== 'pdf' && file1Type !== 'word' && (file2Type === 'pdf' || file2Type === 'word'))) {
+          errorMessage = 'Cannot mix file types. Please upload two files of the same type: PDF + PDF, Word + Word, or data files (Excel/CSV).';
         } else {
           errorMessage = `Unexpected file combination: ${file1Type} and ${file2Type}. Please contact support.`;
         }
@@ -247,7 +254,7 @@ export default function Home() {
                 marginTop: '1.5rem',
                 marginBottom: 0
               }}>
-                Supports: Excel ↔ Excel • CSV ↔ CSV • Excel ↔ CSV cross-format • PDF ↔ PDF
+                Supports: Excel ↔ Excel • CSV ↔ CSV • Excel ↔ CSV cross-format • PDF ↔ PDF • Word ↔ Word
               </p>
             </div>
           </div>
