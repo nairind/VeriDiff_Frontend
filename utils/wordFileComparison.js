@@ -16,17 +16,49 @@ const updateProgress = (stage, progress, message) => {
 const extractTextFromWord = async (fileBuffer, fileName) => {
   try {
     console.log(`📝 Extracting text from ${fileName}...`);
+    console.log(`📊 File buffer type: ${typeof fileBuffer}, length: ${fileBuffer?.byteLength || 'unknown'}`);
     
-    // Use mammoth to extract text with paragraph structure
-    const result = await mammoth.extractRawText(fileBuffer);
+    // Ensure we have a proper ArrayBuffer
+    let arrayBuffer;
+    if (fileBuffer instanceof ArrayBuffer) {
+      arrayBuffer = fileBuffer;
+    } else if (fileBuffer.buffer instanceof ArrayBuffer) {
+      arrayBuffer = fileBuffer.buffer;
+    } else {
+      throw new Error(`Invalid file buffer format for ${fileName}. Expected ArrayBuffer.`);
+    }
+    
+    console.log(`📊 ArrayBuffer size: ${arrayBuffer.byteLength} bytes`);
+    
+    // Use mammoth to extract text with proper options
+    console.log(`🔍 Calling mammoth.extractRawText for ${fileName}...`);
+    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
     const text = result.text;
     
+    if (!text || text.trim().length === 0) {
+      throw new Error(`No text content found in ${fileName}. The document may be empty or corrupted.`);
+    }
+    
+    console.log(`📝 Extracted text length: ${text.length} characters`);
+    
     // Also get HTML for better structure detection
-    const htmlResult = await mammoth.convertToHtml(fileBuffer);
+    console.log(`🔍 Calling mammoth.convertToHtml for ${fileName}...`);
+    const htmlResult = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
     const html = htmlResult.value;
     
     // Parse into paragraphs (split by double newlines and filter empty)
     const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    
+    // If no paragraphs found through splitting, try splitting by single newlines
+    if (paragraphs.length === 0) {
+      const singleLineParagraphs = text.split(/\n/).filter(p => p.trim().length > 0);
+      paragraphs.push(...singleLineParagraphs);
+    }
+    
+    // If still no paragraphs, treat the entire text as one paragraph
+    if (paragraphs.length === 0 && text.trim().length > 0) {
+      paragraphs.push(text.trim());
+    }
     
     // Extract metadata from HTML structure
     const wordCount = text.split(/\s+/).filter(word => word.length > 0).length;
@@ -39,7 +71,7 @@ const extractTextFromWord = async (fileBuffer, fileName) => {
       paragraphs: paragraphs.map((paragraph, index) => ({
         index: index,
         text: paragraph.trim(),
-        word_count: paragraph.trim().split(/\s+/).length
+        word_count: paragraph.trim().split(/\s+/).filter(word => word.length > 0).length
       })),
       metadata: {
         totalWords: wordCount,
@@ -51,7 +83,15 @@ const extractTextFromWord = async (fileBuffer, fileName) => {
     
   } catch (error) {
     console.error(`❌ Error extracting from ${fileName}:`, error);
-    throw new Error(`Failed to extract text from ${fileName}: ${error.message}`);
+    
+    // Provide more specific error messages
+    if (error.message.includes('zip')) {
+      throw new Error(`Failed to extract text from ${fileName}: Document appears corrupted or is not a valid Word document. Please ensure the file is a proper .docx or .doc file.`);
+    } else if (error.message.includes('arrayBuffer')) {
+      throw new Error(`Failed to extract text from ${fileName}: File data format error. Please try re-uploading the document.`);
+    } else {
+      throw new Error(`Failed to extract text from ${fileName}: ${error.message}`);
+    }
   }
 };
 
@@ -59,8 +99,11 @@ const calculateTextSimilarity = (text1, text2) => {
   if (!text1 || !text2) return 0;
   
   // Simple similarity calculation
-  const words1 = text1.toLowerCase().split(/\s+/);
-  const words2 = text2.toLowerCase().split(/\s+/);
+  const words1 = text1.toLowerCase().split(/\s+/).filter(word => word.length > 0);
+  const words2 = text2.toLowerCase().split(/\s+/).filter(word => word.length > 0);
+  
+  if (words1.length === 0 && words2.length === 0) return 100;
+  if (words1.length === 0 || words2.length === 0) return 0;
   
   const set1 = new Set(words1);
   const set2 = new Set(words2);
@@ -172,7 +215,19 @@ export const compareWordFiles = async (file1Buffer, file2Buffer, options = {}) =
   
   try {
     console.log('🚀 Starting Word document comparison...');
+    console.log('📊 Input buffer details:', {
+      file1Type: typeof file1Buffer,
+      file2Type: typeof file2Buffer,
+      file1Size: file1Buffer?.byteLength || 'unknown',
+      file2Size: file2Buffer?.byteLength || 'unknown'
+    });
+    
     updateProgress('Initialization', 5, 'Starting Word document analysis...');
+    
+    // Validate input buffers
+    if (!file1Buffer || !file2Buffer) {
+      throw new Error('Invalid file data: Both documents must be provided');
+    }
     
     // Extract text and structure from both documents
     updateProgress('Text Extraction', 20, 'Extracting text from first document...');
@@ -180,6 +235,11 @@ export const compareWordFiles = async (file1Buffer, file2Buffer, options = {}) =
     
     updateProgress('Text Extraction', 40, 'Extracting text from second document...');
     const doc2 = await extractTextFromWord(file2Buffer, 'Document 2');
+    
+    // Validate extraction results
+    if (!doc1.text || !doc2.text) {
+      throw new Error('Text extraction failed: One or both documents appear to be empty or corrupted');
+    }
     
     updateProgress('Analysis', 60, 'Comparing document structures...');
     
@@ -291,13 +351,23 @@ export const compareWordFiles = async (file1Buffer, file2Buffer, options = {}) =
     console.log('✅ Word comparison completed:', {
       similarity: results.similarity_score,
       changes: results.differences_found,
-      processingTime: processingTime
+      processingTime: processingTime,
+      doc1Paragraphs: doc1.paragraphs.length,
+      doc2Paragraphs: doc2.paragraphs.length
     });
     
     return results;
     
   } catch (error) {
     console.error('❌ Word comparison failed:', error);
-    throw new Error(`Word document comparison failed: ${error.message}`);
+    
+    // Provide better error context
+    if (error.message.includes('mammoth')) {
+      throw new Error(`Word processing library error: ${error.message}. Please ensure you're uploading valid Word documents (.docx/.doc files).`);
+    } else if (error.message.includes('memory') || error.message.includes('buffer')) {
+      throw new Error(`Memory or file processing error: ${error.message}. Try using smaller files or refresh the page and try again.`);
+    } else {
+      throw new Error(`Word document comparison failed: ${error.message}`);
+    }
   }
 };
