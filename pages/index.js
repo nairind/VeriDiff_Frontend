@@ -65,11 +65,68 @@ export default function Home() {
 
   const handleFilesReady = async ({ file1, file2 }) => {
     try {
-      // Detect file types
+      // STEP 1: Log the raw file objects
+      console.log('🔍 Raw file objects received:');
+      console.log('File 1:', file1);
+      console.log('File 2:', file2);
+      
+      // STEP 2: Check file names specifically
+      console.log('📝 File names:');
+      console.log('File 1 name:', file1?.name);
+      console.log('File 2 name:', file2?.name);
+      console.log('File 1 name type:', typeof file1?.name);
+      console.log('File 2 name type:', typeof file2?.name);
+      
+      // STEP 3: Debug the extension extraction
+      if (file1?.name) {
+        const file1Parts = file1.name.split('.');
+        const file1Extension = file1Parts.pop()?.toLowerCase();
+        console.log('File 1 split parts:', file1Parts);
+        console.log('File 1 extension extracted:', file1Extension);
+        console.log('File 1 extension check docx:', file1Extension === 'docx');
+        console.log('File 1 extension check doc:', file1Extension === 'doc');
+        console.log('File 1 includes check:', ['docx', 'doc'].includes(file1Extension));
+      }
+      
+      if (file2?.name) {
+        const file2Parts = file2.name.split('.');
+        const file2Extension = file2Parts.pop()?.toLowerCase();
+        console.log('File 2 split parts:', file2Parts);
+        console.log('File 2 extension extracted:', file2Extension);
+        console.log('File 2 extension check docx:', file2Extension === 'docx');
+        console.log('File 2 extension check doc:', file2Extension === 'doc');
+        console.log('File 2 includes check:', ['docx', 'doc'].includes(file2Extension));
+      }
+      
+      // STEP 4: Test the getFileType function directly
+      console.log('🧪 Testing getFileType function:');
+      if (file1?.name) {
+        const file1Type = getFileType(file1.name);
+        console.log('File 1 detected type:', file1Type);
+      }
+      if (file2?.name) {
+        const file2Type = getFileType(file2.name);
+        console.log('File 2 detected type:', file2Type);
+      }
+      
+      // STEP 5: Test with known Word extensions
+      console.log('🧪 Testing getFileType with sample filenames:');
+      console.log('test.docx ->', getFileType('test.docx'));
+      console.log('test.doc ->', getFileType('test.doc'));
+      console.log('test.DOCX ->', getFileType('test.DOCX'));
+      console.log('document.docx ->', getFileType('document.docx'));
+      
+      // Original detection logic with extra logging
       const file1Type = getFileType(file1.name);
       const file2Type = getFileType(file2.name);
       
-      console.log('🔍 File types detected:', { file1Type, file2Type });
+      console.log('🔍 Final file types detected:', { file1Type, file2Type });
+
+      // STEP 6: Check routing conditions
+      console.log('🚦 Routing condition checks:');
+      console.log('Both PDF?', file1Type === 'pdf' && file2Type === 'pdf');
+      console.log('Both Word?', file1Type === 'word' && file2Type === 'word');
+      console.log('Both Excel/CSV?', ['excel', 'csv'].includes(file1Type) && ['excel', 'csv'].includes(file2Type));
 
       // Route based on file type combination
       if (file1Type === 'pdf' && file2Type === 'pdf') {
@@ -78,7 +135,16 @@ export default function Home() {
         
       } else if (file1Type === 'word' && file2Type === 'word') {
         console.log('📝 Routing to Word comparison...');
-        await router.push('/word-comparison');
+        console.log('About to navigate to /word-comparison');
+        
+        // STEP 7: Test if the route exists
+        try {
+          await router.push('/word-comparison');
+          console.log('✅ Successfully routed to /word-comparison');
+        } catch (routeError) {
+          console.error('❌ Route error:', routeError);
+          alert('Routing to Word comparison failed. Check if /word-comparison route exists.');
+        }
         
       } else if (['excel', 'csv'].includes(file1Type) && ['excel', 'csv'].includes(file2Type)) {
         console.log('📊 Routing to Excel/CSV comparison...');
@@ -99,6 +165,7 @@ export default function Home() {
         }
         
         console.error('❌ Invalid file combination:', { file1Type, file2Type });
+        console.error('Error message:', errorMessage);
         alert(errorMessage);
       }
       
