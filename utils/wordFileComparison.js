@@ -1,4 +1,4 @@
-// /utils/wordFileComparison.js - ENHANCED WORD COMPARISON ENGINE WITH SEMANTIC DIFF
+    // /utils/wordFileComparison.js - ENHANCED WORD COMPARISON ENGINE WITH SEMANTIC DIFF
 import * as mammoth from 'mammoth';
 
 let progressCallback = null;
@@ -11,6 +11,34 @@ const updateProgress = (stage, progress, message) => {
   if (progressCallback) {
     progressCallback({ stage, progress, message, isActive: true });
   }
+};
+
+// TEXT SIMILARITY CALCULATION - MISSING FUNCTION
+const calculateTextSimilarity = (text1, text2) => {
+  if (!text1 || !text2) return 0;
+  if (text1 === text2) return 100;
+  
+  // Simple word-based similarity calculation
+  const words1 = text1.toLowerCase().split(/\s+/).filter(word => word.length > 0);
+  const words2 = text2.toLowerCase().split(/\s+/).filter(word => word.length > 0);
+  
+  if (words1.length === 0 && words2.length === 0) return 100;
+  if (words1.length === 0 || words2.length === 0) return 0;
+  
+  // Jaccard similarity: intersection / union
+  const set1 = new Set(words1);
+  const set2 = new Set(words2);
+  
+  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  const union = new Set([...set1, ...set2]);
+  
+  const jaccardSimilarity = union.size > 0 ? (intersection.size / union.size) * 100 : 0;
+  
+  // Also consider length similarity
+  const lengthSimilarity = 100 - Math.abs(words1.length - words2.length) / Math.max(words1.length, words2.length) * 100;
+  
+  // Combined similarity (weighted average)
+  return Math.round((jaccardSimilarity * 0.7 + lengthSimilarity * 0.3));
 };
 
 // Enhanced sentence and word tokenization
