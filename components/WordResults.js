@@ -318,54 +318,6 @@ const WordResults = ({ results, file1Name, file2Name, options, isAuthenticated, 
     </div>
   );
 
-  const renderMarginAnnotation = (change, position = 'right') => {
-    if (isMobile) return null;
-    
-    return (
-      <div style={{
-        position: 'absolute',
-        [position]: '-200px',
-        top: '0px',
-        width: '180px',
-        background: 'white',
-        border: '2px solid #e5e7eb',
-        borderRadius: '8px',
-        padding: '8px 12px',
-        fontSize: '0.8rem',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        zIndex: 10
-      }}>
-        <div style={{
-          fontWeight: '600',
-          color: getSeverityColor(change.severity),
-          marginBottom: '4px'
-        }}>
-          {change.annotation}
-        </div>
-        {change.semantic && (
-          <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
-            {change.semantic.category}
-            {change.semantic.metadata?.change && (
-              <div style={{ fontWeight: '600', color: '#374151' }}>
-                {typeof change.semantic.metadata.change === 'number' 
-                  ? (change.semantic.metadata.change > 0 ? '+' : '') + change.semantic.metadata.change
-                  : change.semantic.metadata.change
-                }
-              </div>
-            )}
-          </div>
-        )}
-        <div style={{
-          fontSize: '0.7rem',
-          color: '#9ca3af',
-          marginTop: '4px'
-        }}>
-          Change {change.displayIndex} • {change.severity}
-        </div>
-      </div>
-    );
-  };
-
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'high': return '#dc2626';
@@ -530,51 +482,6 @@ const WordResults = ({ results, file1Name, file2Name, options, isAuthenticated, 
     );
     
     return <span dangerouslySetInnerHTML={{ __html: highlightedText }} />;
-  };
-
-  const renderWordDiff = (wordDiff) => {
-    if (!wordDiff || !Array.isArray(wordDiff)) return null;
-    
-    return (
-      <div style={{ lineHeight: '1.8', fontSize: '1rem' }}>
-        {wordDiff.map((word, index) => {
-          let style = {};
-          
-          switch (word.type) {
-            case 'added':
-              style = {
-                background: '#dcfce7',
-                color: '#166534',
-                border: '1px solid #bbf7d0',
-                borderRadius: '3px',
-                padding: '2px 4px',
-                fontWeight: '600'
-              };
-              break;
-            case 'removed':
-              style = {
-                background: '#fee2e2',
-                color: '#dc2626',
-                border: '1px solid #fecaca',
-                borderRadius: '3px',
-                padding: '2px 4px',
-                textDecoration: 'line-through',
-                fontWeight: '600'
-              };
-              break;
-            case 'unchanged':
-              style = { color: '#374151' };
-              break;
-          }
-          
-          return (
-            <span key={index} style={style}>
-              {word.text}
-            </span>
-          );
-        })}
-      </div>
-    );
   };
 
   // NEW: Unified diff view (like GitHub)
@@ -902,9 +809,6 @@ const WordResults = ({ results, file1Name, file2Name, options, isAuthenticated, 
           ...(isMobile ? {} : { marginRight: '200px' })
         }}
       >
-        {/* Margin annotation for desktop */}
-        {!isMobile && renderMarginAnnotation(change)}
-        
         {/* Mobile annotation */}
         {isMobile && (
           <div style={{
@@ -1309,7 +1213,7 @@ const WordResults = ({ results, file1Name, file2Name, options, isAuthenticated, 
                   borderRadius: '12px',
                   fontWeight: '500'
                 }}>
-                  {viewMode.replace('-', ' ').replace(/^\w/, c => c.toUpperCase())}
+                  🎨 Color Highlighting
                 </span>
               </h3>
               
@@ -1349,7 +1253,7 @@ const WordResults = ({ results, file1Name, file2Name, options, isAuthenticated, 
               fontSize: '0.85rem'
             }}>
               <p>
-                Analysis completed with {Math.round((results.quality_metrics?.semantic_analysis_coverage || 0) * 100)}% semantic coverage
+                🎨 Analysis completed with {Math.round((results.quality_metrics?.semantic_analysis_coverage || 0) * 100)}% semantic coverage and color highlighting
               </p>
               <p style={{ marginTop: '5px' }}>
                 Processing time: {results.processing_time?.total_time_ms || 0}ms
@@ -1386,7 +1290,7 @@ const WordResults = ({ results, file1Name, file2Name, options, isAuthenticated, 
             color: '#6b7280',
             lineHeight: '1.4'
           }}>
-            Get unlimited comparisons, export reports, and advanced semantic analysis
+            Get unlimited comparisons, export reports with color highlighting, and advanced semantic analysis
           </p>
           <div style={{
             display: 'flex',
