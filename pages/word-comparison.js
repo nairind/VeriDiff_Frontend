@@ -1,4 +1,4 @@
-// /pages/word-comparison.js - ENHANCED WORD DOCUMENT COMPARISON SETUP PAGE - FIXED
+// /pages/word-comparison.js - COMPLETE ENHANCED WORD DOCUMENT COMPARISON SETUP PAGE - FINAL VERSION
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -172,7 +172,7 @@ export default function EnhancedWordComparison() {
             How was your Enhanced Word Analysis?
           </h2>
           <p style="color: #6b7280; line-height: 1.6; font-size: 1.05rem;">
-            You've completed ${currentCount} enhanced comparisons! Help us perfect our semantic analysis technology.
+            You've completed ${currentCount} enhanced comparisons! Help us perfect our semantic analysis and color highlighting technology.
           </p>
         </div>
 
@@ -206,11 +206,11 @@ export default function EnhancedWordComparison() {
             color: #374151;
             margin-bottom: 12px;
           ">
-            Feedback on semantic analysis features: (Optional)
+            Feedback on enhanced features: (Optional)
           </label>
           <textarea
             id="enhanced-word-feedback-comments"
-            placeholder="How did the word-level changes, financial/data detection, and section analysis work for you?"
+            placeholder="How did the color highlighting, word-level changes, financial/data detection, and view modes work for you?"
             style="
               width: 100%;
               min-height: 100px;
@@ -302,13 +302,13 @@ export default function EnhancedWordComparison() {
             feedback_text: feedbackText,
             comparisonCount: wordCount,
             email: null,
-            selected_reasons: ['enhanced_semantic_analysis'],
-            enhancement_type: 'word_semantic_comparison'
+            selected_reasons: ['enhanced_semantic_analysis', 'color_highlighting', 'multiple_view_modes'],
+            enhancement_type: 'word_semantic_comparison_with_highlighting'
           })
         });
 
         if (response.ok) {
-          alert('Thank you for your enhanced Word analysis feedback! This helps us improve our semantic comparison technology. 🚀');
+          alert('Thank you for your enhanced Word analysis feedback! This helps us improve our semantic comparison and color highlighting technology. 🚀');
         } else {
           alert('Thank you for your feedback! (Note: There was an issue saving to our system, but we appreciate your input)');
         }
@@ -349,7 +349,7 @@ export default function EnhancedWordComparison() {
       setProcessingProgress({
         stage: 'Enhanced Initialization',
         progress: 0,
-        message: 'Preparing enhanced Word document comparison with semantic analysis...',
+        message: 'Preparing enhanced Word document comparison with semantic analysis and color highlighting...',
         isActive: true
       });
 
@@ -363,7 +363,8 @@ export default function EnhancedWordComparison() {
         file2DataExists: !!file2Data,
         file1DataLength: file1Data?.length || 0,
         file2DataLength: file2Data?.length || 0,
-        enhancedMode: enhancedWordOptions.semanticAnalysis
+        enhancedMode: enhancedWordOptions.semanticAnalysis,
+        colorHighlighting: enhancedWordOptions.wordLevelDiff
       });
 
       if (!file1Data || !file2Data) {
@@ -385,7 +386,7 @@ export default function EnhancedWordComparison() {
       setProcessingProgress({
         stage: 'Enhanced File Preparation',
         progress: 8,
-        message: 'Converting files for enhanced semantic analysis...',
+        message: 'Converting files for enhanced semantic analysis with color highlighting...',
         isActive: true
       });
 
@@ -438,7 +439,7 @@ export default function EnhancedWordComparison() {
       setProcessingProgress({
         stage: 'Enhanced Text Extraction',
         progress: 25,
-        message: 'Extracting text with enhanced structure analysis...',
+        message: 'Extracting text with enhanced structure analysis and color preparation...',
         isActive: true
       });
 
@@ -456,7 +457,7 @@ export default function EnhancedWordComparison() {
       }
 
       // Start the enhanced comparison process
-      console.log('⚙️ Starting enhanced Word comparison engine with semantic analysis...');
+      console.log('⚙️ Starting enhanced Word comparison engine with semantic analysis and color highlighting...');
       
       const enhancedComparisonResults = await compareWordFiles(
         file1Binary.buffer, 
@@ -469,12 +470,13 @@ export default function EnhancedWordComparison() {
         similarityScore: enhancedComparisonResults.similarity_score,
         enhancedChanges: enhancedComparisonResults.enhanced_changes?.length || 0,
         semanticBreakdown: enhancedComparisonResults.change_statistics?.semantic_breakdown,
-        processingMethod: enhancedComparisonResults.comparison_method
+        processingMethod: enhancedComparisonResults.comparison_method,
+        hasWordDiffs: enhancedComparisonResults.enhanced_changes?.some(c => c.wordDiff) || false
       });
 
       // Store enhanced results
       sessionStorage.setItem('veridiff_word_results', JSON.stringify(enhancedComparisonResults));
-      sessionStorage.setItem('veridiff_comparison_type', 'enhanced_word');
+      sessionStorage.setItem('veridiff_comparison_type', 'enhanced_word_with_highlighting');
       sessionStorage.setItem('veridiff_word_options', JSON.stringify(enhancedWordOptions));
 
       // Enhanced Word feedback system
@@ -495,7 +497,7 @@ export default function EnhancedWordComparison() {
       setProcessingProgress({
         stage: 'Enhanced Complete',
         progress: 100,
-        message: 'Enhanced semantic comparison completed! Redirecting to results...',
+        message: 'Enhanced semantic comparison with color highlighting completed! Redirecting to results...',
         isActive: false
       });
 
@@ -556,9 +558,10 @@ export default function EnhancedWordComparison() {
           <ul style={{ margin: '0 0 20px 20px', padding: 0 }}>
             <li>Estimated processing time: <strong>{estimatedTime} - {estimatedTime * 2} minutes</strong></li>
             <li>Advanced semantic analysis for financial, numerical, and qualitative changes</li>
-            <li>Word-level diff with intelligent change classification</li>
-            <li>Section detection and margin annotations</li>
-            <li>Professional-grade comparison results</li>
+            <li>Word-level diff with intelligent color highlighting</li>
+            <li>Section detection and professional margin annotations</li>
+            <li>Multiple view modes (Unified, Track Changes, Side-by-Side)</li>
+            <li>Professional-grade comparison results with export functionality</li>
           </ul>
           
           <div style={{ marginBottom: '15px' }}>
@@ -640,7 +643,7 @@ export default function EnhancedWordComparison() {
             border: '1px solid #a7f3d0'
           }}>
             🧠 <strong>Enhanced Large Document Processing:</strong> Please keep this tab active. 
-            Large Word documents with semantic analysis may take several minutes to process completely.
+            Large Word documents with semantic analysis and color highlighting may take several minutes to process completely.
           </div>
         )}
       </div>
@@ -675,7 +678,7 @@ export default function EnhancedWordComparison() {
             borderRadius: '12px',
             fontWeight: '600'
           }}>
-            SEMANTIC AI
+            SEMANTIC AI + COLOR HIGHLIGHTING
           </span>
         </h3>
 
@@ -729,7 +732,7 @@ export default function EnhancedWordComparison() {
               margin: '0 0 0 35px',
               lineHeight: '1.5'
             }}>
-              Automatically detect and classify financial amounts, percentages, dates, and qualitative changes with intelligent annotations.
+              Automatically detect and classify financial amounts, percentages, dates, and qualitative changes with intelligent annotations and smart color highlighting.
             </p>
           </div>
 
@@ -753,7 +756,16 @@ export default function EnhancedWordComparison() {
                 }))}
                 style={{ transform: 'scale(1.3)' }}
               />
-              📝 Word-Level Precision
+              🎨 Word-Level Color Highlighting
+              <span style={{
+                background: '#6366f1',
+                color: 'white',
+                fontSize: '0.7rem',
+                padding: '2px 6px',
+                borderRadius: '8px'
+              }}>
+                NEW
+              </span>
             </label>
             <p style={{
               fontSize: '0.9rem',
@@ -761,7 +773,7 @@ export default function EnhancedWordComparison() {
               margin: '0 0 0 35px',
               lineHeight: '1.5'
             }}>
-              Highlight exact word changes instead of showing entire paragraphs as modified. Perfect for tracking specific edits.
+              Highlight exact word changes with beautiful color gradients. Financial amounts get gold highlighting, percentages get purple, and text changes get red/green.
             </p>
           </div>
 
@@ -793,7 +805,7 @@ export default function EnhancedWordComparison() {
               margin: '0 0 0 35px',
               lineHeight: '1.5'
             }}>
-              Automatically identify document sections, headers, and organizational structure for better change navigation.
+              Automatically identify document sections, headers, and organizational structure for better change navigation and professional presentation.
             </p>
           </div>
 
@@ -825,12 +837,12 @@ export default function EnhancedWordComparison() {
               margin: '0 0 0 35px',
               lineHeight: '1.5'
             }}>
-              Focus on content changes rather than formatting like bold, italic, fonts, or colors.
+              Focus on content changes rather than formatting like bold, italic, fonts, or colors. Perfect for content-focused reviews.
             </p>
           </div>
         </div>
 
-        {/* Enhanced Document Information */}
+        {/* Enhanced Feature Preview */}
         <div style={{
           background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
           padding: '20px',
@@ -842,15 +854,29 @@ export default function EnhancedWordComparison() {
             fontSize: '1.1rem',
             fontWeight: '700',
             marginBottom: '15px',
-            color: '#1f2937'
+            color: '#1f2937',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}>
-            📊 Enhanced Analysis Preview
+            🎨 Enhanced Features Preview
+            <span style={{
+              background: '#22c55e',
+              color: 'white',
+              fontSize: '0.7rem',
+              padding: '2px 6px',
+              borderRadius: '8px'
+            }}>
+              PREMIUM
+            </span>
           </h4>
+          
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '20px',
-            fontSize: '0.95rem'
+            fontSize: '0.95rem',
+            marginBottom: '15px'
           }}>
             <div>
               <strong>File 1:</strong> {fileInfo.file1?.name}
@@ -875,7 +901,7 @@ export default function EnhancedWordComparison() {
           </div>
           
           <div style={{
-            marginTop: '15px',
+            marginBottom: '15px',
             padding: '12px',
             background: '#ecfdf5',
             borderRadius: '8px',
@@ -883,14 +909,25 @@ export default function EnhancedWordComparison() {
             color: '#047857',
             border: '1px solid #a7f3d0'
           }}>
-            🧠 <strong>Enhanced Features Active:</strong> {
+            🎨 <strong>Enhanced Features Active:</strong> {
               [
                 enhancedWordOptions.semanticAnalysis && 'Semantic AI Analysis',
-                enhancedWordOptions.wordLevelDiff && 'Word-Level Precision',
+                enhancedWordOptions.wordLevelDiff && 'Color Highlighting',
                 enhancedWordOptions.sectionDetection && 'Section Detection',
                 enhancedWordOptions.changeClassification && 'Change Classification'
               ].filter(Boolean).join(' • ') || 'Basic Analysis'
             }
+          </div>
+
+          <div style={{
+            background: '#f0f9ff',
+            padding: '12px',
+            borderRadius: '8px',
+            fontSize: '0.9rem',
+            color: '#0369a1',
+            border: '1px solid #7dd3fc'
+          }}>
+            📊 <strong>View Modes Available:</strong> Unified Document View (GitHub-style) • Track Changes (Word-style) • Side-by-Side Comparison
           </div>
           
           {isLargeFile && (
@@ -903,7 +940,7 @@ export default function EnhancedWordComparison() {
               color: '#92400e',
               border: '1px solid #fbbf24'
             }}>
-              ⏱️ Large documents with enhanced analysis may take {estimatedTime}-{estimatedTime * 2} minutes.
+              ⏱️ Large documents with enhanced analysis and color highlighting may take {estimatedTime}-{estimatedTime * 2} minutes.
             </div>
           )}
         </div>
@@ -951,6 +988,17 @@ export default function EnhancedWordComparison() {
             </>
           )}
         </button>
+
+        {/* Feature highlight */}
+        <div style={{
+          marginTop: '20px',
+          textAlign: 'center',
+          fontSize: '0.85rem',
+          color: '#6b7280',
+          lineHeight: '1.5'
+        }}>
+          ✨ <strong>Enhanced with:</strong> AI Semantic Analysis • Color Highlighting • Multiple View Modes • Professional Export
+        </div>
       </div>
     );
   };
@@ -1019,8 +1067,8 @@ export default function EnhancedWordComparison() {
   return (
     <>
       <Head>
-        <title>Enhanced Word Document Comparison - VeriDiff</title>
-        <meta name="description" content="Configure your enhanced Word document comparison with semantic analysis and professional features" />
+        <title>Enhanced Word Document Comparison with Color Highlighting - VeriDiff</title>
+        <meta name="description" content="Configure your enhanced Word document comparison with semantic analysis, color highlighting, and professional features" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
       </Head>
       
@@ -1056,8 +1104,8 @@ export default function EnhancedWordComparison() {
               lineHeight: '1.6'
             }}>
               {isLargeFile
-                ? 'Professional semantic analysis for large Word documents with AI-powered change detection'
-                : 'Professional semantic analysis with word-level precision and intelligent change classification'
+                ? 'Professional semantic analysis for large Word documents with AI-powered change detection and beautiful color highlighting'
+                : 'Professional semantic analysis with word-level precision, intelligent change classification, and premium color highlighting'
               }
             </p>
           </div>
@@ -1082,8 +1130,8 @@ export default function EnhancedWordComparison() {
               </h3>
               <p style={{ color: '#6b7280', fontSize: '1.05rem' }}>
                 {isLargeFile 
-                  ? 'Initializing enhanced semantic analysis for large documents and optimizing system resources...'
-                  : 'Loading enhanced comparison engine with semantic analysis capabilities'
+                  ? 'Initializing enhanced semantic analysis for large documents with color highlighting and optimizing system resources...'
+                  : 'Loading enhanced comparison engine with semantic analysis capabilities and color highlighting'
                 }
               </p>
             </div>
