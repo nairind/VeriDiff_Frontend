@@ -1,4 +1,4 @@
-// /utils/wordFileComparison.js - COMPLETE ENHANCED WORD COMPARISON WITH ALL FIXES
+// /utils/wordFileComparison.js - COMPLETE ENHANCED WORD COMPARISON WITH ALL FIXES - FINAL VERSION
 // Progress callback for enhanced processing
 let progressCallback = null;
 
@@ -119,14 +119,14 @@ const paragraphsAreEqual = (para1, para2, options) => {
 };
 
 /**
- * FIXED: Find optimal paragraph alignment using similarity scoring
+ * OPTIMIZED: Find optimal paragraph alignment with better threshold
  */
 const findOptimalAlignment = (paragraphs1, paragraphs2) => {
   const alignments = [];
   const used1 = new Set();
   const used2 = new Set();
   
-  // Step 1: Find exact and near-exact matches
+  // Step 1: Find exact and near-exact matches with OPTIMIZED threshold
   for (let i = 0; i < paragraphs1.length; i++) {
     if (used1.has(i)) continue;
     
@@ -135,8 +135,9 @@ const findOptimalAlignment = (paragraphs1, paragraphs2) => {
       
       const similarity = calculateParagraphSimilarity(paragraphs1[i], paragraphs2[j]);
       
-      // High similarity = likely the same paragraph (possibly modified)
-      if (similarity > 0.6) {
+      // OPTIMIZED: Lower threshold for better document evolution detection
+      // 0.4 instead of 0.6 - better for business documents with content additions
+      if (similarity > 0.4) {
         alignments.push({
           type: 'match',
           para1: paragraphs1[i],
@@ -152,7 +153,36 @@ const findOptimalAlignment = (paragraphs1, paragraphs2) => {
     }
   }
   
-  // Step 2: Mark unmatched paragraphs as additions/deletions
+  // Step 2: For remaining unmatched, try looser matching for headers
+  for (let i = 0; i < paragraphs1.length; i++) {
+    if (used1.has(i)) continue;
+    
+    // Special handling for headers and short content
+    if (paragraphs1[i].isHeader || paragraphs1[i].wordCount <= 5) {
+      for (let j = 0; j < paragraphs2.length; j++) {
+        if (used2.has(j)) continue;
+        
+        const similarity = calculateParagraphSimilarity(paragraphs1[i], paragraphs2[j]);
+        
+        // Even looser threshold for headers/short content
+        if (similarity > 0.25) {
+          alignments.push({
+            type: 'match',
+            para1: paragraphs1[i],
+            para2: paragraphs2[j],
+            index1: i,
+            index2: j,
+            similarity
+          });
+          used1.add(i);
+          used2.add(j);
+          break;
+        }
+      }
+    }
+  }
+  
+  // Step 3: Mark remaining unmatched paragraphs as additions/deletions
   for (let i = 0; i < paragraphs1.length; i++) {
     if (!used1.has(i)) {
       alignments.push({
@@ -177,14 +207,14 @@ const findOptimalAlignment = (paragraphs1, paragraphs2) => {
     }
   }
   
-  // Step 3: Sort by document order
+  // Step 4: Sort by document order
   alignments.sort((a, b) => {
     const orderA = a.index2 >= 0 ? a.index2 : (a.index1 + 1000);
     const orderB = b.index2 >= 0 ? b.index2 : (b.index1 + 1000);
     return orderA - orderB;
   });
   
-  console.log('📊 Optimal alignment results:', {
+  console.log('📊 Optimized alignment results:', {
     totalAlignments: alignments.length,
     matches: alignments.filter(a => a.type === 'match').length,
     additions: alignments.filter(a => a.type === 'addition').length,
