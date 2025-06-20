@@ -1,4 +1,4 @@
-// /pages/word-comparison.js - ENHANCED WORD DOCUMENT COMPARISON SETUP PAGE
+// /pages/word-comparison.js - ENHANCED WORD DOCUMENT COMPARISON SETUP PAGE - FIXED
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -36,25 +36,54 @@ export default function EnhancedWordComparison() {
     loadFileData();
     
     // Set up enhanced progress callback for Word processing
-    setProgressCallback((progressData) => {
-      setProcessingProgress({
-        ...progressData,
-        isActive: true
-      });
-    });
+    try {
+      console.log('🔧 Setting up enhanced progress callback...');
+      
+      if (typeof setProgressCallback === 'function') {
+        setProgressCallback((progressData) => {
+          console.log('📊 Enhanced progress update:', progressData);
+          setProcessingProgress({
+            ...progressData,
+            isActive: true
+          });
+        });
+        console.log('✅ Enhanced progress callback set successfully');
+      } else {
+        console.error('❌ setProgressCallback is not a function:', typeof setProgressCallback);
+      }
+    } catch (callbackError) {
+      console.error('❌ Error setting progress callback:', callbackError);
+    }
 
     // Cleanup progress callback on unmount
     return () => {
-      setProgressCallback(null);
+      try {
+        if (typeof setProgressCallback === 'function') {
+          setProgressCallback(null);
+          console.log('🧹 Enhanced progress callback cleaned up');
+        }
+      } catch (cleanupError) {
+        console.warn('⚠️ Error cleaning up progress callback:', cleanupError);
+      }
     };
   }, []);
 
   const loadFileData = async () => {
     try {
+      console.log('📁 Loading enhanced Word file data...');
+      
       const file1Info = JSON.parse(sessionStorage.getItem('veridiff_file1_info') || 'null');
       const file2Info = JSON.parse(sessionStorage.getItem('veridiff_file2_info') || 'null');
 
+      console.log('📊 File info loaded:', {
+        file1: file1Info?.name,
+        file2: file2Info?.name,
+        file1Size: file1Info?.size,
+        file2Size: file2Info?.size
+      });
+
       if (!file1Info || !file2Info) {
+        console.warn('⚠️ File info not found, redirecting to home...');
         router.push('/');
         return;
       }
@@ -78,6 +107,12 @@ export default function EnhancedWordComparison() {
       const isLarge = totalSize > 25 || file1Info.size > 15 * 1024 * 1024 || file2Info.size > 15 * 1024 * 1024;
       setIsLargeFile(isLarge);
 
+      console.log('📊 Enhanced file analysis:', {
+        totalSizeMB: totalSize.toFixed(1),
+        isLarge,
+        semanticAnalysis: enhancedWordOptions.semanticAnalysis
+      });
+
       if (isLarge) {
         // Enhanced estimation for semantic analysis
         const baseTime = Math.ceil(totalSize / 8); // Faster due to enhanced processing
@@ -86,9 +121,10 @@ export default function EnhancedWordComparison() {
       }
 
       setIsLoading(false);
+      console.log('✅ Enhanced Word file data loaded successfully');
 
     } catch (error) {
-      console.error('Error loading enhanced Word file data:', error);
+      console.error('❌ Error loading enhanced Word file data:', error);
       setError('Failed to load Word file data. Please try uploading again.');
       setIsLoading(false);
     }
@@ -288,19 +324,34 @@ export default function EnhancedWordComparison() {
     try {
       setIsLoading(true);
       setError(null);
-      setProcessingProgress({
-        stage: 'Enhanced Initialization',
-        progress: 0,
-        message: 'Preparing enhanced Word document comparison with semantic analysis...',
-        isActive: true
-      });
-
+      
       console.log('🧠 Starting enhanced Word document comparison process...');
 
       // Enhanced validation and setup
       if (typeof window === 'undefined') {
         throw new Error('Enhanced Word processing is only available in browser environment');
       }
+
+      // Verify mammoth.js availability
+      if (!window.mammoth) {
+        throw new Error(
+          'Enhanced Word Processing Library Missing\n\n' +
+          'The mammoth.js library is required for enhanced Word document processing.\n\n' +
+          'This appears to be a loading issue. Please:\n' +
+          '• Refresh the page and try again\n' +
+          '• Check your internet connection\n' +
+          '• Ensure JavaScript is enabled\n\n' +
+          'If the problem persists, try using a different browser.'
+        );
+      }
+
+      // Initial progress
+      setProcessingProgress({
+        stage: 'Enhanced Initialization',
+        progress: 0,
+        message: 'Preparing enhanced Word document comparison with semantic analysis...',
+        isActive: true
+      });
 
       // Load enhanced Word file data with improved debugging
       console.log('📁 Loading enhanced file data from sessionStorage...');
@@ -384,17 +435,25 @@ export default function EnhancedWordComparison() {
       // Enhanced mammoth.js testing with semantic features
       console.log('🧠 Testing enhanced mammoth.js with semantic processing...');
 
-      if (!window.mammoth) {
-        console.error('❌ mammoth.js not available for enhanced processing');
-        throw new Error('Enhanced processing requires mammoth.js library');
-      }
-
       setProcessingProgress({
         stage: 'Enhanced Text Extraction',
         progress: 25,
         message: 'Extracting text with enhanced structure analysis...',
         isActive: true
       });
+
+      // Verify compareWordFiles function availability
+      if (typeof compareWordFiles !== 'function') {
+        throw new Error(
+          'Enhanced Comparison Function Missing\n\n' +
+          'The enhanced Word comparison function is not available.\n\n' +
+          'This may be due to:\n' +
+          '• Module loading issues\n' +
+          '• Import/export mismatch\n' +
+          '• Library initialization problems\n\n' +
+          'Please refresh the page and try again.'
+        );
+      }
 
       // Start the enhanced comparison process
       console.log('⚙️ Starting enhanced Word comparison engine with semantic analysis...');
