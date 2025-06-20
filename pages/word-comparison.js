@@ -294,9 +294,19 @@ export default function WordComparison() {
         throw new Error('Word processing is only available in browser environment');
       }
 
-      // Load Word file data
+      // Load Word file data with enhanced debugging
+      console.log('📁 Loading file data from sessionStorage...');
       const file1Data = sessionStorage.getItem('veridiff_file1_data');
       const file2Data = sessionStorage.getItem('veridiff_file2_data');
+
+      console.log('📊 SessionStorage data check:', {
+        file1DataExists: !!file1Data,
+        file2DataExists: !!file2Data,
+        file1DataLength: file1Data?.length || 0,
+        file2DataLength: file2Data?.length || 0,
+        file1DataPreview: file1Data ? file1Data.substring(0, 50) + '...' : 'null',
+        file2DataPreview: file2Data ? file2Data.substring(0, 50) + '...' : 'null'
+      });
 
       if (!file1Data || !file2Data) {
         throw new Error(
@@ -323,12 +333,63 @@ export default function WordComparison() {
       let file1Binary, file2Binary;
       
       try {
-        file1Binary = Uint8Array.from(atob(file1Data), c => c.charCodeAt(0));
-        file2Binary = Uint8Array.from(atob(file2Data), c => c.charCodeAt(0));
+        console.log('🔄 Converting base64 to binary data...');
+        
+        // Enhanced base64 conversion with validation
+        console.log('📝 File 1 conversion...');
+        const file1Base64Clean = file1Data.replace(/[^A-Za-z0-9+/]/g, '');
+        console.log('📊 File 1 base64 stats:', {
+          originalLength: file1Data.length,
+          cleanedLength: file1Base64Clean.length,
+          hasValidBase64: /^[A-Za-z0-9+/]*={0,2}$/.test(file1Base64Clean),
+          startsWithPK: file1Base64Clean.startsWith('UEsD') || file1Base64Clean.startsWith('UEs=') // Base64 for "PK"
+        });
+        
+        file1Binary = Uint8Array.from(atob(file1Base64Clean), c => c.charCodeAt(0));
+        console.log('✅ File 1 binary conversion successful:', {
+          binaryLength: file1Binary.length,
+          firstBytes: Array.from(file1Binary.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' '),
+          isPKSignature: file1Binary[0] === 0x50 && file1Binary[1] === 0x4B
+        });
+        
+        console.log('📝 File 2 conversion...');
+        const file2Base64Clean = file2Data.replace(/[^A-Za-z0-9+/]/g, '');
+        console.log('📊 File 2 base64 stats:', {
+          originalLength: file2Data.length,
+          cleanedLength: file2Base64Clean.length,
+          hasValidBase64: /^[A-Za-z0-9+/]*={0,2}$/.test(file2Base64Clean),
+          startsWithPK: file2Base64Clean.startsWith('UEsD') || file2Base64Clean.startsWith('UEs=')
+        });
+        
+        file2Binary = Uint8Array.from(atob(file2Base64Clean), c => c.charCodeAt(0));
+        console.log('✅ File 2 binary conversion successful:', {
+          binaryLength: file2Binary.length,
+          firstBytes: Array.from(file2Binary.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' '),
+          isPKSignature: file2Binary[0] === 0x50 && file2Binary[1] === 0x4B
+        });
         
         const size1 = (file1Binary.length/1024/1024).toFixed(1);
         const size2 = (file2Binary.length/1024/1024).toFixed(1);
         console.log(`📊 Word file sizes: ${size1}MB, ${size2}MB`);
+        
+        // Validate file signatures before proceeding
+        if (!(file1Binary[0] === 0x50 && file1Binary[1] === 0x4B)) {
+          console.error('❌ File 1 does not have expected Word (.docx) signature');
+          console.log('🔍 File 1 signature analysis:', {
+            firstFourBytes: Array.from(file1Binary.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' '),
+            expectedDocx: '50 4b 03 04 (PK..)',
+            actualBytes: Array.from(file1Binary.slice(0, 4)).map(b => String.fromCharCode(b)).join('')
+          });
+        }
+        
+        if (!(file2Binary[0] === 0x50 && file2Binary[1] === 0x4B)) {
+          console.error('❌ File 2 does not have expected Word (.docx) signature');
+          console.log('🔍 File 2 signature analysis:', {
+            firstFourBytes: Array.from(file2Binary.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' '),
+            expectedDocx: '50 4b 03 04 (PK..)',
+            actualBytes: Array.from(file2Binary.slice(0, 4)).map(b => String.fromCharCode(b)).join('')
+          });
+        }
         
         setProcessingProgress({
           stage: 'File Preparation',
@@ -338,6 +399,7 @@ export default function WordComparison() {
         });
         
       } catch (conversionError) {
+        console.error('❌ File conversion error:', conversionError);
         throw new Error(
           'Word File Data Conversion Error\n\n' +
           'Failed to process the uploaded Word files.\n\n' +
@@ -348,8 +410,29 @@ export default function WordComparison() {
           'Solutions:\n' +
           '• Try smaller Word files (under 15MB each)\n' +
           '• Use a different browser\n' +
-          '• Restart browser and try again'
+          '• Restart browser and try again\n\n' +
+          `Technical details: ${conversionError.message}`
         );
+      }
+
+      // Test mammoth.js directly with the converted data
+      console.log('🧪 Testing mammoth.js directly with converted data...');
+      try {
+        const testResult1 = await window.mammoth.extractRawText({ arrayBuffer: file1Binary.buffer });
+        console.log('🧪 Direct mammoth test File 1:', {
+          textLength: testResult1.text?.length || 0,
+          textPreview: testResult1.text?.substring(0, 100) || 'empty',
+          messageCount: testResult1.messages?.length || 0
+        });
+        
+        const testResult2 = await window.mammoth.extractRawText({ arrayBuffer: file2Binary.buffer });
+        console.log('🧪 Direct mammoth test File 2:', {
+          textLength: testResult2.text?.length || 0,
+          textPreview: testResult2.text?.substring(0, 100) || 'empty',
+          messageCount: testResult2.messages?.length || 0
+        });
+      } catch (mammothTestError) {
+        console.error('❌ Direct mammoth test failed:', mammothTestError);
       }
 
       // Start the comparison process
