@@ -331,65 +331,61 @@ export default function WordComparison() {
       });
 
       let file1Binary, file2Binary;
-      
+
       try {
         console.log('🔄 Converting base64 to binary data...');
         
-        // Enhanced base64 conversion with validation
-        console.log('📝 File 1 conversion...');
-        const file1Base64Clean = file1Data.replace(/[^A-Za-z0-9+/]/g, '');
-        console.log('📊 File 1 base64 stats:', {
-          originalLength: file1Data.length,
-          cleanedLength: file1Base64Clean.length,
-          hasValidBase64: /^[A-Za-z0-9+/]*={0,2}$/.test(file1Base64Clean),
-          startsWithPK: file1Base64Clean.startsWith('UEsD') || file1Base64Clean.startsWith('UEs=') // Base64 for "PK"
+        // ENHANCED DEBUGGING - Check base64 data quality
+        console.log('📊 Detailed File Analysis:');
+        console.log('File 1 base64 length:', file1Data.length);
+        console.log('File 2 base64 length:', file2Data.length);
+        
+        // Check if base64 looks valid
+        const file1StartsCorrect = file1Data.startsWith('UEsD') || file1Data.startsWith('UEs');
+        const file2StartsCorrect = file2Data.startsWith('UEsD') || file2Data.startsWith('UEs');
+        console.log('Base64 starts with Word signature:', { file1StartsCorrect, file2StartsCorrect });
+        
+        // Clean base64 and convert
+        const file1Base64Clean = file1Data.replace(/[^A-Za-z0-9+/=]/g, '');
+        const file2Base64Clean = file2Data.replace(/[^A-Za-z0-9+/=]/g, '');
+        
+        console.log('Cleaned base64 lengths:', { 
+          file1: file1Base64Clean.length, 
+          file2: file2Base64Clean.length 
         });
         
         file1Binary = Uint8Array.from(atob(file1Base64Clean), c => c.charCodeAt(0));
-        console.log('✅ File 1 binary conversion successful:', {
-          binaryLength: file1Binary.length,
-          firstBytes: Array.from(file1Binary.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' '),
-          isPKSignature: file1Binary[0] === 0x50 && file1Binary[1] === 0x4B
-        });
-        
-        console.log('📝 File 2 conversion...');
-        const file2Base64Clean = file2Data.replace(/[^A-Za-z0-9+/]/g, '');
-        console.log('📊 File 2 base64 stats:', {
-          originalLength: file2Data.length,
-          cleanedLength: file2Base64Clean.length,
-          hasValidBase64: /^[A-Za-z0-9+/]*={0,2}$/.test(file2Base64Clean),
-          startsWithPK: file2Base64Clean.startsWith('UEsD') || file2Base64Clean.startsWith('UEs=')
-        });
-        
         file2Binary = Uint8Array.from(atob(file2Base64Clean), c => c.charCodeAt(0));
-        console.log('✅ File 2 binary conversion successful:', {
-          binaryLength: file2Binary.length,
-          firstBytes: Array.from(file2Binary.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' '),
-          isPKSignature: file2Binary[0] === 0x50 && file2Binary[1] === 0x4B
-        });
+        
+        // CRITICAL DEBUG - Check file signatures
+        const file1Signature = Array.from(file1Binary.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' ');
+        const file2Signature = Array.from(file2Binary.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' ');
+        
+        console.log('🔍 CRITICAL - File Signatures:');
+        console.log('File 1 signature:', file1Signature, '(should be: 50 4b 03 04)');
+        console.log('File 2 signature:', file2Signature, '(should be: 50 4b 03 04)');
+        
+        const file1IsValidWord = file1Binary[0] === 0x50 && file1Binary[1] === 0x4B;
+        const file2IsValidWord = file2Binary[0] === 0x50 && file2Binary[1] === 0x4B;
+        
+        console.log('Valid Word signatures:', { file1IsValidWord, file2IsValidWord });
+        
+        // If signatures are wrong, this is the problem
+        if (!file1IsValidWord || !file2IsValidWord) {
+          console.error('❌ FOUND THE ISSUE: Invalid file signatures!');
+          console.log('Expected: 50 4b (PK) for .docx files');
+          console.log('This means the files are not valid Word documents or the upload/storage process corrupted them');
+          
+          // Let's check what the files actually are
+          const file1Chars = Array.from(file1Binary.slice(0, 8)).map(b => String.fromCharCode(b)).join('');
+          const file2Chars = Array.from(file2Binary.slice(0, 8)).map(b => String.fromCharCode(b)).join('');
+          console.log('File 1 starts with chars:', file1Chars);
+          console.log('File 2 starts with chars:', file2Chars);
+        }
         
         const size1 = (file1Binary.length/1024/1024).toFixed(1);
         const size2 = (file2Binary.length/1024/1024).toFixed(1);
         console.log(`📊 Word file sizes: ${size1}MB, ${size2}MB`);
-        
-        // Validate file signatures before proceeding
-        if (!(file1Binary[0] === 0x50 && file1Binary[1] === 0x4B)) {
-          console.error('❌ File 1 does not have expected Word (.docx) signature');
-          console.log('🔍 File 1 signature analysis:', {
-            firstFourBytes: Array.from(file1Binary.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' '),
-            expectedDocx: '50 4b 03 04 (PK..)',
-            actualBytes: Array.from(file1Binary.slice(0, 4)).map(b => String.fromCharCode(b)).join('')
-          });
-        }
-        
-        if (!(file2Binary[0] === 0x50 && file2Binary[1] === 0x4B)) {
-          console.error('❌ File 2 does not have expected Word (.docx) signature');
-          console.log('🔍 File 2 signature analysis:', {
-            firstFourBytes: Array.from(file2Binary.slice(0, 4)).map(b => b.toString(16).padStart(2, '0')).join(' '),
-            expectedDocx: '50 4b 03 04 (PK..)',
-            actualBytes: Array.from(file2Binary.slice(0, 4)).map(b => String.fromCharCode(b)).join('')
-          });
-        }
         
         setProcessingProgress({
           stage: 'File Preparation',
@@ -403,36 +399,61 @@ export default function WordComparison() {
         throw new Error(
           'Word File Data Conversion Error\n\n' +
           'Failed to process the uploaded Word files.\n\n' +
-          'This might be caused by:\n' +
-          '• Files exceeding browser memory limits\n' +
-          '• Corrupted data during upload\n' +
-          '• Browser compatibility issues with large files\n\n' +
-          'Solutions:\n' +
-          '• Try smaller Word files (under 15MB each)\n' +
-          '• Use a different browser\n' +
-          '• Restart browser and try again\n\n' +
           `Technical details: ${conversionError.message}`
         );
       }
 
-      // Test mammoth.js directly with the converted data
-      console.log('🧪 Testing mammoth.js directly with converted data...');
+      // ENHANCED MAMMOTH TESTING
+      console.log('🧪 Testing mammoth.js with file data...');
+
+      // Test if mammoth is available
+      if (!window.mammoth) {
+        console.error('❌ mammoth.js not available on window object');
+        throw new Error('Mammoth.js library not loaded');
+      }
+
+      // Test with File 1
+      console.log('🧪 Testing File 1 with mammoth...');
       try {
-        const testResult1 = await window.mammoth.extractRawText({ arrayBuffer: file1Binary.buffer });
-        console.log('🧪 Direct mammoth test File 1:', {
-          textLength: testResult1.text?.length || 0,
-          textPreview: testResult1.text?.substring(0, 100) || 'empty',
-          messageCount: testResult1.messages?.length || 0
+        const arrayBuffer1 = file1Binary.buffer;
+        console.log('ArrayBuffer 1 details:', {
+          byteLength: arrayBuffer1.byteLength,
+          constructor: arrayBuffer1.constructor.name
         });
         
-        const testResult2 = await window.mammoth.extractRawText({ arrayBuffer: file2Binary.buffer });
-        console.log('🧪 Direct mammoth test File 2:', {
-          textLength: testResult2.text?.length || 0,
-          textPreview: testResult2.text?.substring(0, 100) || 'empty',
-          messageCount: testResult2.messages?.length || 0
+        const mammothResult1 = await window.mammoth.extractRawText({ arrayBuffer: arrayBuffer1 });
+        console.log('🧪 Mammoth File 1 result:', {
+          textLength: mammothResult1.text?.length || 0,
+          hasText: !!mammothResult1.text,
+          textPreview: mammothResult1.text ? mammothResult1.text.substring(0, 100) : 'NO TEXT',
+          messagesCount: mammothResult1.messages?.length || 0,
+          messages: mammothResult1.messages
         });
-      } catch (mammothTestError) {
-        console.error('❌ Direct mammoth test failed:', mammothTestError);
+        
+        if (!mammothResult1.text || mammothResult1.text.trim().length === 0) {
+          console.error('❌ MAMMOTH FAILED - No text extracted from File 1');
+          console.log('This suggests the file is not a valid Word document or is corrupted');
+        }
+        
+      } catch (mammothError1) {
+        console.error('❌ Mammoth test failed for File 1:', mammothError1);
+      }
+
+      // Test with File 2
+      console.log('🧪 Testing File 2 with mammoth...');
+      try {
+        const arrayBuffer2 = file2Binary.buffer;
+        const mammothResult2 = await window.mammoth.extractRawText({ arrayBuffer: arrayBuffer2 });
+        console.log('🧪 Mammoth File 2 result:', {
+          textLength: mammothResult2.text?.length || 0,
+          hasText: !!mammothResult2.text,
+          textPreview: mammothResult2.text ? mammothResult2.text.substring(0, 100) : 'NO TEXT',
+          messagesCount: mammothResult2.messages?.length || 0,
+          messages: mammothResult2.messages
+        });
+        
+      } catch (mammothError2) {
+        console.error('❌ Mammoth test failed for File 2:', mammothError2);
       }
 
       // Start the comparison process
