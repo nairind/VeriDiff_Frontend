@@ -902,6 +902,7 @@ export default function WordComparison() {
       <Head>
         <title>Word Document Comparison Setup - VeriDiff</title>
         <meta name="description" content="Configure your Word document comparison settings and options" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
       </Head>
       
       <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
