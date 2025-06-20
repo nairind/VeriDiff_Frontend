@@ -31,8 +31,13 @@ const tokenizeText = (text) => {
   return { sentences, words };
 };
 
-// Advanced diff algorithm for word-level changes
+// Advanced diff algorithm for word-level changes - ENHANCED FOR LARGE TEXTS
 const computeWordLevelDiff = (text1, text2) => {
+  // For very large texts, break into sentence chunks first
+  if (text1.length > 1000 || text2.length > 1000) {
+    return computeChunkedDiff(text1, text2);
+  }
+  
   const words1 = text1.split(/(\s+)/).filter(w => w.length > 0);
   const words2 = text2.split(/(\s+)/).filter(w => w.length > 0);
   
@@ -100,6 +105,67 @@ const computeWordLevelDiff = (text1, text2) => {
     }
   }
   
+  return diff;
+};
+
+// NEW: Chunked diff for large texts
+const computeChunkedDiff = (text1, text2) => {
+  console.log(`🔍 Computing chunked diff for large texts (${text1.length} vs ${text2.length} chars)`);
+  
+  // Split into sentences first
+  const sentences1 = text1.match(/[^.!?]+[.!?]+/g) || [text1];
+  const sentences2 = text2.match(/[^.!?]+[.!?]+/g) || [text2];
+  
+  const diff = [];
+  let i = 0, j = 0;
+  
+  while (i < sentences1.length || j < sentences2.length) {
+    if (i >= sentences1.length) {
+      // Remaining sentences in text2 are additions
+      const words = sentences2[j].split(/(\s+)/).filter(w => w.trim().length > 0);
+      words.forEach(word => diff.push({ type: 'added', text: word }));
+      j++;
+    } else if (j >= sentences2.length) {
+      // Remaining sentences in text1 are deletions
+      const words = sentences1[i].split(/(\s+)/).filter(w => w.trim().length > 0);
+      words.forEach(word => diff.push({ type: 'removed', text: word }));
+      i++;
+    } else {
+      // Compare sentences
+      const sent1 = sentences1[i].trim();
+      const sent2 = sentences2[j].trim();
+      
+      if (sent1 === sent2) {
+        // Sentences match exactly
+        const words = sent1.split(/(\s+)/).filter(w => w.length > 0);
+        words.forEach(word => diff.push({ type: 'unchanged', text: word }));
+        i++;
+        j++;
+      } else {
+        // Check similarity
+        const similarity = calculateTextSimilarity(sent1, sent2);
+        
+        if (similarity > 50) {
+          // Similar sentences - do word-level diff
+          const sentDiff = computeWordLevelDiff(sent1, sent2);
+          diff.push(...sentDiff);
+          i++;
+          j++;
+        } else {
+          // Different sentences - treat as replace
+          const words1 = sent1.split(/(\s+)/).filter(w => w.trim().length > 0);
+          const words2 = sent2.split(/(\s+)/).filter(w => w.trim().length > 0);
+          
+          words1.forEach(word => diff.push({ type: 'removed', text: word }));
+          words2.forEach(word => diff.push({ type: 'added', text: word }));
+          i++;
+          j++;
+        }
+      }
+    }
+  }
+  
+  console.log(`✅ Chunked diff completed: ${diff.length} word changes`);
   return diff;
 };
 
@@ -387,33 +453,78 @@ const extractTextFromWord = async (fileBuffer, fileName) => {
     
     console.log(`✅ Successfully extracted ${finalText.length} characters from ${fileName} using ${extractionMethod} method`);
     
-    // PROCESS TEXT INTO STRUCTURE - ALL INLINE
-    const paragraphs = finalText.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    // PROCESS TEXT INTO STRUCTURE - ENHANCED PARAGRAPH DETECTION
+    console.log(`🔍 Processing document structure for ${fileName}...`);
+    
+    // STEP 1: Better paragraph splitting for business documents
+    let paragraphs = [];
+    
+    // Try multiple splitting strategies
+    const strategies = [
+      // Strategy 1: Double newlines
+      () => finalText.split(/\n\s*\n/).filter(p => p.trim().length > 10),
+      // Strategy 2: Single newlines with sentence detection
+      () => finalText.split(/\n/).filter(p => p.trim().length > 10),
+      // Strategy 3: Sentence-based splitting for dense text
+      () => finalText.split(/(?<=[.!?])\s+(?=[A-Z])/).filter(p => p.trim().length > 20),
+      // Strategy 4: Section headers + content
+      () => finalText.split(/(?=^[A-Z][a-zA-Z\s]{2,50}$)/m).filter(p => p.trim().length > 10)
+    ];
+    
+    for (const strategy of strategies) {
+      paragraphs = strategy();
+      console.log(`📊 Strategy yielded ${paragraphs.length} paragraphs`);
+      if (paragraphs.length > 1 && paragraphs.length < 100) {
+        break; // Good paragraph count
+      }
+    }
+    
+    // Fallback: If still one massive block, force split by sentences
+    if (paragraphs.length === 1 && finalText.length > 1000) {
+      console.log(`🔧 Forcing sentence-based split for large single block...`);
+      const sentences = finalText.match(/[^.!?]+[.!?]+/g) || [];
+      if (sentences.length > 5) {
+        // Group sentences into logical paragraphs
+        paragraphs = [];
+        for (let i = 0; i < sentences.length; i += 3) {
+          const paragraphText = sentences.slice(i, i + 3).join(' ').trim();
+          if (paragraphText.length > 20) {
+            paragraphs.push(paragraphText);
+          }
+        }
+      }
+    }
+    
+    // Final fallback
     if (paragraphs.length === 0) {
-      paragraphs.push(...finalText.split(/\n/).filter(p => p.trim().length > 0));
+      paragraphs = [finalText.trim()];
     }
-    if (paragraphs.length === 0 && finalText.trim().length > 0) {
-      paragraphs.push(finalText.trim());
-    }
+    
+    console.log(`✅ Final paragraph count: ${paragraphs.length}`);
     
     const wordCount = finalText.split(/\s+/).filter(word => word.length > 0).length;
     
-    // DETECT SECTIONS (simple approach)
+    // STEP 2: ENHANCED SECTION DETECTION for business documents
     const sections = [];
     let currentSection = null;
     
     paragraphs.forEach((paragraph, index) => {
       const trimmed = paragraph.trim();
       
-      // Simple header detection
-      const isHeader = trimmed.length < 100 && 
-        (trimmed.match(/^[A-Z\s]{3,}$/) || 
-         trimmed.endsWith(':') || 
-         /^(executive summary|financial overview|conclusion|introduction)/i.test(trimmed));
+      // Enhanced header detection for business reports
+      const isHeader = trimmed.length < 150 && (
+        // Common business report headers
+        /^(executive summary|financial overview|revenue performance|expense management|profit margins|departmental performance|sales department|marketing department|product development|human resources|market analysis|competitive landscape|customer satisfaction|challenges and risks|future outlook|strategic initiatives|conclusion)$/i.test(trimmed) ||
+        // General patterns
+        trimmed.match(/^[A-Z][a-zA-Z\s]{2,50}$/) && !trimmed.match(/\d/) ||
+        trimmed.endsWith(':') && trimmed.length < 80 ||
+        /^Q\d{1,2}\s+\d{4}/i.test(trimmed) || // Quarter references
+        /^\d+\.\s*[A-Z]/.test(trimmed) // Numbered sections
+      );
       
-      if (isHeader && trimmed.length > 0) {
+      if (isHeader && trimmed.length > 0 && trimmed.length < 150) {
         // Start new section
-        if (currentSection) {
+        if (currentSection && currentSection.paragraphs.length > 0) {
           sections.push(currentSection);
         }
         currentSection = {
@@ -422,11 +533,12 @@ const extractTextFromWord = async (fileBuffer, fileName) => {
           paragraphs: [],
           type: 'section'
         };
+        console.log(`📂 Detected section: "${trimmed}"`);
       } else {
         // Add to current section
         if (!currentSection) {
           currentSection = {
-            title: 'Document Content',
+            title: 'Executive Summary',
             index: 0,
             paragraphs: [],
             type: 'section'
@@ -443,26 +555,44 @@ const extractTextFromWord = async (fileBuffer, fileName) => {
     });
     
     // Add final section
-    if (currentSection) {
+    if (currentSection && currentSection.paragraphs.length > 0) {
       sections.push(currentSection);
     }
     
-    // Ensure we have at least one section
-    if (sections.length === 0) {
-      sections.push({
-        title: 'Document Content',
-        index: 0,
-        paragraphs: paragraphs.map((p, i) => ({
+    // Ensure we have reasonable sections
+    if (sections.length === 0 || (sections.length === 1 && sections[0].paragraphs.length > 20)) {
+      console.log(`🔧 Reorganizing into smaller sections...`);
+      
+      // Split large sections into smaller ones
+      const allParagraphs = sections.length > 0 ? sections[0].paragraphs : 
+        paragraphs.map((p, i) => ({
           index: i,
           text: p.trim(),
           wordCount: p.trim().split(/\s+/).filter(w => w.length > 0).length,
           type: 'paragraph'
-        })),
-        type: 'section'
-      });
+        }));
+      
+      const reorganizedSections = [];
+      const chunkSize = Math.max(3, Math.ceil(allParagraphs.length / 5)); // Aim for ~5 sections
+      
+      for (let i = 0; i < allParagraphs.length; i += chunkSize) {
+        const chunk = allParagraphs.slice(i, i + chunkSize);
+        const sectionTitle = i === 0 ? 'Executive Summary' :
+          i < allParagraphs.length / 2 ? 'Financial Performance' :
+          'Strategic Outlook';
+        
+        reorganizedSections.push({
+          title: `${sectionTitle} (Part ${Math.floor(i / chunkSize) + 1})`,
+          index: reorganizedSections.length,
+          paragraphs: chunk,
+          type: 'section'
+        });
+      }
+      
+      sections.splice(0, sections.length, ...reorganizedSections);
     }
     
-    console.log(`✅ Processed ${paragraphs.length} paragraphs, ${sections.length} sections, ${wordCount} words from ${fileName}`);
+    console.log(`✅ Processed ${paragraphs.length} paragraphs into ${sections.length} sections, ${wordCount} words from ${fileName}`);
     
     // RETURN COMPLETE STRUCTURE
     return {
@@ -558,6 +688,8 @@ const compareSectionParagraphs = (section1, section2, sectionIndex) => {
   const changes = [];
   const maxParagraphs = Math.max(section1.paragraphs.length, section2.paragraphs.length);
   
+  console.log(`🔍 Comparing section "${section1.title}" - ${section1.paragraphs.length} vs ${section2.paragraphs.length} paragraphs`);
+  
   for (let paragraphIndex = 0; paragraphIndex < maxParagraphs; paragraphIndex++) {
     const para1 = section1.paragraphs[paragraphIndex];
     const para2 = section2.paragraphs[paragraphIndex];
@@ -585,30 +717,61 @@ const compareSectionParagraphs = (section1, section2, sectionIndex) => {
         wordCount: para1.wordCount
       });
     } else if (para1 && para2 && para1.text !== para2.text) {
-      // Perform word-level diff
-      const wordDiff = computeWordLevelDiff(para1.text, para2.text);
-      const semantic = classifyChange(para1.text, para2.text);
+      // ENHANCED: Check if paragraphs are similar enough for word-level diff
+      const similarity = calculateTextSimilarity(para1.text, para2.text);
       
-      changes.push({
-        type: 'paragraph_modified',
-        sectionIndex,
-        sectionTitle: section1.title,
-        paragraphIndex,
-        oldContent: para1.text,
-        newContent: para2.text,
-        wordDiff,
-        semantic,
-        annotation: semantic.annotation,
-        severity: semantic.severity,
-        wordCount: {
-          old: para1.wordCount,
-          new: para2.wordCount,
-          change: para2.wordCount - para1.wordCount
-        }
-      });
+      if (similarity > 30) {
+        // Similar enough - do word-level diff
+        console.log(`📝 Word-level diff for paragraph ${paragraphIndex} (similarity: ${similarity}%)`);
+        const wordDiff = computeWordLevelDiff(para1.text, para2.text);
+        const semantic = classifyChange(para1.text, para2.text);
+        
+        changes.push({
+          type: 'paragraph_modified',
+          sectionIndex,
+          sectionTitle: section1.title,
+          paragraphIndex,
+          oldContent: para1.text,
+          newContent: para2.text,
+          wordDiff,
+          semantic,
+          annotation: semantic.annotation,
+          severity: semantic.severity,
+          wordCount: {
+            old: para1.wordCount,
+            new: para2.wordCount,
+            change: para2.wordCount - para1.wordCount
+          },
+          similarity: similarity
+        });
+      } else {
+        // Too different - treat as remove + add
+        changes.push({
+          type: 'paragraph_removed',
+          sectionIndex,
+          sectionTitle: section1.title,
+          paragraphIndex,
+          content: para1.text,
+          annotation: '🔄 Replaced (Old)',
+          severity: 'high',
+          wordCount: para1.wordCount
+        });
+        
+        changes.push({
+          type: 'paragraph_added',
+          sectionIndex,
+          sectionTitle: section2.title,
+          paragraphIndex,
+          content: para2.text,
+          annotation: '🔄 Replaced (New)',
+          severity: 'high',
+          wordCount: para2.wordCount
+        });
+      }
     }
   }
   
+  console.log(`✅ Section comparison completed: ${changes.length} changes found`);
   return changes;
 };
 
