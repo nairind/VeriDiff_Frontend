@@ -1,950 +1,1186 @@
-    // /utils/wordFileComparison.js - ENHANCED WORD COMPARISON ENGINE WITH SEMANTIC DIFF
-import * as mammoth from 'mammoth';
+// /components/WordResults.js - PROFESSIONAL WORD COMPARISON RESULTS WITH SEMANTIC ANALYSIS
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 
-let progressCallback = null;
+const WordResults = ({ results, file1Name, file2Name, options, isAuthenticated, onSignUp, onSignIn }) => {
+  // Navigation and filtering state
+  const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [expandedSections, setExpandedSections] = useState(new Set());
+  const [showUnchanged, setShowUnchanged] = useState(false);
+  const [viewMode, setViewMode] = useState('unified'); // 'unified', 'side-by-side', 'track-changes'
+  
+  // Responsive design state
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
+  
+  const resultsRef = useRef(null);
 
-export const setProgressCallback = (callback) => {
-  progressCallback = callback;
-};
+  // Check for mobile view
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-const updateProgress = (stage, progress, message) => {
-  if (progressCallback) {
-    progressCallback({ stage, progress, message, isActive: true });
-  }
-};
+  // Process enhanced changes for filtering and navigation
+  const processedChanges = useMemo(() => {
+    if (!results?.enhanced_changes) return [];
+    
+    return results.enhanced_changes.map((change, index) => ({
+      ...change,
+      id: `change_${index}`,
+      displayIndex: index + 1
+    }));
+  }, [results]);
 
-// TEXT SIMILARITY CALCULATION - MISSING FUNCTION
-const calculateTextSimilarity = (text1, text2) => {
-  if (!text1 || !text2) return 0;
-  if (text1 === text2) return 100;
-  
-  // Simple word-based similarity calculation
-  const words1 = text1.toLowerCase().split(/\s+/).filter(word => word.length > 0);
-  const words2 = text2.toLowerCase().split(/\s+/).filter(word => word.length > 0);
-  
-  if (words1.length === 0 && words2.length === 0) return 100;
-  if (words1.length === 0 || words2.length === 0) return 0;
-  
-  // Jaccard similarity: intersection / union
-  const set1 = new Set(words1);
-  const set2 = new Set(words2);
-  
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
-  
-  const jaccardSimilarity = union.size > 0 ? (intersection.size / union.size) * 100 : 0;
-  
-  // Also consider length similarity
-  const lengthSimilarity = 100 - Math.abs(words1.length - words2.length) / Math.max(words1.length, words2.length) * 100;
-  
-  // Combined similarity (weighted average)
-  return Math.round((jaccardSimilarity * 0.7 + lengthSimilarity * 0.3));
-};
+  // Filtered changes based on active filter
+  const filteredChanges = useMemo(() => {
+    if (!processedChanges.length) return [];
+    
+    switch (activeFilter) {
+      case 'additions':
+        return processedChanges.filter(c => c.type.includes('added'));
+      case 'deletions':
+        return processedChanges.filter(c => c.type.includes('removed'));
+      case 'modifications':
+        return processedChanges.filter(c => c.type.includes('modified'));
+      case 'financial':
+        return processedChanges.filter(c => c.semantic?.type === 'financial');
+      case 'quantitative':
+        return processedChanges.filter(c => c.semantic?.type === 'quantitative');
+      case 'major':
+        return processedChanges.filter(c => c.severity === 'high');
+      default:
+        return processedChanges;
+    }
+  }, [processedChanges, activeFilter]);
 
-// Enhanced sentence and word tokenization
-const tokenizeText = (text) => {
-  // Split into sentences using multiple delimiters
-  const sentences = text
-    .split(/[.!?]+/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
-  
-  // Split into words with better tokenization
-  const words = text
-    .toLowerCase()
-    .replace(/[^\w\s\$\%\-]/g, ' ')
-    .split(/\s+/)
-    .filter(w => w.length > 0);
-  
-  return { sentences, words };
-};
+  // Statistics for dashboard
+  const stats = useMemo(() => {
+    const base = results?.change_statistics || {};
+    return {
+      totalChanges: base.total_changes || 0,
+      additions: base.additions || 0,
+      deletions: base.deletions || 0,
+      modifications: base.modifications || 0,
+      financial: base.semantic_breakdown?.financial || 0,
+      quantitative: base.semantic_breakdown?.quantitative || 0,
+      qualitative: base.semantic_breakdown?.qualitative || 0,
+      similarity: results?.similarity_score || 0
+    };
+  }, [results]);
 
-// Advanced diff algorithm for word-level changes - ENHANCED FOR LARGE TEXTS
-const computeWordLevelDiff = (text1, text2) => {
-  // For very large texts, break into sentence chunks first
-  if (text1.length > 1000 || text2.length > 1000) {
-    return computeChunkedDiff(text1, text2);
-  }
-  
-  const words1 = text1.split(/(\s+)/).filter(w => w.length > 0);
-  const words2 = text2.split(/(\s+)/).filter(w => w.length > 0);
-  
-  // Simple LCS-based diff (Longest Common Subsequence)
-  const diff = [];
-  let i = 0, j = 0;
-  
-  while (i < words1.length || j < words2.length) {
-    if (i >= words1.length) {
-      // Remaining words in text2 are additions
-      diff.push({ type: 'added', text: words2[j] });
-      j++;
-    } else if (j >= words2.length) {
-      // Remaining words in text1 are deletions
-      diff.push({ type: 'removed', text: words1[i] });
-      i++;
-    } else if (words1[i] === words2[j]) {
-      // Words match
-      diff.push({ type: 'unchanged', text: words1[i] });
-      i++;
-      j++;
-    } else {
-      // Look ahead to find the best match
-      let found = false;
+  // Navigation functions
+  const goToChange = (index) => {
+    if (index >= 0 && index < filteredChanges.length) {
+      setCurrentChangeIndex(index);
       
-      // Check if word1[i] appears later in words2
-      for (let k = j + 1; k < Math.min(j + 10, words2.length); k++) {
-        if (words1[i] === words2[k]) {
-          // Add words from j to k-1 as additions
-          for (let l = j; l < k; l++) {
-            diff.push({ type: 'added', text: words2[l] });
-          }
-          diff.push({ type: 'unchanged', text: words1[i] });
-          i++;
-          j = k + 1;
-          found = true;
-          break;
-        }
-      }
-      
-      if (!found) {
-        // Check if word2[j] appears later in words1
-        for (let k = i + 1; k < Math.min(i + 10, words1.length); k++) {
-          if (words2[j] === words1[k]) {
-            // Add words from i to k-1 as deletions
-            for (let l = i; l < k; l++) {
-              diff.push({ type: 'removed', text: words1[l] });
-            }
-            diff.push({ type: 'unchanged', text: words2[j] });
-            i = k + 1;
-            j++;
-            found = true;
-            break;
-          }
-        }
-      }
-      
-      if (!found) {
-        // No match found, treat as modification
-        diff.push({ type: 'removed', text: words1[i] });
-        diff.push({ type: 'added', text: words2[j] });
-        i++;
-        j++;
+      // Scroll to change
+      const changeElement = document.getElementById(`change_${filteredChanges[index].id}`);
+      if (changeElement) {
+        changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }
-  
-  return diff;
-};
+  };
 
-// NEW: Chunked diff for large texts
-const computeChunkedDiff = (text1, text2) => {
-  console.log(`🔍 Computing chunked diff for large texts (${text1.length} vs ${text2.length} chars)`);
-  
-  // Split into sentences first
-  const sentences1 = text1.match(/[^.!?]+[.!?]+/g) || [text1];
-  const sentences2 = text2.match(/[^.!?]+[.!?]+/g) || [text2];
-  
-  const diff = [];
-  let i = 0, j = 0;
-  
-  while (i < sentences1.length || j < sentences2.length) {
-    if (i >= sentences1.length) {
-      // Remaining sentences in text2 are additions
-      const words = sentences2[j].split(/(\s+)/).filter(w => w.trim().length > 0);
-      words.forEach(word => diff.push({ type: 'added', text: word }));
-      j++;
-    } else if (j >= sentences2.length) {
-      // Remaining sentences in text1 are deletions
-      const words = sentences1[i].split(/(\s+)/).filter(w => w.trim().length > 0);
-      words.forEach(word => diff.push({ type: 'removed', text: word }));
-      i++;
+  const previousChange = () => {
+    const newIndex = Math.max(0, currentChangeIndex - 1);
+    goToChange(newIndex);
+  };
+
+  const nextChange = () => {
+    const newIndex = Math.min(filteredChanges.length - 1, currentChangeIndex + 1);
+    goToChange(newIndex);
+  };
+
+  const jumpToMajorChanges = () => {
+    const majorChanges = filteredChanges.filter(c => c.severity === 'high');
+    if (majorChanges.length > 0) {
+      const majorIndex = filteredChanges.indexOf(majorChanges[0]);
+      goToChange(majorIndex);
+    }
+  };
+
+  // Section expansion management
+  const toggleSection = (sectionIndex) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(sectionIndex)) {
+      newExpanded.delete(sectionIndex);
     } else {
-      // Compare sentences
-      const sent1 = sentences1[i].trim();
-      const sent2 = sentences2[j].trim();
-      
-      if (sent1 === sent2) {
-        // Sentences match exactly
-        const words = sent1.split(/(\s+)/).filter(w => w.length > 0);
-        words.forEach(word => diff.push({ type: 'unchanged', text: word }));
-        i++;
-        j++;
-      } else {
-        // Check similarity
-        const similarity = calculateTextSimilarity(sent1, sent2);
+      newExpanded.add(sectionIndex);
+    }
+    setExpandedSections(newExpanded);
+  };
+
+  const expandAllSections = () => {
+    const allSections = new Set();
+    for (let i = 0; i < (results?.navigation?.total_sections || 0); i++) {
+      allSections.add(i);
+    }
+    setExpandedSections(allSections);
+  };
+
+  const collapseAllSections = () => {
+    setExpandedSections(new Set());
+  };
+
+  // Render functions
+  const renderStatsPanel = () => (
+    <div style={{
+      background: 'white',
+      borderRadius: '12px',
+      padding: '20px',
+      marginBottom: '20px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+      border: '1px solid #e5e7eb'
+    }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+        gap: '15px',
+        marginBottom: '20px'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            fontSize: '2rem',
+            fontWeight: '700',
+            color: stats.similarity >= 80 ? '#22c55e' : stats.similarity >= 60 ? '#f59e0b' : '#ef4444'
+          }}>
+            {stats.similarity}%
+          </div>
+          <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Similarity</div>
+        </div>
         
-        if (similarity > 50) {
-          // Similar sentences - do word-level diff
-          const sentDiff = computeWordLevelDiff(sent1, sent2);
-          diff.push(...sentDiff);
-          i++;
-          j++;
-        } else {
-          // Different sentences - treat as replace
-          const words1 = sent1.split(/(\s+)/).filter(w => w.trim().length > 0);
-          const words2 = sent2.split(/(\s+)/).filter(w => w.trim().length > 0);
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', fontWeight: '700', color: '#7c3aed' }}>
+            {stats.totalChanges}
+          </div>
+          <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Total Changes</div>
+        </div>
+        
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', fontWeight: '700', color: '#059669' }}>
+            {stats.financial + stats.quantitative}
+          </div>
+          <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Data Changes</div>
+        </div>
+        
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', fontWeight: '700', color: '#dc2626' }}>
+            {filteredChanges.filter(c => c.severity === 'high').length}
+          </div>
+          <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Major Changes</div>
+        </div>
+      </div>
+
+      {/* Filter Bar */}
+      <div style={{
+        display: 'flex',
+        gap: '8px',
+        flexWrap: 'wrap',
+        marginBottom: '15px'
+      }}>
+        {[
+          { key: 'all', label: 'All', count: stats.totalChanges },
+          { key: 'additions', label: '➕ Added', count: stats.additions },
+          { key: 'deletions', label: '🗑️ Removed', count: stats.deletions },
+          { key: 'modifications', label: '✏️ Modified', count: stats.modifications },
+          { key: 'financial', label: '💰 Financial', count: stats.financial },
+          { key: 'quantitative', label: '📊 Numbers', count: stats.quantitative },
+          { key: 'major', label: '🎯 Major', count: filteredChanges.filter(c => c.severity === 'high').length }
+        ].map(filter => (
+          <button
+            key={filter.key}
+            onClick={() => {
+              setActiveFilter(filter.key);
+              setCurrentChangeIndex(0);
+            }}
+            style={{
+              background: activeFilter === filter.key ? '#059669' : '#f3f4f6',
+              color: activeFilter === filter.key ? 'white' : '#374151',
+              border: '1px solid ' + (activeFilter === filter.key ? '#059669' : '#d1d5db'),
+              padding: '6px 12px',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            {filter.label}
+            <span style={{
+              background: activeFilter === filter.key ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+              borderRadius: '10px',
+              padding: '1px 6px',
+              fontSize: '0.7rem'
+            }}>
+              {filter.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Navigation Controls */}
+      {filteredChanges.length > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: '#f8fafc',
+          padding: '10px 15px',
+          borderRadius: '8px',
+          fontSize: '0.9rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={previousChange}
+              disabled={currentChangeIndex === 0}
+              style={{
+                background: currentChangeIndex === 0 ? '#e5e7eb' : '#059669',
+                color: currentChangeIndex === 0 ? '#9ca3af' : 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                cursor: currentChangeIndex === 0 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              ◀️ Prev
+            </button>
+            
+            <span style={{ color: '#374151', fontWeight: '500' }}>
+              {currentChangeIndex + 1} of {filteredChanges.length}
+            </span>
+            
+            <button
+              onClick={nextChange}
+              disabled={currentChangeIndex === filteredChanges.length - 1}
+              style={{
+                background: currentChangeIndex === filteredChanges.length - 1 ? '#e5e7eb' : '#059669',
+                color: currentChangeIndex === filteredChanges.length - 1 ? '#9ca3af' : 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                cursor: currentChangeIndex === filteredChanges.length - 1 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Next ▶️
+            </button>
+          </div>
           
-          words1.forEach(word => diff.push({ type: 'removed', text: word }));
-          words2.forEach(word => diff.push({ type: 'added', text: word }));
-          i++;
-          j++;
-        }
-      }
-    }
-  }
-  
-  console.log(`✅ Chunked diff completed: ${diff.length} word changes`);
-  return diff;
-};
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={jumpToMajorChanges}
+              style={{
+                background: '#dc2626',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                cursor: 'pointer'
+              }}
+            >
+              🎯 Major Changes
+            </button>
+            
+            <button
+              onClick={() => setViewMode(
+                viewMode === 'unified' ? 'side-by-side' : 
+                viewMode === 'side-by-side' ? 'track-changes' : 'unified'
+              )}
+              style={{
+                background: '#6366f1',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              {viewMode === 'unified' ? '📊 Side-by-Side' : 
+               viewMode === 'side-by-side' ? '📝 Track Changes' : '📄 Unified'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
-// Semantic change detection
-const classifyChange = (oldText, newText) => {
-  const financial_pattern = /\$[\d,.]+(k|m|b|million|billion|thousand)?/i;
-  const percentage_pattern = /\d+(\.\d+)?%/;
-  const number_pattern = /\b\d+(\.\d+)?\b/;
-  const date_pattern = /\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2},?\s+\d{2,4}\b/i;
-  
-  if (financial_pattern.test(oldText) && financial_pattern.test(newText)) {
-    const oldAmount = extractFinancialValue(oldText);
-    const newAmount = extractFinancialValue(newText);
-    const change = newAmount - oldAmount;
+  const renderMarginAnnotation = (change, position = 'right') => {
+    if (isMobile) return null;
     
-    return {
-      type: 'financial',
-      category: 'Financial Change',
-      annotation: change > 0 ? `💰 +${formatCurrency(change)}` : `💰 ${formatCurrency(change)}`,
-      severity: Math.abs(change) > 100000 ? 'high' : Math.abs(change) > 10000 ? 'medium' : 'low',
-      metadata: { oldAmount, newAmount, change }
-    };
-  }
-  
-  if (percentage_pattern.test(oldText) && percentage_pattern.test(newText)) {
-    const oldPercent = parseFloat(oldText.match(/\d+(\.\d+)?/)[0]);
-    const newPercent = parseFloat(newText.match(/\d+(\.\d+)?/)[0]);
-    const change = newPercent - oldPercent;
-    
-    return {
-      type: 'percentage',
-      category: 'Percentage Change',
-      annotation: change > 0 ? `📈 +${change.toFixed(1)}%` : `📉 ${change.toFixed(1)}%`,
-      severity: Math.abs(change) > 10 ? 'high' : Math.abs(change) > 5 ? 'medium' : 'low',
-      metadata: { oldPercent, newPercent, change }
-    };
-  }
-  
-  if (number_pattern.test(oldText) && number_pattern.test(newText)) {
-    const oldNum = parseFloat(oldText.match(/\d+(\.\d+)?/)[0]);
-    const newNum = parseFloat(newText.match(/\d+(\.\d+)?/)[0]);
-    const change = newNum - oldNum;
-    
-    return {
-      type: 'quantitative',
-      category: 'Number Change',
-      annotation: change > 0 ? `📊 +${change}` : `📊 ${change}`,
-      severity: Math.abs(change) > 100 ? 'high' : Math.abs(change) > 10 ? 'medium' : 'low',
-      metadata: { oldNum, newNum, change }
-    };
-  }
-  
-  if (date_pattern.test(oldText) && date_pattern.test(newText)) {
-    return {
-      type: 'temporal',
-      category: 'Date Change',
-      annotation: '📅 Date updated',
-      severity: 'medium',
-      metadata: { oldDate: oldText, newDate: newText }
-    };
-  }
-  
-  // Qualitative text changes
-  const intensityWords = {
-    low: ['okay', 'fair', 'decent', 'adequate', 'satisfactory'],
-    medium: ['good', 'solid', 'strong', 'positive', 'effective'],
-    high: ['excellent', 'outstanding', 'exceptional', 'remarkable', 'extraordinary']
+    return (
+      <div style={{
+        position: 'absolute',
+        [position]: '-200px',
+        top: '0px',
+        width: '180px',
+        background: 'white',
+        border: '2px solid #e5e7eb',
+        borderRadius: '8px',
+        padding: '8px 12px',
+        fontSize: '0.8rem',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        zIndex: 10
+      }}>
+        <div style={{
+          fontWeight: '600',
+          color: getSeverityColor(change.severity),
+          marginBottom: '4px'
+        }}>
+          {change.annotation}
+        </div>
+        {change.semantic && (
+          <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+            {change.semantic.category}
+            {change.semantic.metadata?.change && (
+              <div style={{ fontWeight: '600', color: '#374151' }}>
+                {typeof change.semantic.metadata.change === 'number' 
+                  ? (change.semantic.metadata.change > 0 ? '+' : '') + change.semantic.metadata.change
+                  : change.semantic.metadata.change
+                }
+              </div>
+            )}
+          </div>
+        )}
+        <div style={{
+          fontSize: '0.7rem',
+          color: '#9ca3af',
+          marginTop: '4px'
+        }}>
+          Change {change.displayIndex} • {change.severity}
+        </div>
+      </div>
+    );
   };
-  
-  const getIntensity = (text) => {
-    const lowerText = text.toLowerCase();
-    for (const [level, words] of Object.entries(intensityWords)) {
-      if (words.some(word => lowerText.includes(word))) {
-        return level;
-      }
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case 'high': return '#dc2626';
+      case 'medium': return '#d97706';
+      case 'low': return '#059669';
+      default: return '#6b7280';
     }
-    return null;
   };
-  
-  const oldIntensity = getIntensity(oldText);
-  const newIntensity = getIntensity(newText);
-  
-  if (oldIntensity && newIntensity && oldIntensity !== newIntensity) {
-    const intensityLevels = { low: 1, medium: 2, high: 3 };
-    const change = intensityLevels[newIntensity] - intensityLevels[oldIntensity];
-    
-    return {
-      type: 'qualitative',
-      category: 'Tone Change',
-      annotation: change > 0 ? '📈 Tone improved' : '📉 Tone softened',
-      severity: Math.abs(change) > 1 ? 'high' : 'medium',
-      metadata: { oldIntensity, newIntensity, change }
-    };
-  }
-  
-  // Default text modification
-  return {
-    type: 'textual',
-    category: 'Text Change',
-    annotation: '✏️ Text modified',
-    severity: 'low',
-    metadata: { oldText, newText }
-  };
-};
 
-// Helper functions for financial parsing
-const extractFinancialValue = (text) => {
-  const match = text.match(/\$?([\d,]+(?:\.\d+)?)\s*(k|m|b|million|billion|thousand)?/i);
-  if (!match) return 0;
-  
-  let value = parseFloat(match[1].replace(/,/g, ''));
-  const unit = match[2]?.toLowerCase();
-  
-  const multipliers = {
-    'k': 1000,
-    'thousand': 1000,
-    'm': 1000000,
-    'million': 1000000,
-    'b': 1000000000,
-    'billion': 1000000000
-  };
-  
-  if (unit && multipliers[unit]) {
-    value *= multipliers[unit];
-  }
-  
-  return value;
-};
-
-const formatCurrency = (amount) => {
-  if (Math.abs(amount) >= 1000000000) {
-    return `$${(amount / 1000000000).toFixed(1)}B`;
-  } else if (Math.abs(amount) >= 1000000) {
-    return `$${(amount / 1000000).toFixed(1)}M`;
-  } else if (Math.abs(amount) >= 1000) {
-    return `$${(amount / 1000).toFixed(1)}K`;
-  } else {
-    return `$${amount.toFixed(0)}`;
-  }
-};
-
-// Enhanced paragraph processing with section detection
-const processDocumentStructure = (text, html) => {
-  // Detect sections using headers and formatting
-  const sections = [];
-  let currentSection = null;
-  
-  // Split text into paragraphs with better detection
-  const rawParagraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-  
-  rawParagraphs.forEach((paragraph, index) => {
-    const trimmed = paragraph.trim();
+  const renderWordDiff = (wordDiff) => {
+    if (!wordDiff || !Array.isArray(wordDiff)) return null;
     
-    // Detect if this is a header/section title
-    const isHeader = 
-      trimmed.length < 100 && 
-      (trimmed.match(/^[A-Z\s]{3,}$/) || // ALL CAPS
-       trimmed.match(/^[A-Z][a-z\s]*$/) && trimmed.split(' ').length <= 5 || // Title Case, short
-       trimmed.endsWith(':') || // Ends with colon
-       /^(chapter|section|\d+\.|\d+\s)/i.test(trimmed)); // Numbered sections
-    
-    if (isHeader && trimmed.length > 0) {
-      // Start new section
-      if (currentSection) {
-        sections.push(currentSection);
-      }
-      currentSection = {
-        title: trimmed,
-        index: index,
-        paragraphs: [],
-        type: 'section'
-      };
-    } else {
-      // Add to current section or create default section
-      if (!currentSection) {
-        currentSection = {
-          title: 'Introduction',
-          index: 0,
-          paragraphs: [],
-          type: 'section'
-        };
-      }
-      
-      currentSection.paragraphs.push({
-        index: index,
-        text: trimmed,
-        wordCount: trimmed.split(/\s+/).filter(w => w.length > 0).length,
-        type: 'paragraph'
-      });
-    }
-  });
-  
-  // Add final section
-  if (currentSection) {
-    sections.push(currentSection);
-  }
-  
-  return sections.length > 0 ? sections : [{
-    title: 'Document Content',
-    index: 0,
-    paragraphs: rawParagraphs.map((p, i) => ({
-      index: i,
-      text: p.trim(),
-      wordCount: p.trim().split(/\s+/).filter(w => w.length > 0).length,
-      type: 'paragraph'
-    })),
-    type: 'section'
-  }];
-};
-
-// Enhanced text extraction with structure preservation - BULLETPROOF VERSION
-const extractTextFromWord = async (fileBuffer, fileName) => {
-  try {
-    console.log(`📝 Enhanced extraction from ${fileName}...`);
-    console.log(`📊 File buffer type: ${typeof fileBuffer}, length: ${fileBuffer?.byteLength || 'unknown'}`);
-    
-    // Ensure we have a proper ArrayBuffer
-    let arrayBuffer;
-    if (fileBuffer instanceof ArrayBuffer) {
-      arrayBuffer = fileBuffer;
-    } else if (fileBuffer.buffer instanceof ArrayBuffer) {
-      arrayBuffer = fileBuffer.buffer;
-    } else {
-      throw new Error(`Invalid file buffer format for ${fileName}. Expected ArrayBuffer.`);
-    }
-    
-    console.log(`📊 ArrayBuffer size: ${arrayBuffer.byteLength} bytes`);
-    
-    // Use mammoth.js - PRIORITIZE HTML EXTRACTION
-    const mammothLib = window.mammoth || mammoth;
-    if (!mammothLib) {
-      throw new Error('Mammoth.js library not available. Please ensure mammoth.js is loaded.');
-    }
-    
-    let finalText = '';
-    let html = '';
-    let extractionMethod = '';
-    
-    // TRY HTML EXTRACTION FIRST (more reliable for your documents)
-    console.log(`🔍 Trying HTML extraction first for ${fileName}...`);
-    try {
-      const htmlResult = await mammothLib.convertToHtml({ arrayBuffer: arrayBuffer });
-      html = htmlResult.value || '';
-      console.log(`📄 HTML result length: ${html.length}`);
-      
-      if (html && html.trim().length > 0) {
-        // Strip HTML tags to get clean text
-        finalText = html
-          .replace(/<[^>]*>/g, ' ')  // Remove HTML tags
-          .replace(/&nbsp;/g, ' ')   // Replace &nbsp; with spaces
-          .replace(/&amp;/g, '&')    // Replace &amp; with &
-          .replace(/&lt;/g, '<')     // Replace &lt; with <
-          .replace(/&gt;/g, '>')     // Replace &gt; with >
-          .replace(/\s+/g, ' ')      // Normalize whitespace
-          .trim();
-        
-        if (finalText.length > 0) {
-          console.log(`✅ HTML extraction successful: ${finalText.length} characters`);
-          extractionMethod = 'HTML';
-        }
-      }
-    } catch (htmlError) {
-      console.warn(`⚠️ HTML extraction failed for ${fileName}:`, htmlError.message);
-    }
-    
-    // FALLBACK: Try text extraction if HTML didn't work
-    if (!finalText || finalText.length === 0) {
-      console.log(`🔍 Trying text extraction fallback for ${fileName}...`);
-      try {
-        const textResult = await mammothLib.extractRawText({ arrayBuffer: arrayBuffer });
-        finalText = textResult.text || '';
-        console.log(`📝 Text extraction result: ${finalText.length} characters`);
-        if (finalText.length > 0) {
-          extractionMethod = 'TEXT';
-        }
-      } catch (textError) {
-        console.warn(`⚠️ Text extraction also failed for ${fileName}:`, textError.message);
-      }
-    }
-    
-    // VALIDATE final result
-    if (!finalText || finalText.trim().length === 0) {
-      throw new Error(`No text content could be extracted from ${fileName}. The document may be empty, corrupted, or in an unsupported format.`);
-    }
-    
-    console.log(`✅ Successfully extracted ${finalText.length} characters from ${fileName} using ${extractionMethod} method`);
-    
-    // PROCESS TEXT INTO STRUCTURE - ENHANCED PARAGRAPH DETECTION
-    console.log(`🔍 Processing document structure for ${fileName}...`);
-    
-    // STEP 1: Better paragraph splitting for business documents
-    let paragraphs = [];
-    
-    // Try multiple splitting strategies
-    const strategies = [
-      // Strategy 1: Double newlines
-      () => finalText.split(/\n\s*\n/).filter(p => p.trim().length > 10),
-      // Strategy 2: Single newlines with sentence detection
-      () => finalText.split(/\n/).filter(p => p.trim().length > 10),
-      // Strategy 3: Sentence-based splitting for dense text
-      () => finalText.split(/(?<=[.!?])\s+(?=[A-Z])/).filter(p => p.trim().length > 20),
-      // Strategy 4: Section headers + content
-      () => finalText.split(/(?=^[A-Z][a-zA-Z\s]{2,50}$)/m).filter(p => p.trim().length > 10)
-    ];
-    
-    for (const strategy of strategies) {
-      paragraphs = strategy();
-      console.log(`📊 Strategy yielded ${paragraphs.length} paragraphs`);
-      if (paragraphs.length > 1 && paragraphs.length < 100) {
-        break; // Good paragraph count
-      }
-    }
-    
-    // Fallback: If still one massive block, force split by sentences
-    if (paragraphs.length === 1 && finalText.length > 1000) {
-      console.log(`🔧 Forcing sentence-based split for large single block...`);
-      const sentences = finalText.match(/[^.!?]+[.!?]+/g) || [];
-      if (sentences.length > 5) {
-        // Group sentences into logical paragraphs
-        paragraphs = [];
-        for (let i = 0; i < sentences.length; i += 3) {
-          const paragraphText = sentences.slice(i, i + 3).join(' ').trim();
-          if (paragraphText.length > 20) {
-            paragraphs.push(paragraphText);
+    return (
+      <div style={{ lineHeight: '1.8', fontSize: '1rem' }}>
+        {wordDiff.map((word, index) => {
+          let style = {};
+          
+          switch (word.type) {
+            case 'added':
+              style = {
+                background: '#dcfce7',
+                color: '#166534',
+                border: '1px solid #bbf7d0',
+                borderRadius: '3px',
+                padding: '2px 4px',
+                fontWeight: '600'
+              };
+              break;
+            case 'removed':
+              style = {
+                background: '#fee2e2',
+                color: '#dc2626',
+                border: '1px solid #fecaca',
+                borderRadius: '3px',
+                padding: '2px 4px',
+                textDecoration: 'line-through',
+                fontWeight: '600'
+              };
+              break;
+            case 'unchanged':
+              style = { color: '#374151' };
+              break;
           }
-        }
-      }
-    }
-    
-    // Final fallback
-    if (paragraphs.length === 0) {
-      paragraphs = [finalText.trim()];
-    }
-    
-    console.log(`✅ Final paragraph count: ${paragraphs.length}`);
-    
-    const wordCount = finalText.split(/\s+/).filter(word => word.length > 0).length;
-    
-    // STEP 2: ENHANCED SECTION DETECTION for business documents
-    const sections = [];
-    let currentSection = null;
-    
-    paragraphs.forEach((paragraph, index) => {
-      const trimmed = paragraph.trim();
-      
-      // Enhanced header detection for business reports
-      const isHeader = trimmed.length < 150 && (
-        // Common business report headers
-        /^(executive summary|financial overview|revenue performance|expense management|profit margins|departmental performance|sales department|marketing department|product development|human resources|market analysis|competitive landscape|customer satisfaction|challenges and risks|future outlook|strategic initiatives|conclusion)$/i.test(trimmed) ||
-        // General patterns
-        trimmed.match(/^[A-Z][a-zA-Z\s]{2,50}$/) && !trimmed.match(/\d/) ||
-        trimmed.endsWith(':') && trimmed.length < 80 ||
-        /^Q\d{1,2}\s+\d{4}/i.test(trimmed) || // Quarter references
-        /^\d+\.\s*[A-Z]/.test(trimmed) // Numbered sections
-      );
-      
-      if (isHeader && trimmed.length > 0 && trimmed.length < 150) {
-        // Start new section
-        if (currentSection && currentSection.paragraphs.length > 0) {
-          sections.push(currentSection);
-        }
-        currentSection = {
-          title: trimmed,
-          index: sections.length,
-          paragraphs: [],
-          type: 'section'
-        };
-        console.log(`📂 Detected section: "${trimmed}"`);
-      } else {
-        // Add to current section
-        if (!currentSection) {
-          currentSection = {
-            title: 'Executive Summary',
-            index: 0,
-            paragraphs: [],
-            type: 'section'
-          };
-        }
-        
-        currentSection.paragraphs.push({
-          index: index,
-          text: trimmed,
-          wordCount: trimmed.split(/\s+/).filter(w => w.length > 0).length,
-          type: 'paragraph'
-        });
-      }
-    });
-    
-    // Add final section
-    if (currentSection && currentSection.paragraphs.length > 0) {
-      sections.push(currentSection);
-    }
-    
-    // Ensure we have reasonable sections
-    if (sections.length === 0 || (sections.length === 1 && sections[0].paragraphs.length > 20)) {
-      console.log(`🔧 Reorganizing into smaller sections...`);
-      
-      // Split large sections into smaller ones
-      const allParagraphs = sections.length > 0 ? sections[0].paragraphs : 
-        paragraphs.map((p, i) => ({
-          index: i,
-          text: p.trim(),
-          wordCount: p.trim().split(/\s+/).filter(w => w.length > 0).length,
-          type: 'paragraph'
-        }));
-      
-      const reorganizedSections = [];
-      const chunkSize = Math.max(3, Math.ceil(allParagraphs.length / 5)); // Aim for ~5 sections
-      
-      for (let i = 0; i < allParagraphs.length; i += chunkSize) {
-        const chunk = allParagraphs.slice(i, i + chunkSize);
-        const sectionTitle = i === 0 ? 'Executive Summary' :
-          i < allParagraphs.length / 2 ? 'Financial Performance' :
-          'Strategic Outlook';
-        
-        reorganizedSections.push({
-          title: `${sectionTitle} (Part ${Math.floor(i / chunkSize) + 1})`,
-          index: reorganizedSections.length,
-          paragraphs: chunk,
-          type: 'section'
-        });
-      }
-      
-      sections.splice(0, sections.length, ...reorganizedSections);
-    }
-    
-    console.log(`✅ Processed ${paragraphs.length} paragraphs into ${sections.length} sections, ${wordCount} words from ${fileName}`);
-    
-    // RETURN COMPLETE STRUCTURE
-    return {
-      text: finalText,
-      html: html,
-      sections: sections,
-      paragraphs: paragraphs.map((paragraph, index) => ({
-        index: index,
-        text: paragraph.trim(),
-        word_count: paragraph.trim().split(/\s+/).filter(word => word.length > 0).length
-      })),
-      metadata: {
-        totalWords: wordCount,
-        totalParagraphs: paragraphs.length,
-        totalSections: sections.length,
-        fileName: fileName,
-        extractionMethod: extractionMethod
-      },
-      warnings: []
-    };
-    
-  } catch (error) {
-    console.error(`❌ Enhanced extraction error for ${fileName}:`, error);
-    throw new Error(`Failed to extract text from ${fileName}: ${error.message}`);
-  }
-};
-
-// Enhanced comparison with semantic analysis
-const compareDocumentSections = (doc1, doc2) => {
-  const changes = [];
-  const stats = {
-    additions: 0,
-    deletions: 0,
-    modifications: 0,
-    unchanged: 0,
-    financial: 0,
-    quantitative: 0,
-    qualitative: 0
+          
+          return (
+            <span key={index} style={style}>
+              {word.text}
+            </span>
+          );
+        })}
+      </div>
+    );
   };
-  
-  // Compare sections
-  const maxSections = Math.max(doc1.sections.length, doc2.sections.length);
-  
-  for (let sectionIndex = 0; sectionIndex < maxSections; sectionIndex++) {
-    const section1 = doc1.sections[sectionIndex];
-    const section2 = doc2.sections[sectionIndex];
-    
-    if (!section1 && section2) {
-      // Section added
-      changes.push({
-        type: 'section_added',
-        sectionIndex,
-        sectionTitle: section2.title,
-        content: section2,
-        annotation: '➕ New section',
-        severity: 'high'
-      });
-      stats.additions++;
-    } else if (section1 && !section2) {
-      // Section removed
-      changes.push({
-        type: 'section_removed',
-        sectionIndex,
-        sectionTitle: section1.title,
-        content: section1,
-        annotation: '🗑️ Section removed',
-        severity: 'high'
-      });
-      stats.deletions++;
-    } else if (section1 && section2) {
-      // Compare section content
-      const sectionChanges = compareSectionParagraphs(section1, section2, sectionIndex);
-      changes.push(...sectionChanges);
-      
-      // Update stats
-      sectionChanges.forEach(change => {
-        if (change.semantic?.type === 'financial') stats.financial++;
-        if (change.semantic?.type === 'quantitative') stats.quantitative++;
-        if (change.semantic?.type === 'qualitative') stats.qualitative++;
-        
-        if (change.type.includes('added')) stats.additions++;
-        else if (change.type.includes('removed')) stats.deletions++;
-        else if (change.type.includes('modified')) stats.modifications++;
-        else stats.unchanged++;
-      });
-    }
-  }
-  
-  return { changes, stats };
-};
 
-const compareSectionParagraphs = (section1, section2, sectionIndex) => {
-  const changes = [];
-  const maxParagraphs = Math.max(section1.paragraphs.length, section2.paragraphs.length);
-  
-  console.log(`🔍 Comparing section "${section1.title}" - ${section1.paragraphs.length} vs ${section2.paragraphs.length} paragraphs`);
-  
-  for (let paragraphIndex = 0; paragraphIndex < maxParagraphs; paragraphIndex++) {
-    const para1 = section1.paragraphs[paragraphIndex];
-    const para2 = section2.paragraphs[paragraphIndex];
-    
-    if (!para1 && para2) {
-      changes.push({
-        type: 'paragraph_added',
-        sectionIndex,
-        sectionTitle: section2.title,
-        paragraphIndex,
-        content: para2.text,
-        annotation: '➕ Added',
-        severity: 'medium',
-        wordCount: para2.wordCount
-      });
-    } else if (para1 && !para2) {
-      changes.push({
-        type: 'paragraph_removed',
-        sectionIndex,
-        sectionTitle: section1.title,
-        paragraphIndex,
-        content: para1.text,
-        annotation: '🗑️ Removed',
-        severity: 'medium',
-        wordCount: para1.wordCount
-      });
-    } else if (para1 && para2 && para1.text !== para2.text) {
-      // ENHANCED: Check if paragraphs are similar enough for word-level diff
-      const similarity = calculateTextSimilarity(para1.text, para2.text);
-      
-      if (similarity > 30) {
-        // Similar enough - do word-level diff
-        console.log(`📝 Word-level diff for paragraph ${paragraphIndex} (similarity: ${similarity}%)`);
-        const wordDiff = computeWordLevelDiff(para1.text, para2.text);
-        const semantic = classifyChange(para1.text, para2.text);
-        
-        changes.push({
-          type: 'paragraph_modified',
-          sectionIndex,
-          sectionTitle: section1.title,
-          paragraphIndex,
-          oldContent: para1.text,
-          newContent: para2.text,
-          wordDiff,
-          semantic,
-          annotation: semantic.annotation,
-          severity: semantic.severity,
-          wordCount: {
-            old: para1.wordCount,
-            new: para2.wordCount,
-            change: para2.wordCount - para1.wordCount
-          },
-          similarity: similarity
-        });
-      } else {
-        // Too different - treat as remove + add
-        changes.push({
-          type: 'paragraph_removed',
-          sectionIndex,
-          sectionTitle: section1.title,
-          paragraphIndex,
-          content: para1.text,
-          annotation: '🔄 Replaced (Old)',
-          severity: 'high',
-          wordCount: para1.wordCount
-        });
-        
-        changes.push({
-          type: 'paragraph_added',
-          sectionIndex,
-          sectionTitle: section2.title,
-          paragraphIndex,
-          content: para2.text,
-          annotation: '🔄 Replaced (New)',
-          severity: 'high',
-          wordCount: para2.wordCount
-        });
-      }
+  // NEW: Unified diff view (like GitHub)
+  const renderUnifiedView = () => {
+    if (!processedChanges.length) {
+      return (
+        <div style={{
+          textAlign: 'center',
+          padding: '60px',
+          color: '#6b7280'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🎉</div>
+          <h3>Documents are identical!</h3>
+          <p>No changes detected between the documents.</p>
+        </div>
+      );
     }
-  }
-  
-  console.log(`✅ Section comparison completed: ${changes.length} changes found`);
-  return changes;
-};
 
-// Main comparison function
-export const compareWordFiles = async (file1Buffer, file2Buffer, options = {}) => {
-  const startTime = Date.now();
-  
-  try {
-    console.log('🚀 Starting enhanced Word document comparison...');
-    
-    updateProgress('Initialization', 5, 'Starting enhanced analysis...');
-    
-    // Enhanced text extraction
-    updateProgress('Text Extraction', 20, 'Extracting structured content from Document 1...');
-    const doc1 = await extractTextFromWord(file1Buffer, 'Document 1');
-    
-    updateProgress('Text Extraction', 40, 'Extracting structured content from Document 2...');
-    const doc2 = await extractTextFromWord(file2Buffer, 'Document 2');
-    
-    updateProgress('Analysis', 60, 'Performing semantic comparison...');
-    
-    // Enhanced comparison
-    const { changes, stats } = compareDocumentSections(doc1, doc2);
-    
-    updateProgress('Processing', 80, 'Generating professional analysis...');
-    
-    // Calculate overall similarity with better algorithm
-    const totalWords1 = doc1.metadata.totalWords;
-    const totalWords2 = doc2.metadata.totalWords;
-    const changedWords = changes.reduce((acc, change) => {
-      if (change.wordCount) {
-        return acc + (typeof change.wordCount === 'object' 
-          ? Math.max(change.wordCount.old || 0, change.wordCount.new || 0)
-          : change.wordCount);
+    // Group changes by section for unified view
+    const changesBySection = filteredChanges.reduce((acc, change) => {
+      const sectionKey = change.sectionIndex || 0;
+      if (!acc[sectionKey]) {
+        acc[sectionKey] = {
+          title: change.sectionTitle || 'Document Content',
+          changes: []
+        };
       }
+      acc[sectionKey].changes.push(change);
       return acc;
-    }, 0);
+    }, {});
+
+    return (
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+        border: '1px solid #e5e7eb'
+      }}>
+        {Object.entries(changesBySection).map(([sectionIndex, section]) => (
+          <div key={sectionIndex}>
+            {/* Section Header */}
+            <div style={{
+              background: '#f8fafc',
+              padding: '15px 20px',
+              borderBottom: '2px solid #e5e7eb',
+              fontSize: '1.1rem',
+              fontWeight: '600',
+              color: '#374151',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <span>📂</span>
+              {section.title}
+              <span style={{
+                background: '#e5e7eb',
+                color: '#6b7280',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                fontSize: '0.8rem'
+              }}>
+                {section.changes.length} changes
+              </span>
+            </div>
+
+            {/* Changes in unified view */}
+            {section.changes.map((change, changeIndex) => (
+              <div
+                key={change.id}
+                id={`change_${change.id}`}
+                style={{
+                  position: 'relative',
+                  borderBottom: '1px solid #f3f4f6'
+                }}
+              >
+                {/* Change annotation bar */}
+                <div style={{
+                  background: change.severity === 'high' ? '#fef2f2' : 
+                           change.severity === 'medium' ? '#fefbf2' : '#f0fdf4',
+                  padding: '8px 20px',
+                  fontSize: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderLeft: `4px solid ${getSeverityColor(change.severity)}`
+                }}>
+                  <span style={{ 
+                    color: getSeverityColor(change.severity),
+                    fontWeight: '600'
+                  }}>
+                    {change.annotation} • {change.type.replace('_', ' ').replace(/^\w/, c => c.toUpperCase())}
+                  </span>
+                  <span style={{
+                    background: 'rgba(255,255,255,0.8)',
+                    padding: '2px 8px',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    color: '#6b7280'
+                  }}>
+                    #{change.displayIndex}
+                  </span>
+                </div>
+
+                {/* Content display */}
+                <div style={{ padding: '15px 20px' }}>
+                  {change.type === 'paragraph_modified' && change.wordDiff ? (
+                    // Show inline diff
+                    <div>
+                      <div style={{
+                        fontSize: '0.8rem',
+                        color: '#6b7280',
+                        marginBottom: '10px',
+                        fontWeight: '500'
+                      }}>
+                        📝 Word-level changes:
+                      </div>
+                      {renderWordDiff(change.wordDiff)}
+                    </div>
+                  ) : change.type === 'paragraph_added' ? (
+                    // Added content
+                    <div style={{
+                      background: '#f0fdf4',
+                      border: '1px solid #bbf7d0',
+                      borderRadius: '6px',
+                      padding: '12px',
+                      borderLeft: '4px solid #22c55e'
+                    }}>
+                      <div style={{
+                        fontSize: '0.8rem',
+                        color: '#166534',
+                        fontWeight: '600',
+                        marginBottom: '8px'
+                      }}>
+                        ➕ Added content:
+                      </div>
+                      <div style={{ color: '#166534', lineHeight: '1.6' }}>
+                        {change.content}
+                      </div>
+                    </div>
+                  ) : change.type === 'paragraph_removed' ? (
+                    // Removed content
+                    <div style={{
+                      background: '#fef2f2',
+                      border: '1px solid #fecaca',
+                      borderRadius: '6px',
+                      padding: '12px',
+                      borderLeft: '4px solid #dc2626'
+                    }}>
+                      <div style={{
+                        fontSize: '0.8rem',
+                        color: '#dc2626',
+                        fontWeight: '600',
+                        marginBottom: '8px'
+                      }}>
+                        🗑️ Removed content:
+                      </div>
+                      <div style={{ 
+                        color: '#dc2626', 
+                        lineHeight: '1.6',
+                        textDecoration: 'line-through',
+                        opacity: 0.8
+                      }}>
+                        {change.content}
+                      </div>
+                    </div>
+                  ) : (
+                    // Other changes
+                    <div style={{
+                      background: '#fefbf2',
+                      border: '1px solid #fed7aa',
+                      borderRadius: '6px',
+                      padding: '12px',
+                      borderLeft: '4px solid #f59e0b',
+                      color: '#92400e',
+                      lineHeight: '1.6'
+                    }}>
+                      {change.newContent || change.content}
+                    </div>
+                  )}
+
+                  {/* Word count info */}
+                  {change.wordCount && (
+                    <div style={{
+                      marginTop: '8px',
+                      fontSize: '0.75rem',
+                      color: '#6b7280',
+                      fontStyle: 'italic'
+                    }}>
+                      {typeof change.wordCount === 'object' ? (
+                        <>
+                          Words: {change.wordCount.old} → {change.wordCount.new} 
+                          ({change.wordCount.change > 0 ? '+' : ''}{change.wordCount.change})
+                        </>
+                      ) : (
+                        `Word count: ${change.wordCount}`
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // NEW: Track Changes view (like Microsoft Word)
+  const renderTrackChangesView = () => {
+    return (
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '30px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+        border: '1px solid #e5e7eb',
+        position: 'relative'
+      }}>
+        <div style={{
+          fontSize: '1.1rem',
+          lineHeight: '1.8',
+          color: '#374151',
+          maxWidth: isMobile ? '100%' : '70%' // Leave space for margin comments
+        }}>
+          {/* Reconstruct document with inline changes */}
+          {filteredChanges.map((change, index) => (
+            <div
+              key={change.id}
+              style={{
+                marginBottom: '20px',
+                position: 'relative'
+              }}
+            >
+              {change.type === 'paragraph_modified' && change.wordDiff ? (
+                <div style={{ position: 'relative' }}>
+                  {renderWordDiff(change.wordDiff)}
+                  
+                  {/* Margin comment (desktop only) */}
+                  {!isMobile && (
+                    <div style={{
+                      position: 'absolute',
+                      right: '-280px',
+                      top: '0',
+                      width: '250px',
+                      background: '#fefbf2',
+                      border: '2px solid #fed7aa',
+                      borderRadius: '8px',
+                      padding: '10px',
+                      fontSize: '0.8rem',
+                      color: '#92400e'
+                    }}>
+                      <strong>{change.annotation}</strong>
+                      <br />
+                      {change.semantic?.category}
+                      <div style={{ fontSize: '0.7rem', marginTop: '5px', color: '#6b7280' }}>
+                        Change #{change.displayIndex}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <span style={{
+                    background: change.type.includes('added') ? '#dcfce7' : 
+                               change.type.includes('removed') ? '#fee2e2' : '#fefbf2',
+                    color: change.type.includes('added') ? '#166534' : 
+                           change.type.includes('removed') ? '#dc2626' : '#92400e',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    textDecoration: change.type.includes('removed') ? 'line-through' : 'none'
+                  }}>
+                    {change.content || change.newContent}
+                  </span>
+                  
+                  {/* Mobile annotation */}
+                  {isMobile && (
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: getSeverityColor(change.severity),
+                      marginTop: '5px',
+                      fontWeight: '600'
+                    }}>
+                      {change.annotation}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderChange = (change, index) => {
+    const isCurrentChange = index === currentChangeIndex;
     
-    const maxWords = Math.max(totalWords1, totalWords2);
-    const similarityScore = maxWords > 0 ? Math.round((1 - changedWords / maxWords) * 100) : 100;
-    
-    updateProgress('Finalization', 95, 'Compiling enhanced results...');
-    
-    const processingTime = Date.now() - startTime;
-    
-    const results = {
-      // Enhanced metadata
-      comparison_method: 'enhanced_word_semantic_comparison',
-      similarity_score: similarityScore,
-      overall_similarity: similarityScore,
-      processing_time: { total_time_ms: processingTime },
+    return (
+      <div
+        key={change.id}
+        id={`change_${change.id}`}
+        style={{
+          position: 'relative',
+          background: isCurrentChange ? '#f0fdf4' : 'white',
+          border: `2px solid ${isCurrentChange ? '#22c55e' : '#e5e7eb'}`,
+          borderRadius: '8px',
+          padding: '15px',
+          marginBottom: '15px',
+          ...(isMobile ? {} : { marginRight: '200px' }) // Space for annotations
+        }}
+      >
+        {/* Margin annotation for desktop */}
+        {!isMobile && renderMarginAnnotation(change)}
+        
+        {/* Mobile annotation */}
+        {isMobile && (
+          <div style={{
+            background: getSeverityColor(change.severity),
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            marginBottom: '10px',
+            display: 'inline-block'
+          }}>
+            {change.annotation}
+          </div>
+        )}
+        
+        {/* Change header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '10px'
+        }}>
+          <div style={{
+            fontSize: '0.9rem',
+            fontWeight: '600',
+            color: '#374151'
+          }}>
+            {change.sectionTitle && `${change.sectionTitle} • `}
+            {change.type.replace('_', ' ').replace(/^\w/, c => c.toUpperCase())}
+          </div>
+          
+          <div style={{
+            fontSize: '0.8rem',
+            color: '#6b7280',
+            background: '#f3f4f6',
+            padding: '2px 8px',
+            borderRadius: '12px'
+          }}>
+            #{change.displayIndex}
+          </div>
+        </div>
+        
+        {/* Change content */}
+        {viewMode === 'side-by-side' && change.type === 'paragraph_modified' ? (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: '15px'
+          }}>
+            <div>
+              <div style={{
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                color: '#dc2626',
+                marginBottom: '8px'
+              }}>
+                Original:
+              </div>
+              <div style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '6px',
+                padding: '10px',
+                fontSize: '0.9rem',
+                lineHeight: '1.5'
+              }}>
+                {change.oldContent}
+              </div>
+            </div>
+            
+            <div>
+              <div style={{
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                color: '#059669',
+                marginBottom: '8px'
+              }}>
+                Revised:
+              </div>
+              <div style={{
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderRadius: '6px',
+                padding: '10px',
+                fontSize: '0.9rem',
+                lineHeight: '1.5'
+              }}>
+                {change.newContent}
+              </div>
+            </div>
+          </div>
+        ) : change.type === 'paragraph_modified' && change.wordDiff ? (
+          <div>
+            <div style={{
+              fontSize: '0.8rem',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
+              Detailed Changes:
+            </div>
+            <div style={{
+              background: '#f8fafc',
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              padding: '10px',
+              fontSize: '0.9rem'
+            }}>
+              {renderWordDiff(change.wordDiff)}
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            background: change.type.includes('added') ? '#f0fdf4' 
+              : change.type.includes('removed') ? '#fef2f2' 
+              : '#fef3c7',
+            border: `1px solid ${change.type.includes('added') ? '#bbf7d0' 
+              : change.type.includes('removed') ? '#fecaca' 
+              : '#fde047'}`,
+            borderRadius: '6px',
+            padding: '10px',
+            fontSize: '0.9rem',
+            lineHeight: '1.5'
+          }}>
+            {change.content || change.newContent || change.oldContent}
+          </div>
+        )}
+        
+        {/* Word count information */}
+        {change.wordCount && (
+          <div style={{
+            marginTop: '8px',
+            fontSize: '0.75rem',
+            color: '#6b7280'
+          }}>
+            {typeof change.wordCount === 'object' ? (
+              <>
+                Words: {change.wordCount.old} → {change.wordCount.new} 
+                ({change.wordCount.change > 0 ? '+' : ''}{change.wordCount.change})
+              </>
+            ) : (
+              `Word count: ${change.wordCount}`
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderSectionControls = () => (
+    <div style={{
+      background: 'white',
+      borderRadius: '8px',
+      padding: '15px',
+      marginBottom: '20px',
+      border: '1px solid #e5e7eb',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: '10px'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px'
+      }}>
+        <label style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontSize: '0.9rem',
+          color: '#374151'
+        }}>
+          <input
+            type="checkbox"
+            checked={showUnchanged}
+            onChange={(e) => setShowUnchanged(e.target.checked)}
+          />
+          Show unchanged content
+        </label>
+      </div>
       
-      // Document structure
-      document1_structure: {
-        sections: doc1.sections.map((section, index) => ({
-          sectionIndex: index,
-          title: section.title,
-          paragraphCount: section.paragraphs.length,
-          wordCount: section.paragraphs.reduce((acc, p) => acc + p.wordCount, 0)
-        })),
-        metadata: doc1.metadata
-      },
-      
-      document2_structure: {
-        sections: doc2.sections.map((section, index) => ({
-          sectionIndex: index,
-          title: section.title,
-          paragraphCount: section.paragraphs.length,
-          wordCount: section.paragraphs.reduce((acc, p) => acc + p.wordCount, 0)
-        })),
-        metadata: doc2.metadata
-      },
-      
-      // Enhanced changes with semantic analysis
-      enhanced_changes: changes,
-      change_statistics: {
-        total_changes: changes.length,
-        additions: stats.additions,
-        deletions: stats.deletions,
-        modifications: stats.modifications,
-        unchanged: stats.unchanged,
-        semantic_breakdown: {
-          financial: stats.financial,
-          quantitative: stats.quantitative,
-          qualitative: stats.qualitative,
-          textual: changes.length - (stats.financial + stats.quantitative + stats.qualitative)
-        }
-      },
-      
-      // Navigation data
-      navigation: {
-        total_sections: Math.max(doc1.sections.length, doc2.sections.length),
-        sections_with_changes: [...new Set(changes.map(c => c.sectionIndex))].length,
-        major_changes: changes.filter(c => c.severity === 'high').length,
-        change_density: changes.length / Math.max(doc1.metadata.totalParagraphs, doc2.metadata.totalParagraphs)
-      },
-      
-      // Export data for professional reports
-      export_data: {
-        document_titles: {
-          doc1: doc1.metadata.fileName,
-          doc2: doc2.metadata.fileName
-        },
-        summary: {
-          total_changes: changes.length,
-          similarity_percentage: similarityScore,
-          word_change_percentage: maxWords > 0 ? Math.round((changedWords / maxWords) * 100) : 0
-        }
-      },
-      
-      // Performance metrics
-      quality_metrics: {
-        overall_success_rate: 1.0,
-        semantic_analysis_coverage: (stats.financial + stats.quantitative + stats.qualitative) / Math.max(changes.length, 1),
-        processing_efficiency: processingTime < 5000 ? 1.0 : Math.max(0.5, 5000 / processingTime)
-      },
-      
-      // Legacy compatibility
-      text_changes: changes.map(change => ({
-        type: change.type.replace('paragraph_', '').replace('section_', ''),
-        paragraph: change.paragraphIndex || 0,
-        section: change.sectionIndex || 0,
-        old_text: change.oldContent || change.content || '',
-        new_text: change.newContent || change.content || '',
-        annotation: change.annotation
-      })),
-      
-      comparison_type: 'Enhanced Word Document Analysis',
-      processing_note: `Enhanced semantic comparison completed. Analyzed ${doc1.sections.length} and ${doc2.sections.length} sections with ${changes.length} changes detected.`
-    };
-    
-    updateProgress('Complete', 100, 'Enhanced comparison completed!');
-    
-    console.log('✅ Enhanced Word comparison completed:', {
-      similarity: results.similarity_score,
-      changes: results.enhanced_changes.length,
-      sections: results.navigation.total_sections,
-      semanticCoverage: results.quality_metrics.semantic_analysis_coverage,
-      processingTime: processingTime
-    });
-    
-    return results;
-    
-  } catch (error) {
-    console.error('❌ Enhanced Word comparison failed:', error);
-    throw new Error(`Enhanced Word document comparison failed: ${error.message}`);
+      <div style={{
+        display: 'flex',
+        gap: '8px'
+      }}>
+        <button
+          onClick={expandAllSections}
+          style={{
+            background: '#f3f4f6',
+            border: '1px solid #d1d5db',
+            color: '#374151',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            fontSize: '0.8rem',
+            cursor: 'pointer'
+          }}
+        >
+          📂 Expand All
+        </button>
+        
+        <button
+          onClick={collapseAllSections}
+          style={{
+            background: '#f3f4f6',
+            border: '1px solid #d1d5db',
+            color: '#374151',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            fontSize: '0.8rem',
+            cursor: 'pointer'
+          }}
+        >
+          📁 Collapse All
+        </button>
+      </div>
+    </div>
+  );
+
+  // Main render
+  if (!results || !results.enhanced_changes) {
+    return (
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '40px',
+        textAlign: 'center',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+      }}>
+        <div style={{ fontSize: '3rem', marginBottom: '20px' }}>❌</div>
+        <h3 style={{ color: '#dc2626', marginBottom: '15px' }}>
+          No comparison results available
+        </h3>
+        <p style={{ color: '#6b7280' }}>
+          Please run the Word comparison again to see detailed results.
+        </p>
+      </div>
+    );
   }
+
+  return (
+    <div ref={resultsRef} style={{ position: 'relative' }}>
+      {/* Mobile Navigation Toggle */}
+      {isMobile && (
+        <button
+          onClick={() => setShowMobileNav(!showMobileNav)}
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            background: '#059669',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            fontSize: '1.2rem',
+            cursor: 'pointer',
+            zIndex: 1000,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+          }}
+        >
+          📊
+        </button>
+      )}
+
+      {/* Stats Panel */}
+      {(!isMobile || showMobileNav) && renderStatsPanel()}
+      
+      {/* Section Controls */}
+      {(!isMobile || showMobileNav) && renderSectionControls()}
+      
+      {/* Results Content */}
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '20px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+        border: '1px solid #e5e7eb',
+        minHeight: '400px'
+      }}>
+        {filteredChanges.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            color: '#6b7280',
+            padding: '40px'
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🎉</div>
+            <h3 style={{ marginBottom: '10px' }}>
+              {activeFilter === 'all' ? 'No Changes Found' : `No ${activeFilter} Changes`}
+            </h3>
+            <p>
+              {activeFilter === 'all' 
+                ? 'The documents are identical!'
+                : `Try selecting a different filter to see other types of changes.`
+              }
+            </p>
+          </div>
+        ) : (
+          <div>
+            <div style={{
+              marginBottom: '20px',
+              paddingBottom: '15px',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              <h3 style={{
+                margin: '0 0 5px 0',
+                color: '#1f2937',
+                fontSize: '1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                {viewMode === 'unified' ? '📄 Unified Document View' :
+                 viewMode === 'track-changes' ? '📝 Track Changes View' :
+                 '📊 Side-by-Side Comparison'
+                }
+                
+                <span style={{
+                  background: '#f3f4f6',
+                  color: '#6b7280',
+                  fontSize: '0.7rem',
+                  padding: '3px 8px',
+                  borderRadius: '12px',
+                  fontWeight: '500'
+                }}>
+                  {viewMode.replace('-', ' ').replace(/^\w/, c => c.toUpperCase())}
+                </span>
+              </h3>
+              
+              <p style={{
+                margin: 0,
+                color: '#6b7280',
+                fontSize: '0.9rem'
+              }}>
+                {viewMode === 'unified' 
+                  ? `Showing ${filteredChanges.length} changes organized by document section (GitHub-style)`
+                  : viewMode === 'track-changes'
+                    ? `Showing changes inline with margin annotations (Microsoft Word-style)`
+                    : `Showing ${filteredChanges.length} changes with original vs revised comparison`
+                }
+                {activeFilter !== 'all' && ` (${activeFilter} filter applied)`}
+              </p>
+            </div>
+            
+            {/* Changes Content - Multiple View Modes */}
+            <div>
+              {viewMode === 'unified' ? renderUnifiedView() :
+               viewMode === 'track-changes' ? renderTrackChangesView() :
+               // Default: Side-by-side view
+               <div>
+                 {filteredChanges.map((change, index) => renderChange(change, index))}
+               </div>
+              }
+            </div>
+            
+            {/* Professional footer */}
+            <div style={{
+              marginTop: '30px',
+              paddingTop: '20px',
+              borderTop: '1px solid #e5e7eb',
+              textAlign: 'center',
+              color: '#6b7280',
+              fontSize: '0.85rem'
+            }}>
+              <p>
+                Analysis completed with {Math.round((results.quality_metrics?.semantic_analysis_coverage || 0) * 100)}% semantic coverage
+              </p>
+              <p style={{ marginTop: '5px' }}>
+                Processing time: {results.processing_time?.total_time_ms || 0}ms
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Authentication overlay for enhanced features */}
+      {!isAuthenticated && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          background: 'white',
+          border: '2px solid #059669',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+          maxWidth: '300px',
+          zIndex: 1000
+        }}>
+          <h4 style={{
+            margin: '0 0 10px 0',
+            color: '#059669',
+            fontSize: '1rem'
+          }}>
+            🚀 Unlock Full Features
+          </h4>
+          <p style={{
+            margin: '0 0 15px 0',
+            fontSize: '0.85rem',
+            color: '#6b7280',
+            lineHeight: '1.4'
+          }}>
+            Get unlimited comparisons, export reports, and advanced semantic analysis
+          </p>
+          <div style={{
+            display: 'flex',
+            gap: '8px'
+          }}>
+            <button
+              onClick={onSignUp}
+              style={{
+                background: '#059669',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                flex: 1
+              }}
+            >
+              Sign Up
+            </button>
+            <button
+              onClick={onSignIn}
+              style={{
+                background: 'transparent',
+                color: '#059669',
+                border: '1px solid #059669',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                flex: 1
+              }}
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
+
+export default WordResults;
