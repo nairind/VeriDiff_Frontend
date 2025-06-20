@@ -1,4 +1,4 @@
-// /utils/wordFileComparison.js - ENHANCED WORD COMPARISON WITH SEMANTIC ANALYSIS
+// /utils/wordFileComparison.js - COMPLETE ENHANCED WORD COMPARISON WITH FIXED SEMANTIC ANALYSIS
 // Progress callback for enhanced processing
 let progressCallback = null;
 
@@ -23,6 +23,49 @@ const reportProgress = (progressData) => {
       console.warn('⚠️ Enhanced progress callback error:', error);
     }
   }
+};
+
+/**
+ * FIXED: Extract financial value with proper parsing
+ */
+const extractFinancialValue = (financialText) => {
+  if (!financialText) return null;
+  
+  // Handle millions: $2.4 million, $2.4M, etc.
+  const millionMatch = financialText.match(/\$?(\d+\.?\d*)\s*(?:million|M)/i);
+  if (millionMatch) {
+    return parseFloat(millionMatch[1]);
+  }
+  
+  // Handle thousands: $1,800, $1800, etc.
+  const thousandMatch = financialText.match(/\$?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/);
+  if (thousandMatch) {
+    return parseFloat(thousandMatch[1].replace(/,/g, '')) / 1000; // Convert to millions
+  }
+  
+  return null;
+};
+
+/**
+ * FIXED: Extract percentage value with proper parsing
+ */
+const extractPercentageValue = (percentageText) => {
+  if (!percentageText) return null;
+  
+  const match = percentageText.match(/(\d+(?:\.\d+)?)/);
+  return match ? parseFloat(match[1]) : null;
+};
+
+/**
+ * FIXED: Extract numerical value with proper parsing
+ */
+const extractNumericalValue = (numberText) => {
+  if (!numberText) return null;
+  
+  // Remove commas and parse
+  const cleaned = numberText.replace(/,/g, '');
+  const match = cleaned.match(/(\d+(?:\.\d+)?)/);
+  return match ? parseFloat(match[1]) : null;
 };
 
 /**
@@ -316,27 +359,28 @@ const extractSemanticMarkers = (text) => {
     qualitative: []
   };
 
-  // Financial patterns (enhanced)
-  const financialRegex = /\$[\d,]+(?:\.\d{2})?|\$\d+(?:\.\d{2})?[KMB]?|USD?\s*[\d,]+(?:\.\d{2})?/gi;
+  // Enhanced financial patterns
+  const financialRegex = /\$[\d,]+(?:\.\d{2})?|\$\d+(?:\.\d+)?\s*(?:million|M|thousand|K)\b|USD?\s*[\d,]+(?:\.\d{2})?/gi;
   markers.financial = (text.match(financialRegex) || []);
 
-  // Percentage patterns (enhanced)
+  // Enhanced percentage patterns
   const percentageRegex = /\d+(?:\.\d+)?%|\d+(?:\.\d+)?\s*percent/gi;
   markers.percentages = (text.match(percentageRegex) || []);
 
-  // Number patterns (enhanced)
+  // Enhanced number patterns (excluding financial and percentages)
   const numberRegex = /\b\d{1,3}(?:,\d{3})*(?:\.\d+)?\b/g;
-  markers.numbers = (text.match(numberRegex) || []).filter(num => 
+  const allNumbers = (text.match(numberRegex) || []);
+  markers.numbers = allNumbers.filter(num => 
     !markers.financial.some(fin => fin.includes(num)) &&
     !markers.percentages.some(pct => pct.includes(num))
   );
 
-  // Date patterns (enhanced)
+  // Enhanced date patterns
   const dateRegex = /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{1,2}-\d{1,2}-\d{2,4}\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{2,4}\b/gi;
   markers.dates = (text.match(dateRegex) || []);
 
-  // Qualitative markers (enhanced)
-  const qualitativeWords = ['increase', 'decrease', 'improve', 'decline', 'better', 'worse', 'higher', 'lower', 'more', 'less', 'significant', 'substantial'];
+  // Enhanced qualitative markers
+  const qualitativeWords = ['increase', 'decrease', 'improve', 'decline', 'better', 'worse', 'higher', 'lower', 'more', 'less', 'significant', 'substantial', 'exceptional', 'outstanding', 'strong', 'weak'];
   markers.qualitative = qualitativeWords.filter(word => 
     new RegExp(`\\b${word}\\b`, 'i').test(text)
   );
@@ -482,37 +526,52 @@ const createEnhancedChange = async (oldPara, newPara, index, changeType, options
 };
 
 /**
- * Generate enhanced annotation with semantic intelligence
+ * FIXED: Generate enhanced annotation with semantic intelligence
  */
 const generateEnhancedAnnotation = (oldPara, newPara, changeType, options) => {
   if (changeType === 'added') return '➕ Content added';
   if (changeType === 'removed') return '🗑️ Content removed';
   
   if (changeType === 'modified' && oldPara && newPara) {
-    // Enhanced semantic annotation detection
+    // Enhanced semantic annotation detection with FIXED calculations
     const oldMarkers = oldPara.semanticMarkers || {};
     const newMarkers = newPara.semanticMarkers || {};
     
     // Check for financial changes
     if (oldMarkers.financial?.length > 0 || newMarkers.financial?.length > 0) {
+      const oldAmount = extractFinancialValue(oldMarkers.financial?.[0]);
+      const newAmount = extractFinancialValue(newMarkers.financial?.[0]);
+      
+      if (oldAmount && newAmount && oldAmount !== newAmount) {
+        const change = newAmount - oldAmount;
+        const changeFormatted = change > 0 ? `+$${change.toFixed(1)}M` : `-$${Math.abs(change).toFixed(1)}M`;
+        return `💰 Financial change: ${changeFormatted}`;
+      }
       return '💰 Financial amount changed';
     }
     
-    // Check for percentage changes
+    // FIXED: Check for percentage changes with correct calculation
     if (oldMarkers.percentages?.length > 0 || newMarkers.percentages?.length > 0) {
-      const oldPct = oldMarkers.percentages[0];
-      const newPct = newMarkers.percentages[0];
-      if (oldPct && newPct) {
-        const oldVal = parseFloat(oldPct);
-        const newVal = parseFloat(newPct);
-        const change = newVal - oldVal;
-        return `📊 Percentage change: ${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
+      const oldPct = extractPercentageValue(oldMarkers.percentages?.[0]);
+      const newPct = extractPercentageValue(newMarkers.percentages?.[0]);
+      
+      if (oldPct !== null && newPct !== null && oldPct !== newPct) {
+        const change = newPct - oldPct; // FIXED: Correct direction calculation
+        const direction = change > 0 ? '📈' : '📉';
+        return `📊 ${direction} Percentage: ${oldPct}% → ${newPct}% (${change > 0 ? '+' : ''}${change.toFixed(1)}%)`;
       }
       return '📊 Percentage modified';
     }
     
     // Check for numerical changes
     if (oldMarkers.numbers?.length > 0 || newMarkers.numbers?.length > 0) {
+      const oldNum = extractNumericalValue(oldMarkers.numbers?.[0]);
+      const newNum = extractNumericalValue(newMarkers.numbers?.[0]);
+      
+      if (oldNum !== null && newNum !== null && oldNum !== newNum) {
+        const change = newNum - oldNum;
+        return `🔢 Number change: ${oldNum} → ${newNum} (${change > 0 ? '+' : ''}${change})`;
+      }
       return '🔢 Numerical value changed';
     }
     
@@ -531,7 +590,7 @@ const generateEnhancedAnnotation = (oldPara, newPara, changeType, options) => {
 };
 
 /**
- * Perform semantic analysis on paragraph changes
+ * FIXED: Perform semantic analysis with correct calculations
  */
 const performSemanticAnalysis = async (oldPara, newPara) => {
   const semantic = {
@@ -545,28 +604,34 @@ const performSemanticAnalysis = async (oldPara, newPara) => {
   const oldMarkers = oldPara.semanticMarkers || {};
   const newMarkers = newPara.semanticMarkers || {};
 
-  // Enhanced financial analysis
+  // FIXED: Enhanced financial analysis with correct calculations
   if (oldMarkers.financial?.length > 0 || newMarkers.financial?.length > 0) {
     semantic.type = 'financial';
     semantic.category = 'Financial amount change';
     
-    if (oldMarkers.financial[0] && newMarkers.financial[0]) {
-      const oldAmount = parseFloat(oldMarkers.financial[0].replace(/[\$,]/g, ''));
-      const newAmount = parseFloat(newMarkers.financial[0].replace(/[\$,]/g, ''));
-      semantic.metadata.change = newAmount - oldAmount;
+    const oldAmount = extractFinancialValue(oldMarkers.financial?.[0]);
+    const newAmount = extractFinancialValue(newMarkers.financial?.[0]);
+    
+    if (oldAmount !== null && newAmount !== null) {
+      semantic.metadata.oldValue = oldAmount;
+      semantic.metadata.newValue = newAmount;
+      semantic.metadata.change = newAmount - oldAmount; // FIXED: Correct calculation
       semantic.metadata.changePercent = ((newAmount - oldAmount) / oldAmount * 100).toFixed(1);
     }
   }
   
-  // Enhanced percentage analysis
+  // FIXED: Enhanced percentage analysis with correct calculations
   else if (oldMarkers.percentages?.length > 0 || newMarkers.percentages?.length > 0) {
     semantic.type = 'quantitative';
     semantic.category = 'Percentage modification';
     
-    if (oldMarkers.percentages[0] && newMarkers.percentages[0]) {
-      const oldPct = parseFloat(oldMarkers.percentages[0]);
-      const newPct = parseFloat(newMarkers.percentages[0]);
-      semantic.metadata.change = (newPct - oldPct).toFixed(1);
+    const oldPct = extractPercentageValue(oldMarkers.percentages?.[0]);
+    const newPct = extractPercentageValue(newMarkers.percentages?.[0]);
+    
+    if (oldPct !== null && newPct !== null) {
+      semantic.metadata.oldValue = oldPct;
+      semantic.metadata.newValue = newPct;
+      semantic.metadata.change = (newPct - oldPct).toFixed(1); // FIXED: Correct calculation
       semantic.metadata.direction = newPct > oldPct ? 'increase' : 'decrease';
     }
   }
@@ -575,6 +640,16 @@ const performSemanticAnalysis = async (oldPara, newPara) => {
   else if (oldMarkers.numbers?.length > 0 || newMarkers.numbers?.length > 0) {
     semantic.type = 'quantitative';
     semantic.category = 'Numerical value change';
+    
+    const oldNum = extractNumericalValue(oldMarkers.numbers?.[0]);
+    const newNum = extractNumericalValue(newMarkers.numbers?.[0]);
+    
+    if (oldNum !== null && newNum !== null) {
+      semantic.metadata.oldValue = oldNum;
+      semantic.metadata.newValue = newNum;
+      semantic.metadata.change = newNum - oldNum;
+      semantic.metadata.changePercent = ((newNum - oldNum) / oldNum * 100).toFixed(1);
+    }
   }
   
   // Enhanced qualitative analysis
@@ -587,7 +662,7 @@ const performSemanticAnalysis = async (oldPara, newPara) => {
 };
 
 /**
- * Calculate change severity for enhanced prioritization
+ * FIXED: Calculate change severity with improved logic
  */
 const calculateChangeSeverity = (oldPara, newPara, changeType) => {
   if (changeType === 'added' || changeType === 'removed') {
@@ -600,13 +675,21 @@ const calculateChangeSeverity = (oldPara, newPara, changeType) => {
   const newLength = newPara.content.length;
   const lengthChange = Math.abs(newLength - oldLength) / Math.max(oldLength, 1);
 
-  // Enhanced severity calculation with semantic factors
+  // FIXED: Enhanced severity calculation with semantic factors
   const hasFinancial = (oldPara.semanticMarkers?.financial?.length || 0) > 0 || 
                       (newPara.semanticMarkers?.financial?.length || 0) > 0;
   const hasPercentage = (oldPara.semanticMarkers?.percentages?.length || 0) > 0 || 
                        (newPara.semanticMarkers?.percentages?.length || 0) > 0;
+  const hasSignificantNumbers = (oldPara.semanticMarkers?.numbers?.length || 0) > 0 || 
+                               (newPara.semanticMarkers?.numbers?.length || 0) > 0;
 
-  if (hasFinancial || hasPercentage) return 'high'; // Financial/percentage changes are high priority
+  // Financial and percentage changes are high priority
+  if (hasFinancial || hasPercentage) return 'high';
+  
+  // Significant numerical changes are medium priority
+  if (hasSignificantNumbers) return 'medium';
+  
+  // Text length-based severity
   if (lengthChange > 0.5) return 'high'; // Major content changes
   if (lengthChange > 0.2) return 'medium'; // Moderate changes
   return 'low'; // Minor changes
@@ -785,18 +868,28 @@ const generateEnhancedStatistics = (changes, doc1, doc2) => {
 };
 
 /**
- * Calculate enhanced similarity score
+ * FIXED: Calculate enhanced similarity score with better algorithm
  */
 const calculateEnhancedSimilarity = (changes, doc1, doc2) => {
   const totalParagraphs = Math.max(doc1.paragraphs.length, doc2.paragraphs.length);
   if (totalParagraphs === 0) return 100;
 
+  // Calculate similarity based on unchanged content vs total content
   const unchangedParagraphs = totalParagraphs - changes.length;
-  const baseSimilarity = (unchangedParagraphs / totalParagraphs) * 100;
+  
+  // FIXED: Improved similarity calculation
+  // Consider content additions as less impactful than modifications/deletions
+  const additions = changes.filter(c => c.type === 'paragraph_added').length;
+  const modifications = changes.filter(c => c.type === 'paragraph_modified').length;
+  const deletions = changes.filter(c => c.type === 'paragraph_removed').length;
+  
+  // Weight changes differently: additions are less impactful
+  const weightedChanges = (additions * 0.3) + (modifications * 0.8) + (deletions * 1.0);
+  const baseSimilarity = Math.max(0, (totalParagraphs - weightedChanges) / totalParagraphs * 100);
 
-  // Enhanced similarity calculation considering semantic importance
+  // Additional penalty for semantic changes (but smaller)
   const semanticChanges = changes.filter(c => c.semantic && c.semantic.type !== 'textual').length;
-  const semanticPenalty = (semanticChanges / totalParagraphs) * 10; // Additional penalty for semantic changes
+  const semanticPenalty = (semanticChanges / totalParagraphs) * 5; // Reduced penalty
 
   return Math.max(0, Math.min(100, baseSimilarity - semanticPenalty));
 };
