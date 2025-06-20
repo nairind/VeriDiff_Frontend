@@ -421,18 +421,38 @@ export default function WordComparison() {
           constructor: arrayBuffer1.constructor.name
         });
         
-        const mammothResult1 = await window.mammoth.extractRawText({ arrayBuffer: arrayBuffer1 });
-        console.log('🧪 Mammoth File 1 result:', {
-          textLength: mammothResult1.text?.length || 0,
-          hasText: !!mammothResult1.text,
-          textPreview: mammothResult1.text ? mammothResult1.text.substring(0, 100) : 'NO TEXT',
-          messagesCount: mammothResult1.messages?.length || 0,
-          messages: mammothResult1.messages
+        // ENHANCED DEBUG - Check ArrayBuffer structure
+        const uint8View1 = new Uint8Array(arrayBuffer1);
+        console.log('🔍 ArrayBuffer 1 analysis:', {
+          firstBytes: Array.from(uint8View1.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' '),
+          lastBytes: Array.from(uint8View1.slice(-8)).map(b => b.toString(16).padStart(2, '0')).join(' '),
+          totalBytes: uint8View1.length,
+          isZeroFilled: uint8View1.every(b => b === 0)
         });
         
-        if (!mammothResult1.text || mammothResult1.text.trim().length === 0) {
+        // Try alternative mammoth call methods
+        console.log('🧪 Method 1: Direct arrayBuffer');
+        const mammothResult1a = await window.mammoth.extractRawText({ arrayBuffer: arrayBuffer1 });
+        console.log('Result 1a:', {
+          textLength: mammothResult1a.text?.length || 0,
+          textPreview: mammothResult1a.text?.substring(0, 100) || 'NO TEXT',
+          messages: mammothResult1a.messages
+        });
+        
+        console.log('🧪 Method 2: Fresh Uint8Array');
+        const freshUint8 = new Uint8Array(arrayBuffer1);
+        const mammothResult1b = await window.mammoth.extractRawText({ arrayBuffer: freshUint8.buffer });
+        console.log('Result 1b:', {
+          textLength: mammothResult1b.text?.length || 0,
+          textPreview: mammothResult1b.text?.substring(0, 100) || 'NO TEXT',
+          messages: mammothResult1b.messages
+        });
+        
+        if (!mammothResult1a.text || mammothResult1a.text.trim().length === 0) {
           console.error('❌ MAMMOTH FAILED - No text extracted from File 1');
           console.log('This suggests the file is not a valid Word document or is corrupted');
+        } else {
+          console.log('✅ SUCCESS - Text extracted from File 1!');
         }
         
       } catch (mammothError1) {
