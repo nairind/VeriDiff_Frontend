@@ -310,59 +310,106 @@ const processDocumentStructure = (text, html) => {
   }];
 };
 
-// Enhanced text extraction with structure preservation
+// Enhanced text extraction with structure preservation - FIXED
 const extractTextFromWord = async (fileBuffer, fileName) => {
   try {
     console.log(`📝 Enhanced extraction from ${fileName}...`);
+    console.log(`📊 File buffer type: ${typeof fileBuffer}, length: ${fileBuffer?.byteLength || 'unknown'}`);
     
+    // Ensure we have a proper ArrayBuffer - SIMPLIFIED APPROACH
     let arrayBuffer;
     if (fileBuffer instanceof ArrayBuffer) {
       arrayBuffer = fileBuffer;
     } else if (fileBuffer.buffer instanceof ArrayBuffer) {
       arrayBuffer = fileBuffer.buffer;
     } else {
-      throw new Error(`Invalid file buffer format for ${fileName}.`);
+      throw new Error(`Invalid file buffer format for ${fileName}. Expected ArrayBuffer.`);
     }
     
+    console.log(`📊 ArrayBuffer size: ${arrayBuffer.byteLength} bytes`);
+    
+    // Basic validation - don't over-complicate
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const isZipBased = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B; // PK signature
+    console.log(`📋 File format check: ZIP-based (.docx): ${isZipBased}`);
+    
+    if (!isZipBased) {
+      console.warn(`⚠️ File signature doesn't match .docx format for ${fileName}, but proceeding...`);
+    }
+    
+    // Use mammoth.js - BACK TO SIMPLE WORKING APPROACH
     const mammothLib = window.mammoth || mammoth;
     if (!mammothLib) {
-      throw new Error('Mammoth.js library not available.');
+      throw new Error('Mammoth.js library not available. Please ensure mammoth.js is loaded.');
     }
     
-    // Extract both text and HTML for structure
-    const [textResult, htmlResult] = await Promise.all([
-      mammothLib.extractRawText({ arrayBuffer }),
-      mammothLib.convertToHtml({ arrayBuffer })
-    ]);
+    console.log(`🔍 Calling mammoth.extractRawText for ${fileName}...`);
     
+    // SIMPLIFIED - Just use the basic approach that was working
+    const textResult = await mammothLib.extractRawText({ arrayBuffer: arrayBuffer });
     const text = textResult.text || '';
-    const html = htmlResult.value || '';
+    
+    console.log(`📝 Mammoth result for ${fileName}:`, {
+      textLength: text.length,
+      textPreview: text.substring(0, 200) + (text.length > 200 ? '...' : ''),
+      messagesCount: textResult.messages?.length || 0
+    });
+    
+    // Log any mammoth warnings/messages
+    if (textResult.messages && textResult.messages.length > 0) {
+      console.log(`📋 Mammoth processing messages for ${fileName}:`, textResult.messages);
+    }
     
     if (!text || text.trim().length === 0) {
-      throw new Error(`No text content found in ${fileName}.`);
+      console.error(`❌ No text extracted from ${fileName}`);
+      
+      // Try HTML extraction as fallback
+      console.log(`🔄 Trying HTML extraction fallback for ${fileName}...`);
+      try {
+        const htmlResult = await mammothLib.convertToHtml({ arrayBuffer: arrayBuffer });
+        console.log(`📄 HTML result length: ${htmlResult.value?.length || 0}`);
+        
+        if (htmlResult.value && htmlResult.value.trim().length > 0) {
+          // Strip HTML tags to get text
+          const textFromHtml = htmlResult.value.replace(/<[^>]*>/g, '').trim();
+          if (textFromHtml.length > 0) {
+            console.log(`✅ Recovered text from HTML: ${textFromHtml.length} characters`);
+            return processExtractedText(textFromHtml, htmlResult.value, fileName, htmlResult.messages);
+          }
+        }
+      } catch (htmlError) {
+        console.error(`❌ HTML extraction also failed for ${fileName}:`, htmlError);
+      }
+      
+      throw new Error(`No text content found in ${fileName}. The document may be empty, corrupted, or in an unsupported format.`);
     }
     
-    console.log(`📝 Extracted ${text.length} characters from ${fileName}`);
+    console.log(`✅ Successfully extracted ${text.length} characters from ${fileName}`);
     
-    // Process document structure
-    const sections = processDocumentStructure(text, html);
+    // Also get HTML for structure - but don't let it fail the whole process
+    let html = '';
+    try {
+      const htmlResult = await mammothLib.convertToHtml({ arrayBuffer: arrayBuffer });
+      html = htmlResult.value || '';
+    } catch (htmlError) {
+      console.warn(`⚠️ HTML extraction failed for ${fileName}, continuing with text only:`, htmlError.message);
+    }
     
-    return {
-      text: text,
-      html: html,
-      sections: sections,
-      metadata: {
-        totalWords: text.split(/\s+/).filter(w => w.length > 0).length,
-        totalParagraphs: sections.reduce((acc, section) => acc + section.paragraphs.length, 0),
-        totalSections: sections.length,
-        fileName: fileName
-      },
-      warnings: textResult.messages || []
-    };
+    return processExtractedText(text, html, fileName, textResult.messages);
     
   } catch (error) {
     console.error(`❌ Enhanced extraction error for ${fileName}:`, error);
-    throw error;
+    
+    // Provide more specific error messages
+    if (error.message.includes('zip') || error.message.includes('ZIP')) {
+      throw new Error(`Failed to extract text from ${fileName}: Document appears corrupted or is not a valid Word document.`);
+    } else if (error.message.includes('arrayBuffer') || error.message.includes('ArrayBuffer')) {
+      throw new Error(`Failed to extract text from ${fileName}: File data format error. Please try re-uploading the document.`);
+    } else if (error.message.includes('mammoth') || error.message.includes('Mammoth')) {
+      throw new Error(`Failed to extract text from ${fileName}: Word processing library error. ${error.message}`);
+    } else {
+      throw new Error(`Failed to extract text from ${fileName}: ${error.message}`);
+    }
   }
 };
 
