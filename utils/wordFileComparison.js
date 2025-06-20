@@ -1,4 +1,4 @@
-// /utils/wordFileComparison.js - Word Document Comparison Engine
+// /utils/wordFileComparison.js - ENHANCED WORD COMPARISON ENGINE WITH SEMANTIC DIFF
 import * as mammoth from 'mammoth';
 
 let progressCallback = null;
@@ -13,476 +13,623 @@ const updateProgress = (stage, progress, message) => {
   }
 };
 
+// Enhanced sentence and word tokenization
+const tokenizeText = (text) => {
+  // Split into sentences using multiple delimiters
+  const sentences = text
+    .split(/[.!?]+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+  
+  // Split into words with better tokenization
+  const words = text
+    .toLowerCase()
+    .replace(/[^\w\s\$\%\-]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 0);
+  
+  return { sentences, words };
+};
+
+// Advanced diff algorithm for word-level changes
+const computeWordLevelDiff = (text1, text2) => {
+  const words1 = text1.split(/(\s+)/).filter(w => w.length > 0);
+  const words2 = text2.split(/(\s+)/).filter(w => w.length > 0);
+  
+  // Simple LCS-based diff (Longest Common Subsequence)
+  const diff = [];
+  let i = 0, j = 0;
+  
+  while (i < words1.length || j < words2.length) {
+    if (i >= words1.length) {
+      // Remaining words in text2 are additions
+      diff.push({ type: 'added', text: words2[j] });
+      j++;
+    } else if (j >= words2.length) {
+      // Remaining words in text1 are deletions
+      diff.push({ type: 'removed', text: words1[i] });
+      i++;
+    } else if (words1[i] === words2[j]) {
+      // Words match
+      diff.push({ type: 'unchanged', text: words1[i] });
+      i++;
+      j++;
+    } else {
+      // Look ahead to find the best match
+      let found = false;
+      
+      // Check if word1[i] appears later in words2
+      for (let k = j + 1; k < Math.min(j + 10, words2.length); k++) {
+        if (words1[i] === words2[k]) {
+          // Add words from j to k-1 as additions
+          for (let l = j; l < k; l++) {
+            diff.push({ type: 'added', text: words2[l] });
+          }
+          diff.push({ type: 'unchanged', text: words1[i] });
+          i++;
+          j = k + 1;
+          found = true;
+          break;
+        }
+      }
+      
+      if (!found) {
+        // Check if word2[j] appears later in words1
+        for (let k = i + 1; k < Math.min(i + 10, words1.length); k++) {
+          if (words2[j] === words1[k]) {
+            // Add words from i to k-1 as deletions
+            for (let l = i; l < k; l++) {
+              diff.push({ type: 'removed', text: words1[l] });
+            }
+            diff.push({ type: 'unchanged', text: words2[j] });
+            i = k + 1;
+            j++;
+            found = true;
+            break;
+          }
+        }
+      }
+      
+      if (!found) {
+        // No match found, treat as modification
+        diff.push({ type: 'removed', text: words1[i] });
+        diff.push({ type: 'added', text: words2[j] });
+        i++;
+        j++;
+      }
+    }
+  }
+  
+  return diff;
+};
+
+// Semantic change detection
+const classifyChange = (oldText, newText) => {
+  const financial_pattern = /\$[\d,.]+(k|m|b|million|billion|thousand)?/i;
+  const percentage_pattern = /\d+(\.\d+)?%/;
+  const number_pattern = /\b\d+(\.\d+)?\b/;
+  const date_pattern = /\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2},?\s+\d{2,4}\b/i;
+  
+  if (financial_pattern.test(oldText) && financial_pattern.test(newText)) {
+    const oldAmount = extractFinancialValue(oldText);
+    const newAmount = extractFinancialValue(newText);
+    const change = newAmount - oldAmount;
+    
+    return {
+      type: 'financial',
+      category: 'Financial Change',
+      annotation: change > 0 ? `💰 +${formatCurrency(change)}` : `💰 ${formatCurrency(change)}`,
+      severity: Math.abs(change) > 100000 ? 'high' : Math.abs(change) > 10000 ? 'medium' : 'low',
+      metadata: { oldAmount, newAmount, change }
+    };
+  }
+  
+  if (percentage_pattern.test(oldText) && percentage_pattern.test(newText)) {
+    const oldPercent = parseFloat(oldText.match(/\d+(\.\d+)?/)[0]);
+    const newPercent = parseFloat(newText.match(/\d+(\.\d+)?/)[0]);
+    const change = newPercent - oldPercent;
+    
+    return {
+      type: 'percentage',
+      category: 'Percentage Change',
+      annotation: change > 0 ? `📈 +${change.toFixed(1)}%` : `📉 ${change.toFixed(1)}%`,
+      severity: Math.abs(change) > 10 ? 'high' : Math.abs(change) > 5 ? 'medium' : 'low',
+      metadata: { oldPercent, newPercent, change }
+    };
+  }
+  
+  if (number_pattern.test(oldText) && number_pattern.test(newText)) {
+    const oldNum = parseFloat(oldText.match(/\d+(\.\d+)?/)[0]);
+    const newNum = parseFloat(newText.match(/\d+(\.\d+)?/)[0]);
+    const change = newNum - oldNum;
+    
+    return {
+      type: 'quantitative',
+      category: 'Number Change',
+      annotation: change > 0 ? `📊 +${change}` : `📊 ${change}`,
+      severity: Math.abs(change) > 100 ? 'high' : Math.abs(change) > 10 ? 'medium' : 'low',
+      metadata: { oldNum, newNum, change }
+    };
+  }
+  
+  if (date_pattern.test(oldText) && date_pattern.test(newText)) {
+    return {
+      type: 'temporal',
+      category: 'Date Change',
+      annotation: '📅 Date updated',
+      severity: 'medium',
+      metadata: { oldDate: oldText, newDate: newText }
+    };
+  }
+  
+  // Qualitative text changes
+  const intensityWords = {
+    low: ['okay', 'fair', 'decent', 'adequate', 'satisfactory'],
+    medium: ['good', 'solid', 'strong', 'positive', 'effective'],
+    high: ['excellent', 'outstanding', 'exceptional', 'remarkable', 'extraordinary']
+  };
+  
+  const getIntensity = (text) => {
+    const lowerText = text.toLowerCase();
+    for (const [level, words] of Object.entries(intensityWords)) {
+      if (words.some(word => lowerText.includes(word))) {
+        return level;
+      }
+    }
+    return null;
+  };
+  
+  const oldIntensity = getIntensity(oldText);
+  const newIntensity = getIntensity(newText);
+  
+  if (oldIntensity && newIntensity && oldIntensity !== newIntensity) {
+    const intensityLevels = { low: 1, medium: 2, high: 3 };
+    const change = intensityLevels[newIntensity] - intensityLevels[oldIntensity];
+    
+    return {
+      type: 'qualitative',
+      category: 'Tone Change',
+      annotation: change > 0 ? '📈 Tone improved' : '📉 Tone softened',
+      severity: Math.abs(change) > 1 ? 'high' : 'medium',
+      metadata: { oldIntensity, newIntensity, change }
+    };
+  }
+  
+  // Default text modification
+  return {
+    type: 'textual',
+    category: 'Text Change',
+    annotation: '✏️ Text modified',
+    severity: 'low',
+    metadata: { oldText, newText }
+  };
+};
+
+// Helper functions for financial parsing
+const extractFinancialValue = (text) => {
+  const match = text.match(/\$?([\d,]+(?:\.\d+)?)\s*(k|m|b|million|billion|thousand)?/i);
+  if (!match) return 0;
+  
+  let value = parseFloat(match[1].replace(/,/g, ''));
+  const unit = match[2]?.toLowerCase();
+  
+  const multipliers = {
+    'k': 1000,
+    'thousand': 1000,
+    'm': 1000000,
+    'million': 1000000,
+    'b': 1000000000,
+    'billion': 1000000000
+  };
+  
+  if (unit && multipliers[unit]) {
+    value *= multipliers[unit];
+  }
+  
+  return value;
+};
+
+const formatCurrency = (amount) => {
+  if (Math.abs(amount) >= 1000000000) {
+    return `$${(amount / 1000000000).toFixed(1)}B`;
+  } else if (Math.abs(amount) >= 1000000) {
+    return `$${(amount / 1000000).toFixed(1)}M`;
+  } else if (Math.abs(amount) >= 1000) {
+    return `$${(amount / 1000).toFixed(1)}K`;
+  } else {
+    return `$${amount.toFixed(0)}`;
+  }
+};
+
+// Enhanced paragraph processing with section detection
+const processDocumentStructure = (text, html) => {
+  // Detect sections using headers and formatting
+  const sections = [];
+  let currentSection = null;
+  
+  // Split text into paragraphs with better detection
+  const rawParagraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+  
+  rawParagraphs.forEach((paragraph, index) => {
+    const trimmed = paragraph.trim();
+    
+    // Detect if this is a header/section title
+    const isHeader = 
+      trimmed.length < 100 && 
+      (trimmed.match(/^[A-Z\s]{3,}$/) || // ALL CAPS
+       trimmed.match(/^[A-Z][a-z\s]*$/) && trimmed.split(' ').length <= 5 || // Title Case, short
+       trimmed.endsWith(':') || // Ends with colon
+       /^(chapter|section|\d+\.|\d+\s)/i.test(trimmed)); // Numbered sections
+    
+    if (isHeader && trimmed.length > 0) {
+      // Start new section
+      if (currentSection) {
+        sections.push(currentSection);
+      }
+      currentSection = {
+        title: trimmed,
+        index: index,
+        paragraphs: [],
+        type: 'section'
+      };
+    } else {
+      // Add to current section or create default section
+      if (!currentSection) {
+        currentSection = {
+          title: 'Introduction',
+          index: 0,
+          paragraphs: [],
+          type: 'section'
+        };
+      }
+      
+      currentSection.paragraphs.push({
+        index: index,
+        text: trimmed,
+        wordCount: trimmed.split(/\s+/).filter(w => w.length > 0).length,
+        type: 'paragraph'
+      });
+    }
+  });
+  
+  // Add final section
+  if (currentSection) {
+    sections.push(currentSection);
+  }
+  
+  return sections.length > 0 ? sections : [{
+    title: 'Document Content',
+    index: 0,
+    paragraphs: rawParagraphs.map((p, i) => ({
+      index: i,
+      text: p.trim(),
+      wordCount: p.trim().split(/\s+/).filter(w => w.length > 0).length,
+      type: 'paragraph'
+    })),
+    type: 'section'
+  }];
+};
+
+// Enhanced text extraction with structure preservation
 const extractTextFromWord = async (fileBuffer, fileName) => {
   try {
-    console.log(`📝 Extracting text from ${fileName}...`);
-    console.log(`📊 File buffer type: ${typeof fileBuffer}, length: ${fileBuffer?.byteLength || 'unknown'}`);
+    console.log(`📝 Enhanced extraction from ${fileName}...`);
     
-    // Ensure we have a proper ArrayBuffer
     let arrayBuffer;
     if (fileBuffer instanceof ArrayBuffer) {
       arrayBuffer = fileBuffer;
     } else if (fileBuffer.buffer instanceof ArrayBuffer) {
       arrayBuffer = fileBuffer.buffer;
     } else {
-      throw new Error(`Invalid file buffer format for ${fileName}. Expected ArrayBuffer.`);
+      throw new Error(`Invalid file buffer format for ${fileName}.`);
     }
     
-    console.log(`📊 ArrayBuffer size: ${arrayBuffer.byteLength} bytes`);
-    
-    // ENHANCED DEBUG - Check ArrayBuffer content
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const firstBytes = Array.from(uint8Array.slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join(' ');
-    console.log(`🔍 File signature (first 8 bytes): ${firstBytes}`);
-    
-    // Check for common Word file signatures
-    const isZipBased = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B; // PK (ZIP-based like .docx)
-    const isOldDoc = uint8Array[0] === 0xD0 && uint8Array[1] === 0xCF; // Old .doc format
-    console.log(`📋 File format detection: ZIP-based (.docx): ${isZipBased}, Old .doc: ${isOldDoc}`);
-    
-    // Check if ArrayBuffer is valid
-    const isZeroFilled = uint8Array.every(b => b === 0);
-    const hasContent = uint8Array.some(b => b !== 0);
-    console.log(`🔍 ArrayBuffer analysis:`, {
-      isZeroFilled,
-      hasContent,
-      firstNonZeroByte: uint8Array.findIndex(b => b !== 0),
-      totalBytes: uint8Array.length
-    });
-    
-    if (isZeroFilled) {
-      throw new Error(`${fileName} contains only zero bytes - file data is corrupted or empty`);
-    }
-    
-    if (!isZipBased && !isOldDoc) {
-      console.warn(`⚠️ File signature doesn't match expected Word document formats for ${fileName}`);
-    }
-    
-    // Try mammoth.js with the browser global instead of import
     const mammothLib = window.mammoth || mammoth;
     if (!mammothLib) {
-      throw new Error('Mammoth.js library not available. Please ensure mammoth.js is loaded.');
+      throw new Error('Mammoth.js library not available.');
     }
     
-    console.log(`🔍 Using mammoth library:`, typeof mammothLib);
+    // Extract both text and HTML for structure
+    const [textResult, htmlResult] = await Promise.all([
+      mammothLib.extractRawText({ arrayBuffer }),
+      mammothLib.convertToHtml({ arrayBuffer })
+    ]);
     
-    // Use mammoth to extract text with proper options
-    console.log(`🔍 Calling mammoth.extractRawText for ${fileName}...`);
-    
-    // METHOD 1: Standard approach
-    console.log('🧪 Method 1: Standard mammoth call');
-    let result;
-    try {
-      result = await mammothLib.extractRawText({ arrayBuffer: arrayBuffer });
-      console.log(`📝 Method 1 result:`, {
-        textLength: result.text?.length || 0,
-        textPreview: result.text ? result.text.substring(0, 100) + (result.text.length > 100 ? '...' : '') : 'null',
-        messagesCount: result.messages?.length || 0
-      });
-    } catch (method1Error) {
-      console.error('❌ Method 1 failed:', method1Error);
-    }
-    
-    // METHOD 2: Alternative if first method fails
-    if (!result?.text || result.text.trim().length === 0) {
-      console.log('🧪 Method 2: Alternative mammoth approach');
-      try {
-        // Create a fresh ArrayBuffer copy
-        const freshBuffer = arrayBuffer.slice(0);
-        result = await mammothLib.extractRawText({ arrayBuffer: freshBuffer });
-        console.log(`📝 Method 2 result:`, {
-          textLength: result.text?.length || 0,
-          textPreview: result.text ? result.text.substring(0, 100) + (result.text.length > 100 ? '...' : '') : 'null',
-          messagesCount: result.messages?.length || 0
-        });
-      } catch (method2Error) {
-        console.error('❌ Method 2 failed:', method2Error);
-      }
-    }
-    
-    // METHOD 3: Try HTML extraction if text extraction fails
-    if (!result?.text || result.text.trim().length === 0) {
-      console.log('🧪 Method 3: HTML extraction fallback');
-      try {
-        const htmlResult = await mammothLib.convertToHtml({ arrayBuffer: arrayBuffer });
-        console.log(`📄 HTML extraction result length: ${htmlResult.value?.length || 0}`);
-        console.log(`📄 HTML preview:`, htmlResult.value?.substring(0, 200) || 'empty');
-        
-        if (htmlResult.value && htmlResult.value.trim().length > 0) {
-          // Strip HTML tags to get text
-          const textFromHtml = htmlResult.value.replace(/<[^>]*>/g, '').trim();
-          if (textFromHtml.length > 0) {
-            console.log(`✅ Recovered text from HTML conversion: ${textFromHtml.length} characters`);
-            result = {
-              text: textFromHtml,
-              messages: htmlResult.messages || []
-            };
-          }
-        }
-      } catch (htmlError) {
-        console.error('❌ HTML extraction also failed:', htmlError);
-      }
-    }
-    
-    const text = result?.text || '';
-    
-    // Log any mammoth warnings/messages
-    if (result?.messages && result.messages.length > 0) {
-      console.log(`📋 Mammoth processing messages for ${fileName}:`, result.messages);
-    }
+    const text = textResult.text || '';
+    const html = htmlResult.value || '';
     
     if (!text || text.trim().length === 0) {
-      console.error(`❌ FINAL FAILURE: No text extracted from ${fileName}`);
-      console.log('File analysis summary:', {
-        hasValidSignature: isZipBased || isOldDoc,
-        arrayBufferSize: arrayBuffer.byteLength,
-        hasNonZeroContent: hasContent,
-        firstBytes: firstBytes
-      });
-      
-      throw new Error(`No text content found in ${fileName}. The document may be empty, corrupted, or in an unsupported format. File size: ${arrayBuffer.byteLength} bytes, Signature: ${firstBytes}`);
+      throw new Error(`No text content found in ${fileName}.`);
     }
     
-    console.log(`📝 Successfully extracted ${text.length} characters from ${fileName}`);
+    console.log(`📝 Extracted ${text.length} characters from ${fileName}`);
     
-    // Also get HTML for better structure detection  
-    console.log(`🔍 Getting HTML structure for ${fileName}...`);
-    let html = '';
-    try {
-      const htmlResult = await mammothLib.convertToHtml({ arrayBuffer: arrayBuffer });
-      html = htmlResult.value || '';
-    } catch (htmlError) {
-      console.warn(`⚠️ HTML extraction failed for ${fileName}:`, htmlError.message);
-    }
+    // Process document structure
+    const sections = processDocumentStructure(text, html);
     
-    return processExtractedText(text, html, fileName, result.messages);
+    return {
+      text: text,
+      html: html,
+      sections: sections,
+      metadata: {
+        totalWords: text.split(/\s+/).filter(w => w.length > 0).length,
+        totalParagraphs: sections.reduce((acc, section) => acc + section.paragraphs.length, 0),
+        totalSections: sections.length,
+        fileName: fileName
+      },
+      warnings: textResult.messages || []
+    };
     
   } catch (error) {
-    console.error(`❌ Error extracting from ${fileName}:`, error);
+    console.error(`❌ Enhanced extraction error for ${fileName}:`, error);
+    throw error;
+  }
+};
+
+// Enhanced comparison with semantic analysis
+const compareDocumentSections = (doc1, doc2) => {
+  const changes = [];
+  const stats = {
+    additions: 0,
+    deletions: 0,
+    modifications: 0,
+    unchanged: 0,
+    financial: 0,
+    quantitative: 0,
+    qualitative: 0
+  };
+  
+  // Compare sections
+  const maxSections = Math.max(doc1.sections.length, doc2.sections.length);
+  
+  for (let sectionIndex = 0; sectionIndex < maxSections; sectionIndex++) {
+    const section1 = doc1.sections[sectionIndex];
+    const section2 = doc2.sections[sectionIndex];
     
-    // Provide more specific error messages
-    if (error.message.includes('zip') || error.message.includes('ZIP')) {
-      throw new Error(`Failed to extract text from ${fileName}: Document appears corrupted or is not a valid Word document. Please ensure the file is a proper .docx or .doc file.`);
-    } else if (error.message.includes('arrayBuffer') || error.message.includes('ArrayBuffer')) {
-      throw new Error(`Failed to extract text from ${fileName}: File data format error. Please try re-uploading the document.`);
-    } else if (error.message.includes('mammoth') || error.message.includes('Mammoth')) {
-      throw new Error(`Failed to extract text from ${fileName}: Word processing library error. ${error.message}`);
-    } else {
-      throw new Error(`Failed to extract text from ${fileName}: ${error.message}`);
+    if (!section1 && section2) {
+      // Section added
+      changes.push({
+        type: 'section_added',
+        sectionIndex,
+        sectionTitle: section2.title,
+        content: section2,
+        annotation: '➕ New section',
+        severity: 'high'
+      });
+      stats.additions++;
+    } else if (section1 && !section2) {
+      // Section removed
+      changes.push({
+        type: 'section_removed',
+        sectionIndex,
+        sectionTitle: section1.title,
+        content: section1,
+        annotation: '🗑️ Section removed',
+        severity: 'high'
+      });
+      stats.deletions++;
+    } else if (section1 && section2) {
+      // Compare section content
+      const sectionChanges = compareSectionParagraphs(section1, section2, sectionIndex);
+      changes.push(...sectionChanges);
+      
+      // Update stats
+      sectionChanges.forEach(change => {
+        if (change.semantic?.type === 'financial') stats.financial++;
+        if (change.semantic?.type === 'quantitative') stats.quantitative++;
+        if (change.semantic?.type === 'qualitative') stats.qualitative++;
+        
+        if (change.type.includes('added')) stats.additions++;
+        else if (change.type.includes('removed')) stats.deletions++;
+        else if (change.type.includes('modified')) stats.modifications++;
+        else stats.unchanged++;
+      });
     }
   }
+  
+  return { changes, stats };
 };
 
-const processExtractedText = (text, html, fileName, messages) => {
-  // Parse into paragraphs (split by double newlines and filter empty)
-  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-  
-  // If no paragraphs found through splitting, try splitting by single newlines
-  if (paragraphs.length === 0) {
-    const singleLineParagraphs = text.split(/\n/).filter(p => p.trim().length > 0);
-    paragraphs.push(...singleLineParagraphs);
-  }
-  
-  // If still no paragraphs, treat the entire text as one paragraph
-  if (paragraphs.length === 0 && text.trim().length > 0) {
-    paragraphs.push(text.trim());
-  }
-  
-  // Extract metadata from HTML structure
-  const wordCount = text.split(/\s+/).filter(word => word.length > 0).length;
-  
-  console.log(`✅ Processed ${paragraphs.length} paragraphs, ${wordCount} words from ${fileName}`);
-  
-  return {
-    text: text,
-    html: html,
-    paragraphs: paragraphs.map((paragraph, index) => ({
-      index: index,
-      text: paragraph.trim(),
-      word_count: paragraph.trim().split(/\s+/).filter(word => word.length > 0).length
-    })),
-    metadata: {
-      totalWords: wordCount,
-      totalParagraphs: paragraphs.length,
-      fileName: fileName
-    },
-    warnings: messages || []
-  };
-};
-
-const calculateTextSimilarity = (text1, text2) => {
-  if (!text1 || !text2) return 0;
-  
-  // Simple similarity calculation
-  const words1 = text1.toLowerCase().split(/\s+/).filter(word => word.length > 0);
-  const words2 = text2.toLowerCase().split(/\s+/).filter(word => word.length > 0);
-  
-  if (words1.length === 0 && words2.length === 0) return 100;
-  if (words1.length === 0 || words2.length === 0) return 0;
-  
-  const set1 = new Set(words1);
-  const set2 = new Set(words2);
-  
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
-  
-  return union.size > 0 ? (intersection.size / union.size) * 100 : 0;
-};
-
-const compareParagraphs = (paragraphs1, paragraphs2) => {
+const compareSectionParagraphs = (section1, section2, sectionIndex) => {
   const changes = [];
-  const maxLength = Math.max(paragraphs1.length, paragraphs2.length);
+  const maxParagraphs = Math.max(section1.paragraphs.length, section2.paragraphs.length);
   
-  for (let i = 0; i < maxLength; i++) {
-    const para1 = paragraphs1[i];
-    const para2 = paragraphs2[i];
+  for (let paragraphIndex = 0; paragraphIndex < maxParagraphs; paragraphIndex++) {
+    const para1 = section1.paragraphs[paragraphIndex];
+    const para2 = section2.paragraphs[paragraphIndex];
     
     if (!para1 && para2) {
-      // Paragraph added in document 2
       changes.push({
-        type: 'added',
-        paragraph: i,
-        text: para2.text,
-        file: 'file2',
-        word_count: para2.word_count
+        type: 'paragraph_added',
+        sectionIndex,
+        sectionTitle: section2.title,
+        paragraphIndex,
+        content: para2.text,
+        annotation: '➕ Added',
+        severity: 'medium',
+        wordCount: para2.wordCount
       });
     } else if (para1 && !para2) {
-      // Paragraph removed in document 2
       changes.push({
-        type: 'removed',
-        paragraph: i,
-        text: para1.text,
-        file: 'file1',
-        word_count: para1.word_count
+        type: 'paragraph_removed',
+        sectionIndex,
+        sectionTitle: section1.title,
+        paragraphIndex,
+        content: para1.text,
+        annotation: '🗑️ Removed',
+        severity: 'medium',
+        wordCount: para1.wordCount
       });
-    } else if (para1 && para2) {
-      // Both paragraphs exist, check if they're different
-      if (para1.text !== para2.text) {
-        const similarity = calculateTextSimilarity(para1.text, para2.text);
-        
-        changes.push({
-          type: 'modified',
-          paragraph: i,
-          old_text: para1.text,
-          new_text: para2.text,
-          file: 'both',
-          similarity: similarity,
-          word_count_old: para1.word_count,
-          word_count_new: para2.word_count
-        });
-      }
+    } else if (para1 && para2 && para1.text !== para2.text) {
+      // Perform word-level diff
+      const wordDiff = computeWordLevelDiff(para1.text, para2.text);
+      const semantic = classifyChange(para1.text, para2.text);
+      
+      changes.push({
+        type: 'paragraph_modified',
+        sectionIndex,
+        sectionTitle: section1.title,
+        paragraphIndex,
+        oldContent: para1.text,
+        newContent: para2.text,
+        wordDiff,
+        semantic,
+        annotation: semantic.annotation,
+        severity: semantic.severity,
+        wordCount: {
+          old: para1.wordCount,
+          new: para2.wordCount,
+          change: para2.wordCount - para1.wordCount
+        }
+      });
     }
   }
   
   return changes;
 };
 
-const generateSmartChanges = (doc1, doc2, textChanges) => {
-  console.log('🧠 Generating SmartDiff-style changes for Word documents...');
-  
-  const smartChanges = [];
-  
-  textChanges.forEach((change, index) => {
-    const baseChange = {
-      id: `word_change_${index}`,
-      paragraph: change.paragraph,
-      type: change.type,
-      change_type: change.type === 'modified' ? 'modification' : change.type === 'added' ? 'addition' : 'deletion',
-      confidence: 'high',
-      similarity: change.similarity || (change.type === 'modified' ? 0.3 : 0),
-      content_type: 'paragraph_text',
-      alignment_type: 'positional_match',
-      metadata: {
-        original_position_1: change.type !== 'added' ? change.paragraph : undefined,
-        original_position_2: change.type !== 'removed' ? change.paragraph : undefined,
-        word_count_1: change.word_count_old || change.word_count || 0,
-        word_count_2: change.word_count_new || change.word_count || 0
-      }
-    };
-    
-    if (change.type === 'modified') {
-      smartChanges.push({
-        ...baseChange,
-        old_content: change.old_text,
-        new_content: change.new_text
-      });
-    } else if (change.type === 'added') {
-      smartChanges.push({
-        ...baseChange,
-        content: change.text,
-        new_content: change.text
-      });
-    } else if (change.type === 'removed') {
-      smartChanges.push({
-        ...baseChange,
-        content: change.text,
-        old_content: change.text
-      });
-    }
-  });
-  
-  console.log(`✅ Generated ${smartChanges.length} SmartDiff-style changes`);
-  return smartChanges;
-};
-
+// Main comparison function
 export const compareWordFiles = async (file1Buffer, file2Buffer, options = {}) => {
   const startTime = Date.now();
   
   try {
-    console.log('🚀 Starting Word document comparison...');
-    console.log('📊 Input buffer details:', {
-      file1Type: typeof file1Buffer,
-      file2Type: typeof file2Buffer,
-      file1Size: file1Buffer?.byteLength || 'unknown',
-      file2Size: file2Buffer?.byteLength || 'unknown'
-    });
+    console.log('🚀 Starting enhanced Word document comparison...');
     
-    updateProgress('Initialization', 5, 'Starting Word document analysis...');
+    updateProgress('Initialization', 5, 'Starting enhanced analysis...');
     
-    // Validate input buffers
-    if (!file1Buffer || !file2Buffer) {
-      throw new Error('Invalid file data: Both documents must be provided');
-    }
-    
-    // Extract text and structure from both documents
-    updateProgress('Text Extraction', 20, 'Extracting text from first document...');
+    // Enhanced text extraction
+    updateProgress('Text Extraction', 20, 'Extracting structured content from Document 1...');
     const doc1 = await extractTextFromWord(file1Buffer, 'Document 1');
     
-    updateProgress('Text Extraction', 40, 'Extracting text from second document...');
+    updateProgress('Text Extraction', 40, 'Extracting structured content from Document 2...');
     const doc2 = await extractTextFromWord(file2Buffer, 'Document 2');
     
-    // Validate extraction results
-    if (!doc1.text || !doc2.text) {
-      throw new Error('Text extraction failed: One or both documents appear to be empty or corrupted');
-    }
+    updateProgress('Analysis', 60, 'Performing semantic comparison...');
     
-    updateProgress('Analysis', 60, 'Comparing document structures...');
+    // Enhanced comparison
+    const { changes, stats } = compareDocumentSections(doc1, doc2);
     
-    // Calculate overall document similarity
-    const overallSimilarity = calculateTextSimilarity(doc1.text, doc2.text);
+    updateProgress('Processing', 80, 'Generating professional analysis...');
     
-    // Compare paragraphs
-    updateProgress('Analysis', 75, 'Analyzing paragraph-level changes...');
-    const textChanges = compareParagraphs(doc1.paragraphs, doc2.paragraphs);
+    // Calculate overall similarity with better algorithm
+    const totalWords1 = doc1.metadata.totalWords;
+    const totalWords2 = doc2.metadata.totalWords;
+    const changedWords = changes.reduce((acc, change) => {
+      if (change.wordCount) {
+        return acc + (typeof change.wordCount === 'object' 
+          ? Math.max(change.wordCount.old || 0, change.wordCount.new || 0)
+          : change.wordCount);
+      }
+      return acc;
+    }, 0);
     
-    // Generate SmartDiff-style results
-    updateProgress('Processing', 85, 'Generating smart comparison results...');
-    const smartChanges = generateSmartChanges(doc1, doc2, textChanges);
+    const maxWords = Math.max(totalWords1, totalWords2);
+    const similarityScore = maxWords > 0 ? Math.round((1 - changedWords / maxWords) * 100) : 100;
     
-    // Calculate statistics
-    const addedCount = textChanges.filter(c => c.type === 'added').length;
-    const removedCount = textChanges.filter(c => c.type === 'removed').length;
-    const modifiedCount = textChanges.filter(c => c.type === 'modified').length;
-    const unchangedCount = Math.max(doc1.paragraphs.length, doc2.paragraphs.length) - textChanges.length;
-    
-    updateProgress('Finalization', 95, 'Compiling results...');
+    updateProgress('Finalization', 95, 'Compiling enhanced results...');
     
     const processingTime = Date.now() - startTime;
     
     const results = {
-      // Main results structure (mirrors PDF format)
-      comparison_method: 'word_document_comparison',
-      similarity_score: Math.round(overallSimilarity),
-      overall_similarity: Math.round(overallSimilarity),
-      differences_found: textChanges.length,
-      matches_found: unchangedCount,
-      total_paragraphs: Math.max(doc1.paragraphs.length, doc2.paragraphs.length),
+      // Enhanced metadata
+      comparison_method: 'enhanced_word_semantic_comparison',
+      similarity_score: similarityScore,
+      overall_similarity: similarityScore,
+      processing_time: { total_time_ms: processingTime },
       
-      // Document-specific data
-      document1_data: {
-        paragraphs: doc1.paragraphs.map((para, index) => ({
-          paragraph_number: index + 1,
-          text: para.text,
-          word_count: para.word_count
+      // Document structure
+      document1_structure: {
+        sections: doc1.sections.map((section, index) => ({
+          sectionIndex: index,
+          title: section.title,
+          paragraphCount: section.paragraphs.length,
+          wordCount: section.paragraphs.reduce((acc, p) => acc + p.wordCount, 0)
         })),
         metadata: doc1.metadata
       },
       
-      document2_data: {
-        paragraphs: doc2.paragraphs.map((para, index) => ({
-          paragraph_number: index + 1,
-          text: para.text,
-          word_count: para.word_count
+      document2_structure: {
+        sections: doc2.sections.map((section, index) => ({
+          sectionIndex: index,
+          title: section.title,
+          paragraphCount: section.paragraphs.length,
+          wordCount: section.paragraphs.reduce((acc, p) => acc + p.wordCount, 0)
         })),
         metadata: doc2.metadata
       },
       
-      // Changes data
-      text_changes: textChanges,
-      smart_changes: smartChanges,
-      
-      // Statistics
-      added_count: addedCount,
-      removed_count: removedCount,
-      modified_count: modifiedCount,
-      unchanged_count: unchangedCount,
-      
-      // Word analysis
-      word_changes: {
-        file1_words: doc1.metadata.totalWords,
-        file2_words: doc2.metadata.totalWords,
-        word_difference: doc2.metadata.totalWords - doc1.metadata.totalWords,
-        word_change_percentage: doc1.metadata.totalWords > 0 
-          ? Math.round(Math.abs(doc2.metadata.totalWords - doc1.metadata.totalWords) / doc1.metadata.totalWords * 100)
-          : 0
-      },
-      
-      // Summary for display
-      paragraph_differences: textChanges.length > 0 ? [
-        {
-          paragraph_number: 'Summary',
-          changes_count: textChanges.length,
-          summary: `${addedCount} added, ${removedCount} removed, ${modifiedCount} modified`,
-          doc1_paragraphs: doc1.paragraphs.length,
-          doc2_paragraphs: doc2.paragraphs.length
+      // Enhanced changes with semantic analysis
+      enhanced_changes: changes,
+      change_statistics: {
+        total_changes: changes.length,
+        additions: stats.additions,
+        deletions: stats.deletions,
+        modifications: stats.modifications,
+        unchanged: stats.unchanged,
+        semantic_breakdown: {
+          financial: stats.financial,
+          quantitative: stats.quantitative,
+          qualitative: stats.qualitative,
+          textual: changes.length - (stats.financial + stats.quantitative + stats.qualitative)
         }
-      ] : [],
-      
-      // Processing metadata
-      processing_time: {
-        total_time_ms: processingTime
       },
       
+      // Navigation data
+      navigation: {
+        total_sections: Math.max(doc1.sections.length, doc2.sections.length),
+        sections_with_changes: [...new Set(changes.map(c => c.sectionIndex))].length,
+        major_changes: changes.filter(c => c.severity === 'high').length,
+        change_density: changes.length / Math.max(doc1.metadata.totalParagraphs, doc2.metadata.totalParagraphs)
+      },
+      
+      // Export data for professional reports
+      export_data: {
+        document_titles: {
+          doc1: doc1.metadata.fileName,
+          doc2: doc2.metadata.fileName
+        },
+        summary: {
+          total_changes: changes.length,
+          similarity_percentage: similarityScore,
+          word_change_percentage: maxWords > 0 ? Math.round((changedWords / maxWords) * 100) : 0
+        }
+      },
+      
+      // Performance metrics
       quality_metrics: {
         overall_success_rate: 1.0,
-        file1_success_rate: 1.0,
-        file2_success_rate: 1.0
+        semantic_analysis_coverage: (stats.financial + stats.quantitative + stats.qualitative) / Math.max(changes.length, 1),
+        processing_efficiency: processingTime < 5000 ? 1.0 : Math.max(0.5, 5000 / processingTime)
       },
       
-      processing_note: `Word document comparison completed. Processed ${doc1.paragraphs.length} and ${doc2.paragraphs.length} paragraphs.`,
-      comparison_type: 'Word Document',
+      // Legacy compatibility
+      text_changes: changes.map(change => ({
+        type: change.type.replace('paragraph_', '').replace('section_', ''),
+        paragraph: change.paragraphIndex || 0,
+        section: change.sectionIndex || 0,
+        old_text: change.oldContent || change.content || '',
+        new_text: change.newContent || change.content || '',
+        annotation: change.annotation
+      })),
       
-      // Change summary for SmartDiff display
-      change_summary: {
-        exact_alignments: unchangedCount,
-        content_alignments: modifiedCount,
-        high_confidence: textChanges.filter(c => c.similarity && c.similarity > 70).length,
-        total_changes: textChanges.length
-      }
+      comparison_type: 'Enhanced Word Document Analysis',
+      processing_note: `Enhanced semantic comparison completed. Analyzed ${doc1.sections.length} and ${doc2.sections.length} sections with ${changes.length} changes detected.`
     };
     
-    updateProgress('Complete', 100, 'Word document comparison completed!');
+    updateProgress('Complete', 100, 'Enhanced comparison completed!');
     
-    console.log('✅ Word comparison completed:', {
+    console.log('✅ Enhanced Word comparison completed:', {
       similarity: results.similarity_score,
-      changes: results.differences_found,
-      processingTime: processingTime,
-      doc1Paragraphs: doc1.paragraphs.length,
-      doc2Paragraphs: doc2.paragraphs.length
+      changes: results.enhanced_changes.length,
+      sections: results.navigation.total_sections,
+      semanticCoverage: results.quality_metrics.semantic_analysis_coverage,
+      processingTime: processingTime
     });
     
     return results;
     
   } catch (error) {
-    console.error('❌ Word comparison failed:', error);
-    
-    // Provide better error context
-    if (error.message.includes('mammoth')) {
-      throw new Error(`Word processing library error: ${error.message}. Please ensure you're uploading valid Word documents (.docx/.doc files).`);
-    } else if (error.message.includes('memory') || error.message.includes('buffer')) {
-      throw new Error(`Memory or file processing error: ${error.message}. Try using smaller files or refresh the page and try again.`);
-    } else {
-      throw new Error(`Word document comparison failed: ${error.message}`);
-    }
+    console.error('❌ Enhanced Word comparison failed:', error);
+    throw new Error(`Enhanced Word document comparison failed: ${error.message}`);
   }
 };
