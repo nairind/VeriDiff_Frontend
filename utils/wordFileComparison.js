@@ -310,13 +310,13 @@ const processDocumentStructure = (text, html) => {
   }];
 };
 
-// Enhanced text extraction with structure preservation - FIXED
+// Enhanced text extraction with structure preservation - BULLETPROOF VERSION
 const extractTextFromWord = async (fileBuffer, fileName) => {
   try {
     console.log(`📝 Enhanced extraction from ${fileName}...`);
     console.log(`📊 File buffer type: ${typeof fileBuffer}, length: ${fileBuffer?.byteLength || 'unknown'}`);
     
-    // Ensure we have a proper ArrayBuffer - SIMPLIFIED APPROACH
+    // Ensure we have a proper ArrayBuffer
     let arrayBuffer;
     if (fileBuffer instanceof ArrayBuffer) {
       arrayBuffer = fileBuffer;
@@ -328,88 +328,165 @@ const extractTextFromWord = async (fileBuffer, fileName) => {
     
     console.log(`📊 ArrayBuffer size: ${arrayBuffer.byteLength} bytes`);
     
-    // Basic validation - don't over-complicate
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const isZipBased = uint8Array[0] === 0x50 && uint8Array[1] === 0x4B; // PK signature
-    console.log(`📋 File format check: ZIP-based (.docx): ${isZipBased}`);
-    
-    if (!isZipBased) {
-      console.warn(`⚠️ File signature doesn't match .docx format for ${fileName}, but proceeding...`);
-    }
-    
-    // Use mammoth.js - BACK TO SIMPLE WORKING APPROACH
+    // Use mammoth.js - PRIORITIZE HTML EXTRACTION
     const mammothLib = window.mammoth || mammoth;
     if (!mammothLib) {
       throw new Error('Mammoth.js library not available. Please ensure mammoth.js is loaded.');
     }
     
-    console.log(`🔍 Calling mammoth.extractRawText for ${fileName}...`);
-    
-    // SIMPLIFIED - Just use the basic approach that was working
-    const textResult = await mammothLib.extractRawText({ arrayBuffer: arrayBuffer });
-    const text = textResult.text || '';
-    
-    console.log(`📝 Mammoth result for ${fileName}:`, {
-      textLength: text.length,
-      textPreview: text.substring(0, 200) + (text.length > 200 ? '...' : ''),
-      messagesCount: textResult.messages?.length || 0
-    });
-    
-    // Log any mammoth warnings/messages
-    if (textResult.messages && textResult.messages.length > 0) {
-      console.log(`📋 Mammoth processing messages for ${fileName}:`, textResult.messages);
-    }
-    
-    if (!text || text.trim().length === 0) {
-      console.error(`❌ No text extracted from ${fileName}`);
-      
-      // Try HTML extraction as fallback
-      console.log(`🔄 Trying HTML extraction fallback for ${fileName}...`);
-      try {
-        const htmlResult = await mammothLib.convertToHtml({ arrayBuffer: arrayBuffer });
-        console.log(`📄 HTML result length: ${htmlResult.value?.length || 0}`);
-        
-        if (htmlResult.value && htmlResult.value.trim().length > 0) {
-          // Strip HTML tags to get text
-          const textFromHtml = htmlResult.value.replace(/<[^>]*>/g, '').trim();
-          if (textFromHtml.length > 0) {
-            console.log(`✅ Recovered text from HTML: ${textFromHtml.length} characters`);
-            return processExtractedText(textFromHtml, htmlResult.value, fileName, htmlResult.messages);
-          }
-        }
-      } catch (htmlError) {
-        console.error(`❌ HTML extraction also failed for ${fileName}:`, htmlError);
-      }
-      
-      throw new Error(`No text content found in ${fileName}. The document may be empty, corrupted, or in an unsupported format.`);
-    }
-    
-    console.log(`✅ Successfully extracted ${text.length} characters from ${fileName}`);
-    
-    // Also get HTML for structure - but don't let it fail the whole process
+    let finalText = '';
     let html = '';
+    let extractionMethod = '';
+    
+    // TRY HTML EXTRACTION FIRST (more reliable for your documents)
+    console.log(`🔍 Trying HTML extraction first for ${fileName}...`);
     try {
       const htmlResult = await mammothLib.convertToHtml({ arrayBuffer: arrayBuffer });
       html = htmlResult.value || '';
+      console.log(`📄 HTML result length: ${html.length}`);
+      
+      if (html && html.trim().length > 0) {
+        // Strip HTML tags to get clean text
+        finalText = html
+          .replace(/<[^>]*>/g, ' ')  // Remove HTML tags
+          .replace(/&nbsp;/g, ' ')   // Replace &nbsp; with spaces
+          .replace(/&amp;/g, '&')    // Replace &amp; with &
+          .replace(/&lt;/g, '<')     // Replace &lt; with <
+          .replace(/&gt;/g, '>')     // Replace &gt; with >
+          .replace(/\s+/g, ' ')      // Normalize whitespace
+          .trim();
+        
+        if (finalText.length > 0) {
+          console.log(`✅ HTML extraction successful: ${finalText.length} characters`);
+          extractionMethod = 'HTML';
+        }
+      }
     } catch (htmlError) {
-      console.warn(`⚠️ HTML extraction failed for ${fileName}, continuing with text only:`, htmlError.message);
+      console.warn(`⚠️ HTML extraction failed for ${fileName}:`, htmlError.message);
     }
     
-    return processExtractedText(text, html, fileName, textResult.messages);
+    // FALLBACK: Try text extraction if HTML didn't work
+    if (!finalText || finalText.length === 0) {
+      console.log(`🔍 Trying text extraction fallback for ${fileName}...`);
+      try {
+        const textResult = await mammothLib.extractRawText({ arrayBuffer: arrayBuffer });
+        finalText = textResult.text || '';
+        console.log(`📝 Text extraction result: ${finalText.length} characters`);
+        if (finalText.length > 0) {
+          extractionMethod = 'TEXT';
+        }
+      } catch (textError) {
+        console.warn(`⚠️ Text extraction also failed for ${fileName}:`, textError.message);
+      }
+    }
+    
+    // VALIDATE final result
+    if (!finalText || finalText.trim().length === 0) {
+      throw new Error(`No text content could be extracted from ${fileName}. The document may be empty, corrupted, or in an unsupported format.`);
+    }
+    
+    console.log(`✅ Successfully extracted ${finalText.length} characters from ${fileName} using ${extractionMethod} method`);
+    
+    // PROCESS TEXT INTO STRUCTURE - ALL INLINE
+    const paragraphs = finalText.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    if (paragraphs.length === 0) {
+      paragraphs.push(...finalText.split(/\n/).filter(p => p.trim().length > 0));
+    }
+    if (paragraphs.length === 0 && finalText.trim().length > 0) {
+      paragraphs.push(finalText.trim());
+    }
+    
+    const wordCount = finalText.split(/\s+/).filter(word => word.length > 0).length;
+    
+    // DETECT SECTIONS (simple approach)
+    const sections = [];
+    let currentSection = null;
+    
+    paragraphs.forEach((paragraph, index) => {
+      const trimmed = paragraph.trim();
+      
+      // Simple header detection
+      const isHeader = trimmed.length < 100 && 
+        (trimmed.match(/^[A-Z\s]{3,}$/) || 
+         trimmed.endsWith(':') || 
+         /^(executive summary|financial overview|conclusion|introduction)/i.test(trimmed));
+      
+      if (isHeader && trimmed.length > 0) {
+        // Start new section
+        if (currentSection) {
+          sections.push(currentSection);
+        }
+        currentSection = {
+          title: trimmed,
+          index: sections.length,
+          paragraphs: [],
+          type: 'section'
+        };
+      } else {
+        // Add to current section
+        if (!currentSection) {
+          currentSection = {
+            title: 'Document Content',
+            index: 0,
+            paragraphs: [],
+            type: 'section'
+          };
+        }
+        
+        currentSection.paragraphs.push({
+          index: index,
+          text: trimmed,
+          wordCount: trimmed.split(/\s+/).filter(w => w.length > 0).length,
+          type: 'paragraph'
+        });
+      }
+    });
+    
+    // Add final section
+    if (currentSection) {
+      sections.push(currentSection);
+    }
+    
+    // Ensure we have at least one section
+    if (sections.length === 0) {
+      sections.push({
+        title: 'Document Content',
+        index: 0,
+        paragraphs: paragraphs.map((p, i) => ({
+          index: i,
+          text: p.trim(),
+          wordCount: p.trim().split(/\s+/).filter(w => w.length > 0).length,
+          type: 'paragraph'
+        })),
+        type: 'section'
+      });
+    }
+    
+    console.log(`✅ Processed ${paragraphs.length} paragraphs, ${sections.length} sections, ${wordCount} words from ${fileName}`);
+    
+    // RETURN COMPLETE STRUCTURE
+    return {
+      text: finalText,
+      html: html,
+      sections: sections,
+      paragraphs: paragraphs.map((paragraph, index) => ({
+        index: index,
+        text: paragraph.trim(),
+        word_count: paragraph.trim().split(/\s+/).filter(word => word.length > 0).length
+      })),
+      metadata: {
+        totalWords: wordCount,
+        totalParagraphs: paragraphs.length,
+        totalSections: sections.length,
+        fileName: fileName,
+        extractionMethod: extractionMethod
+      },
+      warnings: []
+    };
     
   } catch (error) {
     console.error(`❌ Enhanced extraction error for ${fileName}:`, error);
-    
-    // Provide more specific error messages
-    if (error.message.includes('zip') || error.message.includes('ZIP')) {
-      throw new Error(`Failed to extract text from ${fileName}: Document appears corrupted or is not a valid Word document.`);
-    } else if (error.message.includes('arrayBuffer') || error.message.includes('ArrayBuffer')) {
-      throw new Error(`Failed to extract text from ${fileName}: File data format error. Please try re-uploading the document.`);
-    } else if (error.message.includes('mammoth') || error.message.includes('Mammoth')) {
-      throw new Error(`Failed to extract text from ${fileName}: Word processing library error. ${error.message}`);
-    } else {
-      throw new Error(`Failed to extract text from ${fileName}: ${error.message}`);
-    }
+    throw new Error(`Failed to extract text from ${fileName}: ${error.message}`);
   }
 };
 
