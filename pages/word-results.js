@@ -1,4 +1,4 @@
-// /pages/word-results.js - ENHANCED WORD RESULTS PAGE WITH PROFESSIONAL FEATURES
+// /pages/word-results.js - COMPLETE ENHANCED WORD RESULTS PAGE WITH COLOR HIGHLIGHTING EXPORT
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
@@ -178,7 +178,7 @@ export default function EnhancedWordResultsPage() {
     router.push('/word-comparison');
   };
 
-  // Enhanced export functionality
+  // ENHANCED EXPORT FUNCTIONALITY WITH COLOR HIGHLIGHTING
   const handleExportReport = async () => {
     if (!wordResults || !isAuthenticated) {
       if (!isAuthenticated) {
@@ -192,12 +192,13 @@ export default function EnhancedWordResultsPage() {
     setExportLoading(true);
     
     try {
-      console.log('📄 Generating enhanced Word comparison report...');
+      console.log('📄 Generating enhanced Word comparison report with color highlighting...');
       
+      // Generate enhanced report data
       const exportData = generateEnhancedReport(wordResults, fileInfo);
       
-      // Create enhanced HTML report
-      const htmlContent = createEnhancedHTMLReport(exportData);
+      // Create enhanced HTML report with color highlighting
+      const htmlContent = createEnhancedHTMLReportWithColors(exportData);
       
       // Download the report
       const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -210,16 +211,40 @@ export default function EnhancedWordResultsPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      console.log('✅ Enhanced report exported successfully');
+      console.log('✅ Enhanced report with color highlighting exported successfully');
+      
+      // Show success message
+      const successMessage = document.createElement('div');
+      successMessage.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #059669, #047857);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+      `;
+      successMessage.innerHTML = '✅ Enhanced report with color highlighting exported!';
+      document.body.appendChild(successMessage);
+      
+      setTimeout(() => {
+        document.body.removeChild(successMessage);
+      }, 3000);
       
     } catch (error) {
-      console.error('❌ Export failed:', error);
-      alert('Failed to export report. Please try again.');
+      console.error('❌ Enhanced export failed:', error);
+      alert('Failed to export enhanced report. Please try again.');
     } finally {
       setExportLoading(false);
     }
   };
 
+  /**
+   * Generate enhanced report data with better change processing
+   */
   const generateEnhancedReport = (results, fileInfo) => {
     const stats = results.change_statistics || {};
     const navigation = results.navigation || {};
@@ -227,7 +252,7 @@ export default function EnhancedWordResultsPage() {
     return {
       metadata: {
         title: 'Enhanced Word Document Comparison Report',
-        subtitle: 'Professional Semantic Analysis with SmartDiff Technology',
+        subtitle: 'Professional Semantic Analysis with Color Highlighting Technology',
         generatedAt: new Date().toLocaleString('en-GB', { 
           day: '2-digit', 
           month: '2-digit', 
@@ -265,7 +290,10 @@ export default function EnhancedWordResultsPage() {
     };
   };
 
-  const createEnhancedHTMLReport = (data) => {
+  /**
+   * ENHANCED: Create HTML report with beautiful color highlighting
+   */
+  const createEnhancedHTMLReportWithColors = (data) => {
     const { metadata, summary, statistics, changes } = data;
     
     return `<!DOCTYPE html>
@@ -294,18 +322,159 @@ export default function EnhancedWordResultsPage() {
         .similarity-good { color: #84cc16; }
         .similarity-fair { color: #f59e0b; }
         .similarity-poor { color: #ef4444; }
+        
+        /* ENHANCED COLOR HIGHLIGHTING STYLES */
         .changes-section { margin-top: 40px; }
-        .change-item { background: white; border: 2px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 20px; position: relative; }
-        .change-header { display: flex; justify-content: between; align-items: center; margin-bottom: 15px; }
+        .change-item { background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 25px; margin-bottom: 25px; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .change-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .change-type { font-weight: 600; color: #374151; font-size: 1.1rem; }
-        .change-annotation { background: #059669; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-        .change-content { background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #059669; }
-        .severity-high { border-left-color: #dc2626; }
-        .severity-medium { border-left-color: #f59e0b; }
-        .severity-low { border-left-color: #22c55e; }
+        .change-annotation { background: #059669; color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+        .change-content { border-radius: 8px; padding: 20px; margin-bottom: 15px; line-height: 1.8; font-size: 1rem; }
+        
+        .severity-high .change-content { border-left: 4px solid #dc2626; background: #fef2f2; }
+        .severity-medium .change-content { border-left: 4px solid #f59e0b; background: #fefbf2; }
+        .severity-low .change-content { border-left: 4px solid #22c55e; background: #f0fdf4; }
+        
+        .word-added {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            color: #166534;
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin: 0 1px;
+            font-weight: 600;
+            border: 1px solid #4ade80;
+            box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2);
+        }
+        
+        .word-removed {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            padding: 3px 6px;
+            border-radius: 4px;
+            margin: 0 1px;
+            font-weight: 600;
+            text-decoration: line-through;
+            border: 1px solid #f87171;
+            box-shadow: 0 1px 3px rgba(220, 38, 38, 0.2);
+        }
+        
+        .financial-highlight {
+            background: linear-gradient(135deg, #fef3c7, #fde047);
+            color: #92400e;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            border: 1px solid #f59e0b;
+            box-shadow: 0 1px 2px rgba(245, 158, 11, 0.2);
+        }
+        
+        .percentage-highlight {
+            background: linear-gradient(135deg, #ddd6fe, #c4b5fd);
+            color: #6b21a8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            border: 1px solid #8b5cf6;
+            box-shadow: 0 1px 2px rgba(139, 92, 246, 0.2);
+        }
+        
+        .number-highlight {
+            background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+            color: #0277bd;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 500;
+            border: 1px solid #29b6f6;
+        }
+        
+        .content-added {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 4px solid #22c55e;
+            color: #166534;
+        }
+        
+        .content-removed {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #dc2626;
+            color: #dc2626;
+            opacity: 0.9;
+        }
+        
+        .content-modified {
+            background: #fefbf2;
+            border: 1px solid #fed7aa;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+        }
+        
+        .word-diff-container {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            line-height: 1.8;
+            overflow-wrap: break-word;
+        }
+        
+        .change-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #f3f4f6;
+            font-style: italic;
+        }
+        
+        .severity-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .severity-high .severity-badge { background: #fee2e2; color: #dc2626; }
+        .severity-medium .severity-badge { background: #fef3c7; color: #d97706; }
+        .severity-low .severity-badge { background: #dcfce7; color: #059669; }
+        
+        .diff-legend {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
         .footer { margin-top: 50px; padding-top: 30px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280; }
         .powered-by { background: linear-gradient(135deg, #059669, #047857); color: white; padding: 20px; border-radius: 12px; margin-top: 20px; font-weight: 600; }
-        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .container { padding: 20px; } }
+        
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; }
+            .change-item { break-inside: avoid; }
+        }
+        
+        @media (max-width: 768px) { 
+            .stats-grid { grid-template-columns: repeat(2, 1fr); } 
+            .container { padding: 20px; }
+            .change-header { flex-direction: column; align-items: flex-start; }
+            .diff-legend { flex-direction: column; align-items: flex-start; }
+        }
     </style>
 </head>
 <body>
@@ -361,20 +530,44 @@ export default function EnhancedWordResultsPage() {
 
         ${changes.length > 0 ? `
         <div class="changes-section">
-            <h2 style="color: #374151; margin-bottom: 25px; font-size: 1.8rem;">📋 Detailed Change Analysis</h2>
-            ${changes.slice(0, 20).map((change, index) => `
-                <div class="change-item">
+            <h2 style="color: #374151; margin-bottom: 25px; font-size: 1.8rem;">📋 Detailed Change Analysis with Color Highlighting</h2>
+            
+            <!-- Color Legend -->
+            <div class="diff-legend">
+                <strong>🎨 Color Legend:</strong>
+                <div class="legend-item">
+                    <span class="word-added">Added Text</span>
+                </div>
+                <div class="legend-item">
+                    <span class="word-removed">Removed Text</span>
+                </div>
+                <div class="legend-item">
+                    <span class="financial-highlight">$2.4M Financial</span>
+                </div>
+                <div class="legend-item">
+                    <span class="percentage-highlight">25% Percentage</span>
+                </div>
+                <div class="legend-item">
+                    <span class="number-highlight">147 Number</span>
+                </div>
+            </div>
+            
+            ${changes.slice(0, 25).map((change, index) => `
+                <div class="change-item severity-${change.severity || 'medium'}">
                     <div class="change-header">
-                        <div class="change-type">${change.sectionTitle || 'Document'} • ${change.type?.replace(/_/g, ' ').replace(/^\\w/, c => c.toUpperCase()) || 'Change'}</div>
+                        <div class="change-type">
+                            ${change.sectionTitle || 'Document'} • ${change.type?.replace(/_/g, ' ').replace(/^\\w/, c => c.toUpperCase()) || 'Change'}
+                            <span class="severity-badge">${change.severity || 'medium'}</span>
+                        </div>
                         <div class="change-annotation">${change.annotation || '✏️ Modified'}</div>
                     </div>
-                    <div class="change-content severity-${change.severity || 'medium'}">
-                        ${change.newContent || change.content || change.oldContent || 'Content changed'}
-                        ${change.wordCount ? `<div style="margin-top: 10px; font-size: 0.8rem; color: #6b7280;">Word count: ${typeof change.wordCount === 'object' ? `${change.wordCount.old} → ${change.wordCount.new}` : change.wordCount}</div>` : ''}
+                    <div class="change-content ${getContentClass(change)}">
+                        ${generateColorHighlightedContent(change)}
+                        ${change.wordCount ? `<div class="change-meta">📊 Word count: ${typeof change.wordCount === 'object' ? `${change.wordCount.old} → ${change.wordCount.new} (${change.wordCount.change > 0 ? '+' : ''}${change.wordCount.change})` : change.wordCount}</div>` : ''}
                     </div>
                 </div>
             `).join('')}
-            ${changes.length > 20 ? `<div style="text-align: center; color: #6b7280; font-style: italic; margin-top: 20px;">... and ${changes.length - 20} more changes (showing first 20)</div>` : ''}
+            ${changes.length > 25 ? `<div style="text-align: center; color: #6b7280; font-style: italic; margin-top: 20px; padding: 20px; background: #f8fafc; border-radius: 8px;">📋 <strong>Report Truncated:</strong> Showing first 25 changes of ${changes.length} total changes for optimal viewing. <br><small>Export the full comparison results from the application for complete analysis.</small></div>` : ''}
         </div>
         ` : ''}
 
@@ -382,12 +575,131 @@ export default function EnhancedWordResultsPage() {
             <p><strong>Analysis Quality:</strong> ${summary.semanticCoverage}% semantic coverage • Processing time: ${summary.processingTime}ms</p>
             <p style="margin-top: 10px;">Performance: ${Math.round(data.performance.efficiency * 100)}% efficiency • ${Math.round(data.performance.accuracy * 100)}% accuracy</p>
             <div class="powered-by">
-                🚀 Powered by VeriDiff Enhanced SmartDiff Technology - Professional Document Analysis
+                🚀 Powered by VeriDiff Enhanced SmartDiff Technology - Professional Document Analysis with Color Highlighting
             </div>
         </div>
     </div>
 </body>
 </html>`;
+  };
+
+  /**
+   * Get CSS class for change content based on change type
+   */
+  const getContentClass = (change) => {
+    if (change.type === 'paragraph_added') return 'content-added';
+    if (change.type === 'paragraph_removed') return 'content-removed';
+    if (change.type === 'paragraph_modified') return 'content-modified';
+    return 'content-modified';
+  };
+
+  /**
+   * Generate color-highlighted content with beautiful formatting
+   */
+  const generateColorHighlightedContent = (change) => {
+    // Handle word-level diff with color highlighting
+    if (change.wordDiff && Array.isArray(change.wordDiff)) {
+      return `
+        <div style="margin-bottom: 10px; font-weight: 600; color: #374151; font-size: 0.9rem;">
+          🎨 Word-Level Changes:
+        </div>
+        <div class="word-diff-container">
+          ${change.wordDiff.map(word => {
+            switch (word.type) {
+              case 'added':
+                return `<span class="word-added">${escapeHtml(word.text)}</span>`;
+              case 'removed':
+                return `<span class="word-removed">${escapeHtml(word.text)}</span>`;
+              case 'unchanged':
+                return `<span>${escapeHtml(word.text)}</span>`;
+              default:
+                return `<span>${escapeHtml(word.text)}</span>`;
+            }
+          }).join('')}
+        </div>
+      `;
+    }
+    
+    // Handle regular content with semantic highlighting
+    const content = change.newContent || change.content || change.oldContent || '';
+    
+    // Apply semantic highlighting based on change type
+    if (change.semantic) {
+      return applySemanticHighlighting(content, change.semantic);
+    }
+    
+    // Apply basic content highlighting
+    return `<div style="font-size: 1rem; line-height: 1.6;">${applyBasicHighlighting(content)}</div>`;
+  };
+
+  /**
+   * Apply semantic highlighting for financial, percentage, and numerical changes
+   */
+  const applySemanticHighlighting = (content, semantic) => {
+    let highlightedContent = escapeHtml(content);
+    
+    // Highlight financial amounts
+    if (semantic.type === 'financial') {
+      highlightedContent = highlightedContent.replace(
+        /(\$[\d,]+(?:\.\d{2})?|\$\d+(?:\.\d+)?\s*(?:million|M|thousand|K))/gi,
+        '<span class="financial-highlight">$1</span>'
+      );
+    }
+    
+    // Highlight percentages
+    if (semantic.type === 'quantitative' && semantic.category?.includes('Percentage')) {
+      highlightedContent = highlightedContent.replace(
+        /(\d+(?:\.\d+)?%)/gi,
+        '<span class="percentage-highlight">$1</span>'
+      );
+    }
+    
+    // Highlight numbers
+    if (semantic.type === 'quantitative' && !semantic.category?.includes('Percentage')) {
+      highlightedContent = highlightedContent.replace(
+        /(\b\d{1,3}(?:,\d{3})*\b)/g,
+        '<span class="number-highlight">$1</span>'
+      );
+    }
+    
+    return `<div style="font-size: 1rem; line-height: 1.6;">${highlightedContent}</div>`;
+  };
+
+  /**
+   * Apply basic highlighting for non-semantic content
+   */
+  const applyBasicHighlighting = (content) => {
+    let highlighted = escapeHtml(content);
+    
+    // Highlight financial patterns
+    highlighted = highlighted.replace(
+      /(\$[\d,]+(?:\.\d{2})?|\$\d+(?:\.\d+)?\s*(?:million|M|thousand|K))/gi,
+      '<span class="financial-highlight">$1</span>'
+    );
+    
+    // Highlight percentages
+    highlighted = highlighted.replace(
+      /(\d+(?:\.\d+)?%)/gi,
+      '<span class="percentage-highlight">$1</span>'
+    );
+    
+    // Highlight large numbers
+    highlighted = highlighted.replace(
+      /(\b\d{1,3}(?:,\d{3})*\b)/g,
+      '<span class="number-highlight">$1</span>'
+    );
+    
+    return highlighted;
+  };
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  const escapeHtml = (text) => {
+    if (typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   };
 
   // Modal handlers
@@ -461,6 +773,7 @@ export default function EnhancedWordResultsPage() {
         fontSize: '1.1rem',
         marginBottom: '25px',
         lineHeight: '1.6',
+        whiteSpace: 'pre-line',
         maxWidth: '500px',
         margin: '0 auto 25px'
       }}>
@@ -512,7 +825,7 @@ export default function EnhancedWordResultsPage() {
               : `Enhanced Word Comparison Results - VeriDiff`
           }
         </title>
-        <meta name="description" content="View your detailed Word document comparison results with enhanced semantic analysis" />
+        <meta name="description" content="View your detailed Word document comparison results with enhanced semantic analysis and color highlighting" />
       </Head>
       
       <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
@@ -583,7 +896,7 @@ export default function EnhancedWordResultsPage() {
                       borderRadius: '12px',
                       marginLeft: '8px'
                     }}>
-                      Enhanced
+                      Enhanced + Color Highlighting
                     </span>
                   )}
                   {!isAuthenticated && (
@@ -647,9 +960,9 @@ export default function EnhancedWordResultsPage() {
                   alignItems: 'center',
                   gap: '8px'
                 }}
-                title={!isAuthenticated ? 'Sign in to export professional reports' : ''}
+                title={!isAuthenticated ? 'Sign in to export professional reports with color highlighting' : ''}
               >
-                {exportLoading ? '⏳ Exporting...' : '📄 Export Report'}
+                {exportLoading ? '⏳ Exporting...' : '🎨 Export Report with Color Highlighting'}
               </button>
               
               <button
