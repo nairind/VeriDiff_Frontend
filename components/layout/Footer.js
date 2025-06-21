@@ -157,6 +157,51 @@ const Footer = () => {
                 </a>
               </div>
             </div>
+
+            {/* ⭐ NEW: UK LEGAL COMPLIANCE - Company Information */}
+            <div>
+              <h4 style={{ fontWeight: '500', marginBottom: '1rem', color: '#fbbf24' }}>🏢 Company Info</h4>
+              <div style={{ fontSize: '0.75rem', color: '#9ca3af', lineHeight: '1.4' }}>
+                <p style={{ margin: '0 0 0.5rem 0' }}>
+                  <strong style={{ color: '#d1d5db' }}>Qubit HCM Ltd</strong>
+                </p>
+                <p style={{ margin: '0 0 0.5rem 0' }}>
+                  Company No: 13597650
+                </p>
+                <p style={{ margin: '0 0 0.5rem 0' }}>
+                  VAT: GB389489219
+                </p>
+                <p style={{ margin: '0 0 0.5rem 0' }}>
+                  📍 46 Throwley Way<br/>
+                  Sutton, Surrey<br/>
+                  SM1 4AF, United Kingdom
+                </p>
+                <p style={{ margin: '0 0 0.5rem 0' }}>
+                  📧 sales@veridiff.com
+                </p>
+              </div>
+            </div>
+
+            {/* NEW: Company Information Section - Required by UK Law */}
+            <div>
+              <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Company Info</h4>
+              <div style={{ fontSize: '0.75rem', color: '#9ca3af', lineHeight: '1.4' }}>
+                <p style={{ margin: '0 0 0.5rem 0' }}>
+                  <strong style={{ color: '#d1d5db' }}>Qubit HCM Ltd</strong>
+                </p>
+                <p style={{ margin: '0 0 0.5rem 0' }}>
+                  Company No: 13597650
+                </p>
+                <p style={{ margin: '0 0 0.5rem 0' }}>
+                  VAT: GB389489219
+                </p>
+                <p style={{ margin: '0 0 0.5rem 0' }}>
+                  46 Throwley Way<br/>
+                  Sutton, Surrey<br/>
+                  SM1 4AF, UK
+                </p>
+              </div>
+            </div>
           </div>
           
           <div style={{ 
@@ -166,7 +211,7 @@ const Footer = () => {
             color: '#9ca3af', 
             fontSize: '0.875rem' 
           }}>
-            <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
+            <p>&copy; 2025 <strong>Qubit HCM Ltd</strong> trading as VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
           </div>
         </div>
       </footer>
