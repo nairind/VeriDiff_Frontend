@@ -19,9 +19,7 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
     setUserMenuOpen(false);
   };
 
-  const handleTryDemo = () => {
-    window.location.href = '/compare';
-  };
+  // REMOVED: handleTryDemo function
 
   const handleContact = () => {
     window.location.href = 'mailto:sales@veridiff.com';
@@ -240,18 +238,7 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
                   <button onClick={handleSignIn} style={{ ...authButtonStyle, background: 'transparent' }}>
                     Sign In
                   </button>
-                  <button onClick={handleTryDemo} style={{ 
-                    padding: '0.5rem 1rem', 
-                    border: 'none', 
-                    borderRadius: '0.5rem', 
-                    fontWeight: '500', 
-                    cursor: 'pointer', 
-                    background: '#2563eb', 
-                    color: 'white',
-                    transition: 'all 0.2s'
-                  }}>
-                    Try Free Demo
-                  </button>
+                  {/* REMOVED: Try Free Demo button from desktop nav */}
                 </>
               )}
             </nav>
@@ -300,19 +287,7 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
                     <button onClick={handleSignIn} style={{ ...authButtonStyle, textAlign: 'left' }}>
                       Sign In
                     </button>
-                    <button onClick={handleTryDemo} style={{ 
-                      padding: '0.75rem 1rem', 
-                      border: 'none', 
-                      borderRadius: '0.5rem', 
-                      fontWeight: '500', 
-                      cursor: 'pointer', 
-                      background: '#2563eb', 
-                      color: 'white',
-                      width: '100%',
-                      textAlign: 'center'
-                    }}>
-                      Try Free Demo
-                    </button>
+                    {/* REMOVED: Try Free Demo button from mobile nav */}
                   </>
                 )}
               </div>
