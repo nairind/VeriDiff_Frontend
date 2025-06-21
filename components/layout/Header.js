@@ -151,7 +151,7 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
               <Link href="/use-cases" style={getNavLinkStyle('/use-cases')} className="nav-link">
                 Use Cases
               </Link>
-              <Link href="/security-assessment" style={getNavLinkStyle('/security-assessment')} className="nav-link">
+              <Link href="/security" style={getNavLinkStyle('/security')} className="nav-link">
                 Security
               </Link>
               <Link href="/about" style={getNavLinkStyle('/about')} className="nav-link">
@@ -282,7 +282,7 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
                 <Link href="/use-cases" style={getMobileNavLinkStyle('/use-cases')} className="mobile-nav-link" onClick={handleMobileNavClick}>
                   Use Cases
                 </Link>
-                <Link href="/security-assessment" style={getMobileNavLinkStyle('/security-assessment')} className="mobile-nav-link" onClick={handleMobileNavClick}>
+                <Link href="/security" style={getMobileNavLinkStyle('/security')} className="mobile-nav-link" onClick={handleMobileNavClick}>
                   Security
                 </Link>
                 <Link href="/about" style={getMobileNavLinkStyle('/about')} className="mobile-nav-link" onClick={handleMobileNavClick}>
