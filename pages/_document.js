@@ -9,6 +9,13 @@ export default function Document() {
         <meta charSet="utf-8" />
         <link rel="icon" href="/favicon.ico" />
         
+        {/* Plausible Analytics - Added without affecting PDF.js */}
+        <script 
+          defer 
+          data-domain="veridiff.com" 
+          src="https://plausible.io/js/script.js"
+        />
+        
         {/* PDF.js Library Loading - Using working CDN with fallback */}
         <script 
           src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.min.js"
