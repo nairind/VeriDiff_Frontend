@@ -106,7 +106,8 @@ export default function SecurityAssessment() {
               marginBottom: '2rem'
             }}>
               VeriDiff undergoes regular third-party security evaluations to ensure we meet 
-              the highest standards for enterprise data protection and application security.
+              the highest standards for enterprise data protection and application security. 
+              <strong>Verify our claims yourself with live, independent security assessments.</strong>
             </p>
           </div>
         </section>
@@ -135,7 +136,7 @@ export default function SecurityAssessment() {
                 color: '#047857',
                 marginBottom: '1rem'
               }}>
-                ✅ VeriDiff is Trusted by Corporate Users
+                ✅ Enterprise-Ready Security Architecture
               </h2>
               <p style={{
                 fontSize: '1.1rem',
@@ -143,8 +144,7 @@ export default function SecurityAssessment() {
                 lineHeight: '1.6',
                 margin: '0 0 1.5rem 0'
               }}>
-                Our platform passes enterprise security reviews and is used by professionals 
-                at Fortune 500 companies, law firms, financial institutions, and healthcare organizations.
+                Built from the ground up to meet the rigorous security and data privacy requirements expected by all.
               </p>
               <div style={{
                 display: 'flex',
@@ -161,6 +161,32 @@ export default function SecurityAssessment() {
                 <span>•</span>
                 <span>0/39 Blacklist Check (VirusTotal)</span>
               </div>
+            </div>
+
+            <div style={{
+              background: '#eff6ff',
+              border: '1px solid #dbeafe',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              textAlign: 'center'
+            }}>
+              <h3 style={{
+                fontSize: '1.1rem',
+                fontWeight: '600',
+                color: '#1e40af',
+                marginBottom: '0.75rem'
+              }}>
+                🔍 Verify Our Security Claims
+              </h3>
+              <p style={{
+                fontSize: '0.95rem',
+                color: '#1e40af',
+                lineHeight: '1.5',
+                margin: '0'
+              }}>
+                Don't take our word for it. Click the links below to view live, real-time security assessments 
+                from independent third-party providers. We update our scores regularly and encourage you to verify them directly.
+              </p>
             </div>
           </div>
         </section>
@@ -193,7 +219,7 @@ export default function SecurityAssessment() {
               lineHeight: '1.6'
             }}>
               We believe in transparency. These independent assessments are performed by leading 
-              security organizations and updated regularly to ensure ongoing compliance.
+              security organizations. <strong>Click the "View Live Report" links below to see real-time results</strong> and verify our security claims for yourself.
             </p>
 
             <div style={{
@@ -317,21 +343,26 @@ export default function SecurityAssessment() {
                   <p style={{
                     fontSize: '0.875rem',
                     color: '#6b7280',
-                    margin: '0 0 0.5rem 0'
+                    margin: '0 0 0.75rem 0'
                   }}>
-                    <strong>Last Assessed:</strong> June 21, 2025
+                    <strong>Scores updated regularly.</strong> Click below for live results.
                   </p>
                   <a 
                     href="https://securityheaders.com/?q=veridiff.com&followRedirects=on" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     style={{
-                      fontSize: '0.875rem',
-                      color: '#3b82f6',
-                      textDecoration: 'none'
+                      display: 'inline-block',
+                      fontSize: '0.9rem',
+                      color: '#fff',
+                      backgroundColor: '#3b82f6',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '0.375rem',
+                      textDecoration: 'none',
+                      fontWeight: '600'
                     }}
                   >
-                    View Full Report →
+                    View Live Report →
                   </a>
                 </div>
               </div>
@@ -449,17 +480,48 @@ export default function SecurityAssessment() {
                   <p style={{
                     fontSize: '0.875rem',
                     color: '#6b7280',
-                    margin: '0 0 0.5rem 0'
+                    margin: '0 0 1rem 0'
                   }}>
-                    <strong>Last Scanned:</strong> June 21, 2025
+                    <strong>Live scanning results.</strong> Verify current status:
                   </p>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    margin: '0'
+                  <div style={{
+                    display: 'flex',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap'
                   }}>
-                    Automated daily scanning across 39 security engines
-                  </p>
+                    <a 
+                      href="https://www.virustotal.com/gui/domain/veridiff.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: '0.8rem',
+                        color: '#fff',
+                        backgroundColor: '#10b981',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '0.25rem',
+                        textDecoration: 'none',
+                        fontWeight: '500'
+                      }}
+                    >
+                      VirusTotal Check
+                    </a>
+                    <a 
+                      href="https://transparencyreport.google.com/safe-browsing/search?url=https%3A%2F%2Fwww.veridiff.com%2F" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: '0.8rem',
+                        color: '#fff',
+                        backgroundColor: '#10b981',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '0.25rem',
+                        textDecoration: 'none',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Google Safe Browsing
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -511,8 +573,21 @@ export default function SecurityAssessment() {
                   <p style={{
                     fontSize: '0.875rem',
                     color: '#6b7280',
-                    margin: '0.25rem 0 0 0'
+                    margin: '0.25rem 0 0.75rem 0'
                   }}>Qualys SSL Labs</p>
+                  <a 
+                    href="https://www.ssllabs.com/ssltest/analyze.html?d=veridiff.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#3b82f6',
+                      textDecoration: 'none',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Test Live →
+                  </a>
                 </div>
 
                 <div style={{
@@ -731,7 +806,7 @@ export default function SecurityAssessment() {
               marginBottom: '2rem',
               color: '#1f2937'
             }}>
-              Assessment Schedule
+              Live Security Monitoring
             </h2>
             
             <div style={{
@@ -753,7 +828,7 @@ export default function SecurityAssessment() {
                   borderRadius: '0.5rem'
                 }}>
                   <span style={{ fontSize: '1rem', color: '#4b5563' }}>Security Headers</span>
-                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>Weekly</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>Live Results</span>
                 </div>
                 <div style={{
                   display: 'flex',
@@ -764,7 +839,7 @@ export default function SecurityAssessment() {
                   borderRadius: '0.5rem'
                 }}>
                   <span style={{ fontSize: '1rem', color: '#4b5563' }}>Malware Scanning</span>
-                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>Daily</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>Live Results</span>
                 </div>
                 <div style={{
                   display: 'flex',
@@ -775,7 +850,7 @@ export default function SecurityAssessment() {
                   borderRadius: '0.5rem'
                 }}>
                   <span style={{ fontSize: '1rem', color: '#4b5563' }}>SSL/TLS Assessment</span>
-                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>Monthly</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>Live Results</span>
                 </div>
                 <div style={{
                   display: 'flex',
@@ -786,7 +861,7 @@ export default function SecurityAssessment() {
                   borderRadius: '0.5rem'
                 }}>
                   <span style={{ fontSize: '1rem', color: '#4b5563' }}>Blacklist Monitoring</span>
-                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>Continuous</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1f2937' }}>Real-Time</span>
                 </div>
               </div>
               
@@ -796,8 +871,8 @@ export default function SecurityAssessment() {
                 margin: '1.5rem 0 0 0',
                 fontStyle: 'italic'
               }}>
-                All assessments are conducted automatically and results are publicly verifiable 
-                through the respective security provider websites.
+                <strong>100% Transparent:</strong> All results are publicly verifiable through the respective security provider websites. 
+                We update our displayed scores regularly, but click the links above for real-time verification.
               </p>
             </div>
           </div>
