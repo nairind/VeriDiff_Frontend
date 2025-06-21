@@ -19,15 +19,13 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
     setUserMenuOpen(false);
   };
 
-  // REMOVED: handleTryDemo function
-
   const handleContact = () => {
     window.location.href = 'mailto:sales@veridiff.com';
   };
 
   // Check if current path matches nav item
   const isActivePath = (path) => {
-    return router.pathname === path;
+    return router.pathname === path || (path === '/blog' && router.pathname.startsWith('/blog'));
   };
 
   // Close mobile menu when navigating
@@ -149,6 +147,9 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
               <Link href="/use-cases" style={getNavLinkStyle('/use-cases')} className="nav-link">
                 Use Cases
               </Link>
+              <Link href="/blog" style={getNavLinkStyle('/blog')} className="nav-link">
+                Blog
+              </Link>
               <Link href="/security" style={getNavLinkStyle('/security')} className="nav-link">
                 Security
               </Link>
@@ -238,7 +239,6 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
                   <button onClick={handleSignIn} style={{ ...authButtonStyle, background: 'transparent' }}>
                     Sign In
                   </button>
-                  {/* REMOVED: Try Free Demo button from desktop nav */}
                 </>
               )}
             </nav>
@@ -269,6 +269,9 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
                 <Link href="/use-cases" style={getMobileNavLinkStyle('/use-cases')} className="mobile-nav-link" onClick={handleMobileNavClick}>
                   Use Cases
                 </Link>
+                <Link href="/blog" style={getMobileNavLinkStyle('/blog')} className="mobile-nav-link" onClick={handleMobileNavClick}>
+                  Blog
+                </Link>
                 <Link href="/security" style={getMobileNavLinkStyle('/security')} className="mobile-nav-link" onClick={handleMobileNavClick}>
                   Security
                 </Link>
@@ -287,7 +290,6 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
                     <button onClick={handleSignIn} style={{ ...authButtonStyle, textAlign: 'left' }}>
                       Sign In
                     </button>
-                    {/* REMOVED: Try Free Demo button from mobile nav */}
                   </>
                 )}
               </div>
