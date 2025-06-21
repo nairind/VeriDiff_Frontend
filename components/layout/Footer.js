@@ -182,27 +182,7 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* NEW: Company Information Section - Required by UK Law */}
-            <div>
-              <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Company Info</h4>
-              <div style={{ fontSize: '0.75rem', color: '#9ca3af', lineHeight: '1.4' }}>
-                <p style={{ margin: '0 0 0.5rem 0' }}>
-                  <strong style={{ color: '#d1d5db' }}>Qubit HCM Ltd</strong>
-                </p>
-                <p style={{ margin: '0 0 0.5rem 0' }}>
-                  Company No: 13597650
-                </p>
-                <p style={{ margin: '0 0 0.5rem 0' }}>
-                  VAT: GB389489219
-                </p>
-                <p style={{ margin: '0 0 0.5rem 0' }}>
-                  46 Throwley Way<br/>
-                  Sutton, Surrey<br/>
-                  SM1 4AF, UK
-                </p>
-              </div>
-            </div>
-          </div>
+            
           
           <div style={{ 
             borderTop: '1px solid #374151', 
