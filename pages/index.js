@@ -7,6 +7,8 @@ import UploadZone from '../components/UploadZone';
 import FeatureSection from '../components/FeatureSection';
 import PricingSection from '../components/PricingSection';
 import AuthModal from '../components/AuthModal';
+// Import your dual tracking functions
+import { trackPageView, trackFileUpload, trackPartnershipEngagement } from '../utils/analytics';
 
 export default function Home() {
   const router = useRouter();
@@ -19,8 +21,8 @@ export default function Home() {
   const [showCookieBanner, setShowCookieBanner] = useState(false);
 
   useEffect(() => {
-    // Simple analytics - just console log for now
-    console.log('Page view: home');
+    // Track page view to BOTH your dashboard AND Plausible
+    trackPageView('home');
     
     // Check cookie consent
     checkCookieConsent();
@@ -53,6 +55,11 @@ export default function Home() {
     setShowAuthModal(false);
   };
 
+  // Partnership tracking handler
+  const handlePartnershipClick = () => {
+    trackPartnershipEngagement('section_view');
+  };
+
   // File type detection helper
   const getFileType = (fileName) => {
     const extension = fileName.split('.').pop().toLowerCase();
@@ -65,6 +72,11 @@ export default function Home() {
 
   const handleFilesReady = async ({ file1, file2 }) => {
     try {
+      // TRACK: File upload event to BOTH systems
+      const file1Type = getFileType(file1.name);
+      const file2Type = getFileType(file2.name);
+      trackFileUpload(file1Type, file2Type);
+
       // STEP 1: Log the raw file objects
       console.log('🔍 Raw file objects received:');
       console.log('File 1:', file1);
@@ -328,10 +340,13 @@ export default function Home() {
         </section>
 
              {/* Why Your Expertise Matters */}
-        <section style={{
-          padding: '2.5rem 0',
-          background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)'
-        }}>
+        <section 
+          style={{
+            padding: '2.5rem 0',
+            background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)'
+          }}
+          onClick={handlePartnershipClick}
+        >
           <div style={{
             maxWidth: '800px',
             margin: '0 auto',
@@ -705,7 +720,7 @@ export default function Home() {
               }}>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minMax(200px, 1fr))',
                   gap: '1rem',
                   fontSize: '0.9rem',
                   color: '#047857',
