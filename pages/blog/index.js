@@ -104,10 +104,10 @@ export default function BlogIndex({ posts }) {
           </div>
         </div>
 
-        {/* Hero Section */}
+        {/* Hero Section - Reduced padding */}
         <section style={{
           background: 'linear-gradient(135deg, #eff6ff, #f8fafc)',
-          padding: '4rem 0',
+          padding: '2.5rem 0', // Reduced from 4rem 0
           textAlign: 'center'
         }}>
           <div style={{
@@ -119,7 +119,7 @@ export default function BlogIndex({ posts }) {
             <h1 style={{ 
               fontSize: '3.5rem', 
               fontWeight: '700', 
-              marginBottom: '1rem', 
+              marginBottom: '0.75rem', // Reduced from 1rem
               lineHeight: '1.2', 
               color: '#1f2937' 
             }}>
@@ -138,7 +138,7 @@ export default function BlogIndex({ posts }) {
             <p style={{ 
               fontSize: '1.25rem', 
               color: '#6b7280', 
-              marginBottom: '2rem', 
+              marginBottom: '0', // Reduced from 2rem
               maxWidth: '600px', 
               marginLeft: 'auto', 
               marginRight: 'auto',
@@ -149,10 +149,10 @@ export default function BlogIndex({ posts }) {
           </div>
         </section>
 
-        {/* Featured Post */}
+        {/* Featured Post - Reduced padding */}
         {featuredPosts.length > 0 && featuredPosts.map(post => (
           <section key={post.slug} style={{
-            padding: '3rem 0',
+            padding: '2rem 0 3rem 0', // Reduced top padding from 3rem
             background: 'white'
           }}>
             <div style={{
@@ -168,7 +168,7 @@ export default function BlogIndex({ posts }) {
                 border: '2px solid #f59e0b',
                 borderRadius: '50px',
                 padding: '0.5rem 1.5rem',
-                marginBottom: '2rem'
+                marginBottom: '1.5rem' // Reduced from 2rem
               }}>
                 <span style={{ fontSize: '1.2rem' }}>⭐</span>
                 <span style={{ fontWeight: '700', color: '#92400e' }}>Featured Article</span>
@@ -177,7 +177,7 @@ export default function BlogIndex({ posts }) {
               <article style={{
                 background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
                 borderRadius: '1rem',
-                padding: '3rem',
+                padding: '2.5rem', // Reduced from 3rem
                 border: '1px solid #e2e8f0'
               }}>
                 <div style={{ marginBottom: '1.5rem' }}>
@@ -251,9 +251,9 @@ export default function BlogIndex({ posts }) {
           </section>
         ))}
 
-        {/* Blog Posts Grid */}
+        {/* Blog Posts Grid - Reduced padding */}
         <section style={{
-          padding: '3rem 0',
+          padding: '2rem 0 3rem 0', // Reduced top padding from 3rem
           background: '#f8fafc'
         }}>
           <div style={{
@@ -264,7 +264,7 @@ export default function BlogIndex({ posts }) {
             <h2 style={{
               fontSize: '2.5rem',
               fontWeight: '700',
-              marginBottom: '3rem',
+              marginBottom: '2.5rem', // Reduced from 3rem
               color: '#1f2937',
               textAlign: 'center'
             }}>
