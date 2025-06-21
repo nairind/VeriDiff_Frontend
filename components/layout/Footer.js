@@ -44,6 +44,8 @@ const Footer = () => {
             gap: '2rem', 
             marginBottom: '2rem' 
           }} className="footer-grid">
+            
+            {/* Brand Section */}
             <div>
               <span style={{ 
                 fontSize: '1.5rem', 
@@ -57,11 +59,12 @@ const Footer = () => {
               }}>
                 VeriDiff
               </span>
-              <p style={{ color: '#d1d5db', fontSize: '0.875rem' }}>
+              <p style={{ color: '#d1d5db', fontSize: '0.875rem', marginBottom: '1rem' }}>
                 Precision-engineered in London for global business professionals. Your data never leaves your browser.
               </p>
             </div>
             
+            {/* Product Section */}
             <div>
               <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Product</h4>
               <div>
@@ -96,6 +99,7 @@ const Footer = () => {
               </div>
             </div>
             
+            {/* Support Section */}
             <div>
               <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Support</h4>
               <div>
@@ -112,6 +116,7 @@ const Footer = () => {
               </div>
             </div>
             
+            {/* Legal Section */}
             <div>
               <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Legal</h4>
               <div>
@@ -158,9 +163,9 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* ⭐ NEW: UK LEGAL COMPLIANCE - Company Information */}
+            {/* Company Information Section - UK Legal Requirement */}
             <div>
-              <h4 style={{ fontWeight: '500', marginBottom: '1rem', color: '#fbbf24' }}>🏢 Company Info</h4>
+              <h4 style={{ fontWeight: '500', marginBottom: '1rem' }}>Company Info</h4>
               <div style={{ fontSize: '0.75rem', color: '#9ca3af', lineHeight: '1.4' }}>
                 <p style={{ margin: '0 0 0.5rem 0' }}>
                   <strong style={{ color: '#d1d5db' }}>Qubit HCM Ltd</strong>
@@ -172,18 +177,18 @@ const Footer = () => {
                   VAT: GB389489219
                 </p>
                 <p style={{ margin: '0 0 0.5rem 0' }}>
-                  📍 46 Throwley Way<br/>
+                  46 Throwley Way<br/>
                   Sutton, Surrey<br/>
-                  SM1 4AF, United Kingdom
+                  SM1 4AF, UK
                 </p>
                 <p style={{ margin: '0 0 0.5rem 0' }}>
                   📧 sales@veridiff.com
                 </p>
               </div>
             </div>
-
-            
+          </div>
           
+          {/* Simple Copyright Section */}
           <div style={{ 
             borderTop: '1px solid #374151', 
             paddingTop: '2rem', 
@@ -191,7 +196,7 @@ const Footer = () => {
             color: '#9ca3af', 
             fontSize: '0.875rem' 
           }}>
-            <p>&copy; 2025 <strong>Qubit HCM Ltd</strong> trading as VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
+            <p>&copy; 2025 VeriDiff. All rights reserved. Precision-engineered in London for global professionals.</p>
           </div>
         </div>
       </footer>
