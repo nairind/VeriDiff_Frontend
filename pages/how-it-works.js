@@ -308,8 +308,7 @@ export default function HowItWorks() {
                       Browser Memory Loading
                     </h4>
                     <p style={{ fontSize: '1rem', color: '#4b5563', lineHeight: '1.5', margin: '0' }}>
-                      Your browser reads files into temporary memory (RAM) using the 
-                      <code style={{ background: '#e5e7eb', padding: '0.25rem', borderRadius: '0.25rem' }}>FileReader API</code>. 
+                      Your browser reads files into temporary memory (RAM) using the FileReader API. 
                       Files are never transmitted anywhere.
                     </p>
                   </div>
@@ -514,7 +513,7 @@ export default function HowItWorks() {
                 <ul style={{ margin: '0', paddingLeft: '1.5rem', color: '#4b5563', lineHeight: '1.6' }}>
                   <li><strong>No uploads:</strong> Files never leave your device</li>
                   <li><strong>No storage:</strong> Data cleared when you close browser</li>
-                  <li><strong>No tracking:</strong> We can't see your file contents</li>
+                  <li><strong>No tracking:</strong> We cannot see your file contents</li>
                   <li><strong>HTTPS only:</strong> Encrypted connection to our app</li>
                 </ul>
               </div>
@@ -593,7 +592,10 @@ export default function HowItWorks() {
                       border: '1px solid #e5e7eb',
                       padding: '1rem',
                       color: '#4b5563'
-                    }}>Excel ↔ Excel<br/>Excel ↔ CSV</td>
+                    }}>
+                      Excel ↔ Excel<br/>
+                      Excel ↔ CSV
+                    </td>
                     <td style={{
                       border: '1px solid #e5e7eb',
                       padding: '1rem',
@@ -610,7 +612,10 @@ export default function HowItWorks() {
                       border: '1px solid #e5e7eb',
                       padding: '1rem',
                       color: '#4b5563'
-                    }}>CSV ↔ CSV<br/>CSV ↔ Excel</td>
+                    }}>
+                      CSV ↔ CSV<br/>
+                      CSV ↔ Excel
+                    </td>
                     <td style={{
                       border: '1px solid #e5e7eb',
                       padding: '1rem',
@@ -785,7 +790,7 @@ export default function HowItWorks() {
                   margin: '0'
                 }}>
                   <strong>GDPR, HIPAA, SOX, PCI-DSS compliant by design.</strong> Since files never leave your browser, 
-                  there's no data transfer, storage, or processing on our servers that could violate regulations. 
+                  there is no data transfer, storage, or processing on our servers that could violate regulations. 
                   Perfect for financial services, healthcare, and legal industries.
                 </p>
               </div>
@@ -814,8 +819,8 @@ export default function HowItWorks() {
                   lineHeight: '1.6',
                   margin: '0'
                 }}>
-                  <strong>Don't trust us with your data - you don't have to.</strong> Our architecture makes it 
-                  technically impossible for us to access your files. Even if we wanted to (we don't), 
+                  <strong>Do not trust us with your data - you do not have to.</strong> Our architecture makes it 
+                  technically impossible for us to access your files. Even if we wanted to (we do not), 
                   or if we were compromised, your data remains secure.
                 </p>
               </div>
@@ -955,7 +960,7 @@ export default function HowItWorks() {
                   lineHeight: '1.5'
                 }}>
                   <li><strong>JavaScript enabled</strong> (required for file processing)</li>
-                  <li><strong>4GB+ RAM recommended</strong> for large files (>50MB)</li>
+                  <li><strong>4GB+ RAM recommended</strong> for large files (&gt;50MB)</li>
                   <li><strong>Modern browser APIs:</strong> FileReader, Web Workers, Blob</li>
                   <li><strong>HTTPS connection</strong> (security requirement)</li>
                 </ul>
