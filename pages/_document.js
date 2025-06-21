@@ -12,7 +12,7 @@ export default function Document() {
         {/* Plausible Analytics - Added without affecting PDF.js */}
         <script 
           defer 
-          data-domain="veridiff.com" 
+          data-domain="www.veridiff.com" 
           src="https://plausible.io/js/script.js"
         />
         
