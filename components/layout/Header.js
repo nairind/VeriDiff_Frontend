@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 
 const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
   const { data: session } = useSession();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -25,17 +27,13 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
     window.location.href = 'mailto:sales@veridiff.com';
   };
 
-  const scrollToSection = (sectionId) => {
-    // If we're on the homepage, scroll to section
-    if (window.location.pathname === '/') {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      // If we're on another page, redirect to homepage with section
-      window.location.href = `/#${sectionId}`;
-    }
+  // Check if current path matches nav item
+  const isActivePath = (path) => {
+    return router.pathname === path;
+  };
+
+  // Close mobile menu when navigating
+  const handleMobileNavClick = () => {
     setMobileMenuOpen(false);
   };
 
@@ -78,7 +76,30 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
     alignItems: 'center'
   };
 
-  const navButtonStyle = {
+  const getNavLinkStyle = (path) => ({
+    textDecoration: 'none',
+    color: isActivePath(path) ? '#2563eb' : '#374151',
+    fontWeight: isActivePath(path) ? '600' : '500',
+    padding: '0.5rem',
+    borderRadius: '0.25rem',
+    transition: 'all 0.2s',
+    display: 'block',
+    borderBottom: isActivePath(path) ? '2px solid #2563eb' : '2px solid transparent'
+  });
+
+  const getMobileNavLinkStyle = (path) => ({
+    textDecoration: 'none',
+    color: isActivePath(path) ? '#2563eb' : '#374151',
+    fontWeight: isActivePath(path) ? '600' : '500',
+    padding: '0.5rem',
+    borderRadius: '0.25rem',
+    transition: 'all 0.2s',
+    display: 'block',
+    textAlign: 'left',
+    background: isActivePath(path) ? '#eff6ff' : 'transparent'
+  });
+
+  const authButtonStyle = {
     background: 'none',
     border: 'none',
     color: '#374151',
@@ -88,16 +109,6 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
     padding: '0.5rem',
     borderRadius: '0.25rem',
     transition: 'color 0.2s'
-  };
-
-  const navLinkStyle = {
-    textDecoration: 'none',
-    color: '#374151',
-    fontWeight: '500',
-    padding: '0.5rem',
-    borderRadius: '0.25rem',
-    transition: 'color 0.2s',
-    display: 'block'
   };
 
   const mobileNavButtonStyle = {
@@ -116,6 +127,14 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
           .desktop-nav { display: none !important; }
           .mobile-nav-button { display: block !important; }
         }
+        
+        .nav-link:hover {
+          color: #2563eb !important;
+        }
+        
+        .mobile-nav-link:hover {
+          background-color: #f3f4f6 !important;
+        }
       `}</style>
       
       <header style={headerStyle}>
@@ -126,16 +145,19 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
             </Link>
             
             <nav style={desktopNavStyle} className="desktop-nav">
-              <button onClick={() => scrollToSection('features')} style={navButtonStyle}>
-                Features
-              </button>
-              <button onClick={() => scrollToSection('pricing')} style={navButtonStyle}>
-                Pricing
-              </button>
-              <a href="/faq" style={navLinkStyle}>
-                FAQ
-              </a>
-              <button onClick={handleContact} style={navButtonStyle}>
+              <Link href="/how-it-works" style={getNavLinkStyle('/how-it-works')} className="nav-link">
+                How It Works
+              </Link>
+              <Link href="/use-cases" style={getNavLinkStyle('/use-cases')} className="nav-link">
+                Use Cases
+              </Link>
+              <Link href="/security-assessment" style={getNavLinkStyle('/security-assessment')} className="nav-link">
+                Security
+              </Link>
+              <Link href="/about" style={getNavLinkStyle('/about')} className="nav-link">
+                About
+              </Link>
+              <button onClick={handleContact} style={authButtonStyle}>
                 Contact
               </button>
               
@@ -215,7 +237,7 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
                 </div>
               ) : (
                 <>
-                  <button onClick={handleSignIn} style={{ ...navButtonStyle, background: 'transparent' }}>
+                  <button onClick={handleSignIn} style={{ ...authButtonStyle, background: 'transparent' }}>
                     Sign In
                   </button>
                   <button onClick={handleTryDemo} style={{ 
@@ -254,25 +276,28 @@ const Header = ({ onSignIn = () => {}, onSignUp = () => {} }) => {
               background: 'white'
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <button onClick={() => scrollToSection('features')} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                  Features
-                </button>
-                <button onClick={() => scrollToSection('pricing')} style={{ ...navButtonStyle, textAlign: 'left' }}>
-                  Pricing
-                </button>
-                <a href="/faq" style={{ ...navLinkStyle, textAlign: 'left' }}>
-                  FAQ
-                </a>
-                <button onClick={handleContact} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                <Link href="/how-it-works" style={getMobileNavLinkStyle('/how-it-works')} className="mobile-nav-link" onClick={handleMobileNavClick}>
+                  How It Works
+                </Link>
+                <Link href="/use-cases" style={getMobileNavLinkStyle('/use-cases')} className="mobile-nav-link" onClick={handleMobileNavClick}>
+                  Use Cases
+                </Link>
+                <Link href="/security-assessment" style={getMobileNavLinkStyle('/security-assessment')} className="mobile-nav-link" onClick={handleMobileNavClick}>
+                  Security
+                </Link>
+                <Link href="/about" style={getMobileNavLinkStyle('/about')} className="mobile-nav-link" onClick={handleMobileNavClick}>
+                  About
+                </Link>
+                <button onClick={handleContact} style={{ ...authButtonStyle, textAlign: 'left' }}>
                   Contact
                 </button>
                 {session ? (
-                  <button onClick={handleSignOut} style={{ ...navButtonStyle, textAlign: 'left', color: '#dc2626' }}>
+                  <button onClick={handleSignOut} style={{ ...authButtonStyle, textAlign: 'left', color: '#dc2626' }}>
                     Sign Out
                   </button>
                 ) : (
                   <>
-                    <button onClick={handleSignIn} style={{ ...navButtonStyle, textAlign: 'left' }}>
+                    <button onClick={handleSignIn} style={{ ...authButtonStyle, textAlign: 'left' }}>
                       Sign In
                     </button>
                     <button onClick={handleTryDemo} style={{ 
