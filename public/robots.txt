@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Block access to admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /dashboard/
+Disallow: /account/
+
+# Allow important pages
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /gdpr
+Allow: /compare
+
+# Sitemap location
+Sitemap: https://veridiff.com/sitemap.xml
+
+# Crawl delay (optional - be respectful to search engines)
+Crawl-delay: 1
