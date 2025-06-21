@@ -334,38 +334,190 @@ export default function UseCases() {
                     fontSize: '1.1rem',
                     fontWeight: '600',
                     color: '#7c3aed',
-                    marginBottom: '1rem'
+                    marginBottom: '1.5rem',
+                    textAlign: 'center'
                   }}>🔄 Step-by-Step Workflow</h4>
-                  <ol style={{
-                    fontSize: '0.95rem',
-                    color: '#4b5563',
-                    lineHeight: '1.6',
-                    paddingLeft: '1.5rem',
-                    marginBottom: '1.5rem'
-                  }}>
-                    <li>Upload current month P&L and previous month P&L</li>
-                    <li>VeriDiff maps account names automatically</li>
-                    <li>Set 0.01% tolerance for meaningful variance detection</li>
-                    <li>Review highlighted differences in variance column</li>
-                    <li>Export annotated report for audit trail</li>
-                  </ol>
-
+                  
+                  {/* Process Map */}
                   <div style={{
-                    background: '#f0fdf4',
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #bbf7d0'
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                    gap: '1rem',
+                    marginBottom: '2rem'
                   }}>
-                    <p style={{
-                      fontSize: '0.9rem',
-                      color: '#047857',
-                      margin: '0',
-                      fontWeight: '500'
+                    <div style={{
+                      textAlign: 'center',
+                      position: 'relative'
                     }}>
-                      💰 <strong>Time Savings:</strong> 3 hours → 15 minutes<br/>
-                      🔒 <strong>Privacy:</strong> SOX-compliant, no upload to servers<br/>
-                      📊 <strong>Accuracy:</strong> Catches 100% of variances over threshold
-                    </p>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        margin: '0 auto 0.5rem auto'
+                      }}>1</div>
+                      <p style={{
+                        fontSize: '0.8rem',
+                        color: '#4b5563',
+                        lineHeight: '1.3',
+                        margin: '0'
+                      }}>Upload P&L files</p>
+                    </div>
+                    
+                    <div style={{
+                      textAlign: 'center',
+                      position: 'relative'
+                    }}>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #10b981, #059669)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        margin: '0 auto 0.5rem auto'
+                      }}>2</div>
+                      <p style={{
+                        fontSize: '0.8rem',
+                        color: '#4b5563',
+                        lineHeight: '1.3',
+                        margin: '0'
+                      }}>Auto-map accounts</p>
+                    </div>
+                    
+                    <div style={{
+                      textAlign: 'center',
+                      position: 'relative'
+                    }}>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        margin: '0 auto 0.5rem auto'
+                      }}>3</div>
+                      <p style={{
+                        fontSize: '0.8rem',
+                        color: '#4b5563',
+                        lineHeight: '1.3',
+                        margin: '0'
+                      }}>Set tolerance</p>
+                    </div>
+                    
+                    <div style={{
+                      textAlign: 'center',
+                      position: 'relative'
+                    }}>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        margin: '0 auto 0.5rem auto'
+                      }}>4</div>
+                      <p style={{
+                        fontSize: '0.8rem',
+                        color: '#4b5563',
+                        lineHeight: '1.3',
+                        margin: '0'
+                      }}>Review variances</p>
+                    </div>
+                    
+                    <div style={{
+                      textAlign: 'center',
+                      position: 'relative'
+                    }}>
+                      <div style={{
+                        background: 'linear-gradient(135deg, #ec4899, #be185d)',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        margin: '0 auto 0.5rem auto'
+                      }}>5</div>
+                      <p style={{
+                        fontSize: '0.8rem',
+                        color: '#4b5563',
+                        lineHeight: '1.3',
+                        margin: '0'
+                      }}>Export report</p>
+                    </div>
+                  </div>
+
+                  {/* Benefits Call-outs */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '1rem'
+                  }}>
+                    <div style={{
+                      background: '#f0fdf4',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #10b981',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>💰</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#047857', display: 'block', marginBottom: '0.25rem' }}>Time Savings</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#047857', margin: '0', fontWeight: '500' }}>
+                        3 hours → 15 minutes
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#eff6ff',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #3b82f6',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🔒</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#1e40af', display: 'block', marginBottom: '0.25rem' }}>Privacy</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#1e40af', margin: '0', fontWeight: '500' }}>
+                        SOX-compliant, no upload
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#fefce8',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #f59e0b',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📊</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#d97706', display: 'block', marginBottom: '0.25rem' }}>Accuracy</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#d97706', margin: '0', fontWeight: '500' }}>
+                        100% variance detection
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -456,14 +608,16 @@ export default function UseCases() {
                     fontSize: '1.1rem',
                     fontWeight: '600',
                     color: '#7c3aed',
-                    marginBottom: '1rem'
+                    marginBottom: '1.5rem',
+                    textAlign: 'center'
                   }}>🎯 Key Benefits</h4>
+                  
                   <ul style={{
                     fontSize: '0.95rem',
                     color: '#4b5563',
                     lineHeight: '1.6',
                     paddingLeft: '1.5rem',
-                    marginBottom: '1.5rem'
+                    marginBottom: '2rem'
                   }}>
                     <li>Instant variance percentage calculations</li>
                     <li>Visual highlighting of budget overruns</li>
@@ -471,22 +625,53 @@ export default function UseCases() {
                     <li>Historical comparison for trend analysis</li>
                   </ul>
 
+                  {/* Benefits Call-outs */}
                   <div style={{
-                    background: '#eff6ff',
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #dbeafe'
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '1rem'
                   }}>
-                    <p style={{
-                      fontSize: '0.9rem',
-                      color: '#1e40af',
-                      margin: '0',
-                      fontWeight: '500'
+                    <div style={{
+                      background: '#eff6ff',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #3b82f6',
+                      textAlign: 'center'
                     }}>
-                      📊 <strong>Impact:</strong> Identify budget risks 90% faster<br/>
-                      💼 <strong>Use Case:</strong> Monthly/quarterly budget reviews<br/>
-                      🔍 <strong>Detail Level:</strong> Department, project, or GL account
-                    </p>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📊</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#1e40af', display: 'block', marginBottom: '0.25rem' }}>Impact</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#1e40af', margin: '0', fontWeight: '500' }}>
+                        90% faster risk ID
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#f0fdf4',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #10b981',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>💼</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#047857', display: 'block', marginBottom: '0.25rem' }}>Use Case</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#047857', margin: '0', fontWeight: '500' }}>
+                        Monthly/quarterly reviews
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#faf5ff',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #8b5cf6',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🔍</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#7c3aed', display: 'block', marginBottom: '0.25rem' }}>Detail Level</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#7c3aed', margin: '0', fontWeight: '500' }}>
+                        Department to GL account
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -577,37 +762,173 @@ export default function UseCases() {
                     fontSize: '1.1rem',
                     fontWeight: '600',
                     color: '#7c3aed',
-                    marginBottom: '1rem'
-                  }}>📋 Typical Workflow</h4>
+                    marginBottom: '1.5rem',
+                    textAlign: 'center'
+                  }}>📋 Workflow Process</h4>
+                  
+                  {/* Process Flow */}
                   <div style={{
-                    fontSize: '0.95rem',
-                    color: '#4b5563',
-                    lineHeight: '1.6',
-                    marginBottom: '1.5rem'
+                    background: 'white',
+                    padding: '1.5rem',
+                    borderRadius: '0.75rem',
+                    border: '1px solid #e5e7eb',
+                    marginBottom: '2rem'
                   }}>
-                    <p style={{ margin: '0 0 0.5rem 0' }}><strong>1. Upload:</strong> System inventory export + physical count spreadsheet</p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}><strong>2. Map:</strong> SKU columns and quantity columns align automatically</p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}><strong>3. Set:</strong> 5% tolerance to focus on significant variances</p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}><strong>4. Review:</strong> Items requiring cycle count investigation</p>
-                    <p style={{ margin: '0' }}><strong>5. Export:</strong> Adjustment journal entries for ERP system</p>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                      gap: '1rem',
+                      textAlign: 'center'
+                    }}>
+                      <div>
+                        <div style={{
+                          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '35px',
+                          height: '35px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.9rem',
+                          fontWeight: '600',
+                          margin: '0 auto 0.5rem auto'
+                        }}>1</div>
+                        <strong style={{ fontSize: '0.8rem', color: '#1f2937', display: 'block' }}>Upload</strong>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0', lineHeight: '1.3' }}>
+                          System inventory + physical count
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <div style={{
+                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '35px',
+                          height: '35px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.9rem',
+                          fontWeight: '600',
+                          margin: '0 auto 0.5rem auto'
+                        }}>2</div>
+                        <strong style={{ fontSize: '0.8rem', color: '#1f2937', display: 'block' }}>Map</strong>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0', lineHeight: '1.3' }}>
+                          SKU and quantity columns
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <div style={{
+                          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '35px',
+                          height: '35px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.9rem',
+                          fontWeight: '600',
+                          margin: '0 auto 0.5rem auto'
+                        }}>3</div>
+                        <strong style={{ fontSize: '0.8rem', color: '#1f2937', display: 'block' }}>Set</strong>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0', lineHeight: '1.3' }}>
+                          5% variance tolerance
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <div style={{
+                          background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '35px',
+                          height: '35px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.9rem',
+                          fontWeight: '600',
+                          margin: '0 auto 0.5rem auto'
+                        }}>4</div>
+                        <strong style={{ fontSize: '0.8rem', color: '#1f2937', display: 'block' }}>Review</strong>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0', lineHeight: '1.3' }}>
+                          Investigation items
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <div style={{
+                          background: 'linear-gradient(135deg, #ec4899, #be185d)',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '35px',
+                          height: '35px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.9rem',
+                          fontWeight: '600',
+                          margin: '0 auto 0.5rem auto'
+                        }}>5</div>
+                        <strong style={{ fontSize: '0.8rem', color: '#1f2937', display: 'block' }}>Export</strong>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0', lineHeight: '1.3' }}>
+                          Adjustment entries
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
+                  {/* Benefits Call-outs */}
                   <div style={{
-                    background: '#fefce8',
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #fde68a'
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '1rem'
                   }}>
-                    <p style={{
-                      fontSize: '0.9rem',
-                      color: '#d97706',
-                      margin: '0',
-                      fontWeight: '500'
+                    <div style={{
+                      background: '#fefce8',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #f59e0b',
+                      textAlign: 'center'
                     }}>
-                      ⚡ <strong>Speed:</strong> Process 10,000+ SKUs in minutes<br/>
-                      🎯 <strong>Accuracy:</strong> Zero manual calculation errors<br/>
-                      📊 <strong>Output:</strong> Exception reports and journal entries
-                    </p>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⚡</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#d97706', display: 'block', marginBottom: '0.25rem' }}>Speed</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#d97706', margin: '0', fontWeight: '500' }}>
+                        10,000+ SKUs in minutes
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#eff6ff',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #3b82f6',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🎯</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#1e40af', display: 'block', marginBottom: '0.25rem' }}>Accuracy</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#1e40af', margin: '0', fontWeight: '500' }}>
+                        Zero calculation errors
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#f0fdf4',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #10b981',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📊</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#047857', display: 'block', marginBottom: '0.25rem' }}>Output</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#047857', margin: '0', fontWeight: '500' }}>
+                        Reports & journal entries
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -755,7 +1076,7 @@ export default function UseCases() {
                     color: '#4b5563',
                     lineHeight: '1.6',
                     paddingLeft: '1.5rem',
-                    marginBottom: '1.5rem'
+                    marginBottom: '2rem'
                   }}>
                     <li>Customer database CSV vs formatted contact Excel list</li>
                     <li>Sales data export vs Excel dashboard source</li>
@@ -763,22 +1084,53 @@ export default function UseCases() {
                     <li>Inventory system export vs Excel reporting template</li>
                   </ul>
 
+                  {/* Benefits Call-outs */}
                   <div style={{
-                    background: '#f0fdf4',
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #bbf7d0'
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '1rem'
                   }}>
-                    <p style={{
-                      fontSize: '0.9rem',
-                      color: '#047857',
-                      margin: '0',
-                      fontWeight: '500'
+                    <div style={{
+                      background: '#eff6ff',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #3b82f6',
+                      textAlign: 'center'
                     }}>
-                      🎯 <strong>Benefit:</strong> Spot data integrity issues instantly<br/>
-                      ⚡ <strong>Speed:</strong> Minutes vs hours of manual checking<br/>
-                      🔧 <strong>Flexibility:</strong> Works with any CSV/Excel combination
-                    </p>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🎯</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#1e40af', display: 'block', marginBottom: '0.25rem' }}>Benefit</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#1e40af', margin: '0', fontWeight: '500' }}>
+                        Spot integrity issues instantly
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#fefce8',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #f59e0b',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⚡</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#d97706', display: 'block', marginBottom: '0.25rem' }}>Speed</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#d97706', margin: '0', fontWeight: '500' }}>
+                        Minutes vs hours of checking
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#f0fdf4',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #10b981',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🔧</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#047857', display: 'block', marginBottom: '0.25rem' }}>Flexibility</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#047857', margin: '0', fontWeight: '500' }}>
+                        Any CSV/Excel combo
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1041,36 +1393,121 @@ export default function UseCases() {
                     fontSize: '1.1rem',
                     fontWeight: '600',
                     color: '#7c3aed',
-                    marginBottom: '1rem'
+                    marginBottom: '1.5rem',
+                    textAlign: 'center'
                   }}>📈 Analysis Types</h4>
+                  
+                  {/* Analysis Process Grid */}
                   <div style={{
-                    fontSize: '0.95rem',
-                    color: '#4b5563',
-                    lineHeight: '1.6',
-                    marginBottom: '1.5rem'
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                    gap: '1rem',
+                    marginBottom: '2rem'
                   }}>
-                    <p style={{ margin: '0 0 0.5rem 0' }}><strong>Longitudinal:</strong> Same respondents over time</p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}><strong>Cross-Sectional:</strong> Different segments same period</p>
-                    <p style={{ margin: '0 0 0.5rem 0' }}><strong>A/B Testing:</strong> Control vs test group responses</p>
-                    <p style={{ margin: '0' }}><strong>Trend Analysis:</strong> Quarterly or annual comparisons</p>
+                    <div style={{
+                      background: 'white',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e7eb',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📅</div>
+                      <strong style={{ fontSize: '0.85rem', color: '#1f2937', display: 'block', marginBottom: '0.25rem' }}>Longitudinal</strong>
+                      <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0', lineHeight: '1.3' }}>
+                        Same respondents over time
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: 'white',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e7eb',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🎯</div>
+                      <strong style={{ fontSize: '0.85rem', color: '#1f2937', display: 'block', marginBottom: '0.25rem' }}>Cross-Sectional</strong>
+                      <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0', lineHeight: '1.3' }}>
+                        Different segments same period
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: 'white',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e7eb',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🔬</div>
+                      <strong style={{ fontSize: '0.85rem', color: '#1f2937', display: 'block', marginBottom: '0.25rem' }}>A/B Testing</strong>
+                      <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0', lineHeight: '1.3' }}>
+                        Control vs test groups
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: 'white',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #e5e7eb',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📊</div>
+                      <strong style={{ fontSize: '0.85rem', color: '#1f2937', display: 'block', marginBottom: '0.25rem' }}>Trend Analysis</strong>
+                      <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0', lineHeight: '1.3' }}>
+                        Quarterly/annual comparisons
+                      </p>
+                    </div>
                   </div>
 
+                  {/* Benefits Call-outs */}
                   <div style={{
-                    background: '#fefce8',
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid #fde68a'
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '1rem'
                   }}>
-                    <p style={{
-                      fontSize: '0.9rem',
-                      color: '#d97706',
-                      margin: '0',
-                      fontWeight: '500'
+                    <div style={{
+                      background: '#fefce8',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #f59e0b',
+                      textAlign: 'center'
                     }}>
-                      📊 <strong>Insight Speed:</strong> Hours to minutes for trend identification<br/>
-                      🎯 <strong>Accuracy:</strong> Statistical significance testing built-in<br/>
-                      📱 <strong>Output:</strong> Executive summary of key changes
-                    </p>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📊</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#d97706', display: 'block', marginBottom: '0.25rem' }}>Insight Speed</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#d97706', margin: '0', fontWeight: '500' }}>
+                        Hours to minutes
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#eff6ff',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #3b82f6',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🎯</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#1e40af', display: 'block', marginBottom: '0.25rem' }}>Accuracy</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#1e40af', margin: '0', fontWeight: '500' }}>
+                        Statistical significance testing
+                      </p>
+                    </div>
+                    
+                    <div style={{
+                      background: '#f0fdf4',
+                      padding: '1rem',
+                      borderRadius: '0.5rem',
+                      border: '2px solid #10b981',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>📱</div>
+                      <strong style={{ fontSize: '0.9rem', color: '#047857', display: 'block', marginBottom: '0.25rem' }}>Output</strong>
+                      <p style={{ fontSize: '0.8rem', color: '#047857', margin: '0', fontWeight: '500' }}>
+                        Executive summary of changes
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
