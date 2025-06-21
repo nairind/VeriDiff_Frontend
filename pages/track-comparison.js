@@ -16,11 +16,8 @@ import { getRecordStatus, getStatusConfig } from '../utils/statusUtils';
 import { getCharacterDiff, renderCharacterDiff } from '../utils/characterDiff';
 import { handleDownloadExcel, handleDownloadCSV, handleDownloadHTMLDiff } from '../utils/exportUtils';
 import { downloadResultsAsCSV } from '../utils/downloadResults';
-
-// Simple analytics function
-const trackAnalytics = async (eventType, data = {}) => {
-  console.log('Analytics:', eventType, data);
-};
+// Import new analytics functions
+import { trackPageView, trackComparisonComplete, trackSignupPrompt, trackExportAttempt } from '../utils/analytics';
 
 export default function TrackComparison() {
   const router = useRouter();
@@ -88,16 +85,26 @@ export default function TrackComparison() {
   }, [router]);
 
   useEffect(() => {
+    // Track page view when component loads
+    if (results && fileType) {
+      trackPageView('track-comparison', isAuthenticated);
+      trackComparisonComplete(fileType, results.results?.length || 0, isAuthenticated);
+    }
+  }, [results, fileType, isAuthenticated]);
+
+  useEffect(() => {
     scrollManager.restoreScroll();
   }, [viewMode, resultsFilter, searchTerm, focusMode, fieldGrouping, ignoreWhitespace, showCharacterDiff, sortField, sortDirection, expandedGroups, expandedRows, scrollManager]);
 
   // Modal handlers
   const handleSignUp = () => {
+    trackSignupPrompt('upgrade_prompt');
     setAuthMode('signup');
     setShowAuthModal(true);
   };
 
   const handleSignIn = () => {
+    trackSignupPrompt('signin_prompt');
     setAuthMode('signin');
     setShowAuthModal(true);
   };
@@ -187,17 +194,20 @@ export default function TrackComparison() {
 
   // Export handlers
   const onDownloadExcel = () => {
-    handleDownloadExcel(results, file1, file2, fileType, viewMode, trackAnalytics)
+    trackExportAttempt('excel', isAuthenticated);
+    handleDownloadExcel(results, file1, file2, fileType, viewMode)
       .catch(error => setError(error.message));
   };
 
   const onDownloadCSV = () => {
-    handleDownloadCSV(results, file1, file2, viewMode, downloadResultsAsCSV, trackAnalytics, fileType)
+    trackExportAttempt('csv', isAuthenticated);
+    handleDownloadCSV(results, file1, file2, viewMode, downloadResultsAsCSV, fileType)
       .catch(error => setError(error.message));
   };
 
   const onDownloadHTMLDiff = () => {
-    handleDownloadHTMLDiff(results, file1, file2, fileType, viewMode, () => filteredResults, getRecordStatus, getStatusConfig, showCharacterDiff, trackAnalytics)
+    trackExportAttempt('html', isAuthenticated);
+    handleDownloadHTMLDiff(results, file1, file2, fileType, viewMode, () => filteredResults, getRecordStatus, getStatusConfig, showCharacterDiff)
       .catch(error => setError(error.message));
   };
 
