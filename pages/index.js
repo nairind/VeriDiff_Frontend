@@ -72,11 +72,6 @@ export default function Home() {
 
   const handleFilesReady = async ({ file1, file2 }) => {
     try {
-      // TRACK: File upload event to BOTH systems
-      const file1Type = getFileType(file1.name);
-      const file2Type = getFileType(file2.name);
-      trackFileUpload(file1Type, file2Type);
-
       // STEP 1: Log the raw file objects
       console.log('🔍 Raw file objects received:');
       console.log('File 1:', file1);
@@ -112,12 +107,14 @@ export default function Home() {
       
       // STEP 4: Test the getFileType function directly
       console.log('🧪 Testing getFileType function:');
+      let file1Type, file2Type; // Declare variables once
+      
       if (file1?.name) {
-        const file1Type = getFileType(file1.name);
+        file1Type = getFileType(file1.name); // Use without const
         console.log('File 1 detected type:', file1Type);
       }
       if (file2?.name) {
-        const file2Type = getFileType(file2.name);
+        file2Type = getFileType(file2.name); // Use without const
         console.log('File 2 detected type:', file2Type);
       }
       
@@ -128,9 +125,8 @@ export default function Home() {
       console.log('test.DOCX ->', getFileType('test.DOCX'));
       console.log('document.docx ->', getFileType('document.docx'));
       
-      // Original detection logic with extra logging
-      const file1Type = getFileType(file1.name);
-      const file2Type = getFileType(file2.name);
+      // TRACK: File upload event to BOTH systems (use the variables we already have)
+      trackFileUpload(file1Type, file2Type);
       
       console.log('🔍 Final file types detected:', { file1Type, file2Type });
 
@@ -720,7 +716,7 @@ export default function Home() {
               }}>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minMax(200px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                   gap: '1rem',
                   fontSize: '0.9rem',
                   color: '#047857',
