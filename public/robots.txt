@@ -1,4 +1,5 @@
-User-agent: *
+function generateRobotsTxt() {
+  return `User-agent: *
 Allow: /
 
 # Block access to admin and API routes
@@ -14,9 +15,82 @@ Allow: /terms
 Allow: /cookies
 Allow: /gdpr
 Allow: /compare
+Allow: /blog/
+Allow: /how-it-works/
+Allow: /use-cases/
+Allow: /security/
+Allow: /about/
 
 # Sitemap location
 Sitemap: https://veridiff.com/sitemap.xml
 
-# Crawl delay (optional - be respectful to search engines)
+# Crawl delay (be respectful to search engines)
 Crawl-delay: 1
+
+# Specific bot instructions for better SEO
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Social media bots for sharing optimization
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+# AI Search bots for better AI search visibility
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: You.com
+Allow: /
+
+User-agent: SearchGPT
+Allow: /
+
+# Control aggressive crawlers
+User-agent: AhrefsBot
+Crawl-delay: 30
+
+User-agent: SemrushBot
+Crawl-delay: 30
+
+User-agent: MJ12bot
+Crawl-delay: 30
+`;
+}
+
+function RobotsTxt() {
+  // getServerSideProps will handle the response
+}
+
+export async function getServerSideProps({ res }) {
+  const robots = generateRobotsTxt();
+
+  res.setHeader('Content-Type', 'text/plain');
+  res.write(robots);
+  res.end();
+
+  return {
+    props: {},
+  };
+}
+
+export default RobotsTxt;
