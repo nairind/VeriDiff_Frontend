@@ -614,8 +614,8 @@ export default function About() {
               }}>
                 <div>
                   <strong style={{ color: '#1f2937' }}>General Inquiries</strong><br/>
-                  <a href="mailto:hello@veridiff.com" style={{ color: '#3b82f6', textDecoration: 'none' }}>
-                    hello@veridiff.com
+                  <a href="mailto:sales@veridiff.com" style={{ color: '#3b82f6', textDecoration: 'none' }}>
+                    sales@veridiff.com
                   </a>
                 </div>
                 <div>
