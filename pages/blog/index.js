@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 import AuthModal from '../../components/AuthModal';
+import { getAllPosts } from '../../lib/markdown';
 
 export default function BlogIndex({ posts }) {
   // Modal state
@@ -145,33 +146,6 @@ export default function BlogIndex({ posts }) {
             }}>
               Expert insights on data comparison, best practices, and professional techniques for Excel, CSV, and cross-format analysis.
             </p>
-          </div>
-        </section>
-
-        {/* Debug Info */}
-        <section style={{ padding: '2rem 0', background: '#f0f9ff', textAlign: 'center' }}>
-          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 20px' }}>
-            <div style={{
-              background: 'white',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              border: '1px solid #e5e7eb'
-            }}>
-              <h3>🧪 Blog System Status:</h3>
-              <p><strong>Posts loaded:</strong> {posts ? posts.length : 0}</p>
-              <p><strong>Featured posts:</strong> {featuredPosts.length}</p>
-              <p><strong>Regular posts:</strong> {regularPosts.length}</p>
-              {posts && posts.length > 0 && (
-                <div style={{ textAlign: 'left', marginTop: '1rem' }}>
-                  <strong>Post titles:</strong>
-                  <ul>
-                    {posts.map((post, index) => (
-                      <li key={index}>{post.title} ({post.featured ? 'Featured' : 'Regular'})</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
           </div>
         </section>
 
@@ -466,28 +440,17 @@ export default function BlogIndex({ posts }) {
   );
 }
 
-// Get blog posts at build time - using dynamic import to avoid issues
+// Get blog posts at build time
 export async function getStaticProps() {
   try {
-    console.log('🔍 Starting getStaticProps...');
-    
-    // Dynamic import to avoid build-time issues
-    const { getAllPosts } = await import('../../lib/markdown');
-    console.log('✅ Successfully imported getAllPosts');
-    
     const posts = getAllPosts();
-    console.log('✅ Successfully got posts:', posts.length);
-    
     return {
       props: {
-        posts: posts || []
+        posts
       }
     };
   } catch (error) {
-    console.error('❌ Error in getStaticProps:', error);
-    console.error('Error details:', error.message);
-    
-    // Return empty posts array instead of failing
+    console.error('Error getting blog posts:', error);
     return {
       props: {
         posts: []
